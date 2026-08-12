@@ -20,14 +20,13 @@ import {
   quoteAction,
   releaseEscrowAction,
   refundEscrowAction,
-  postMessageAction,
   raiseDisputeAction,
   resolveDisputeAction,
   qcDecisionAction,
 } from "./actions";
 import { uploadFileAction } from "./fileActions";
 import { PayButton } from "./PayButton";
-import { OrderTimeline } from "./OrderTimeline";
+import { OrderConversation } from "./OrderConversation";
 import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
 import type { DisputeRow, MessageRow, OrderRow, VersionRow } from "./types";
 
@@ -179,16 +178,31 @@ export function OrderDetail({
 
   return (
     <div className="space-y-4">
-      {/* Timeline — every state explicit, visible, timestamped. The flagship
-          trust surface: the client always sees exactly where their order is. */}
-      <Panel title="Timeline">
-        {timelineError ? (
-          <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-destructive">
-            Couldn&apos;t load history: {timelineError}
-          </p>
-        ) : (
-          <OrderTimeline rows={timelineRows} currency={o.currency} />
-        )}
+      {/* Conversation — the order as one thread: every timestamped event and
+          every double-blind message in one stream, with the viewer's available
+          actions in the composer's slash menu. The flagship trust surface. */}
+      <Panel
+        title="Conversation"
+        aside={
+          <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+            History &amp; messages · identities hidden
+          </span>
+        }
+      >
+        <OrderConversation
+          orderId={o.id}
+          currency={o.currency}
+          priceTotal={o.price_total}
+          userId={userId}
+          isParticipant={isParticipant}
+          isOrderClient={isOrderClient}
+          messages={messages}
+          timelineRows={timelineRows}
+          timelineError={timelineError}
+          transitionTargets={actions}
+          canFund={canFund}
+          canRaiseDispute={canRaiseDispute}
+        />
       </Panel>
 
       {/* Independent QC decision — the visible quality gate for this order. */}
@@ -481,52 +495,6 @@ export function OrderDetail({
         </Panel>
       )}
 
-      {/* Messages — double-blind */}
-      {(messages.length > 0 || isParticipant) && (
-        <Panel
-          title="Messages"
-          aside={
-            <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Identities hidden — role only</span>
-          }
-        >
-          <ul className="space-y-2">
-            {messages.length === 0 && (
-              <li className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">No messages yet.</li>
-            )}
-            {messages.map((m) => {
-              const mine = m.sender_id === userId;
-              const who = mine ? "You" : m.sender_party === "CLIENT" ? "Client" : "Designer";
-              return (
-                <li key={m.id} className={mine ? "text-right" : "text-left"}>
-                  <div
-                    className={`inline-block max-w-[85%] rounded-lg border px-3 py-2 text-left text-[length:var(--fs-3)] leading-[var(--lh-3)] ${
-                      mine ? "border-primary/20 bg-primary/5" : "border-border bg-subtle"
-                    }`}
-                  >
-                    <p className="text-[length:var(--fs-2)] leading-[var(--lh-2)] font-medium text-muted-foreground">{who}</p>
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {isParticipant && (
-            <form action={postMessageAction} className="mt-3 flex items-end gap-2">
-              <input type="hidden" name="order_id" value={o.id} />
-              <Textarea
-                name="body"
-                required
-                rows={2}
-                maxLength={5000}
-                placeholder="Write a message…"
-                aria-label="Message body"
-                className="flex-1"
-              />
-              <Button type="submit">Send</Button>
-            </form>
-          )}
-        </Panel>
-      )}
     </div>
   );
 }
