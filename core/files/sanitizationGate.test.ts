@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { STRIPPABLE_TYPES } from "./metadataStripper";
 import {
+  ASYNC_STRIPPABLE_TYPES,
   DELIVERABLE_ALLOWLIST,
   MAX_UPLOAD_BYTES,
   sanitizeUpload,
@@ -181,10 +183,20 @@ describe("Test AR5 — delivery path requires strippable formats", () => {
   });
 
   it("the delivery allowlist contains only formats a stripper handles", () => {
+    // Every delivery type is cleaned: synchronously (stripMetadata) or, for
+    // 3DM, by the injected async stripper (sanitizeUploadAsync).
+    for (const type of Object.keys(DELIVERABLE_ALLOWLIST)) {
+      const handled =
+        (STRIPPABLE_TYPES as readonly string[]).includes(type) ||
+        (ASYNC_STRIPPABLE_TYPES as readonly string[]).includes(type);
+      expect(handled, type).toBe(true);
+    }
     expect(Object.keys(DELIVERABLE_ALLOWLIST).sort()).toEqual([
       "image/jpeg",
       "image/png",
       "model/step",
+      "model/stl",
+      "model/x-3dm",
     ]);
   });
 });

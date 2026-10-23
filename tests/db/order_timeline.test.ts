@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb, putOrderInPod } from "../helpers/db";
+import { completeDesignerWork, completeQcTicks, connectFreshDb, putOrderInPod } from "../helpers/db";
 
 /**
  * Fund an order the way production now does: open a collection and confirm it
@@ -95,11 +95,13 @@ beforeAll(async () => {
     ]),
   );
   await asUser(designer, () => db.query("SELECT public.transition_order($1,'IN_PROGRESS'::order_status)", [order]));
+  await completeDesignerWork(db, order, designer);
+  // Submitting goes straight to QC (0041): DESIGNER_SUBMITTED then QC_REVIEW.
   await asUser(designer, () =>
     db.query("SELECT public.transition_order($1,'DESIGNER_SUBMITTED'::order_status)", [order]),
   );
-  await asUser(ops, () => db.query("SELECT public.transition_order($1,'QC_REVIEW'::order_status)", [order]));
   await putOrderInPod(db, order, qc);
+  await completeQcTicks(db, order, qc);
   await asUser(qc, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [order]));
 });
 

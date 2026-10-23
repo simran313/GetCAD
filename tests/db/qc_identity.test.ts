@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb, givePayoutAccount, putOrderInPod } from "../helpers/db";
+import { completeQcTicks, connectFreshDb, givePayoutAccount, putOrderInPod } from "../helpers/db";
 
 let db: Client;
 
@@ -71,6 +71,8 @@ async function orderInQcReview(designerId: string | null, podLead: string = qc):
     [id, client, designerId],
   );
   await putOrderInPod(db, id, podLead);
+  // QC passes need all 19 QC ticks (0041); the tests here are about who may decide.
+  await completeQcTicks(db, id, podLead);
   return id;
 }
 
@@ -88,7 +90,9 @@ describe("Test AS — independent QC is enforced, recorded, and payable", () => 
 
   it("a QC reviewer can request a revision, and is still recorded", async () => {
     const orderId = await orderInQcReview(designer, qc2);
-    await asUser(qc2, () => db.query("SELECT public.record_qc_decision($1,'REVISION')", [orderId]));
+    await asUser(qc2, () =>
+      db.query("SELECT public.record_qc_decision($1,'REVISION','Prong height is off')", [orderId]),
+    );
     const row = await db.query("SELECT status, qc_reviewer_id FROM orders WHERE id=$1", [orderId]);
     expect(row.rows[0]).toEqual({ status: "REVISION_REQUESTED", qc_reviewer_id: qc2 });
   });

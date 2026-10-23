@@ -21,7 +21,7 @@
  * deterministic and testable. Nothing here touches storage or the network.
  */
 
-import { STRIPPABLE_TYPES, stripMetadata } from "./metadataStripper";
+import { STRIPPABLE_TYPES, isStl, stripMetadata, type StripResult } from "./metadataStripper";
 
 /**
  * Hard ceiling for a single upload.
@@ -38,8 +38,8 @@ export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MiB
 /** mime -> verified extension + how to recognise it. */
 interface TypeRule {
   ext: string;
-  /** Byte signatures (any match) OR a required UTF-8 text prefix. */
-  magic: number[][] | { textPrefix: string };
+  /** Byte signatures (any match), a required UTF-8 text prefix, or a check of the whole file. */
+  magic: number[][] | { textPrefix: string } | { validate: (bytes: Uint8Array) => boolean };
 }
 
 const PDF_RULE: TypeRule = { ext: "pdf", magic: [[0x25, 0x50, 0x44, 0x46]] }; // %PDF
@@ -53,6 +53,11 @@ const ZIP_RULE: TypeRule = {
   ],
 }; // PK..
 const STEP_RULE: TypeRule = { ext: "step", magic: { textPrefix: "ISO-10303-21" } };
+// STL has no fixed signature: binary is recognised by its exact length,
+// ASCII by `solid … facet` (see metadataStripper.isStl).
+const STL_RULE: TypeRule = { ext: "stl", magic: { validate: isStl } };
+// Rhino / openNURBS: every 3DM file starts with this 23-character banner.
+const RHINO_3DM_RULE: TypeRule = { ext: "3dm", magic: { textPrefix: "3D Geometry File Format" } };
 
 /**
  * Broad allowlist for uploads where the uploader's identity is ALREADY known to
@@ -92,7 +97,15 @@ export const DELIVERABLE_ALLOWLIST: Record<string, TypeRule> = {
   "image/png": PNG_RULE,
   "image/jpeg": JPEG_RULE,
   "model/step": STEP_RULE,
+  // The two files every CAD job delivers (DECISIONS §9). STL is cleaned here;
+  // 3DM needs the Rhino library, so it is cleaned by sanitizeUploadAsync with
+  // an injected stripper and refused by the synchronous gate.
+  "model/stl": STL_RULE,
+  "model/x-3dm": RHINO_3DM_RULE,
 };
+
+/** Content types whose cleaning needs an async, injected stripper. */
+export const ASYNC_STRIPPABLE_TYPES = ["model/x-3dm"] as const;
 
 export interface IncomingFile {
   /** The client-supplied name — used ONLY for logging, never for the stored key. */
@@ -137,6 +150,9 @@ export interface GateOptions {
 }
 
 function headerMatches(header: Uint8Array, rule: TypeRule): boolean {
+  if ("validate" in rule.magic) {
+    return rule.magic.validate(header);
+  }
   if (Array.isArray(rule.magic)) {
     return rule.magic.some(
       (sig) => header.length >= sig.length && sig.every((b, i) => header[i] === b),
@@ -208,5 +224,45 @@ export function sanitizeUpload(
       bytes,
       metadataStripped,
     },
+  };
+}
+
+/** Cleans one file type that cannot be cleaned synchronously (3DM). */
+export type AsyncStripper = (bytes: Uint8Array) => Promise<StripResult>;
+
+/**
+ * The gate for every type, including those whose cleaning is async.
+ *
+ * Synchronous types go straight through sanitizeUpload. A 3DM is validated
+ * by the same checks (allowlist, size, signature, opaque name) and then
+ * cleaned by the injected `strip3dm` — injected so this module stays pure and
+ * free of the 9 MB Rhino library. With stripping required and no stripper
+ * given, the file is refused, never passed through.
+ */
+export async function sanitizeUploadAsync(
+  input: IncomingFile,
+  opaqueId: string,
+  opts: GateOptions & { strip3dm?: AsyncStripper } = {},
+): Promise<GateResult> {
+  if (!(ASYNC_STRIPPABLE_TYPES as readonly string[]).includes(input.declaredMimeType)) {
+    return sanitizeUpload(input, opaqueId, opts);
+  }
+  const strip = opts.requireMetadataStrip ?? false;
+  const checked = sanitizeUpload(input, opaqueId, {
+    ...opts,
+    requireMetadataStrip: false,
+    allowlist: opts.allowlist ?? DELIVERABLE_ALLOWLIST,
+  });
+  if (!checked.ok || !strip) return checked;
+  if (!opts.strip3dm) {
+    return { ok: false, reason: `cannot strip identifying metadata from ${input.declaredMimeType}; not accepted where anonymity is required` };
+  }
+  const stripped = await opts.strip3dm(checked.file.bytes);
+  if (!stripped.ok) {
+    return { ok: false, reason: `metadata stripping failed: ${stripped.reason}` };
+  }
+  return {
+    ok: true,
+    file: { ...checked.file, bytes: stripped.bytes, sizeBytes: stripped.bytes.length, metadataStripped: true },
   };
 }

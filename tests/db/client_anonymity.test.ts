@@ -119,10 +119,7 @@ async function buildOrder(id: string, basedOn: string | null, note: string): Pro
     "INSERT INTO payout_obligations (order_id, payee_id, party, amount_paise) VALUES ($1,$2,'DESIGNER',50000)",
     [id, designer],
   );
-  await db.query(
-    "INSERT INTO job_assignments (order_id, designer_id, assigned_by) VALUES ($1,$2,$3)",
-    [id, designer, podLead],
-  );
+  // job_assignments: written by assign_designer() above (0041).
   await db.query(
     "INSERT INTO order_checks (order_id, version, item_id, designer_by, designer_at) VALUES ($1,1,1,$2,now())",
     [id, designer],
@@ -372,7 +369,18 @@ describe("Phase 1 must-fix — a designer cannot identify or link a client", () 
 
   it("nothing identifying is shared between two orders of the same client", async () => {
     const enums = await db.query("SELECT enumlabel FROM pg_enum");
-    const labels = new Set<string>(enums.rows.map((r) => r.enumlabel as string));
+    // Fixed reference text the designer legitimately sees on every job: the
+    // checklist (0037) and the upload slots. Read from the database, so a
+    // client-specific value can never be smuggled in through this list.
+    const reference = await db.query(
+      `SELECT group_name AS v FROM checklist_items UNION SELECT label FROM checklist_items
+       UNION SELECT flag FROM checklist_items WHERE flag IS NOT NULL
+       UNION SELECT code FROM deliverable_slots UNION SELECT label FROM deliverable_slots`,
+    );
+    const labels = new Set<string>([
+      ...enums.rows.map((r) => r.enumlabel as string),
+      ...reference.rows.map((r) => r.v as string),
+    ]);
     const isLabel = (s: string) =>
       labels.has(s) ||
       /^[A-Z][A-Z_]{3,}$/.test(s) || // statuses, actions, parties

@@ -186,10 +186,71 @@ export function stripStep(bytes: Uint8Array): StripResult {
   return { ok: true, bytes: enc.encode(rebuilt) };
 }
 
+/* ------------------------------------------------------------------ STL -- */
+
+/**
+ * STL comes in two shapes, and both carry free text:
+ *
+ *   BINARY: an 80-byte header any exporter may fill ("Rhino 8 — Nakshatra
+ *   Studio", a username, a file path), a triangle count, then 50 bytes per
+ *   triangle whose last 2 bytes are an "attribute" some tools use for colour
+ *   or notes.
+ *   ASCII: `solid <name>` … `endsolid <name>`, where the name is usually the
+ *   original file name.
+ *
+ * Binary is recognised by its exact length (84 + 50 × count), since a binary
+ * header may itself begin with the word "solid". The header is replaced and
+ * every attribute zeroed; the triangles are copied untouched. ASCII is rebuilt
+ * from its geometry lines only, under a neutral name.
+ */
+const STL_NEUTRAL_HEADER = "binary STL";
+
+export function isBinaryStl(bytes: Uint8Array): boolean {
+  if (bytes.length < 84) return false;
+  const count = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(80, true);
+  return bytes.length === 84 + count * 50;
+}
+
+export function isStl(bytes: Uint8Array): boolean {
+  if (isBinaryStl(bytes)) return true;
+  const head = dec.decode(bytes.subarray(0, Math.min(bytes.length, 1024))).trimStart();
+  return head.startsWith("solid") && /\bfacet\b|\bendsolid\b/.test(dec.decode(bytes.subarray(0, Math.min(bytes.length, 64 * 1024))));
+}
+
+const ASCII_STL_LINE = /^(facet normal|outer loop|vertex|endloop|endfacet)\b/;
+
+export function stripStl(bytes: Uint8Array): StripResult {
+  if (isBinaryStl(bytes)) {
+    const out = new Uint8Array(bytes);
+    out.fill(0x20, 0, 80);
+    out.set(enc.encode(STL_NEUTRAL_HEADER), 0);
+    const count = new DataView(out.buffer).getUint32(80, true);
+    for (let i = 0; i < count; i++) {
+      const attr = 84 + i * 50 + 48;
+      out[attr] = 0;
+      out[attr + 1] = 0;
+    }
+    return { ok: true, bytes: out };
+  }
+
+  const text = dec.decode(bytes);
+  if (!text.trimStart().startsWith("solid")) {
+    return { ok: false, reason: "not an STL file" };
+  }
+  const geometry = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => ASCII_STL_LINE.test(line));
+  if (!geometry.some((line) => line.startsWith("facet normal"))) {
+    return { ok: false, reason: "STL file has no facets" };
+  }
+  return { ok: true, bytes: enc.encode(["solid model", ...geometry, "endsolid model", ""].join("\n")) };
+}
+
 /* -------------------------------------------------------------- dispatch -- */
 
 /** Content types this module can actually clean. */
-export const STRIPPABLE_TYPES = ["image/png", "image/jpeg", "model/step"] as const;
+export const STRIPPABLE_TYPES = ["image/png", "image/jpeg", "model/step", "model/stl"] as const;
 
 /**
  * Strip identifying metadata from a file of a known content type.
@@ -206,6 +267,8 @@ export function stripMetadata(bytes: Uint8Array, contentType: string): StripResu
       return stripJpeg(bytes);
     case "model/step":
       return stripStep(bytes);
+    case "model/stl":
+      return stripStl(bytes);
     default:
       return { ok: false, reason: `no metadata stripper for content type: ${contentType}` };
   }

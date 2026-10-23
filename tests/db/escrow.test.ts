@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb, givePayoutAccount, putOrderInPod } from "../helpers/db";
+import { completeDesignerWork, completeQcTicks, connectFreshDb, givePayoutAccount, putOrderInPod } from "../helpers/db";
 
 /**
  * Fund an order the way production now does: open a collection and confirm it
@@ -165,9 +165,11 @@ describe("Test U — escrow ledger + money conservation", () => {
       ]),
     );
     await asUser(designer, () => db.query("SELECT public.transition_order($1,'IN_PROGRESS'::order_status)", [id]));
+    await completeDesignerWork(db, id, designer);
+    // Submitting goes straight to QC (0041).
     await asUser(designer, () => db.query("SELECT public.transition_order($1,'DESIGNER_SUBMITTED'::order_status)", [id]));
-    await asUser(ops, () => db.query("SELECT public.transition_order($1,'QC_REVIEW'::order_status)", [id]));
     await putOrderInPod(db, id, qc);
+    await completeQcTicks(db, id, qc);
     await asUser(qc, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [id]));
     await asUser(client, () => db.query("SELECT public.transition_order($1,'APPROVED'::order_status)", [id]));
     await asUser(ops, () => db.query("SELECT public.transition_order($1,'DELIVERED'::order_status)", [id]));

@@ -53,15 +53,21 @@ export { buildTimeline } from "./orders/timeline";
 export type { TimelineRawRow, TimelineStep, QcOutcome } from "./orders/timeline";
 export {
   sanitizeUpload,
+  sanitizeUploadAsync,
   MAX_UPLOAD_BYTES,
   DEFAULT_ALLOWLIST,
   DELIVERABLE_ALLOWLIST,
+  ASYNC_STRIPPABLE_TYPES,
 } from "./files/sanitizationGate";
+export { slotAccept, slotContentType, SLOT_ACCEPT } from "./files/slotTypes";
+export type { SlotTypeResult } from "./files/slotTypes";
 export {
   stripMetadata,
   stripPng,
   stripJpeg,
   stripStep,
+  stripStl,
+  isStl,
   STRIPPABLE_TYPES,
 } from "./files/metadataStripper";
 export type { StripResult } from "./files/metadataStripper";
@@ -70,6 +76,7 @@ export type {
   SanitizedFile,
   GateResult,
   GateOptions,
+  AsyncStripper,
 } from "./files/sanitizationGate";
 export { escrowSign, netHeld, ESCROW_KINDS } from "./money/escrowSign";
 export type { EscrowKind } from "./money/escrowSign";
