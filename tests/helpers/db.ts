@@ -127,3 +127,28 @@ export async function connectFreshDb(): Promise<Client> {
   await freshSchema(client);
   return client;
 }
+
+/**
+ * Put an order in a pod led by `podLeadId` (0033).
+ *
+ * QC decisions and pod-lead visibility belong to the pod lead of the order's
+ * pod, so any suite that walks an order through QC needs one. Fixture setup,
+ * written directly as the superuser: assign_order_pod() needs an admin
+ * session, and this is not a test of that path.
+ */
+export async function putOrderInPod(client: Client, orderId: string, podLeadId: string): Promise<string> {
+  const existing = await client.query("SELECT pod_id FROM pod_members WHERE user_id = $1", [podLeadId]);
+  let podId: string;
+  if (existing.rows.length > 0) {
+    podId = existing.rows[0].pod_id as string;
+  } else {
+    const pod = await client.query("INSERT INTO pods (name) VALUES ($1) RETURNING id", [`Pod ${podLeadId}`]);
+    podId = pod.rows[0].id as string;
+    await client.query(
+      "INSERT INTO pod_members (pod_id, user_id, member_role) VALUES ($1, $2, 'POD_LEAD')",
+      [podId, podLeadId],
+    );
+  }
+  await client.query("UPDATE orders SET pod_id = $1, pod_lead_id = $2 WHERE id = $3", [podId, podLeadId, orderId]);
+  return podId;
+}

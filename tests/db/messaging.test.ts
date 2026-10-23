@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb } from "../helpers/db";
+import { connectFreshDb, putOrderInPod } from "../helpers/db";
 
 /**
  * Fund an order the way production now does: open a collection and confirm it
@@ -84,8 +84,8 @@ afterAll(async () => {
   if (db) await db.end();
 });
 
-describe("Test W — double-blind messaging", () => {
-  it("the client and the assigned designer can post; the party label is derived", async () => {
+describe("Test W — threaded, pseudonymous messaging (DECISIONS §11)", () => {
+  it("the client and the assigned designer can post; party and alias are derived", async () => {
     const c = await post(client, order, "Hi, any questions on the spec?");
     expect(c.rows[0].v.party).toBe("CLIENT");
     const d = await post(designer, order, "Yes — what tolerance do you need?");
@@ -93,39 +93,86 @@ describe("Test W — double-blind messaging", () => {
   });
 
   it("a non-participant cannot post", async () => {
-    await expect(post(otherClient, order, "let me in")).rejects.toThrow(
-      /only the order's client or assigned designer/i,
-    );
+    await expect(post(otherClient, order, "let me in")).rejects.toThrow(/order not found/i);
   });
 
   it("an empty message is rejected", async () => {
     await expect(post(client, order, "   ")).rejects.toThrow(/empty/i);
   });
 
-  it("messages carry NO identity — only opaque sender_id + party label", async () => {
-    // The table has no name/email/avatar columns.
+  it("messages carry no readable identity — the sender id is stored but not selectable", async () => {
     const cols = await db.query(
       `SELECT column_name FROM information_schema.columns
        WHERE table_schema='public' AND table_name='messages'`,
     );
-    const names = cols.rows.map((r) => r.column_name);
-    expect(names.sort()).toEqual(
-      ["body", "created_at", "id", "order_id", "sender_id", "sender_party"].sort(),
+    expect(cols.rows.map((r) => r.column_name).sort()).toEqual(
+      ["body", "created_at", "id", "order_id", "sender_alias", "sender_id", "sender_party", "thread_id"].sort(),
     );
+    await asUser(client, async () => {
+      await expect(db.query("SELECT sender_id FROM messages")).rejects.toThrow(/permission denied/i);
+    });
   });
 
-  it("a participant reads the thread but STILL cannot read the counterparty's identity", async () => {
+  it("the client sees only the team thread; the designer only the internal thread", async () => {
     await asUser(client, async () => {
       const msgs = await db.query(
-        "SELECT sender_party, body FROM messages WHERE order_id = $1 ORDER BY created_at",
+        "SELECT sender_party, sender_alias FROM messages WHERE order_id = $1 ORDER BY created_at",
         [order],
       );
-      // client sees both parties' messages...
-      expect(msgs.rows.map((r) => r.sender_party)).toEqual(["CLIENT", "DESIGNER"]);
-      // ...but cannot read the designer's identity row (double-blind holds).
+      expect(msgs.rows).toEqual([{ sender_party: "CLIENT", sender_alias: "Client" }]);
       const idn = await db.query("SELECT * FROM designer_profiles WHERE user_id = $1", [designer]);
       expect(idn.rows).toHaveLength(0);
     });
+    await asUser(designer, async () => {
+      const msgs = await db.query(
+        "SELECT sender_party, sender_alias FROM messages WHERE order_id = $1 ORDER BY created_at",
+        [order],
+      );
+      expect(msgs.rows).toEqual([{ sender_party: "DESIGNER", sender_alias: "Designer" }]);
+      const mine = await db.query("SELECT is_mine FROM public.order_messages($1)", [order]);
+      expect(mine.rows).toEqual([{ is_mine: true }]);
+    });
+  });
+
+  it("a designer can neither read nor post in the client thread (RLS + function)", async () => {
+    const { rows } = await db.query(
+      "SELECT id FROM message_threads WHERE order_id=$1 AND kind='client_team'",
+      [order],
+    );
+    const clientThread = rows[0].id as string;
+    await asUser(designer, async () => {
+      expect((await db.query("SELECT id FROM message_threads WHERE id=$1", [clientThread])).rows).toHaveLength(0);
+      expect((await db.query("SELECT id FROM messages WHERE thread_id=$1", [clientThread])).rows).toHaveLength(0);
+    });
+    await expect(
+      asUser(designer, () => db.query("SELECT public.post_thread_message($1,'hello client')", [clientThread])),
+    ).rejects.toThrow(/designers cannot post in client threads/i);
+  });
+
+  it("the pod lead reads both threads and posts as 'Team · first name'", async () => {
+    await putOrderInPod(db, order, qc);
+    await db.query("INSERT INTO staff_profiles (user_id, first_name) VALUES ($1,'Priya')", [qc]);
+    const { rows } = await db.query(
+      "SELECT id FROM message_threads WHERE order_id=$1 AND kind='client_team'",
+      [order],
+    );
+    const res = await asUser(qc, () =>
+      db.query("SELECT public.post_thread_message($1,'Quote is on its way') AS v", [rows[0].id]),
+    );
+    expect(res.rows[0].v.party).toBe("TEAM");
+    await asUser(qc, async () => {
+      const seen = await db.query(
+        "SELECT thread_kind, sender_alias FROM public.order_messages($1) ORDER BY created_at",
+        [order],
+      );
+      expect(seen.rows).toEqual([
+        { thread_kind: "client_team", sender_alias: "Client" },
+        { thread_kind: "internal", sender_alias: "Designer" },
+        { thread_kind: "client_team", sender_alias: "Team · Priya" },
+      ]);
+    });
+    // Staff use the thread-level door, not the order-level one.
+    await expect(post(qc, order, "which thread?")).rejects.toThrow(/post_thread_message/i);
   });
 
   it("posting is audited and messages are append-only", async () => {
@@ -133,7 +180,7 @@ describe("Test W — double-blind messaging", () => {
       "SELECT count(*)::int AS n FROM audit.audit_log WHERE action='MESSAGE_POSTED' AND entity_id=$1",
       [order],
     );
-    expect(a.rows[0].n).toBe(2);
+    expect(a.rows[0].n).toBe(3);
 
     await expect(
       db.query("UPDATE messages SET body='edited' WHERE order_id=$1", [order]),

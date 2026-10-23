@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb, givePayoutAccount } from "../helpers/db";
+import { connectFreshDb, givePayoutAccount, putOrderInPod } from "../helpers/db";
 
 let db: Client;
 
@@ -61,8 +61,8 @@ async function asUser<T>(sub: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-/** Build an order sitting in QC_REVIEW with the given designer. */
-async function orderInQcReview(designerId: string | null): Promise<string> {
+/** Build an order sitting in QC_REVIEW with the given designer, in `podLead`'s pod. */
+async function orderInQcReview(designerId: string | null, podLead: string = qc): Promise<string> {
   const id = generateId();
   await db.query(
     `INSERT INTO orders (id, client_id, designer_id, product_type, status, currency,
@@ -70,6 +70,7 @@ async function orderInQcReview(designerId: string | null): Promise<string> {
      VALUES ($1,$2,$3,'CAD_MODEL','QC_REVIEW','USD', 1000, 600, 200, 200)`,
     [id, client, designerId],
   );
+  await putOrderInPod(db, id, podLead);
   return id;
 }
 
@@ -86,7 +87,7 @@ describe("Test AS — independent QC is enforced, recorded, and payable", () => 
   });
 
   it("a QC reviewer can request a revision, and is still recorded", async () => {
-    const orderId = await orderInQcReview(designer);
+    const orderId = await orderInQcReview(designer, qc2);
     await asUser(qc2, () => db.query("SELECT public.record_qc_decision($1,'REVISION')", [orderId]));
     const row = await db.query("SELECT status, qc_reviewer_id FROM orders WHERE id=$1", [orderId]);
     expect(row.rows[0]).toEqual({ status: "REVISION_REQUESTED", qc_reviewer_id: qc2 });
@@ -96,7 +97,7 @@ describe("Test AS — independent QC is enforced, recorded, and payable", () => 
     // The sharpest case: a user who holds the QC role AND produced the work.
     const dualRole = generateId();
     await db.query("INSERT INTO users (id, role, status) VALUES ($1,'QC','ACTIVE')", [dualRole]);
-    const orderId = await orderInQcReview(dualRole);
+    const orderId = await orderInQcReview(dualRole, dualRole);
 
     await expect(
       asUser(dualRole, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [orderId])),
@@ -116,6 +117,7 @@ describe("Test AS — independent QC is enforced, recorded, and payable", () => 
        VALUES ($1,$2,$3,'CAD_MODEL','QC_REVIEW','USD', 1000, 600, 200, 200)`,
       [id, dualRole, designer],
     );
+    await putOrderInPod(db, id, dualRole);
     await expect(
       asUser(dualRole, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [id])),
     ).rejects.toThrow(/cannot review your own order/i);
@@ -137,9 +139,19 @@ describe("Test AS — independent QC is enforced, recorded, and payable", () => 
        VALUES ($1,$2,'CAD_MODEL','DRAFT','USD',0,0,0,0)`,
       [draft, client],
     );
+    await putOrderInPod(db, draft, qc);
     await expect(
       asUser(qc, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [draft])),
     ).rejects.toThrow(/only review an order in QC_REVIEW/i);
+  });
+
+  it("only the pod lead of the order's pod may decide; QC in another pod is refused", async () => {
+    const orderId = await orderInQcReview(designer, qc);
+    await expect(
+      asUser(qc2, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [orderId])),
+    ).rejects.toThrow(/only the pod lead of this order's pod/i);
+    const row = await db.query("SELECT status, qc_reviewer_id FROM orders WHERE id=$1", [orderId]);
+    expect(row.rows[0]).toEqual({ status: "QC_REVIEW", qc_reviewer_id: null });
   });
 
   it("rejects an outcome that is not PASS or REVISION", async () => {
@@ -182,11 +194,11 @@ describe("Test AS — independent QC is enforced, recorded, and payable", () => 
   it("a QC reviewer keeps visibility of the order after deciding", async () => {
     const orderId = await orderInQcReview(designer);
     await asUser(qc, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [orderId]));
-    // Status is now CLIENT_PREVIEW, outside the QC queue policy — the reviewer
-    // policy (0017) is what keeps it visible.
+    // Status is now CLIENT_PREVIEW; the pod-lead policy (0027) and the
+    // reviewer policy (0017) both keep it visible.
     const seen = await asUser(qc, () => db.query("SELECT id FROM orders WHERE id=$1", [orderId]));
     expect(seen.rows.length).toBe(1);
-    // ... and an unrelated QC user does NOT see it.
+    // ... and a QC user leading another pod does NOT see it.
     const unseen = await asUser(qc2, () => db.query("SELECT id FROM orders WHERE id=$1", [orderId]));
     expect(unseen.rows.length).toBe(0);
   });

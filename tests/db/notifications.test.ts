@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb } from "../helpers/db";
+import { connectFreshDb, putOrderInPod } from "../helpers/db";
 
 /**
  * Fund an order the way production now does: open a collection and confirm it
@@ -93,17 +93,22 @@ describe("Test AA — notifications (generated from the audit log)", () => {
     expect(d.map((n) => n.kind)).toContain("ASSIGNED");
   });
 
-  it("a message notifies the OTHER party, not the sender", async () => {
-    await asUser(client, () => db.query("SELECT public.post_message($1,$2)", [order, "hello"]));
-    // designer (the other party) is notified; the client (sender) is not.
-    const d = (await notifsFor(designer)).filter((n) => n.kind === "MESSAGE");
-    const c = (await notifsFor(client)).filter((n) => n.kind === "MESSAGE");
-    expect(d).toHaveLength(1);
-    expect(c).toHaveLength(0);
+  it("a message reaches the pod lead, never the other side's party", async () => {
+    const podLead = generateId();
+    await db.query("INSERT INTO users (id, role, status) VALUES ($1,'QC','ACTIVE')", [podLead]);
+    await putOrderInPod(db, order, podLead);
 
-    // and the reverse direction
+    // The client writes to the team: the pod lead hears about it; the designer
+    // (who cannot read that thread) does not, and nor does the sender.
+    await asUser(client, () => db.query("SELECT public.post_message($1,$2)", [order, "hello"]));
+    expect((await notifsFor(podLead)).filter((n) => n.kind === "MESSAGE")).toHaveLength(1);
+    expect((await notifsFor(designer)).filter((n) => n.kind === "MESSAGE")).toHaveLength(0);
+    expect((await notifsFor(client)).filter((n) => n.kind === "MESSAGE")).toHaveLength(0);
+
+    // The designer writes to the internal thread: the pod lead again, never the client.
     await asUser(designer, () => db.query("SELECT public.post_message($1,$2)", [order, "hi back"]));
-    expect((await notifsFor(client)).filter((n) => n.kind === "MESSAGE")).toHaveLength(1);
+    expect((await notifsFor(podLead)).filter((n) => n.kind === "MESSAGE")).toHaveLength(2);
+    expect((await notifsFor(client)).filter((n) => n.kind === "MESSAGE")).toHaveLength(0);
   });
 
   it("notification text is identity-free (no names/emails)", async () => {

@@ -164,6 +164,20 @@ RLS matrix (Spec §1 visibility), enforced per table:
 - `tests/db/feature_flags.test.ts`: only admin can flip; defaults match §12.
 - Existing suites updated where policies changed (`messaging`, `staff_order_visibility`, `qc_identity`, `file_versions`, `disputes`, `escrow`).
 
+### Phase 1 — as built (differences from the plan above)
+
+- Migrations `0033`–`0037`, policies `0027`–`0030` (described in `db/README.md`).
+- `my_jobs()` became `visible_orders()` for every role (designer shape: job code, no money, product from the brief enum) plus `job_brief()`.
+- Threads were built at the database level now, not in Phase 4: `client_team` / `internal`, per-thread aliases, `post_thread_message()`, `order_messages()`. Phase 4 keeps on-behalf intake, the staff thread UI and Realtime.
+- Existing client↔designer messages are frozen in an admin-only `legacy` thread (Q12 default).
+- No `jobs` table: a change after approval is a new linked order (Q5).
+- `brief_missing()` exists; blocking submit on it lands with the N1 screen in Phase 5 (enforcing it now would break the current stepped brief).
+- Multi-role tabs (`core/nav/tabs.ts`) and a flags helper in `config/` move to Phase 5, where the screens that use them are built.
+- The route-level anonymity check is a source guard (`tests/config/identity-columns.test.ts`); the full browser crawl stays in Phase 8.
+- Found and fixed while testing: `app.escrow_held()` and `settlement_state()` were callable by any role for any order id (price leak to designers, money leak to anyone signed in).
+- Brooches map to product code `OT`.
+- Not enforceable by the database: free text written by the client (brief notes, change summary) reaches the designer as written.
+
 ---
 
 ## Phase 2 — Payments + SLA clock

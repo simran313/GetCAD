@@ -33,9 +33,8 @@ export async function startPaymentAction(formData: FormData): Promise<StartPayme
   const supabase = await createUserSupabaseClient();
   const [{ data: order, error }, { data: me }] = await Promise.all([
     supabase
-      .from("orders")
-      .select("id, client_id, status, price_total, currency")
-      .eq("id", orderId)
+      .rpc("visible_orders", { p_order_id: orderId })
+      .select("id, relation, status, price_total, currency")
       .maybeSingle(),
     supabase.from("users").select("role").maybeSingle(),
   ]);
@@ -49,7 +48,7 @@ export async function startPaymentAction(formData: FormData): Promise<StartPayme
   if (me?.role !== "CLIENT") {
     return { ok: false, error: "Only a client can pay for an order." };
   }
-  if (order.client_id !== userId) {
+  if (order.relation !== "CLIENT") {
     return { ok: false, error: "Only the client of this order can pay for it." };
   }
   if (order.status !== "QUOTED") {

@@ -24,13 +24,15 @@ const REFERENCE_URL_TTL_SECONDS = 60 * 60;
 export const dynamic = "force-dynamic";
 
 interface SpecRow {
-  reference_name: string;
+  /** Absent for a designer: job_brief() leaves it out (0036). */
+  reference_name?: string;
   product: string;
   metal: string;
-  karatage: string;
-  purpose: string;
-  format: string;
-  finish: string;
+  // Optional since 0035 (owner answer Q6).
+  karatage: string | null;
+  purpose: string | null;
+  format: string | null;
+  finish: string | null;
   has_centre_stone: boolean;
   centre_shape: string | null;
   centre_setting: string | null;
@@ -66,9 +68,17 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
 
+  // A designer cannot read order_specs (it holds the client's own label and
+  // the link to their earlier orders); job_brief() is their copy without
+  // either. Everyone else reads the row, under RLS.
+  const { data: rel } = await supabase.rpc("my_order_relation", { p_order_id: id });
+  const isDesigner = rel === "DESIGNER";
+
   const [orderRes, specRes, accentsRes, imagesRes] = await Promise.all([
-    supabase.from("orders").select("id, status, client_id").eq("id", id).maybeSingle(),
-    supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
+    supabase.rpc("visible_orders", { p_order_id: id }).select("id, status, relation").maybeSingle(),
+    isDesigner
+      ? supabase.rpc("job_brief", { p_order_id: id })
+      : supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
     supabase
       .from("order_spec_accents")
       .select("position, shape, width_um, quantity, setting")
@@ -108,7 +118,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   // brief is what the price was calculated against. Showing an editable form
   // that the server would then refuse is a worse experience than saying so.
   const frozen = !["DRAFT", "SUBMITTED"].includes(order.status);
-  const isOwner = order.client_id === userId;
+  const isOwner = order.relation === "CLIENT";
 
   // Private bucket: each picture needs its own short-lived signed URL. Minted
   // with the service role because the browser session has no storage grant —
@@ -165,10 +175,10 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
               referenceName: spec?.reference_name,
               product: spec?.product,
               metal: spec?.metal,
-              karatage: spec?.karatage,
-              purpose: spec?.purpose,
-              format: spec?.format,
-              finish: spec?.finish,
+              karatage: spec?.karatage ?? undefined,
+              purpose: spec?.purpose ?? undefined,
+              format: spec?.format ?? undefined,
+              finish: spec?.finish ?? undefined,
               hasCentreStone: spec?.has_centre_stone,
               centreShape: spec?.centre_shape,
               centreSetting: spec?.centre_setting,
@@ -219,7 +229,7 @@ function ReadOnlyBrief({ spec, accents }: { spec: SpecRow | null; accents: Accen
 
   const rows: Array<[string, string]> = [
     ["Piece", pretty(spec.product)],
-    ["Metal", `${pretty(spec.metal)} · ${spec.karatage}`],
+    ["Metal", [pretty(spec.metal), spec.karatage].filter(Boolean).join(" · ")],
     ["Purpose", pretty(spec.purpose)],
     ["Output", spec.format === "THREE_DM" ? "3DM" : pretty(spec.format)],
     ["Finish", pretty(spec.finish)],

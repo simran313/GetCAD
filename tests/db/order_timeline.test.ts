@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb } from "../helpers/db";
+import { connectFreshDb, putOrderInPod } from "../helpers/db";
 
 /**
  * Fund an order the way production now does: open a collection and confirm it
@@ -99,6 +99,7 @@ beforeAll(async () => {
     db.query("SELECT public.transition_order($1,'DESIGNER_SUBMITTED'::order_status)", [order]),
   );
   await asUser(ops, () => db.query("SELECT public.transition_order($1,'QC_REVIEW'::order_status)", [order]));
+  await putOrderInPod(db, order, qc);
   await asUser(qc, () => db.query("SELECT public.record_qc_decision($1,'PASS')", [order]));
 });
 
@@ -134,11 +135,13 @@ describe("Test AH — order timeline (client-safe audit window)", () => {
     expect(rows.some((r) => r.action === "ORDER_QUOTED")).toBe(true);
   });
 
-  it("staff with a current queue-slot role can also read it (OPS/SALES/QC/FINANCE via existing visibility)", async () => {
-    // QC could see it while the order sat in QC_REVIEW; by now it has moved on to
-    // CLIENT_PREVIEW, so QC's staff-queue visibility has expired — confirms the
-    // timeline visibility is exactly as narrow as order visibility, not broader.
-    await expect(timelineAs(qc)).rejects.toThrow(/not found or not visible/i);
+  it("the pod lead of the order's pod reads it at any status; QC outside the pod cannot", async () => {
+    // The QC pool is gone (0027): a pod lead sees every order in their pod for
+    // its whole life, and a QC user who leads no pod with it sees nothing.
+    expect((await timelineAs(qc)).length).toBeGreaterThan(0);
+    const qcElsewhere = generateId();
+    await db.query("INSERT INTO users (id, role, status) VALUES ($1,'QC','ACTIVE')", [qcElsewhere]);
+    await expect(timelineAs(qcElsewhere)).rejects.toThrow(/not found or not visible/i);
   });
 
   it("a non-participant cannot read the timeline", async () => {

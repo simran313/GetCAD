@@ -53,7 +53,6 @@ const PURPOSES: Array<[string, string]> = [
 const FORMATS = ["THREE_DM", "STL", "BOTH", "STEP"];
 const FINISHES = ["HIGH_POLISH", "MATTE", "BRUSHED", "HAMMERED", "MIXED"];
 const SUPPLY = ["NONE", "CLIENT", "DESIGNER", "PLATFORM"];
-const PRIORITIES = ["STANDARD", "EXPRESS", "RUSH"];
 
 const label = (v: string) =>
   v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
@@ -429,13 +428,8 @@ export function BriefWizard({
           onChange={set("finish")}
         />
 
-        <Choice
-          name="priority"
-          legend="Priority"
-          options={PRIORITIES.map((v) => [v, label(v)])}
-          value={form.priority ?? ""}
-          onChange={set("priority")}
-        />
+        {/* No priority choice: rush is off until it is defined (DECISIONS §12),
+            and upsert_order_spec refuses anything but STANDARD while it is. */}
 
         <Field
           id="notes"

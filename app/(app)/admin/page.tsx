@@ -11,10 +11,9 @@ export const dynamic = "force-dynamic";
 
 interface OrderRow {
   id: string;
+  display_ref: string | null;
   product_type: string;
   status: string;
-  client_id: string;
-  designer_id: string | null;
 }
 
 // Human label for what a status is waiting on (staff-facing; carries no identity).
@@ -52,11 +51,12 @@ export default async function AdminPage() {
     );
   }
 
-  // Staff RLS returns exactly the orders this role can currently act on.
+  // Staff RLS returns exactly the orders this role can currently act on (plus,
+  // for an admin or pod lead, everything in their reach — 0027).
   const [ordersRes, transitionsRes] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, product_type, status, client_id, designer_id")
+      .select("id, display_ref:order_ref, product_type, status")
       .order("created_at", { ascending: false }),
     supabase.from("order_transitions").select("from_status, to_status, actor_role, actor_scope"),
   ]);
@@ -183,7 +183,7 @@ export default async function AdminPage() {
                         <div className="min-w-0 flex-1">
                           <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-medium">{o.product_type}</p>
                           <p className="tabular truncate font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                            {o.id}
+                            {o.display_ref ?? o.id}
                           </p>
                         </div>
                         <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
