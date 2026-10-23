@@ -152,3 +152,49 @@ export async function putOrderInPod(client: Client, orderId: string, podLeadId: 
   await client.query("UPDATE orders SET pod_id = $1, pod_lead_id = $2 WHERE id = $3", [podId, podLeadId, orderId]);
   return podId;
 }
+
+/**
+ * Do the designer's side of the current work version (0041): all 19 designer
+ * ticks and a file in every required slot. Fixture setup as the superuser —
+ * tick_check / add_slot_file have their own suite (tests/db/checklist_slots).
+ */
+export async function completeDesignerWork(client: Client, orderId: string, designerId: string): Promise<void> {
+  const { rows } = await client.query("SELECT work_version FROM orders WHERE id = $1", [orderId]);
+  const version = rows[0].work_version as number;
+  await client.query(
+    `INSERT INTO order_checks (order_id, version, item_id, designer_by, designer_at)
+     SELECT $1, $2, id, $3, now() FROM checklist_items
+     ON CONFLICT (order_id, version, item_id) DO UPDATE
+       SET designer_by = EXCLUDED.designer_by, designer_at = EXCLUDED.designer_at`,
+    [orderId, version, designerId],
+  );
+  const slots = await client.query("SELECT code FROM deliverable_slots WHERE required ORDER BY position");
+  for (const { code } of slots.rows as { code: string }[]) {
+    const fileId = `fx_${orderId}_${code}_${version}`;
+    const { rows: no } = await client.query(
+      "SELECT coalesce(max(version_no), 0) + 1 AS n FROM file_versions WHERE order_id = $1",
+      [orderId],
+    );
+    await client.query(
+      `INSERT INTO file_versions (id, order_id, version_no, object_key, content_type, size_bytes, uploaded_by, kind)
+       VALUES ($1, $2, $3, $4, 'application/octet-stream', 1, $5, app.slot_kind($6))`,
+      [fileId, orderId, no[0].n, `fixtures/${fileId}`, designerId, code],
+    );
+    await client.query(
+      `INSERT INTO deliverables (order_id, slot, version, file_version_id, file_name)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [orderId, code, version, fileId, `${code}_v${version}.bin`],
+    );
+  }
+}
+
+/** Tick all 19 QC lines of the current version (0041), as the given pod lead. */
+export async function completeQcTicks(client: Client, orderId: string, podLeadId: string): Promise<void> {
+  await client.query(
+    `INSERT INTO order_checks (order_id, version, item_id, qc_by, qc_at)
+     SELECT o.id, o.work_version, i.id, $2, now() FROM orders o CROSS JOIN checklist_items i
+     WHERE o.id = $1
+     ON CONFLICT (order_id, version, item_id) DO UPDATE SET qc_by = EXCLUDED.qc_by, qc_at = EXCLUDED.qc_at`,
+    [orderId, podLeadId],
+  );
+}

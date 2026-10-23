@@ -169,3 +169,30 @@ export async function resolveDisputeAction(formData: FormData): Promise<void> {
   if (error) throw new Error(error.message);
   revalidatePath("/orders");
 }
+
+// Admin or the order's pod lead assigns a designer from the pod (0041).
+// The database checks the pod, the agreement, independence and capacity.
+export async function assignDesignerAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("assign_designer", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_designer_id: formData.get("designer_id")?.toString() ?? "",
+    p_override_reason: formData.get("override_reason")?.toString().trim() || null,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+}
+
+// Tick or untick one checklist line (0041). Which column, and whether this
+// person may tick it now, is decided by tick_check().
+export async function tickCheckAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("tick_check", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_item_id: Number(formData.get("item_id")),
+    p_column: formData.get("column")?.toString() ?? "",
+    p_ticked: formData.get("ticked") === "true",
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+}

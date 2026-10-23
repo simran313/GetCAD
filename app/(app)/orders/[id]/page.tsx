@@ -11,6 +11,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { OrderDetail } from "../OrderDetail";
 import type { PayoutStateSummary } from "../PayoutPanel";
+import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
 import type { DisputeRow, LedgerRow, MessageRow, OrderRow, VersionRow } from "../types";
 
 /**
@@ -119,6 +120,21 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
   const timelineRes = await supabase.rpc("order_timeline", { p_order_id: order.id });
 
+  // Phase 3a surfaces, each only for the people the database lets see it.
+  const staffing = order.relation === "ADMIN" || order.relation === "POD_LEAD";
+  const working = staffing || order.relation === "DESIGNER";
+  const [designersRes, checklistRes, slotsRes] = await Promise.all([
+    staffing && ["PAYMENT_HELD", "ASSIGNED"].includes(order.status)
+      ? supabase.rpc("pod_designers", { p_order_id: order.id })
+      : Promise.resolve({ data: null }),
+    working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status)
+      ? supabase.rpc("job_checklist", { p_order_id: order.id })
+      : Promise.resolve({ data: null }),
+    working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status)
+      ? supabase.rpc("job_slots", { p_order_id: order.id })
+      : Promise.resolve({ data: null }),
+  ]);
+
   // Staff only (policies/0028): the rate for showing payouts as a share of
   // the price. A client or designer gets no row, and no margin line.
   const { data: settingRows } = await supabase
@@ -174,6 +190,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           order={order}
           role={role}
           payoutShare={payoutShare}
+          designers={(designersRes.data as PodDesigner[] | null) ?? null}
+          checklist={(checklistRes.data as ChecklistRow[] | null) ?? null}
+          slots={(slotsRes.data as SlotRow[] | null) ?? null}
           transitions={transitions}
           versions={versions}
           messages={messages}

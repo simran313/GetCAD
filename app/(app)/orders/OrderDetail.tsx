@@ -28,6 +28,14 @@ import {
   qcDecisionAction,
 } from "./actions";
 import { uploadFileAction } from "./fileActions";
+import {
+  AssignPanel,
+  ChecklistPanel,
+  SlotsPanel,
+  type ChecklistRow,
+  type PodDesigner,
+  type SlotRow,
+} from "./WorkPanels";
 import { PayButton } from "./PayButton";
 import { OrderTimeline } from "./OrderTimeline";
 import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
@@ -52,17 +60,6 @@ const FILE_KIND_LABELS: Record<string, string> = {
   SUMMARY_SHEET: "Order summary sheet",
   OTHER: "File",
 };
-
-/** What a designer or staff member can be uploading, in delivery order. */
-const UPLOADABLE_KINDS: FileKind[] = [
-  "RENDER",
-  "WEIGHT_CHART",
-  "DIAMOND_DETAILS",
-  "STL",
-  "RHINO_3DM",
-  "SUMMARY_SHEET",
-  "OTHER",
-];
 
 /**
  * The order screen is nine of these stacked, so it is the surface the product
@@ -128,6 +125,9 @@ export function OrderDetail({
   order: o,
   role,
   payoutShare = null,
+  designers = null,
+  checklist = null,
+  slots = null,
   transitions,
   versions,
   messages,
@@ -141,6 +141,10 @@ export function OrderDetail({
   role: string;
   /** Staff only: the admin FX rate and warning threshold (DECISIONS §4). */
   payoutShare?: { paisePerUsd: number; warnPct: number } | null;
+  /** Phase 3a working surfaces; null when this viewer has no part in them. */
+  designers?: PodDesigner[] | null;
+  checklist?: ChecklistRow[] | null;
+  slots?: SlotRow[] | null;
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -181,11 +185,14 @@ export function OrderDetail({
     role,
     isOrderClient,
     isOrderDesigner,
-  }).filter((to) => !HIDDEN_TARGETS.has(to));
+  })
+    .filter((to) => !HIDDEN_TARGETS.has(to))
+    // Assigning has its own panel with the pod's designers (0041).
+    .filter((to) => to !== "ASSIGNED");
 
   // The QC pass/revision decision is the independent quality gate — surfaced as
   // its own clearly-labelled panel rather than a generic status chip.
-  const isQcDecision = role === "QC" && o.status === "QC_REVIEW";
+  const isQcDecision = o.relation === "POD_LEAD" && o.status === "QC_REVIEW";
   const qcTargets = new Set(["CLIENT_PREVIEW", "REVISION_REQUESTED"]);
   const actions = isQcDecision ? allActions.filter((to) => !qcTargets.has(to)) : allActions;
 
@@ -270,6 +277,17 @@ export function OrderDetail({
         </Panel>
       )}
 
+      {designers && <AssignPanel orderId={o.id} designers={designers} />}
+      {checklist && (
+        <ChecklistPanel
+          orderId={o.id}
+          rows={checklist}
+          canTickDesigner={isOrderDesigner && o.status === "IN_PROGRESS"}
+          canTickQc={o.relation === "POD_LEAD" && o.status === "QC_REVIEW"}
+        />
+      )}
+      {slots && <SlotsPanel orderId={o.id} slots={slots} canUpload={isOrderDesigner && o.status === "IN_PROGRESS"} />}
+
       {/* Independent QC decision — the visible quality gate for this order. */}
       {isQcDecision && (
         <Panel title="Independent QC review">
@@ -285,11 +303,20 @@ export function OrderDetail({
               <input type="hidden" name="outcome" value="PASS" />
               <Button type="submit">Pass — send to client preview</Button>
             </form>
-            <form action={qcDecisionAction}>
+            <form action={qcDecisionAction} className="flex w-full flex-wrap items-end gap-2">
               <input type="hidden" name="order_id" value={o.id} />
               <input type="hidden" name="outcome" value="REVISION" />
+              <Textarea
+                name="notes"
+                required
+                rows={2}
+                maxLength={2000}
+                placeholder="What needs fixing (the designer sees this)"
+                aria-label="Send-back note"
+                className="flex-1"
+              />
               <Button type="submit" variant="outline">
-                Request revision
+                Send back
               </Button>
             </form>
           </div>
@@ -555,7 +582,9 @@ export function OrderDetail({
               </li>
             ))}
           </ul>
-          {isParticipant && (
+          {/* Clients attach reference material here; designers use the
+              upload slots above (0041). */}
+          {isOrderClient && (
             <form action={uploadFileAction} className="mt-3">
               <input type="hidden" name="order_id" value={o.id} />
               <div className="flex flex-wrap items-center gap-2">
@@ -571,22 +600,7 @@ export function OrderDetail({
                     is asked for at upload time rather than guessed from the
                     extension afterwards. A client has one legitimate answer, so
                     they are not asked at all. */}
-                {isOrderClient ? (
-                  <input type="hidden" name="kind" value="CLIENT_REFERENCE" />
-                ) : (
-                  <Select
-                    name="kind"
-                    defaultValue="RENDER"
-                    aria-label="What this file is"
-                    className="w-auto"
-                  >
-                    {UPLOADABLE_KINDS.map((k) => (
-                      <option key={k} value={k}>
-                        {FILE_KIND_LABELS[k]}
-                      </option>
-                    ))}
-                  </Select>
-                )}
+                <input type="hidden" name="kind" value="CLIENT_REFERENCE" />
                 <Button type="submit" variant="outline" size="sm">
                   Upload
                 </Button>

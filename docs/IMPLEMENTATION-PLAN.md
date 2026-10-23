@@ -238,6 +238,16 @@ Migrations `0040_assignment.sql`, `0041_checklist.sql`, `0042_deliverables.sql`,
 
 ---
 
+### Phase 3 — split and owner answers (October 2026)
+- **Q10:** submitting goes straight to the pod lead's QC queue.
+- **Q9:** 19 ticks for each column: 18 checks + sign-off; row 19 is the pod lead's own sign-off in the QC column.
+- **Q20:** all 10 required slots (3DM, STL, TV, PV, RV, FV, BV, M, DD, GW). The client reviews all 5 render views plus diamond details and gold weight; 3DM, STL, M and the summary unlock after approval.
+- Split into **3a** (assignment, capacity, checklist, slots, STL/3DM, file names — migration `0041`, policy `0032`, runbook `docs/PHASE-3A-ROLLOUT.md`) and **3b** (2 revision rounds within 14 days then a new linked order, payout obligations on close, CSV export, removal of the old `quote_order`, 60-minute due reminders).
+- 3DM files are rebuilt clean (`lib/files/strip3dm.ts`): geometry, layers (name, colour) and units are kept; creator names, notes, object names and user data are dropped. Files with blocks are refused with a request to explode them. Layer names are kept as written.
+- Image slots take PNG or JPEG; PDF is refused on the delivery path (it cannot be cleaned reliably).
+
+---
+
 ## Phase 4 — WhatsApp/email orders + message threads
 
 Migrations `0044_on_behalf_intake.sql`, `0045_threads.sql`.

@@ -27,6 +27,14 @@ const extraOrigins = (process.env.NEXT_SERVER_ACTION_ALLOWED_ORIGINS ?? "")
 
 const nextConfig = {
   reactStrictMode: true,
+  // 3DM uploads are cleaned with rhino3dm (lib/files/strip3dm.ts), which loads
+  // a WebAssembly file from its own folder at runtime. Left to the bundler,
+  // that file would not be found; kept external, it is required from
+  // node_modules, and the explicit include makes sure the .wasm is deployed.
+  serverExternalPackages: ["rhino3dm"],
+  outputFileTracingIncludes: {
+    "/orders/**": ["./node_modules/rhino3dm/rhino3dm.wasm"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: `${UPLOAD_BODY_LIMIT_MB}mb`,

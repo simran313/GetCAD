@@ -2,8 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 
-import { generateId, sanitizeUpload, RELEASE_KINDS, REVIEW_KINDS, type FileKind } from "@/core";
+import {
+  generateId,
+  sanitizeUpload,
+  sanitizeUploadAsync,
+  slotContentType,
+  RELEASE_KINDS,
+  REVIEW_KINDS,
+  type FileKind,
+} from "@/core";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
+import { strip3dm } from "@/lib/files/strip3dm";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
@@ -81,6 +90,62 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
   });
   if (error) {
     // Not a participant (or other failure) — remove the orphaned object.
+    await admin.storage.from(ORDER_FILES_BUCKET).remove([objectKey]);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/orders");
+}
+
+/**
+ * The designer puts a file into an upload slot (Phase 3a, DECISIONS §9).
+ *
+ * The slot decides the content type (core/files/slotTypes), the gate verifies
+ * the bytes and cleans them — STL in core, 3DM rebuilt by lib/files/strip3dm —
+ * and the database names the file {JOB_CODE}_{SLOT}_v{n}.{ext}. Uploading into
+ * a filled slot replaces it for this version.
+ */
+export async function uploadSlotAction(formData: FormData): Promise<void> {
+  const orderId = formData.get("order_id")?.toString() ?? "";
+  const slot = formData.get("slot")?.toString() ?? "";
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("no file provided");
+  }
+
+  const type = slotContentType(slot, file.type);
+  if (!type.ok) throw new Error(type.reason);
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const gate = await sanitizeUploadAsync(
+    { filename: file.name, declaredMimeType: type.contentType, sizeBytes: file.size, bytes },
+    generateId(),
+    { requireMetadataStrip: true, strip3dm },
+  );
+  if (!gate.ok) {
+    throw new Error(`rejected by sanitization gate: ${gate.reason}`);
+  }
+
+  const objectKey = `${orderId}/${gate.file.objectName}`;
+  const admin = createAdminSupabaseClient();
+  const up = await admin.storage
+    .from(ORDER_FILES_BUCKET)
+    .upload(objectKey, gate.file.bytes, { contentType: gate.file.contentType, upsert: false });
+  if (up.error) {
+    throw new Error(`storage upload failed: ${up.error.message}`);
+  }
+
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("add_slot_file", {
+    p_id: generateId(),
+    p_order_id: orderId,
+    p_slot: slot,
+    p_object_key: objectKey,
+    p_content_type: gate.file.contentType,
+    p_size_bytes: gate.file.sizeBytes,
+    p_extension: gate.file.extension,
+  });
+  if (error) {
     await admin.storage.from(ORDER_FILES_BUCKET).remove([objectKey]);
     throw new Error(error.message);
   }
