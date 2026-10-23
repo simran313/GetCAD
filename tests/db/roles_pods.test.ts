@@ -84,7 +84,7 @@ describe("multi-role: admin = SALES + OPS + FINANCE", () => {
 
   it("an admin can quote (SALES), release (FINANCE) and make OPS moves, recorded as the role used", async () => {
     const submitted = await order("SUBMITTED");
-    await q(admin, "SELECT public.quote_order($1,5500,0,0,5500)", [submitted]);
+    await q(admin, "SELECT public.quote_order_v2($1,'C',5500)", [submitted]);
     const quoted = await db.query(
       "SELECT actor_role FROM audit.audit_log WHERE action='ORDER_QUOTED' AND entity_id=$1",
       [submitted],
@@ -114,7 +114,7 @@ describe("multi-role: admin = SALES + OPS + FINANCE", () => {
 
   it("a single-role user is still refused what their role cannot do", async () => {
     const submitted = await order("SUBMITTED");
-    await expect(q(ops, "SELECT public.quote_order($1,5500,0,0,5500)", [submitted])).rejects.toThrow(/only SALES/i);
+    await expect(q(ops, "SELECT public.quote_order_v2($1,'C',5500)", [submitted])).rejects.toThrow(/only SALES/i);
     await expect(q(sales, "SELECT public.release_escrow($1)", [submitted])).rejects.toThrow(/FINANCE/i);
   });
 

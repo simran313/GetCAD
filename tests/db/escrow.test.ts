@@ -67,7 +67,7 @@ async function newOrder(): Promise<string> {
 }
 async function quote(id: string) {
   return asUser(sales, () =>
-    db.query("SELECT public.quote_order($1,$2,$3,$4,$5)", [id, 10000, 6000, 1000, 3000]),
+    db.query("SELECT public.quote_order_v2($1,'C',$2)", [id, 10000]),
   );
 }
 
@@ -96,18 +96,18 @@ afterAll(async () => {
 });
 
 describe("Test U — escrow ledger + money conservation", () => {
-  it("rejects a quote whose split does not sum to the total", async () => {
+  it("the old free-split quote_order is gone (0042): nothing sets a USD split by hand", async () => {
     const id = await newOrder();
     await expect(
-      asUser(sales, () => db.query("SELECT public.quote_order($1,$2,$3,$4,$5)", [id, 10000, 6000, 1000, 2000])),
-    ).rejects.toThrow(/must sum to price_total/i);
+      asUser(sales, () => db.query("SELECT public.quote_order($1,$2,$3,$4,$5)", [id, 10000, 6000, 1000, 3000])),
+    ).rejects.toThrow(/does not exist/i);
     expect(await statusOf(id)).toBe("SUBMITTED"); // unchanged
   });
 
   it("a conserving quote sets the money and moves to QUOTED (SALES only)", async () => {
     const id = await newOrder();
     await expect(
-      asUser(client, () => db.query("SELECT public.quote_order($1,$2,$3,$4,$5)", [id, 10000, 6000, 1000, 3000])),
+      asUser(client, () => db.query("SELECT public.quote_order_v2($1,'C',$2)", [id, 10000])),
     ).rejects.toThrow(/only SALES/i);
     await quote(id);
     expect(await statusOf(id)).toBe("QUOTED");
@@ -115,11 +115,13 @@ describe("Test U — escrow ledger + money conservation", () => {
       "SELECT price_total, designer_payout, qc_payout, platform_commission FROM orders WHERE id=$1",
       [id],
     );
+    // The escrow split still sums to the price; designer and QC pay are INR
+    // obligations now (DECISIONS §5), not USD legs.
     expect(rows[0]).toEqual({
       price_total: 10000,
-      designer_payout: 6000,
-      qc_payout: 1000,
-      platform_commission: 3000,
+      designer_payout: 0,
+      qc_payout: 0,
+      platform_commission: 10000,
     });
   });
 

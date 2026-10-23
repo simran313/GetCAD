@@ -128,9 +128,9 @@ describe("Test M — legal, role-gated, audited order transitions", () => {
     expect(await statusOf(order)).toBe("SUBMITTED");
   });
 
-  it("SALES can quote it (SUBMITTED -> QUOTED) via quote_order", async () => {
+  it("SALES can quote it (SUBMITTED -> QUOTED) via quote_order_v2", async () => {
     await asUser(sales, () =>
-      db.query("SELECT public.quote_order($1,$2,$3,$4,$5)", [order, 10000, 6000, 1000, 3000]),
+      db.query("SELECT public.quote_order_v2($1,'C',$2)", [order, 10000]),
     );
     expect(await statusOf(order)).toBe("QUOTED");
   });

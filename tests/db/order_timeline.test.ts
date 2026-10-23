@@ -86,7 +86,7 @@ beforeAll(async () => {
   // Walk the order all the way through QC to CLIENT_PREVIEW.
   await asUser(client, () => db.query("SELECT public.create_order($1,$2,'USD')", [order, "CAD_MODEL"]));
   await asUser(client, () => db.query("SELECT public.transition_order($1,'SUBMITTED'::order_status)", [order]));
-  await asUser(sales, () => db.query("SELECT public.quote_order($1,10000,6000,1000,3000)", [order]));
+  await asUser(sales, () => db.query("SELECT public.quote_order_v2($1,'C',10000)", [order]));
   await fundOrder(db, order);
   await asUser(ops, () =>
     db.query("SELECT public.transition_order($1,'ASSIGNED'::order_status,$2::jsonb)", [

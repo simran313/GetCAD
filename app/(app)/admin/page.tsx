@@ -141,6 +141,13 @@ export default async function AdminPage() {
           >
             Late-order credits →
           </Link>
+          {/* Admins and finance only; the page asks payout_list() (0042). */}
+          <Link
+            href="/admin/payouts"
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-[length:var(--fs-3)] leading-[var(--lh-3)] hover:bg-accent"
+          >
+            Payouts →
+          </Link>
         </div>
       )}
 

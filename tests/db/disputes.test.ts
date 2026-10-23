@@ -51,7 +51,7 @@ async function inProgressOrder(): Promise<string> {
   const id = generateId();
   await asUser(client, () => db.query("SELECT public.create_order($1,$2,'USD')", [id, "CAD_MODEL"]));
   await asUser(client, () => db.query("SELECT public.transition_order($1,'SUBMITTED'::order_status)", [id]));
-  await asUser(sales, () => db.query("SELECT public.quote_order($1,10000,6000,1000,3000)", [id]));
+  await asUser(sales, () => db.query("SELECT public.quote_order_v2($1,'C',10000)", [id]));
   await fundOrder(db, id);
   await asUser(ops, () =>
     db.query("SELECT public.transition_order($1,'ASSIGNED'::order_status,$2::jsonb)", [

@@ -246,6 +246,16 @@ Migrations `0040_assignment.sql`, `0041_checklist.sql`, `0042_deliverables.sql`,
 - 3DM files are rebuilt clean (`lib/files/strip3dm.ts`): geometry, layers (name, colour) and units are kept; creator names, notes, object names and user data are dropped. Files with blocks are refused with a request to explode them. Layer names are kept as written.
 - Image slots take PNG or JPEG; PDF is refused on the delivery path (it cannot be cleaned reliably).
 
+### Phase 3b — as built
+- Migration `0042`, policy `0033`, runbook `docs/PHASE-3B-ROLLOUT.md`.
+- **Revisions:** the client asks with a note; 2 rounds within 14 days of first look; each opens a new work version; designer and pod lead are notified; QC send-backs are not counted. The note reaches the designer as the round's brief, without who wrote it.
+- **Changes after that (Q5):** a new linked order (same client, product and pod, brief copied plus the change), quoted at its own category. Ordering a paid change on a preview whose rounds are used approves that preview (the change is built on it). Designers never see which order a change came from (Phase 1 linkability rule).
+- **Payouts:** CLOSED creates the designer and QC obligations at the INR pay locked at quote, once per party. `/admin/payouts`: export owed rows with bank details as a batch, download the CSV (account number, IFSC, rupees), mark paid (payees notified). Payees without usable bank details stay owed. The old Razorpay Route path (0024) is untouched and stays behind `in_app_payouts`.
+- **Reminder:** designer due = SLA due − 60 min; the sweep notifies the designer once, 60 minutes before.
+- **Push:** wording added for every notification kind the database sends (QC, SLA, CREDIT, REVISION, APPROVED, CHANGE_ORDER, DUE_SOON); the test now reads all migrations.
+- **Removed:** the old free-split `quote_order`; test fixtures use `quote_order_v2`.
+- **Known gaps:** a change order's designer gets the original's files only if they did the original (pick the same designer); file attachments in threads come with Phase 4. `DELIVERED → REVISION_REQUESTED` within 30 days stays unbuilt (C4).
+
 ---
 
 ## Phase 4 — WhatsApp/email orders + message threads

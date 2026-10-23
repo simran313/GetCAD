@@ -26,7 +26,7 @@
  * would be noise.
  */
 
-/** The kinds `app.fanout_notifications` (0015) can produce. */
+/** The kinds `app.notify` is called with, across every migration. */
 export const NOTIFICATION_KINDS = [
   "MESSAGE",
   "FILE",
@@ -38,6 +38,13 @@ export const NOTIFICATION_KINDS = [
   "PREVIEW",
   "DELIVERED",
   "SUBMITTED",
+  "QC",
+  "SLA",
+  "CREDIT",
+  "REVISION",
+  "APPROVED",
+  "CHANGE_ORDER",
+  "DUE_SOON",
 ] as const;
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -85,6 +92,13 @@ const COPY: Record<NotificationKind, Copy> = {
   PREVIEW: { title: "Ready for review", body: "One of your orders is ready for you to review." },
   DELIVERED: { title: "Order delivered", body: "One of your orders has been delivered." },
   SUBMITTED: { title: "Work submitted", body: "Work has been submitted on one of your orders." },
+  QC: { title: "Ready for QC", body: "A job in your pod is ready for QC." },
+  SLA: { title: "Deadline passed", body: "A first-look deadline in your pod has passed." },
+  CREDIT: { title: "Credit update", body: "There's a credit update on one of your orders." },
+  REVISION: { title: "Changes requested", body: "Changes were requested on one of your jobs." },
+  APPROVED: { title: "Design approved", body: "A design you worked on was approved." },
+  CHANGE_ORDER: { title: "Change ordered", body: "A change was ordered and needs a quote." },
+  DUE_SOON: { title: "Due soon", body: "A job is due for QC within the hour." },
 };
 
 export function isNotificationKind(value: string): value is NotificationKind {
