@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { generateId } from "@/core";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
@@ -195,4 +196,31 @@ export async function tickCheckAction(formData: FormData): Promise<void> {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/orders");
+}
+
+// The client sends a preview back (DECISIONS §8). request_revision() checks
+// the note, the 2 rounds and the 14-day window, and opens a new version.
+export async function requestRevisionAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("request_revision", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_note: formData.get("note")?.toString() ?? "",
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+}
+
+// A change after approval, or after the included rounds, is a new linked
+// order (owner answer Q5), quoted at its own category.
+export async function changeOrderAction(formData: FormData): Promise<void> {
+  const newId = generateId();
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("create_change_order", {
+    p_parent_id: formData.get("order_id")?.toString() ?? "",
+    p_new_id: newId,
+    p_note: formData.get("note")?.toString() ?? "",
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+  redirect(`/orders/${newId}`);
 }

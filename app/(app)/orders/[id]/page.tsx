@@ -11,6 +11,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { OrderDetail } from "../OrderDetail";
 import type { PayoutStateSummary } from "../PayoutPanel";
+import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPanel";
 import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
 import type { DisputeRow, LedgerRow, MessageRow, OrderRow, VersionRow } from "../types";
 
@@ -123,7 +124,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   // Phase 3a surfaces, each only for the people the database lets see it.
   const staffing = order.relation === "ADMIN" || order.relation === "POD_LEAD";
   const working = staffing || order.relation === "DESIGNER";
-  const [designersRes, checklistRes, slotsRes] = await Promise.all([
+  const [designersRes, checklistRes, slotsRes, allowanceRes, roundsRes, lineageRes] = await Promise.all([
     staffing && ["PAYMENT_HELD", "ASSIGNED"].includes(order.status)
       ? supabase.rpc("pod_designers", { p_order_id: order.id })
       : Promise.resolve({ data: null }),
@@ -133,6 +134,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status)
       ? supabase.rpc("job_slots", { p_order_id: order.id })
       : Promise.resolve({ data: null }),
+    // Phase 3b: rounds and their notes for everyone on the order; the links
+    // between orders never for a designer (order_lineage returns none).
+    supabase.rpc("revision_allowance", { p_order_id: order.id }),
+    supabase.rpc("order_revisions", { p_order_id: order.id }),
+    supabase.rpc("order_lineage", { p_order_id: order.id }),
   ]);
 
   // Staff only (policies/0028): the rate for showing payouts as a share of
@@ -193,6 +199,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           designers={(designersRes.data as PodDesigner[] | null) ?? null}
           checklist={(checklistRes.data as ChecklistRow[] | null) ?? null}
           slots={(slotsRes.data as SlotRow[] | null) ?? null}
+          revisions={{
+            allowance: (allowanceRes.data as RevisionAllowance | null) ?? null,
+            rounds: (roundsRes.data as RevisionRow[] | null) ?? [],
+            lineage: (lineageRes.data as LineageRow[] | null) ?? [],
+          }}
           transitions={transitions}
           versions={versions}
           messages={messages}

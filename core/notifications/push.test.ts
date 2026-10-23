@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -49,7 +49,11 @@ describe("pushMessageFor", () => {
     // Read the migration rather than trusting the constant: the database is the
     // thing that decides which kinds exist, and a kind added there without
     // wording here would silently never be pushed.
-    const sql = readFileSync(join(process.cwd(), "db/migrations/0015_notifications.sql"), "utf8");
+    const dir = join(process.cwd(), "db/migrations");
+    const sql = readdirSync(dir)
+      .filter((f) => f.endsWith(".sql"))
+      .map((f) => readFileSync(join(dir, f), "utf8"))
+      .join("\n");
     const emitted = new Set(
       [...sql.matchAll(/app\.notify\([^)]*?,\s*'([A-Z_]+)'\s*,/g)].map((m) => m[1]!),
     );

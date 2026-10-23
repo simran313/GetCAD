@@ -39,6 +39,7 @@ import {
 import { PayButton } from "./PayButton";
 import { OrderTimeline } from "./OrderTimeline";
 import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
+import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import type { DisputeRow, MessageRow, OrderRow, VersionRow } from "./types";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
@@ -128,6 +129,7 @@ export function OrderDetail({
   designers = null,
   checklist = null,
   slots = null,
+  revisions = null,
   transitions,
   versions,
   messages,
@@ -145,6 +147,8 @@ export function OrderDetail({
   designers?: PodDesigner[] | null;
   checklist?: ChecklistRow[] | null;
   slots?: SlotRow[] | null;
+  /** Phase 3b: revision rounds, notes and linked change orders. */
+  revisions?: RevisionsData | null;
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -321,6 +325,10 @@ export function OrderDetail({
             </form>
           </div>
         </Panel>
+      )}
+
+      {revisions && (
+        <RevisionsPanel orderId={o.id} status={o.status} isActingAsClient={isActingAsClient} data={revisions} />
       )}
 
       {/* Overview + generic actions */}

@@ -109,3 +109,5 @@ export type { EmailTemplate, EmailPayloads, RenderedEmail } from "./email/templa
 // node:crypto, and middleware.ts imports this barrel while running on the EDGE
 // runtime, which has no node builtins. Pulling it in here breaks the build.
 // Server-side callers import it directly from core/payments/razorpaySignature.
+export { payoutBatchCsv, paiseToRupees, csvCell, PAYOUT_CSV_HEADER } from "./payouts/batchCsv";
+export type { PayoutBatchRow } from "./payouts/batchCsv";

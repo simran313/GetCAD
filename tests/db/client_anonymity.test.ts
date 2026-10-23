@@ -81,9 +81,7 @@ async function buildOrder(id: string, basedOn: string | null, note: string): Pro
     ]),
   );
   await asUser(client, () => db.query("SELECT public.transition_order($1,'SUBMITTED')", [id]));
-  await asUser(admin, () => db.query("SELECT public.quote_order($1,$2,$3,0,0)", [id, PRICE, 0]).catch(() => null));
-  // quote_order needs the split to sum to the price; keep it simple and valid.
-  await asUser(admin, () => db.query("SELECT public.quote_order($1,$2,$3,0,0)", [id, PRICE, PRICE]).catch(() => null));
+  await asUser(admin, () => db.query("SELECT public.quote_order_v2($1,'C',$2)", [id, PRICE]));
   await fund(id);
   await asUser(admin, () => db.query("SELECT public.assign_order_pod($1,$2)", [id, podLead]));
   await asUser(admin, () =>
