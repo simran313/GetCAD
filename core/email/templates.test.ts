@@ -110,3 +110,35 @@ describe("Test BA6 — payout sent email", () => {
     expect(r.text).toMatch(/₹0\.00/);
   });
 });
+
+describe("Test BA6 — order placed for the client by the team (Phase 4a)", () => {
+  it("names the order and where it came from, and links to it on a real https site", () => {
+    const r = renderEmail("ORDER_PLACED_FOR_YOU", {
+      order_ref: "MJ1-RN-C-12",
+      order_id: "abc123XYZ",
+      channel: "whatsapp",
+      site_url: "https://portal.example.com/",
+    });
+    expect(r.subject).toContain("MJ1-RN-C-12");
+    expect(r.text).toContain("your WhatsApp message");
+    expect(r.text).toContain("https://portal.example.com/orders/abc123XYZ");
+    expect(r.text).toMatch(/no password/i);
+  });
+
+  it("never links to a local or missing site, or a strange order id", () => {
+    for (const site_url of [undefined, "http://localhost:3000", "javascript:alert(1)"]) {
+      const r = renderEmail("ORDER_PLACED_FOR_YOU", { order_ref: "MJ1-RN-C-1", order_id: "abc", site_url });
+      expect(r.text).not.toMatch(/https?:\/\//);
+      expect(r.text).toMatch(/sign in to your/i);
+    }
+    const odd = renderEmail("ORDER_PLACED_FOR_YOU", { order_id: "../x", site_url: "https://p.example" });
+    expect(odd.text).not.toContain("/orders/");
+  });
+
+  it("escapes what it is given and survives an empty payload", () => {
+    const r = renderEmail("ORDER_PLACED_FOR_YOU", { order_ref: "<b>x</b>", channel: "email" });
+    expect(r.html).not.toContain("<b>x</b>");
+    expect(r.text).toContain("your email");
+    expect(() => renderEmail("ORDER_PLACED_FOR_YOU", {})).not.toThrow();
+  });
+});

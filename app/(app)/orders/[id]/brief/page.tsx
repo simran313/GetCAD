@@ -75,7 +75,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   const isDesigner = rel === "DESIGNER";
 
   const [orderRes, specRes, accentsRes, imagesRes] = await Promise.all([
-    supabase.rpc("visible_orders", { p_order_id: id }).select("id, status, relation").maybeSingle(),
+    supabase.rpc("visible_orders", { p_order_id: id }).select("id, status, relation, source").maybeSingle(),
     isDesigner
       ? supabase.rpc("job_brief", { p_order_id: id })
       : supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
@@ -118,7 +118,11 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   // brief is what the price was calculated against. Showing an editable form
   // that the server would then refuse is a worse experience than saying so.
   const frozen = !["DRAFT", "SUBMITTED"].includes(order.status);
-  const isOwner = order.relation === "CLIENT";
+  // The client writes their brief; on an order the team placed from email,
+  // WhatsApp or phone, the team may too (0043 — the database checks it).
+  const isOwner =
+    order.relation === "CLIENT" ||
+    ((order.relation === "ADMIN" || order.relation === "POD_LEAD") && !!order.source && order.source !== "portal");
 
   // Private bucket: each picture needs its own short-lived signed URL. Minted
   // with the service role because the browser session has no storage grant —
@@ -191,7 +195,8 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
           />
         ) : (
           // A designer or staff member reading someone else's brief. Read-only
-          // by construction: the write function refuses anyone but the client.
+          // by construction: the write function refuses anyone but the client
+          // (and, on team-placed orders, the team).
           <ReadOnlyBrief spec={spec} accents={accents} />
         )}
       </div>

@@ -21,6 +21,7 @@ export const EMAIL_TEMPLATES = [
   "DESIGNER_APPLICATION_ACCEPTED",
   "DESIGNER_APPLICATION_REJECTED",
   "PAYOUT_SENT",
+  "ORDER_PLACED_FOR_YOU",
 ] as const;
 export type EmailTemplate = (typeof EMAIL_TEMPLATES)[number];
 
@@ -36,6 +37,9 @@ export interface EmailPayloads {
   // A payout is the payee's own money for their own order. No client, no
   // designer-on-the-other-side — order_ref is an opaque id they already see.
   PAYOUT_SENT: { amount_minor?: number; currency?: string; order_ref?: string };
+  // The client's own order, placed by the team from their message (0043).
+  // site_url is added by the dispatcher, never stored in the outbox.
+  ORDER_PLACED_FOR_YOU: { order_ref?: string; order_id?: string; channel?: string; site_url?: string };
 }
 
 export interface RenderedEmail {
@@ -144,6 +148,32 @@ function payoutSent(p: EmailPayloads["PAYOUT_SENT"]): RenderedEmail {
   return { subject: `A payout of ${amount} is on its way — ${PRODUCT}`, text, html };
 }
 
+const CHANNEL_WORDS: Record<string, string> = {
+  email: "your email",
+  whatsapp: "your WhatsApp message",
+  phone: "our call",
+};
+
+function orderPlacedForYou(p: EmailPayloads["ORDER_PLACED_FOR_YOU"]): RenderedEmail {
+  const ref = p.order_ref ? ` ${esc(p.order_ref)}` : "";
+  const from = CHANNEL_WORDS[p.channel ?? ""] ?? "your request";
+  // Only a real https origin becomes a link; a missing or local one would
+  // send the client somewhere broken.
+  const base = p.site_url && /^https:\/\/[^\s/]+/.test(p.site_url) ? p.site_url.replace(/\/+$/, "") : null;
+  const link =
+    base && p.order_id && /^[A-Za-z0-9_-]+$/.test(p.order_id) ? `${base}/orders/${p.order_id}` : null;
+  const { text, html } = layout([
+    `Hi there,`,
+    `We've placed order${ref} for you from ${from}. You can follow it, answer questions and pay once it's quoted in your ${esc(PRODUCT)} portal.`,
+    link
+      ? `Open your order: ${esc(link)}`
+      : `Sign in to your ${esc(PRODUCT)} portal to see it.`,
+    `Sign in with this email address. No password is needed: we'll send you a code.`,
+    `If something in the order isn't what you asked for, reply to this email or message us and we'll correct it before work starts.`,
+  ]);
+  return { subject: `Your order${ref} — ${PRODUCT}`, text, html };
+}
+
 /**
  * Render a template with its payload. Throws on an unknown template rather than
  * sending a blank email — a template the DB allows but the renderer doesn't
@@ -164,6 +194,8 @@ export function renderEmail<T extends EmailTemplate>(
       return designerApplicationRejected(payload as EmailPayloads["DESIGNER_APPLICATION_REJECTED"]);
     case "PAYOUT_SENT":
       return payoutSent(payload as EmailPayloads["PAYOUT_SENT"]);
+    case "ORDER_PLACED_FOR_YOU":
+      return orderPlacedForYou(payload as EmailPayloads["ORDER_PLACED_FOR_YOU"]);
     default:
       throw new Error(`unknown email template: ${String(template)}`);
   }

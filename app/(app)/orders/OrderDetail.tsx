@@ -22,7 +22,6 @@ import {
   markPaidAction,
   releaseEscrowAction,
   refundEscrowAction,
-  postMessageAction,
   raiseDisputeAction,
   resolveDisputeAction,
   qcDecisionAction,
@@ -40,7 +39,9 @@ import { PayButton } from "./PayButton";
 import { OrderTimeline } from "./OrderTimeline";
 import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
-import type { DisputeRow, MessageRow, OrderRow, VersionRow } from "./types";
+import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
+import { ThreadsPanel } from "./ThreadsPanel";
+import type { DisputeRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "./types";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
 
@@ -130,6 +131,8 @@ export function OrderDetail({
   checklist = null,
   slots = null,
   revisions = null,
+  intake = null,
+  threads = [],
   transitions,
   versions,
   messages,
@@ -149,6 +152,10 @@ export function OrderDetail({
   slots?: SlotRow[] | null;
   /** Phase 3b: revision rounds, notes and linked change orders. */
   revisions?: RevisionsData | null;
+  /** Phase 4a: a team-placed order's screenshots and, for the team, the client's contact. */
+  intake?: { screenshots: Screenshot[]; contact: ClientContact | null; orderUrl: string | null } | null;
+  /** The threads this viewer may read (0036). */
+  threads?: ThreadRow[];
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -257,6 +264,10 @@ export function OrderDetail({
           <OrderTimeline rows={timelineRows} currency={currency} />
         )}
       </Panel>
+
+      {intake && (
+        <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />
+      )}
 
       {/* The first-look clock (DECISIONS §6). */}
       {showSla && (
@@ -622,54 +633,8 @@ export function OrderDetail({
         </Panel>
       )}
 
-      {/* Messages — double-blind */}
-      {(messages.length > 0 || isParticipant) && (
-        <Panel
-          title="Messages"
-          aside={
-            <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-              {isOrderDesigner ? "With the team — the client never sees this" : "With the team"}
-            </span>
-          }
-        >
-          <ul className="space-y-2">
-            {messages.length === 0 && (
-              <li className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">No messages yet.</li>
-            )}
-            {messages.map((m) => {
-              const mine = m.is_mine;
-              const who = mine ? "You" : m.sender_alias;
-              return (
-                <li key={m.id} className={mine ? "text-right" : "text-left"}>
-                  <div
-                    className={`inline-block max-w-[85%] rounded-lg border px-3 py-2 text-left text-[length:var(--fs-3)] leading-[var(--lh-3)] ${
-                      mine ? "border-primary/20 bg-primary/5" : "border-border bg-subtle"
-                    }`}
-                  >
-                    <p className="text-[length:var(--fs-2)] leading-[var(--lh-2)] font-medium text-muted-foreground">{who}</p>
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {isParticipant && (
-            <form action={postMessageAction} className="mt-3 flex items-end gap-2">
-              <input type="hidden" name="order_id" value={o.id} />
-              <Textarea
-                name="body"
-                required
-                rows={2}
-                maxLength={5000}
-                placeholder="Write a message…"
-                aria-label="Message body"
-                className="flex-1"
-              />
-              <Button type="submit">Send</Button>
-            </form>
-          )}
-        </Panel>
-      )}
+      {/* Conversations: client ↔ team and team ↔ designer (DECISIONS §11). */}
+      <ThreadsPanel relation={o.relation} threads={threads} messages={messages} />
     </div>
   );
 }
