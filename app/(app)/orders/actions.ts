@@ -60,30 +60,56 @@ export async function qcDecisionAction(formData: FormData): Promise<void> {
 // --- Money layer (escrow). Each just calls the DB function AS THE USER; the DB
 // enforces role, state, and money conservation. ---
 
-function intField(formData: FormData, name: string): number {
-  const raw = formData.get(name)?.toString().trim() ?? "";
-  const n = Number(raw);
-  if (!Number.isInteger(n) || n < 0) throw new Error(`${name} must be a non-negative whole number`);
-  return n;
-}
-
-// SALES sets the quote. The UI collects total + designer + qc; platform is the
-// remainder, so the split always sums to the total (the DB re-checks).
+// SALES (admin) quotes from the category (DECISIONS §4). Price and deadline
+// are optional: the database fills the band price, applies the $49 first
+// design once per account, and locks designer and QC pay in paise.
 export async function quoteAction(formData: FormData): Promise<void> {
   const orderId = formData.get("order_id")?.toString() ?? "";
-  const total = intField(formData, "price_total");
-  const designer = intField(formData, "designer_payout");
-  const qc = intField(formData, "qc_payout");
-  const platform = total - designer - qc;
-  if (platform < 0) throw new Error("designer + qc payouts exceed the total");
+  const category = formData.get("category")?.toString().trim() || null;
+  const dollars = formData.get("price_usd")?.toString().trim() ?? "";
+  const hours = formData.get("deadline_hours")?.toString().trim() ?? "";
+
+  let priceCents: number | null = null;
+  if (dollars) {
+    const n = Number(dollars);
+    if (!Number.isFinite(n) || n <= 0) throw new Error("price must be a positive amount in dollars");
+    priceCents = Math.round(n * 100);
+  }
+  let deadlineHours: number | null = null;
+  if (hours) {
+    const n = Number(hours);
+    if (!Number.isInteger(n) || n <= 0) throw new Error("deadline must be a whole number of hours");
+    deadlineHours = n;
+  }
 
   const supabase = await createUserSupabaseClient();
-  const { error } = await supabase.rpc("quote_order", {
+  const { error } = await supabase.rpc("quote_order_v2", {
     p_order_id: orderId,
-    p_price_total: total,
-    p_designer_payout: designer,
-    p_qc_payout: qc,
-    p_platform_commission: platform,
+    p_category: category,
+    p_price_cents: priceCents,
+    p_complex_deadline_hours: deadlineHours,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+}
+
+// Admin or the order's pod lead: the brief is complete, start the clock once paid (v1.1).
+export async function confirmOrderAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("confirm_order", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+}
+
+// FINANCE (admin) records a Wise / bank / PayPal / manual payment (DECISIONS §13).
+export async function markPaidAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("mark_payment_received", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_method: formData.get("method")?.toString() ?? "",
+    p_reference: formData.get("reference")?.toString().trim() || null,
   });
   if (error) throw new Error(error.message);
   revalidatePath("/orders");
