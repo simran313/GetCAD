@@ -13,7 +13,20 @@ Rules for every phase:
 - Feature flags (DECISIONS §12) are enforced in the database, not just hidden in the UI.
 - Migrations are numbered from `0033`, policies from `0027`. Never applied to production by the build.
 
-Section 9 lists the conflicts and open questions. **Phases 1–2 need answers to Q1–Q8 before they start.**
+Section 9 lists the conflicts and open questions. Q1–Q8 are answered (section 8a); they override anything below that disagrees.
+
+## 8a. Answers to Q1–Q8 (owner, October 2026)
+
+| # | Decision |
+| --- | --- |
+| Q1 | **Multiple roles per user** — `user_roles` table. Admin = SALES + OPS + FINANCE; pod lead = QC + pod. |
+| Q2 | **Separate INR payouts.** Escrow ledger keeps client USD money only; the "split must sum to price" rule is removed. Designer/QC pay lives in `payout_obligations` (paise), created on CLOSED, exported to CSV for bank transfer. Margin = price − payouts at the admin rate (Q7). |
+| Q3 | **Order ref = `{CLIENT}-{PRODUCT}-{SERVICE}-{NUMBER}`**, e.g. `MJ1-RN-C-23950`. `CLIENT` = business-name initials + counter, generated automatically at sign-up (Meera Jewels → MJ1, next MJ client → MJ2). `PRODUCT` = short product code (RN ring, …). `SERVICE` = `C` CAD, `R` render, `CR` CAD + render. `NUMBER` = one global running counter. **Designers see the job code without the client part** (`RN-C-23950`); files are named with the full ref only when delivered to the client. The full ref and the client code are column-revoked from designers like other client identifiers (1.1). |
+| Q4 | **Credit balance, admin decides.** A missed standard SLA creates a *pending* credit (full amount paid) and puts it in an admin queue. Admin must choose: apply to next order · refund to card/bank · partial credit (amount + reason) · reject (reason). Every choice is audited; one decision per breach. With `auto_sla_credit` on (November) the default is still a pending credit — confirm then whether to auto-apply. |
+| Q5 | **New linked order** for changes after approval: own ref, quote, payment and SLA clock; `based_on_order_id` carries the brief over (hidden from designers). |
+| Q6 | **Only the DECISIONS §11 minimum is required.** Karat, purpose, output format and finish become optional. |
+| Q7 | **Admin-set fixed USD→INR rate** in `app_settings` (default ₹84 = $1). |
+| Q8 | **Supabase `pg_cron`** runs `sla_sweep()` every minute. Needs the extension enabled once in the Supabase dashboard; local/CI tests call `sla_sweep()` directly. |
 
 ---
 
@@ -363,4 +376,4 @@ Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities chang
 
 ## Next step
 
-Answer Q1–Q8 (they change Phase 1–2 schema). The rest can be answered before the phase that needs them. Phase 1 starts on your go.
+Q1–Q8 answered (8a). Still open for Phase 1: the product-code list (proposed: RN ring, BD band, PD pendant, ER earrings, BR bracelet, BG bangle, NK necklace, SG signet, OT other) and the starting value of the global counter (proposed 10001). Q9–Q24 can be answered before the phase that needs them.
