@@ -1,6 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.0 · October 2026 · Owner: Fazil Zaidi
+Version 1.1 · October 2026 · Owner: Fazil Zaidi
+
+Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -78,18 +80,20 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 
 ## 6. SLA (speed promise)
 
-- **Standard tier (A–F):** first look within **6 hours of payment**.
+- **Standard tier (A–F):** first look within **6 hours of order confirmation**.
 - **Complex tier (G–L):** deadline set by admin with the price (hours), shown to the client before they pay.
-- **Clock starts** when the client accepts the price and pays (or when admin marks a manual payment received).
+- **Clock starts** when the order is both **paid** and **confirmed**, at whichever happens last.
+  - Paid = the client paid the quoted amount (card) or admin marked a manual / Wise / PayPal payment received.
+  - Confirmed = admin or the pod lead pressed "Confirm order" once the brief is complete and open questions are answered.
 - **Met** = the order reaches "first look shared with client" (renders or files for approval) before the deadline.
-- **Missed (standard only):** the full amount paid is credited back to the client, once, and the order is still completed. Complex misses are flagged to admin, no automatic credit.
+- **Missed (standard only):** a credit for the full amount paid is created as **pending**, once, and the order is still completed. Admin decides it: apply to the next order, refund, partial credit (with a reason) or reject (with a reason). Complex misses are flagged to admin, no credit.
 - **October:** the system flags misses; admin clicks **Issue credit**. **November:** automatic credit via the every-minute check, idempotent (never twice).
 - No pause for "waiting on client" in v1.
 - **Internal targets:** designer due time = deadline − 60 minutes (QC buffer). Designer timer = category minutes from "Start work".
 
 ## 7. Guarantees (client-facing promises)
 
-1. **First look in 6 hours or it's free** (standard tier, as in section 6).
+1. **First look within 6 hours of order confirmation, or it's free** (standard tier, as in section 6).
 2. **Castable files, guaranteed to spec.**
    - Every delivery includes a signed spec sheet (minimum wall, prong, stone-seat sizes, ring size, mesh tolerance, no open edges).
    - If a delivered file breaks its own spec sheet, TCP fixes it free and refunds the CAD fee.
@@ -139,7 +143,7 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
   - Created by admin or pod lead.
   - At least one screenshot is required; other brief fields are optional.
   - Visible in the client's portal.
-  - The clock starts only when the client pays.
+  - The clock starts only when the order is paid and confirmed (section 6).
 - **Flow:** admin → pod lead → designer. Capacity 480 category-minutes per designer per shift; over capacity needs an admin override with a reason.
 - **Messaging:**
   - Client ↔ team thread: admin and pod lead appear as "Team · first name".
@@ -161,8 +165,10 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 
 ## 13. Payments
 
-- Razorpay (cards/UPI/international) is primary.
-- If live activation isn't ready, manual invoice or payment link, and admin marks the order paid; that timestamp starts the clock.
+- Razorpay (cards/UPI/international) is the checkout in the portal now.
+- Manual invoice, payment link, Wise bank transfer or PayPal: admin marks the order paid.
+- Connecting PayPal, Wise (automatic matching) and other providers in the portal is the **last build phase**.
+- Payment alone does not start the clock (section 6).
 
 ## 14. Compliance
 
@@ -177,5 +183,5 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 | --- | --- | --- |
 | 1 | Dedicated designer price | Test $2,900 vs $3,500 |
 | 2 | Render-only price card | Quoted |
-| 3 | SLA pause while waiting on client | No pause |
+| 3 | SLA pause while waiting on client | Resolved in 1.1: the clock starts only once the order is confirmed |
 | 4 | QC pay vs designer pay imbalance on large orders | Unchanged; review after 60 days |

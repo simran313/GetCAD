@@ -180,34 +180,34 @@ RLS matrix (Spec §1 visibility), enforced per table:
 
 ---
 
-## Phase 2 — Payments + SLA clock
+## Phase 2 — Quote, confirmation and the SLA clock
 
-Migrations `0037_quote_v2.sql`, `0038_sla.sql`, `0039_manual_payment.sql`; policies `0034_sla_rls.sql`, `0035_client_credits_rls.sql`.
+Changed by DECISIONS v1.1: the clock starts when the order is **paid and confirmed** (whichever is later); payment providers moved to Phase 9.
 
-**Server/database functions**
-- `quote_order_v2(order_id, category, price_cents?, complex_deadline_hours?)` — admin or pod lead sets category; admin sets price. Default price from band; $49 only if the client has no prior paid order (`first_design_used` on client). Locks `designer_payout_paise = minutes × 50000 / 60` and `qc_payout_paise = max(50000, round_to_50(usd × 1000/60) × 100)`. Returns `payout_warning` when payouts > 40 % of price (needs FX, Q7). Old `quote_order` split constraint removed (Q2).
-- `confirm_payment` (existing, 0022) extended: sets `paid_at`, `sla_started_at`, `sla_due_at` (+6 h standard / + deadline complex), `sla_status='running'`, writes `sla_events`.
-- `mark_payment_received(order_id, reference)` — admin only, manual invoice path (DECISIONS §13); same SLA start.
-- `record_first_look(order_id)` — called inside QC pass (Phase 3); sets `first_look_at` if null, `sla_status='met'` if ≤ due.
-- `sla_sweep()` — selects `running AND first_look_at IS NULL AND now() > sla_due_at`; sets `breached`, audits, notifies. If `app.flag('auto_sla_credit')` and tier standard → credits (November path).
-- `issue_sla_credit(order_id)` — admin, October path. Inserts `client_credits(type='sla_credit', amount=amount_paid)`; unique `(order_id, type)` ⇒ never twice; sets `breached_credited`.
-- Plans/wallet checkout: functions exist only behind `wallet_checkout` flag; UI hidden.
+Migrations `0039_payment_methods.sql`, `0040_quote_sla.sql`; policy `0031_quote_sla_rls.sql`.
 
-**App**
-- `app/(app)/orders/paymentActions.ts`: open intent with the band/override price.
-- `app/api/webhooks/razorpay/route.ts`: unchanged contract; SLA start happens in SQL.
-- New `app/api/cron/sla/route.ts` guarded by `config/cron.ts` (CRON_SECRET). Scheduler choice: Q8.
-- `app/(app)/admin/orders/[id]/` quote panel actions (`quoteActions.ts`, `creditActions.ts`, `markPaidAction`).
-- Notifications (Spec §10): quote ready; payment captured + SLA started (client, pod lead, admin); SLA missed (+ credit issued).
+**Database**
+- `set_order_category(order, letter)` — admin, or the pod lead of the order's pod.
+- `quote_order_v2(order, category?, price_cents?, complex_deadline_hours?)` — SALES (admin). Default price from the band; $49 first design once per account; override allowed. Locks `designer_payout_paise` (category rate) and `qc_payout_paise` (`max(₹500, round_to_50(USD × 1000 / 60))`). Returns a warning when payouts exceed 40 % of the price at the admin FX rate. Complex requires a deadline.
+- `confirm_order(order)` — admin or pod lead; records `confirmed_at`.
+- `mark_payment_received(order, method, reference)` — FINANCE (admin) for manual / Wise / PayPal / bank payments; holds the quoted amount like a card payment.
+- Clock: a trigger on the escrow HOLD sets `paid_at`; `app.maybe_start_sla()` starts the clock once `paid_at` and `confirmed_at` both exist: due = start + 6 h (standard) or + deadline (complex).
+- First look: a trigger on `→ CLIENT_PREVIEW` sets `first_look_at`, and `met` when on time.
+- `sla_sweep()` every minute via `pg_cron`: overdue → `breached`; standard tier → one **pending** credit for the amount paid (unique per order). With `auto_sla_credit` on, the credit is created already decided as "apply to next order".
+- `decide_sla_credit(credit, decision, amount?, reason?)` — admin: apply to next order, refunded, partial (reason, smaller amount), rejected (reason). Once only.
+- Notifications: clock started (client, pod lead), breach (pod lead), credit decided (client).
 
-**Tests** (`tests/db/quote_v2.test.ts`, `sla.test.ts`, `manual_payment.test.ts`, `core/pricing/*.test.ts`)
-- Pay sets `sla_due_at = paid_at + 6h` for D and `+ deadline` for H.
-- Breach flagged; manual Issue credit twice → one credit; complex breach never credits.
-- First look at 5:59 = met; at 6:01 = breached.
-- Auto-credit off by default; with flag on, sweep run twice credits once.
-- QC pay $20 → ₹500, $55 → ₹900, $60 → ₹1,000, $85 → ₹1,400, $180 → ₹3,000; designer D → ₹500, L → ₹4,000.
-- C quote defaults to $55; $49 offered once per account; > 40 % warns.
-- Manual payment starts the clock; only admin may mark paid.
+**App** — staff quote panel (category, price, deadline, warning), Confirm order, Mark paid, SLA line on the order, `/admin/credits` decision queue.
+
+**Tests** — payout examples ($20 → ₹500, $55 → ₹900, $60 → ₹1,000, $85 → ₹1,400, $180 → ₹3,000; D → ₹500, L → ₹4,000); C defaults to $55; $49 once per account; > 40 % warns; clock starts at the later of paid / confirmed (both orders); D due + 6 h, H due + deadline; first look at 5:59 met, 6:01 breached; sweep twice → one credit; complex breach → no credit; credit decided once, by admin only.
+
+---
+
+### Phase 2 — as built
+- As planned above; runbook `docs/PHASE-2-ROLLOUT.md`.
+- The old `quote_order` (free USD split) still exists for the existing test fixtures; the app no longer calls it. Remove it in Phase 3 with the payout rework.
+- "Refunded" credits are recorded only; the money goes back by hand until Phase 9.
+- Orders paid before Phase 2 get `paid_at` backfilled; their clock starts when someone presses Confirm order.
 
 ---
 
@@ -327,6 +327,16 @@ Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities chang
 - **Anonymity e2e:** as a designer, crawl every reachable page and capture HTML + RSC/JSON responses; assert no client identifier (same list as 1.1) appears, and no shared token across two orders of the same client.
 - Re-run every Spec §12 and Add. A9 acceptance test as an e2e assertion.
 - CI: new `e2e` job (separate from the 5-minute `verify` job).
+
+---
+
+## Phase 9 — Payment providers (last, by owner decision)
+
+- PayPal checkout on the Pay screen (client chooses card or PayPal), webhook-confirmed like Razorpay.
+- Wise: bank details on the invoice, then automatic matching of incoming transfers by order reference (Wise Business API).
+- Razorpay live keys, international cards; refunds of SLA credits decided as "refunded" sent through the provider that took the payment.
+- Any other provider the owner chooses.
+- Wallet / credit packs / plans checkout (flag `wallet_checkout`).
 
 ---
 

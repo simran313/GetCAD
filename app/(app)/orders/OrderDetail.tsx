@@ -18,6 +18,8 @@ import { TONE_TEXT } from "@/lib/tone";
 import {
   transitionAction,
   quoteAction,
+  confirmOrderAction,
+  markPaidAction,
   releaseEscrowAction,
   refundEscrowAction,
   postMessageAction,
@@ -72,6 +74,36 @@ const UPLOADABLE_KINDS: FileKind[] = [
  * only thing left here is the title/aside arrangement that is genuinely local
  * to this screen.
  */
+const CATEGORIES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+
+const when = (iso: string) =>
+  new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+
+const rupees = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
+
+/**
+ * Where the first-look clock stands (DECISIONS §6, v1.1): it starts only once
+ * the order is both paid and confirmed by the team.
+ */
+function slaLine(o: OrderRow): string {
+  switch (o.sla_status) {
+    case "running":
+      return o.sla_due_at ? `First look due by ${when(o.sla_due_at)}.` : "The clock is running.";
+    case "met":
+      return o.first_look_at ? `First look shared on time (${when(o.first_look_at)}).` : "First look shared on time.";
+    case "breached":
+      return "The first-look deadline was missed. A credit is being reviewed.";
+    case "breached_credited":
+      return "The first-look deadline was missed and a credit was issued.";
+    default: {
+      const waiting = [!o.paid_at && "payment", !o.confirmed_at && "confirmation"].filter(Boolean);
+      return waiting.length
+        ? `The 6-hour clock starts once the order is paid and confirmed — waiting for ${waiting.join(" and ")}.`
+        : "The clock is about to start.";
+    }
+  }
+}
+
 function Panel({
   title,
   aside,
@@ -95,6 +127,7 @@ function Panel({
 export function OrderDetail({
   order: o,
   role,
+  payoutShare = null,
   transitions,
   versions,
   messages,
@@ -106,6 +139,8 @@ export function OrderDetail({
 }: {
   order: OrderRow;
   role: string;
+  /** Staff only: the admin FX rate and warning threshold (DECISIONS §4). */
+  payoutShare?: { paisePerUsd: number; warnPct: number } | null;
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -154,7 +189,15 @@ export function OrderDetail({
   const qcTargets = new Set(["CLIENT_PREVIEW", "REVISION_REQUESTED"]);
   const actions = isQcDecision ? allActions.filter((to) => !qcTargets.has(to)) : allActions;
 
-  const canQuote = role === "SALES" && o.status === "SUBMITTED";
+  // The primary role is not the whole story since roles stack (0033): an
+  // admin's primary role may be OPS, but visible_orders says ADMIN.
+  const isAdmin = o.relation === "ADMIN";
+  const canQuote = (role === "SALES" || isAdmin) && o.status === "SUBMITTED";
+  const canConfirm =
+    (isAdmin || o.relation === "POD_LEAD") &&
+    !o.confirmed_at &&
+    ["SUBMITTED", "QUOTED", "PAYMENT_HELD", "ASSIGNED", "IN_PROGRESS"].includes(o.status);
+  const canMarkPaid = (role === "FINANCE" || isAdmin) && o.status === "QUOTED";
   // Party AND role. Owning the order is not enough: a staff member who happens
   // to have created an order must not be offered the client's actions while
   // acting in a staff role. The server action enforces the same pair.
@@ -170,7 +213,15 @@ export function OrderDetail({
   // A designer's money columns are null (0036), and the money panel is never
   // shown to them; the fallback only satisfies the formatter's type.
   const currency = o.currency ?? "USD";
-  const showMoney = price > 0 || canQuote || canFund || canRelease || canRefund;
+  const showMoney = price > 0 || canQuote || canFund || canRelease || canRefund || canMarkPaid;
+  const showSla = !["DRAFT", "CANCELLED", "REFUNDED"].includes(o.status);
+  // Payouts as a share of the price, at the admin FX rate (DECISIONS §4).
+  const sharePct =
+    payoutShare && price > 0 && o.designer_payout_paise != null && o.qc_payout_paise != null
+      ? Math.round(
+          (((o.designer_payout_paise + o.qc_payout_paise) / payoutShare.paisePerUsd) * 100 * 100) / price,
+        )
+      : null;
 
   // The receipt for "what just happened": the timestamp of the most recent
   // recorded event, read straight from the timeline — no separate confirmation
@@ -195,6 +246,29 @@ export function OrderDetail({
           <OrderTimeline rows={timelineRows} currency={currency} />
         )}
       </Panel>
+
+      {/* The first-look clock (DECISIONS §6). */}
+      {showSla && (
+        <Panel title="First look">
+          <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)]">{slaLine(o)}</p>
+          {o.tier && (
+            <p className="mt-1 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+              Category {o.category} · {o.tier === "complex" ? `complex, ${o.complex_deadline_hours ?? "—"} h deadline` : "standard, 6 hours"}
+            </p>
+          )}
+          {canConfirm && (
+            <form action={confirmOrderAction} className="mt-3 flex flex-wrap items-center gap-2">
+              <input type="hidden" name="order_id" value={o.id} />
+              <Button type="submit" size="sm">
+                Confirm order
+              </Button>
+              <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+                Press once the brief is complete and open questions are answered.
+              </span>
+            </form>
+          )}
+        </Panel>
+      )}
 
       {/* Independent QC decision — the visible quality gate for this order. */}
       {isQcDecision && (
@@ -268,18 +342,30 @@ export function OrderDetail({
         <Panel title="Payment">
           {price > 0 && (
             <dl className="grid grid-cols-2 gap-y-1.5 text-[length:var(--fs-3)] leading-[var(--lh-3)] sm:grid-cols-4">
-              {[
-                ["Total", price],
-                ["Designer", o.designer_payout ?? 0],
-                ["QC", o.qc_payout ?? 0],
-                ["Platform", o.platform_commission ?? 0],
-              ].map(([label, amt]) => (
-                <div key={label as string}>
+              {(
+                [
+                  ["Price", formatMoney(price, currency)],
+                  ...(o.designer_payout_paise != null ? [["Designer pay", rupees(o.designer_payout_paise)]] : []),
+                  ...(o.qc_payout_paise != null ? [["QC pay", rupees(o.qc_payout_paise)]] : []),
+                ] as [string, string][]
+              ).map(([label, value]) => (
+                <div key={label}>
                   <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">{label}</dt>
-                  <dd className="tabular font-mono">{formatMoney(amt as number, currency)}</dd>
+                  <dd className="tabular font-mono">{value}</dd>
                 </div>
               ))}
             </dl>
+          )}
+
+          {sharePct != null && (
+            <p
+              className={`mt-2 text-[length:var(--fs-2)] leading-[var(--lh-2)] ${
+                payoutShare && sharePct > payoutShare.warnPct ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              Payouts are {sharePct}% of the price
+              {payoutShare && sharePct > payoutShare.warnPct ? ` — above the ${payoutShare.warnPct}% limit.` : "."}
+            </p>
           )}
 
           {held > 0 && (
@@ -305,27 +391,55 @@ export function OrderDetail({
               <form action={quoteAction} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="order_id" value={o.id} />
                 <label className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                  Total
-                  <Input name="price_total" type="number" min="1" required className="mt-0.5 w-28" />
+                  Category
+                  <Select name="category" defaultValue={o.category ?? "C"} className="mt-0.5 w-20">
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
                 </label>
                 <label className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                  Designer
-                  <Input name="designer_payout" type="number" min="0" defaultValue="0" required className="mt-0.5 w-28" />
+                  Price $ (optional)
+                  <Input name="price_usd" type="number" min="1" step="0.01" className="mt-0.5 w-28" />
                 </label>
                 <label className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                  QC
-                  <Input name="qc_payout" type="number" min="0" defaultValue="0" required className="mt-0.5 w-24" />
+                  Deadline h (G–L)
+                  <Input name="deadline_hours" type="number" min="1" step="1" className="mt-0.5 w-24" />
                 </label>
                 <Button type="submit" size="sm">
                   Set quote
                 </Button>
                 <span className="w-full text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                  Amounts in cents (e.g. 10000 = $100.00). Platform = total − designer − QC.
+                  Leave the price empty for the band: A–C $55 ($49 first design), D–F $85, G–L from $120.
+                  Designer and QC pay are locked from the category.
                 </span>
               </form>
             )}
             {canFund && (
               <PayButton orderId={o.id} amount={price} currency={currency} />
+            )}
+            {canMarkPaid && (
+              <form action={markPaidAction} className="flex flex-wrap items-end gap-2">
+                <input type="hidden" name="order_id" value={o.id} />
+                <label className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+                  Paid by
+                  <Select name="method" defaultValue="wise" className="mt-0.5 w-auto">
+                    <option value="wise">Wise transfer</option>
+                    <option value="bank">Bank transfer</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="manual">Other</option>
+                  </Select>
+                </label>
+                <label className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+                  Reference
+                  <Input name="reference" maxLength={120} className="mt-0.5 w-40" />
+                </label>
+                <Button type="submit" size="sm" variant="outline">
+                  Mark paid
+                </Button>
+              </form>
             )}
             {canRelease && (
               <form action={releaseEscrowAction}>

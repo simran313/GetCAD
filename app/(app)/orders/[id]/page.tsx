@@ -51,7 +51,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       supabase
         .rpc("visible_orders", { p_order_id: id })
         .select(
-          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission",
+          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission, designer_payout_paise, qc_payout_paise, category, tier, complex_deadline_hours, sla_status, sla_due_at, first_look_at, confirmed_at, paid_at",
         )
         .maybeSingle(),
       supabase.from("order_transitions").select("from_status, to_status, actor_role, actor_scope"),
@@ -119,6 +119,19 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
   const timelineRes = await supabase.rpc("order_timeline", { p_order_id: order.id });
 
+  // Staff only (policies/0028): the rate for showing payouts as a share of
+  // the price. A client or designer gets no row, and no margin line.
+  const { data: settingRows } = await supabase
+    .from("app_settings")
+    .select("key, value")
+    .in("key", ["usd_inr_paise_per_usd", "payout_warning_pct"]);
+  const setting = (key: string) =>
+    (settingRows as { key: string; value: number | null }[] | null)?.find((r) => r.key === key)?.value ?? null;
+  const payoutShare =
+    setting("usd_inr_paise_per_usd") && setting("payout_warning_pct")
+      ? { paisePerUsd: setting("usd_inr_paise_per_usd")!, warnPct: setting("payout_warning_pct")! }
+      : null;
+
   // Payout execution state is service-role only (0024): the rows carry
   // processor references no browser session may read. FINANCE is the only role
   // that acts on them, so it is the only role we fetch them for.
@@ -160,6 +173,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <OrderDetail
           order={order}
           role={role}
+          payoutShare={payoutShare}
           transitions={transitions}
           versions={versions}
           messages={messages}

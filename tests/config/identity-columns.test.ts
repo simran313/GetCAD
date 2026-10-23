@@ -24,6 +24,7 @@ const HIDDEN = [
   "org_id",
   "pod_lead_id",
   "created_on_behalf_by",
+  "confirmed_by",
   "sender_id",
   "uploaded_by",
   "raised_by",

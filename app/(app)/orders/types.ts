@@ -17,6 +17,18 @@ export interface OrderRow {
   designer_payout: number | null;
   qc_payout: number | null;
   platform_commission: number | null;
+  /** Locked at quote (0040), in paise. Null for a client; QC pay null for a designer. */
+  designer_payout_paise: number | null;
+  qc_payout_paise: number | null;
+  category: string | null;
+  tier: "standard" | "complex" | null;
+  complex_deadline_hours: number | null;
+  /** The clock (DECISIONS §6, v1.1): starts once paid AND confirmed. */
+  sla_status: "pending" | "running" | "met" | "breached" | "breached_credited";
+  sla_due_at: string | null;
+  first_look_at: string | null;
+  confirmed_at: string | null;
+  paid_at: string | null;
 }
 
 export interface VersionRow {

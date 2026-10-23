@@ -134,6 +134,13 @@ export default async function AdminPage() {
           >
             Access — roles and accounts →
           </Link>
+          {/* Shown to OPS; the page itself admits admins only (0040). */}
+          <Link
+            href="/admin/credits"
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-[length:var(--fs-3)] leading-[var(--lh-3)] hover:bg-accent"
+          >
+            Late-order credits →
+          </Link>
         </div>
       )}
 
