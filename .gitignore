@@ -36,3 +36,6 @@ npm-debug.log*
 
 # delivery artifact (git bundle), not source
 *.bundle
+
+# clerk configuration (can include secrets)
+/.clerk/
