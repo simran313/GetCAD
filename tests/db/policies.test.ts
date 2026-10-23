@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
-import { connectFreshDb } from "../helpers/db";
+import { connectFreshDb, putOrderInPod } from "../helpers/db";
 
 let db: Client;
 
@@ -81,18 +81,25 @@ describe("Identity-gated RLS — a user sees only what is theirs", () => {
     });
   });
 
-  it("DESIGNER B sees only orders assigned to them and their own profile", async () => {
+  it("DESIGNER B sees only jobs assigned to them, through visible_orders(), and their own profile", async () => {
     await asUser(designerB, async () => {
       expect(await ids("SELECT id FROM users")).toEqual([designerB]);
       const profiles = await db.query("SELECT user_id FROM designer_profiles");
       expect(profiles.rows.map((r) => r.user_id)).toEqual([designerB]);
-      expect(await ids("SELECT id FROM orders")).toEqual([order1]); // not the DRAFT
+      // Designers no longer read the orders table at all (0029) ...
+      expect(await ids("SELECT id FROM orders")).toEqual([]);
+      // ... their jobs come through the function, which hides the client.
+      expect(await ids("SELECT id FROM public.visible_orders()")).toEqual([order1]); // not the DRAFT
     });
   });
 
-  it("QC sees orders in review but no one's identity", async () => {
+  it("QC sees only orders in a pod they lead, and no one's identity", async () => {
     await asUser(qcQ, async () => {
-      expect(await ids("SELECT id FROM orders")).toEqual([order1]); // QC_REVIEW only
+      expect(await ids("SELECT id FROM orders")).toEqual([]); // no pod yet
+    });
+    await putOrderInPod(db, order1, qcQ);
+    await asUser(qcQ, async () => {
+      expect(await ids("SELECT id FROM orders")).toEqual([order1]);
       expect((await db.query("SELECT * FROM client_profiles")).rows.length).toBe(0);
       expect((await db.query("SELECT * FROM designer_profiles")).rows.length).toBe(0);
     });
@@ -116,7 +123,7 @@ describe("Double-blind invariant — neither side sees the other's identity", ()
 describe("Default-deny still holds for the unauthenticated and for writes", () => {
   it("an authenticated request with no Clerk claims sees nothing", async () => {
     await asUser(null, async () => {
-      expect((await db.query("SELECT * FROM orders")).rows.length).toBe(0);
+      expect((await db.query("SELECT id FROM orders")).rows.length).toBe(0);
       expect((await db.query("SELECT * FROM users")).rows.length).toBe(0);
     });
   });

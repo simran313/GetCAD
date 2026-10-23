@@ -39,10 +39,11 @@ export default async function OrdersPage({
   await supabase.rpc("ensure_self");
 
   const [ordersRes, ledgerRes] = await Promise.all([
+    // Through visible_orders() so a designer's list (their jobs, by job code,
+    // without prices) comes from the same place as everyone else's (0036).
     supabase
-      .from("orders")
-      .select("id, product_type, status, currency, price_total")
-      .order("created_at", { ascending: false }),
+      .rpc("visible_orders")
+      .select("id, relation, display_ref, product_type, status, currency, price_total"),
     supabase.from("escrow_ledger").select("order_id, kind, amount"),
   ]);
 
@@ -62,7 +63,10 @@ export default async function OrdersPage({
     );
   }
 
-  const orders = (ordersRes.data ?? []) as OrderRow[];
+  const orders = (ordersRes.data ?? []) as Pick<
+    OrderRow,
+    "id" | "relation" | "display_ref" | "product_type" | "status" | "currency" | "price_total"
+  >[];
   const ledger = (ledgerRes.data ?? []) as LedgerRow[];
 
   const heldFor = (orderId: string): number =>
@@ -115,11 +119,11 @@ export default async function OrdersPage({
                         {o.product_type}
                       </p>
                       <p className="tabular truncate font-mono text-[length:var(--fs-2)] text-muted-foreground">
-                        {o.id}
+                        {o.display_ref ?? o.id}
                       </p>
                     </div>
                     <div className="shrink-0 text-right font-mono text-[length:var(--fs-3)]">
-                      {o.price_total > 0 ? (
+                      {o.price_total && o.currency ? (
                         <>
                           <Money minor={o.price_total} currency={o.currency} className="block" />
                           {held > 0 && (

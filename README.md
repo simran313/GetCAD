@@ -1,5 +1,7 @@
 # GetCAD
 
+> **Source of truth:** `docs/DECISIONS.md`. Where this README or any other doc disagrees with it, DECISIONS wins. Build plan: `docs/IMPLEMENTATION-PLAN.md`.
+
 Foundation for a double-blind, anonymity-critical CAD marketplace.
 Sprint 0 — Slices 1+2: repo scaffold, base schema, default-deny RLS.
 

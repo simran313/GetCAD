@@ -1,5 +1,7 @@
 # How The CAD Pillar works
 
+> **Superseded where it disagrees with `docs/DECISIONS.md`** (v1.0, October 2026): roles are Client / Designer / Pod lead / Admin, designers never message clients, and designer pay is INR. See `docs/IMPLEMENTATION-PLAN.md` for what changes and when.
+
 The whole system, end to end: how an order moves, where the money sits at every
 moment, what each side is allowed to see, and what the platform does on its own.
 

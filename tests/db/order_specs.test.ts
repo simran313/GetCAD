@@ -317,20 +317,31 @@ describe("Test BE6 — the tables stay locked down", () => {
     expect(rows).toEqual([]);
   });
 
-  it("shows a brief to the order's designer, and nothing to a stranger", async () => {
+  it("shows a brief to the order's designer through job_brief() only, minus the client's label", async () => {
     const id = await makeOrder(generateId());
     await saveBasic(client, id);
     await db.query("UPDATE orders SET designer_id=$2 WHERE id=$1", [id, designer]);
 
-    const seen = await asUser(designer, () =>
+    // The table itself is closed to designers (0029): it carries the client's
+    // reference name and the link to their earlier orders.
+    const direct = await asUser(designer, () =>
       db.query("SELECT order_id FROM order_specs WHERE order_id=$1", [id]),
     );
-    expect(seen.rows).toHaveLength(1);
+    expect(direct.rows).toHaveLength(0);
+
+    const brief = await asUser(designer, () => db.query("SELECT public.job_brief($1) AS b", [id]));
+    expect(brief.rows[0].b.order_id).toBe(id);
+    expect(brief.rows[0].b).not.toHaveProperty("reference_name");
+    expect(brief.rows[0].b).not.toHaveProperty("based_on_order_id");
+    expect(brief.rows[0].b.is_revision).toBe(false);
 
     const unseen = await asUser(stranger, () =>
       db.query("SELECT order_id FROM order_specs WHERE order_id=$1", [id]),
     );
     expect(unseen.rows).toHaveLength(0);
+    await expect(
+      asUser(stranger, () => db.query("SELECT public.job_brief($1)", [id])),
+    ).rejects.toThrow(/order not found/i);
   });
 
   it("records each save in the audit chain", async () => {

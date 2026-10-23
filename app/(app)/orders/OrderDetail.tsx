@@ -95,7 +95,6 @@ function Panel({
 export function OrderDetail({
   order: o,
   role,
-  userId,
   transitions,
   versions,
   messages,
@@ -107,7 +106,6 @@ export function OrderDetail({
 }: {
   order: OrderRow;
   role: string;
-  userId: string;
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -117,8 +115,9 @@ export function OrderDetail({
   timelineRows: TimelineRawRow[];
   timelineError?: string | null;
 }) {
-  const isOrderClient = o.client_id === userId;
-  const isParticipant = isOrderClient || o.designer_id === userId;
+  const isOrderClient = o.relation === "CLIENT";
+  const isOrderDesigner = o.relation === "DESIGNER";
+  const isParticipant = isOrderClient || isOrderDesigner;
 
   // The SAME function the download route calls, so the list and the API cannot
   // disagree: a row offered here is a row that will actually serve, and a row
@@ -130,8 +129,10 @@ export function OrderDetail({
         orderStatus: o.status,
         role,
         isOrderClient,
-        isOrderDesigner: o.designer_id === userId,
-        isUploader: version.uploaded_by === userId,
+        isOrderDesigner,
+        isUploader:
+          (version.uploader_party === "CLIENT" && isOrderClient) ||
+          (version.uploader_party === "DESIGNER" && isOrderDesigner),
         fileKind: version.kind,
       });
       return {
@@ -144,7 +145,7 @@ export function OrderDetail({
   const allActions = availableTransitions(o.status, transitions, {
     role,
     isOrderClient,
-    isOrderDesigner: o.designer_id === userId,
+    isOrderDesigner,
   }).filter((to) => !HIDDEN_TARGETS.has(to));
 
   // The QC pass/revision decision is the independent quality gate — surfaced as
@@ -165,7 +166,11 @@ export function OrderDetail({
   // for a staff owner and then fails at the database.
   const canRaiseDispute =
     isActingAsClient && (o.status === "IN_PROGRESS" || o.status === "CLIENT_PREVIEW");
-  const showMoney = o.price_total > 0 || canQuote || canFund || canRelease || canRefund;
+  const price = o.price_total ?? 0;
+  // A designer's money columns are null (0036), and the money panel is never
+  // shown to them; the fallback only satisfies the formatter's type.
+  const currency = o.currency ?? "USD";
+  const showMoney = price > 0 || canQuote || canFund || canRelease || canRefund;
 
   // The receipt for "what just happened": the timestamp of the most recent
   // recorded event, read straight from the timeline — no separate confirmation
@@ -187,7 +192,7 @@ export function OrderDetail({
             Couldn&apos;t load history: {timelineError}
           </p>
         ) : (
-          <OrderTimeline rows={timelineRows} currency={o.currency} />
+          <OrderTimeline rows={timelineRows} currency={currency} />
         )}
       </Panel>
 
@@ -261,17 +266,17 @@ export function OrderDetail({
       {/* Payment / escrow */}
       {showMoney && (
         <Panel title="Payment">
-          {o.price_total > 0 && (
+          {price > 0 && (
             <dl className="grid grid-cols-2 gap-y-1.5 text-[length:var(--fs-3)] leading-[var(--lh-3)] sm:grid-cols-4">
               {[
-                ["Total", o.price_total],
-                ["Designer", o.designer_payout],
-                ["QC", o.qc_payout],
-                ["Platform", o.platform_commission],
+                ["Total", price],
+                ["Designer", o.designer_payout ?? 0],
+                ["QC", o.qc_payout ?? 0],
+                ["Platform", o.platform_commission ?? 0],
               ].map(([label, amt]) => (
                 <div key={label as string}>
                   <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">{label}</dt>
-                  <dd className="tabular font-mono">{formatMoney(amt as number, o.currency)}</dd>
+                  <dd className="tabular font-mono">{formatMoney(amt as number, currency)}</dd>
                 </div>
               ))}
             </dl>
@@ -282,7 +287,7 @@ export function OrderDetail({
               <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
               <span className="text-muted-foreground">Held in escrow</span>
               <span className="tabular ml-auto font-mono font-medium">
-                {formatMoney(held, o.currency)}
+                {formatMoney(held, currency)}
               </span>
             </div>
           )}
@@ -320,7 +325,7 @@ export function OrderDetail({
               </form>
             )}
             {canFund && (
-              <PayButton orderId={o.id} amount={o.price_total} currency={o.currency} />
+              <PayButton orderId={o.id} amount={price} currency={currency} />
             )}
             {canRelease && (
               <form action={releaseEscrowAction}>
@@ -344,7 +349,7 @@ export function OrderDetail({
           only view of whether it actually reached the people owed it. */}
       {role === "FINANCE" && payoutState && payoutState.owed > 0 && (
         <Panel title="Payouts">
-          <PayoutPanel orderId={o.id} currency={o.currency} state={payoutState} />
+          <PayoutPanel orderId={o.id} currency={currency} state={payoutState} />
         </Panel>
       )}
 
@@ -486,7 +491,9 @@ export function OrderDetail({
         <Panel
           title="Messages"
           aside={
-            <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Identities hidden — role only</span>
+            <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+              {isOrderDesigner ? "With the team — the client never sees this" : "With the team"}
+            </span>
           }
         >
           <ul className="space-y-2">
@@ -494,8 +501,8 @@ export function OrderDetail({
               <li className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">No messages yet.</li>
             )}
             {messages.map((m) => {
-              const mine = m.sender_id === userId;
-              const who = mine ? "You" : m.sender_party === "CLIENT" ? "Client" : "Designer";
+              const mine = m.is_mine;
+              const who = mine ? "You" : m.sender_alias;
               return (
                 <li key={m.id} className={mine ? "text-right" : "text-left"}>
                   <div

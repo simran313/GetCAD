@@ -39,32 +39,37 @@ export async function GET(
   const supabase = await createUserSupabaseClient();
   const { data: version, error } = await supabase
     .from("file_versions")
-    .select("object_key, order_id, kind, uploaded_by")
+    .select("object_key, order_id, kind, uploader_party")
     .eq("id", versionId)
     .maybeSingle();
   if (error || !version) return notFound;
 
-  // Both under RLS, so an order the caller cannot see comes back null and the
-  // request ends here rather than in the gate.
+  // visible_orders() returns null for an order the caller cannot see, so the
+  // request ends here rather than in the gate. It also says how the caller
+  // relates to the order, which is all the gate needs: no user id is compared
+  // here, because none is readable any more (0036).
   const [orderRes, meRes] = await Promise.all([
     supabase
-      .from("orders")
-      .select("status, client_id, designer_id")
-      .eq("id", version.order_id as string)
+      .rpc("visible_orders", { p_order_id: version.order_id as string })
+      .select("status, relation")
       .maybeSingle(),
-    supabase.from("users").select("id, role").maybeSingle(),
+    supabase.from("users").select("role").maybeSingle(),
   ]);
   if (orderRes.error || !orderRes.data || meRes.error || !meRes.data) return notFound;
 
-  const order = orderRes.data as { status: string; client_id: string | null; designer_id: string | null };
-  const me = meRes.data as { id: string; role: string };
+  const order = orderRes.data as { status: string; relation: string };
+  const me = meRes.data as { role: string };
+  const isOrderClient = order.relation === "CLIENT";
+  const isOrderDesigner = order.relation === "DESIGNER";
 
   const grant = fileGrantFor({
     orderStatus: order.status,
     role: me.role,
-    isOrderClient: order.client_id === me.id,
-    isOrderDesigner: order.designer_id === me.id,
-    isUploader: version.uploaded_by === me.id,
+    isOrderClient,
+    isOrderDesigner,
+    isUploader:
+      (version.uploader_party === "CLIENT" && isOrderClient) ||
+      (version.uploader_party === "DESIGNER" && isOrderDesigner),
     fileKind: version.kind as FileKind,
   });
   if (grant !== "ALLOW") return notFound;

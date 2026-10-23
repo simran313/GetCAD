@@ -45,9 +45,8 @@ export default async function DashboardPage() {
     .from("users")
     .select("id, role, status")
     .maybeSingle();
-  const { count: myOrders } = await supabase
-    .from("orders")
-    .select("id", { count: "exact", head: true });
+  const { data: visible } = await supabase.rpc("visible_orders").select("id");
+  const myOrders = Array.isArray(visible) ? visible.length : 0;
   const { data: notifData } = await supabase
     .from("notifications")
     .select("id, kind, summary, order_id, read_at, created_at")

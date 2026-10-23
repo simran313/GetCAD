@@ -44,28 +44,25 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const [meRes, orderRes, transitionsRes, versionsRes, ledgerRes, messagesRes, disputesRes] =
     await Promise.all([
       supabase.from("users").select("role").maybeSingle(),
-      // RLS decides whether this row is visible at all. A `null` here is the
-      // same answer as "no such order" on purpose — the existence of an order
-      // is itself something a stranger should not be able to probe for.
+      // visible_orders() decides whether this order is visible at all, and in
+      // what shape: a designer gets the job code and no money (0036). A `null`
+      // here is the same answer as "no such order" on purpose — the existence
+      // of an order is itself something a stranger should not probe for.
       supabase
-        .from("orders")
+        .rpc("visible_orders", { p_order_id: id })
         .select(
-          "id, product_type, status, client_id, designer_id, currency, price_total, designer_payout, qc_payout, platform_commission",
+          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission",
         )
-        .eq("id", id)
         .maybeSingle(),
       supabase.from("order_transitions").select("from_status, to_status, actor_role, actor_scope"),
       supabase
         .from("file_versions")
-        .select("id, order_id, version_no, content_type, size_bytes, kind, uploaded_by")
+        .select("id, order_id, version_no, content_type, size_bytes, kind, uploader_party")
         .eq("order_id", id)
         .order("version_no", { ascending: false }),
       supabase.from("escrow_ledger").select("order_id, kind, amount").eq("order_id", id),
-      supabase
-        .from("messages")
-        .select("id, order_id, sender_id, sender_party, body, created_at")
-        .eq("order_id", id)
-        .order("created_at", { ascending: true }),
+      // Aliases and is_mine only: the sender's id never leaves the database.
+      supabase.rpc("order_messages", { p_order_id: id }),
       supabase
         .from("disputes")
         .select("id, order_id, reason, status, resolution, resolution_notes")
@@ -143,7 +140,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </h1>
         <StatusBadge status={order.status} />
       </div>
-      <p className="tabular mt-0.5 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">{order.id}</p>
+      <p className="tabular mt-0.5 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+        {order.display_ref ?? order.id}
+      </p>
 
       {/* The brief is a route, not a panel: it is long, and it must be
           resumable and linkable. */}
@@ -161,7 +160,6 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <OrderDetail
           order={order}
           role={role}
-          userId={userId}
           transitions={transitions}
           versions={versions}
           messages={messages}
