@@ -7,6 +7,7 @@ import { ErrorPanel } from "@/components/error-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { identitiesFor, searchIdentities, type Identity } from "@/lib/clerk/identities";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { setUserRoleAction, setUserStatusAction } from "./actions";
@@ -20,11 +21,12 @@ import { Select } from "@/components/ui/select";
  * it: no record of who granted what, and the most privilege-sensitive action in
  * the product happening in a tool that will just as happily drop a table.
  *
- * IDS, NOT NAMES. The table shows opaque account references and nothing else —
- * no email, no name. Changing a role does not require knowing which jeweller is
- * which, and this product's premise is that identity does not travel further
- * than it has to. The account screen tells each person their own reference and
- * to quote it; that is how a support request gets matched to a row here.
+ * WHO IS WHO, FOR ADMINS ONLY. An admin (Sales + Ops + Finance, DECISIONS §2)
+ * also sees each account's email and name, fetched from Clerk, and can search
+ * by them. public.record_identity_lookup() is asked first: it refuses anyone
+ * who is not an admin and writes the lookup to the audit log as an
+ * identity-piercing read (0038). A plain OPS account sees references only, as
+ * before.
  *
  * The order counts are there so nobody flips a role blind. A designer with live
  * work is not someone to move to CLIENT without thinking about what happens to
@@ -56,8 +58,19 @@ export default async function AdminUsersPage({
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
 
+  // An empty lookup records nothing but still runs the admin check, so this
+  // is how the page learns whether it may show identities at all.
+  const { error: notAdmin } = await supabase.rpc("record_identity_lookup", {
+    p_user_ids: [],
+    p_purpose: "access screen",
+  });
+  const isAdmin = !notAdmin;
+  const search = q?.trim() || null;
+
   const { data, error } = await supabase.rpc("list_platform_users", {
-    p_search: q ?? null,
+    // An admin's search also matches email and name, so it filters below
+    // instead of in the database (which only knows ids).
+    p_search: isAdmin ? null : search,
     p_role: roleFilter && roleFilter !== "ALL" ? roleFilter : null,
   });
 
@@ -76,7 +89,36 @@ export default async function AdminUsersPage({
     );
   }
 
-  const users = (data ?? []) as PlatformUser[];
+  let users = (data ?? []) as PlatformUser[];
+  let identities = new Map<string, Identity>();
+  let identityError: string | null = null;
+
+  if (isAdmin) {
+    try {
+      if (search) {
+        const matches = new Set(await searchIdentities(search));
+        const needle = search.toLowerCase();
+        users = users.filter((u) => matches.has(u.id) || u.id.toLowerCase().includes(needle));
+      }
+      const ids = users.map((u) => u.id);
+      const { error: lookupError } = await supabase.rpc("record_identity_lookup", {
+        p_user_ids: ids,
+        p_purpose: "access screen",
+      });
+      if (lookupError) throw new Error(lookupError.message);
+      identities = await identitiesFor(ids);
+    } catch (e) {
+      identityError = e instanceof Error ? e.message : "Clerk did not answer";
+    }
+  }
+
+  // Extra staff roles (0033), so an admin shows as Ops + Sales + Finance
+  // rather than just their primary role. OPS may read every grant.
+  const { data: grantRows } = await supabase.from("user_roles").select("user_id, role");
+  const extraRoles = new Map<string, string[]>();
+  for (const g of (grantRows ?? []) as { user_id: string; role: string }[]) {
+    extraRoles.set(g.user_id, [...(extraRoles.get(g.user_id) ?? []), g.role]);
+  }
 
   return (
     <main className="container max-w-4xl py-8">
@@ -99,8 +141,8 @@ export default async function AdminUsersPage({
         <Input
           name="q"
           defaultValue={q ?? ""}
-          placeholder="Account reference…"
-          aria-label="Search by account reference"
+          placeholder={isAdmin ? "Email, name or account reference…" : "Account reference…"}
+          aria-label={isAdmin ? "Search by email, name or account reference" : "Search by account reference"}
           className="max-w-xs"
         />
         <Select
@@ -121,6 +163,14 @@ export default async function AdminUsersPage({
         </Button>
       </form>
 
+      {identityError && (
+        <ErrorPanel
+          title="Couldn't load emails"
+          message={`${identityError} — showing account references only.`}
+          className="mt-4"
+        />
+      )}
+
       <div className="mt-6 overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {users.length === 0 ? (
           <p className="p-6 text-center text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">
@@ -128,10 +178,20 @@ export default async function AdminUsersPage({
           </p>
         ) : (
           <ul className="divide-y divide-border">
-            {users.map((u) => (
+            {users.map((u) => {
+              const who = identities.get(u.id);
+              return (
               <li key={u.id} className="p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
+                    {who?.email ? (
+                      <p className="break-all text-[length:var(--fs-4)] font-medium leading-[var(--lh-4)]">
+                        {who.email}
+                        {who.name ? (
+                          <span className="ml-2 font-normal text-muted-foreground">{who.name}</span>
+                        ) : null}
+                      </p>
+                    ) : null}
                     <p className="tabular break-all font-mono text-[length:var(--fs-2)] text-muted-foreground">
                       {u.id}
                       {u.id === userId ? (
@@ -140,6 +200,11 @@ export default async function AdminUsersPage({
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                       <Badge variant="muted">{partyLabel(u.role)}</Badge>
+                      {(extraRoles.get(u.id) ?? []).map((r) => (
+                        <Badge key={r} variant="muted">
+                          + {partyLabel(r)}
+                        </Badge>
+                      ))}
                       <Badge variant={u.status === "ACTIVE" ? "default" : "muted"}>
                         {u.status === "ACTIVE"
                           ? "Active"
@@ -194,7 +259,8 @@ export default async function AdminUsersPage({
                   </div>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </div>
@@ -202,6 +268,7 @@ export default async function AdminUsersPage({
       <p className="mt-4 text-[length:var(--fs-2)] text-muted-foreground">
         Every change is written to the audit log with the account that made it. The last active OPS
         account cannot be demoted or suspended — promote someone else first.
+        {isAdmin ? " Showing emails is recorded in the audit log too." : ""}
       </p>
     </main>
   );
