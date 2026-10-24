@@ -12,21 +12,26 @@ describe("tabsForRole", () => {
     }
   });
 
-  it("gives every staff role the same shell", () => {
+  it("gives the admin roles the same shell", () => {
     const ops = tabsForRole("OPS");
-    for (const role of ["SALES", "FINANCE", "QC"]) {
+    for (const role of ["SALES", "FINANCE"]) {
       expect(tabsForRole(role)).toEqual(ops);
     }
     expect(hrefs("OPS")).toContain("/admin");
   });
 
-  it("labels the same route for the person reading it", () => {
-    const client = tabsForRole("CLIENT").find((t) => t.key === "orders");
-    const designer = tabsForRole("DESIGNER").find((t) => t.key === "orders");
-    expect(client?.href).toBe("/orders");
-    expect(designer?.href).toBe("/orders");
-    expect(client?.label).toBe("Orders");
-    expect(designer?.label).toBe("My work");
+  // P1–P6 (Phase 5c): the pod lead's own workspace.
+  it("gives a pod lead the QC queue, team board, orders, create order, messages, earnings", () => {
+    expect(tabsForRole("QC").map((t) => t.key)).toEqual(["qc", "board", "orders", "new", "messages", "earnings", "account"]);
+    expect(activeTabKey("/qc/orders", tabsForRole("QC"))).toBe("orders");
+    expect(activeTabKey("/qc/ord_1", tabsForRole("QC"))).toBe("qc");
+  });
+
+  // D2–D6 (Phase 5c).
+  it("gives a designer Home, Open jobs, Messages, Earnings, Account", () => {
+    expect(tabsForRole("DESIGNER").map((t) => t.label)).toEqual(["Home", "Open jobs", "Messages", "Earnings", "Account"]);
+    expect(activeTabKey("/work/earnings", tabsForRole("DESIGNER"))).toBe("earnings");
+    expect(activeTabKey("/work/ord_1/checklist", tabsForRole("DESIGNER"))).toBe("work");
   });
 
   // Falling back to the staff shell would show an empty queue and leak that
@@ -48,13 +53,6 @@ describe("tabsForRole", () => {
     expect(hrefs("DESIGNER")).not.toContain("/orders/new");
   });
 
-  // A designer who cannot reach onboarding cannot sign the agreement, and an
-  // unsigned designer can never be assigned work. This was reachable before
-  // navigation was scoped by role, and briefly was not afterwards.
-  it("gives a designer a way to reach onboarding", () => {
-    expect(hrefs("DESIGNER")).toContain("/onboarding/designer");
-  });
-
   it("offers no tab that is not a real route", () => {
     const known = new Set([
       "/home",
@@ -64,11 +62,16 @@ describe("tabsForRole", () => {
       "/admin/new-order",
       "/orders",
       "/orders/new",
-      "/onboarding/designer",
+      "/work",
+      "/work/earnings",
+      "/qc",
+      "/qc/orders",
+      "/qc/earnings",
+      "/pod/board",
       "/admin",
       "/account",
     ]);
-    for (const role of ["CLIENT", "DESIGNER", "OPS"]) {
+    for (const role of ["CLIENT", "DESIGNER", "OPS", "QC"]) {
       for (const href of hrefs(role)) expect(known.has(href)).toBe(true);
     }
   });
@@ -113,9 +116,10 @@ describe("activeTabKey", () => {
 
 describe("workspaceFor (Phase 5)", () => {
   it("draws the team in the dark sidebar and everyone else in the light one", () => {
-    for (const role of ["OPS", "SALES", "FINANCE", "QC"]) {
+    for (const role of ["OPS", "SALES", "FINANCE"]) {
       expect(workspaceFor(role)).toEqual({ label: "Team workspace", tone: "dark" });
     }
+    expect(workspaceFor("QC")).toEqual({ label: "Pod lead workspace", tone: "dark" });
     expect(workspaceFor("CLIENT")).toEqual({ label: "Client workspace", tone: "light" });
     expect(workspaceFor("DESIGNER")).toEqual({ label: "Designer workspace", tone: "light" });
     expect(workspaceFor("SOMETHING_NEW").tone).toBe("light");
@@ -129,7 +133,8 @@ describe("workspaceFor (Phase 5)", () => {
 
   it("keeps the phone bar to Home, Orders, Messages, Account for a client", () => {
     expect(mobileTabs(tabsForRole("CLIENT")).map((t) => t.key)).toEqual(["home", "orders", "messages", "account"]);
-    // Every other role keeps all its tabs on the phone.
+    // A designer keeps all five; a pod lead's phone bar drops Create order and Earnings.
     expect(mobileTabs(tabsForRole("DESIGNER"))).toEqual(tabsForRole("DESIGNER"));
+    expect(mobileTabs(tabsForRole("QC")).map((t) => t.key)).toEqual(["qc", "board", "orders", "messages", "account"]);
   });
 });

@@ -12,6 +12,9 @@ import { loadClientOrders } from "@/lib/client/orders";
 
 import { markNotificationsReadAction } from "./actions";
 import { ClientHome } from "./ClientHome";
+import { DesignerHome } from "./DesignerHome";
+import { loadEarnings, loadMyWork } from "@/lib/work/load";
+import { versionNote } from "@/lib/work/notes";
 
 // Authenticated, per-request data — never cache it.
 export const dynamic = "force-dynamic";
@@ -49,7 +52,7 @@ export default async function DashboardPage() {
     .select("id, role, status")
     .maybeSingle();
   // Clients get the redesigned home (C1, Phase 5b); designers and the team
-  // keep this one until 5c / 5d. A client who has never said who they are is
+  // keep this one until 5d. A client who has never said who they are is
   // asked once (S3).
   if (me?.role === "CLIENT") {
     const { data: profile } = await supabase
@@ -77,6 +80,53 @@ export default async function DashboardPage() {
         orders={orders}
         creditCents={creditCents}
         unreadMessages={(unread.data ?? []) as { order_id: string | null; created_at: string }[]}
+      />
+    );
+  }
+
+  // The pod lead's home is the QC queue (P1, Phase 5c).
+  if (me?.role === "QC") redirect("/qc");
+
+  // D2 — the designer's home (Phase 5c).
+  if (me?.role === "DESIGNER") {
+    const [jobs, earnings, profileRes, podRes, unreadRes, payoutRes, bankRes] = await Promise.all([
+      loadMyWork(supabase),
+      loadEarnings(supabase),
+      supabase.from("designer_profiles").select("designer_ref, agreement_accepted_at").maybeSingle(),
+      supabase.from("pod_members").select("pods(name)").maybeSingle(),
+      supabase
+        .from("notifications")
+        .select("order_id, created_at")
+        .eq("kind", "MESSAGE")
+        .is("read_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("notifications")
+        .select("summary, created_at")
+        .eq("kind", "PAYOUT")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.rpc("my_payout_account"),
+    ]);
+    const revisions = jobs.filter((j) => j.status === "REVISION_REQUESTED");
+    const notes = Object.fromEntries(
+      await Promise.all(revisions.map(async (j) => [j.order_id, await versionNote(supabase, j.order_id, j.work_version)] as const)),
+    );
+    const profile = profileRes.data as { designer_ref: string; agreement_accepted_at: string | null } | null;
+    const pod = (podRes.data as { pods: { name: string } | { name: string }[] | null } | null)?.pods;
+    return (
+      <DesignerHome
+        designerRef={profile?.designer_ref ?? null}
+        podName={Array.isArray(pod) ? (pod[0]?.name ?? null) : (pod?.name ?? null)}
+        onboarded={!!profile?.agreement_accepted_at}
+        bankStatus={(bankRes.data as { status?: string } | null)?.status ?? null}
+        jobs={jobs}
+        notes={notes}
+        earnings={earnings}
+        unread={(unreadRes.data ?? []) as { order_id: string | null; created_at: string }[]}
+        lastPayout={(payoutRes.data as { summary: string; created_at: string } | null) ?? null}
       />
     );
   }

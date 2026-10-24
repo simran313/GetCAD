@@ -97,7 +97,7 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
     throw new Error(error.message);
   }
 
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 /**
@@ -153,7 +153,7 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
     throw new Error(error.message);
   }
 
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 /**
@@ -177,7 +177,7 @@ export async function postThreadAction(formData: FormData): Promise<void> {
     if (!body) throw new Error("message is empty");
     const { error } = await supabase.rpc("post_thread_message", { p_thread_id: threadId, p_body: body });
     if (error) throw new Error(error.message);
-    revalidatePath("/orders");
+    revalidatePath("/", "layout");
     return;
   }
 
@@ -218,5 +218,5 @@ export async function postThreadAction(formData: FormData): Promise<void> {
     await storage.remove([objectKey]);
     throw new Error(error.message);
   }
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }

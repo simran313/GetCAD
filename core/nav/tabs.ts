@@ -57,15 +57,25 @@ const CLIENT_TABS: Tab[] = [
   ACCOUNT,
 ];
 
+// D2–D6 (Phase 5c). Onboarding is not a tab: until the agreement is signed
+// the designer's Home leads there, and an unsigned designer has no jobs.
 const DESIGNER_TABS: Tab[] = [
   { key: "home", label: "Home", href: "/home", icon: "home" },
-  { key: "orders", label: "My work", href: "/orders", icon: "work" },
-  // Restoring a link that scoping navigation by role accidentally dropped.
-  // Before that change the header showed every destination to everyone, which
-  // is how this one was reachable at all. Onboarding is where a designer signs
-  // the agreement, and an unsigned designer cannot be assigned work — so an
-  // unreachable page here is a designer who can never start.
-  { key: "onboarding", label: "Onboarding", href: "/onboarding/designer", icon: "work" },
+  { key: "work", label: "Open jobs", href: "/work", icon: "work" },
+  { key: "messages", label: "Messages", href: "/messages", icon: "message" },
+  { key: "earnings", label: "Earnings", href: "/work/earnings", icon: "money" },
+  ACCOUNT,
+];
+
+// P1–P6 (Phase 5c): the pod lead's own workspace. Create order is the
+// Phase 4a screen; on a phone it is reached from the QC queue.
+const POD_LEAD_TABS: Tab[] = [
+  { key: "qc", label: "QC queue", href: "/qc", icon: "queue" },
+  { key: "board", label: "Team board", href: "/pod/board", icon: "board" },
+  { key: "orders", label: "All orders", href: "/qc/orders", icon: "list" },
+  { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus", mobile: false },
+  { key: "messages", label: "Messages", href: "/messages", icon: "message" },
+  { key: "earnings", label: "Earnings", href: "/qc/earnings", icon: "money", mobile: false },
   ACCOUNT,
 ];
 
@@ -92,10 +102,11 @@ export function workspaceFor(role: string): Workspace {
   switch (role) {
     case "DESIGNER":
       return { label: "Designer workspace", tone: "light" };
+    case "QC":
+      return { label: "Pod lead workspace", tone: "dark" };
     case "OPS":
     case "SALES":
     case "FINANCE":
-    case "QC":
       return { label: "Team workspace", tone: "dark" };
     default:
       return { label: "Client workspace", tone: "light" };
@@ -106,10 +117,11 @@ export function tabsForRole(role: string): Tab[] {
   switch (role) {
     case "DESIGNER":
       return DESIGNER_TABS;
+    case "QC":
+      return POD_LEAD_TABS;
     case "OPS":
     case "SALES":
     case "FINANCE":
-    case "QC":
       return STAFF_TABS;
     case "CLIENT":
       return CLIENT_TABS;

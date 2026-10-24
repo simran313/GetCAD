@@ -34,6 +34,9 @@ export const PROTECTED_PREFIXES = [
   "/admin",
   "/settings",
   "/onboarding",
+  "/work",
+  "/qc",
+  "/pod",
 ] as const;
 
 /** True if `pathname` is behind auth. Matches a prefix exactly or as a segment. */

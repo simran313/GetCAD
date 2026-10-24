@@ -363,6 +363,22 @@ Tests: `tests/config/route-reachability.test.ts` extended to every route; per-ro
 - **Navigation:** client tabs Home · New order · Orders · Messages · Wallet · Files · Account; the phone bar keeps Home · Orders · Messages · Account (`Tab.mobile`).
 - **Core:** `core/orders/clientView.ts` (`clientTab`, `clientNextStep`, the 7 client steps).
 
+### Phase 5c — as built
+- **Migration 0047** (read-only): `my_work`, `pod_jobs`, `pod_load`, `my_earnings`. **Policy 0036:** designers read the category table (their rate card).
+- **Designer (role DESIGNER):** tabs Home · Open jobs · Messages · Earnings · Account (all five on the phone).
+  - D2 `/home`: needs-you cards (sent back with the notes, new, in progress with the Start-work timer), unread messages, last payout, bank details and onboarding prompts. Onboarding left the tab bar; Home leads there until the agreement is signed.
+  - D3 `/work` (Open jobs · Submitted to QC · Done), Start work inline.
+  - D4 `/work/[id]`: brief without the client (job_brief), references with pins, the version's notes (client revision or QC send-back), ten upload slots, checklist count, Submit to QC (enabled at 19/19 + all files), the designer thread.
+  - D4b `/work/[id]/checklist`; D5 is `/messages` (shared; designer copy); D6 `/work/earnings` (obligations, rate card from `job_categories`, bank card).
+  - `/orders` and `/orders/[id]` redirect a designer to `/work`, so old links and notifications still land.
+- **Pod lead (role QC):** "Pod lead workspace"; tabs QC queue · Team board · All orders · Create order · Messages · Earnings · Account (phone: QC queue, Team board, All orders, Messages, Account).
+  - P1 `/qc` (awaiting QC oldest first; in your review), P2 `/qc/[id]` (version files with v1/v2 switch, brief, references, two-level checklist with QC ticks, send back with a note, pass at 19/19; admins see it read-only).
+  - P3 `/qc/orders` (All · Open · Needs staff · Closed; search by order, client code or designer ref), P4 `/qc/earnings` (QC rate table from DECISIONS §5), P5 `/pod/board` (unassigned paid orders with Assign to…, each designer's open jobs and load).
+  - P6 stays `/admin/new-order` (Phase 4a). `/home` and `/orders` send a pod lead to `/qc` and `/qc/orders`; the order page links to the QC review while in QC.
+- **Route changes against the table above:** D2 is `/home` (Q13) rather than `/work`; D5 is the shared `/messages`; P6 keeps `/admin/new-order`.
+- **Core:** `core/work/view.ts` (job tabs and states, category time words, the Start-work clock, QC pay formula, load words).
+- Server actions now revalidate the whole app layout, so the new routes refresh after a tick, upload or decision.
+
 ---
 
 ## Phase 6 — Marketing website

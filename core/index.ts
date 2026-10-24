@@ -115,3 +115,5 @@ export { remaining } from "./time/remaining";
 export type { Remaining } from "./time/remaining";
 export { clientTab, clientNextStep, clientStepsDone, CLIENT_STEPS } from "./orders/clientView";
 export type { ClientTab, ClientStep } from "./orders/clientView";
+export { jobTab, isOpenJob, jobState, minutesWord, jobClockDue, qcPayoutPaise, rupeesWord, loadWord } from "./work/view";
+export type { JobTab } from "./work/view";
