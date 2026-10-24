@@ -30,6 +30,9 @@ interface OutboxRow {
   idempotency_key: string;
 }
 
+/** Gap between sends: under the provider's 2-per-second limit. */
+const SEND_SPACING_MS = 600;
+
 export async function dispatchEmails(limit = 20): Promise<DispatchOutcome[]> {
   // Email switched off is a valid state (see config/email.ts). Leave the queue
   // untouched so it drains once a key is set, rather than failing every row.
@@ -47,7 +50,9 @@ export async function dispatchEmails(limit = 20): Promise<DispatchOutcome[]> {
   const claimed = (data ?? []) as OutboxRow[];
   const outcomes: DispatchOutcome[] = [];
 
-  for (const row of claimed) {
+  for (const [i, row] of claimed.entries()) {
+    // Resend allows 2 requests a second; bursts above that come back 429.
+    if (i > 0) await new Promise((r) => setTimeout(r, SEND_SPACING_MS));
     if (!isEmailTemplate(row.template)) {
       await admin.rpc("record_email_result", {
         p_idempotency_key: row.idempotency_key,
@@ -100,7 +105,9 @@ export async function dispatchEmails(limit = 20): Promise<DispatchOutcome[]> {
  */
 export async function flushEmailsBestEffort(): Promise<void> {
   try {
-    await dispatchEmails();
+    // A few at a time: this runs inside a form submission, and the queue
+    // sends new emails first (0044), so the one just enqueued goes out now.
+    await dispatchEmails(5);
   } catch {
     // The outbox is durable; a failed flush loses nothing. Never surface this
     // to a user who just submitted a form successfully.

@@ -113,10 +113,16 @@ async function main() {
 
   let sent = 0;
   let failed = 0;
-  for (const row of claimed) {
+  for (const [i, row] of claimed.entries()) {
+    // Resend allows 2 requests a second; bursts above that come back 429.
+    if (i > 0) await new Promise((r) => setTimeout(r, 600));
     try {
       if (!isEmailTemplate(row.template)) throw new Error(`unknown template: ${row.template}`);
-      const rendered = renderEmail(row.template, row.payload ?? {});
+      // Same as the app's dispatcher: the site address comes from config.
+      const rendered = renderEmail(row.template, {
+        ...(row.payload ?? {}),
+        site_url: process.env.NEXT_PUBLIC_SITE_URL,
+      });
       const id = await sendViaProvider({
         to: row.recipient_email,
         subject: rendered.subject,
