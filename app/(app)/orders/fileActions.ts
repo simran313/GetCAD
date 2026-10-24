@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  attachmentContentType,
+  DEFAULT_ALLOWLIST,
+  DELIVERABLE_ALLOWLIST,
   generateId,
   sanitizeUpload,
   sanitizeUploadAsync,
@@ -150,5 +153,70 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
     throw new Error(error.message);
   }
 
+  revalidatePath("/orders");
+}
+
+/**
+ * Post in one of the order's conversations, with or without a file (Phase 4b).
+ *
+ * Which thread it is comes from the database (order_threads, as the user),
+ * never from the form. A file for the designer thread must be cleanable and
+ * is cleaned (EXIF, STEP author, STL header, 3DM rebuilt); a file for the
+ * client thread is checked against the wider allowlist, since only the
+ * client and the team read it. post_thread_file() enforces the same split.
+ */
+export async function postThreadAction(formData: FormData): Promise<void> {
+  const orderId = formData.get("order_id")?.toString() ?? "";
+  const threadId = formData.get("thread_id")?.toString() ?? "";
+  const body = formData.get("body")?.toString().trim() ?? "";
+  const file = formData.get("file");
+  const hasFile = file instanceof File && file.size > 0;
+
+  const supabase = await createUserSupabaseClient();
+  if (!hasFile) {
+    if (!body) throw new Error("message is empty");
+    const { error } = await supabase.rpc("post_thread_message", { p_thread_id: threadId, p_body: body });
+    if (error) throw new Error(error.message);
+    revalidatePath("/orders");
+    return;
+  }
+
+  const { data: threads, error: threadError } = await supabase.rpc("order_threads", { p_order_id: orderId });
+  if (threadError) throw new Error(threadError.message);
+  const thread = ((threads ?? []) as { id: string; kind: string }[]).find((t) => t.id === threadId);
+  if (!thread) throw new Error("thread not found");
+  const toDesigner = thread.kind === "internal";
+
+  const gate = await sanitizeUploadAsync(
+    {
+      filename: file.name,
+      declaredMimeType: attachmentContentType(file.name, file.type),
+      sizeBytes: file.size,
+      bytes: new Uint8Array(await file.arrayBuffer()),
+    },
+    generateId(),
+    toDesigner
+      ? { requireMetadataStrip: true, strip3dm }
+      : { allowlist: { ...DEFAULT_ALLOWLIST, ...DELIVERABLE_ALLOWLIST } },
+  );
+  if (!gate.ok) throw new Error(`rejected by sanitization gate: ${gate.reason}`);
+
+  const objectKey = `${orderId}/threads/${gate.file.objectName}`;
+  const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
+  const up = await storage.upload(objectKey, gate.file.bytes, { contentType: gate.file.contentType, upsert: false });
+  if (up.error) throw new Error(`storage upload failed: ${up.error.message}`);
+
+  const { error } = await supabase.rpc("post_thread_file", {
+    p_thread_id: threadId,
+    p_object_key: objectKey,
+    p_content_type: gate.file.contentType,
+    p_size_bytes: gate.file.sizeBytes,
+    p_extension: gate.file.extension,
+    p_note: body || null,
+  });
+  if (error) {
+    await storage.remove([objectKey]);
+    throw new Error(error.message);
+  }
   revalidatePath("/orders");
 }

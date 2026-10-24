@@ -280,6 +280,12 @@ Migrations `0044_on_behalf_intake.sql`, `0045_threads.sql`.
 - **Q12:** unchanged (old client↔designer messages frozen, admins only).
 - Split into **4a** (on-behalf orders, client accounts, screenshots, email + WhatsApp, team-written brief, staff posting in both threads, 20-second page refresh; migration `0043`, policy `0034`, runbook `docs/PHASE-4A-ROLLOUT.md`) and **4b** (attachments in threads through the sanitization gate, Supabase Realtime in place of the refresh).
 
+### Phase 4b — as built
+- Migration `0045`, policy `0035`, runbook `docs/PHASE-4B-ROLLOUT.md`.
+- **Attachments:** `thread_files` + `post_thread_file` (the thread's post rules; the designer thread takes only cleanable formats, and the server cleans them), `thread_attachments`, `thread_file_for_download` (the thread's read rule), `/api/thread-files/[fileId]` (signed URL, 404 for not found and not allowed alike). Server-named per thread (`file_n.ext`).
+- **Updates:** Supabase Realtime was not used. It needs the Clerk token in the browser and Realtime authorisation for the threads, which can't be verified outside the live project. Instead, `order_activity_stamp` (the newest audit entry the viewer could see the effect of) is polled every 5 s from `/api/orders/[id]/stamp`, and the page re-reads only when it moves. Realtime can replace the poll later without changing anything else.
+- Closes the Phase 3b gap: a change order's designer gets the original files from the pod lead in the designer thread.
+
 ---
 
 ## Phase 5 — Portal screens from docs/design

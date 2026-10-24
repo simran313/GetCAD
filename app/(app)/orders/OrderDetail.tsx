@@ -41,7 +41,7 @@ import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
 import { ThreadsPanel } from "./ThreadsPanel";
-import type { DisputeRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "./types";
+import type { AttachmentRow, DisputeRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "./types";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
 
@@ -133,6 +133,7 @@ export function OrderDetail({
   revisions = null,
   intake = null,
   threads = [],
+  attachments = [],
   transitions,
   versions,
   messages,
@@ -156,6 +157,8 @@ export function OrderDetail({
   intake?: { screenshots: Screenshot[]; contact: ClientContact | null; orderUrl: string | null } | null;
   /** The threads this viewer may read (0036). */
   threads?: ThreadRow[];
+  /** Files sent in those threads (0045). */
+  attachments?: AttachmentRow[];
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -634,7 +637,13 @@ export function OrderDetail({
       )}
 
       {/* Conversations: client ↔ team and team ↔ designer (DECISIONS §11). */}
-      <ThreadsPanel relation={o.relation} threads={threads} messages={messages} />
+      <ThreadsPanel
+        orderId={o.id}
+        relation={o.relation}
+        threads={threads}
+        messages={messages}
+        attachments={attachments}
+      />
     </div>
   );
 }

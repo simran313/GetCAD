@@ -1,26 +1,52 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
- * Re-reads the order page every 20 seconds while it is on screen, so a new
- * message or a status change shows up without a reload. Server data only:
- * nothing typed into a form is lost by a refresh. Pauses while the tab is
- * hidden. Instant updates (Supabase Realtime) come in Phase 4b.
+ * Keeps the order page current (Phase 4b). Every few seconds, while the tab
+ * is visible, it asks the server one cheap question — has anything on this
+ * order changed? (/api/orders/[id]/stamp) — and re-reads the page only when
+ * the answer is yes. A new message or status change shows up within about
+ * five seconds; an idle page costs one tiny request each time. Server data
+ * only: anything typed into a form survives a refresh.
  */
-export function AutoRefresh({ seconds = 20 }: { seconds?: number }) {
+export function AutoRefresh({ orderId, stamp, seconds = 5 }: { orderId: string; stamp: string | null; seconds?: number }) {
   const router = useRouter();
+  const known = useRef(stamp);
+
+  // A refresh brings a newer stamp with it; adopt it.
   useEffect(() => {
-    const tick = () => {
-      if (document.visibilityState === "visible") router.refresh();
+    known.current = stamp;
+  }, [stamp]);
+
+  useEffect(() => {
+    let busy = false;
+    const check = async () => {
+      if (busy || document.visibilityState !== "visible") return;
+      busy = true;
+      try {
+        const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/stamp`, { cache: "no-store" });
+        if (res.ok) {
+          const { stamp: latest } = (await res.json()) as { stamp: string };
+          if (latest !== known.current) {
+            known.current = latest;
+            router.refresh();
+          }
+        }
+      } catch {
+        // Offline for a moment: try again on the next tick.
+      } finally {
+        busy = false;
+      }
     };
-    const timer = window.setInterval(tick, seconds * 1000);
-    document.addEventListener("visibilitychange", tick);
+    const timer = window.setInterval(check, seconds * 1000);
+    document.addEventListener("visibilitychange", check);
     return () => {
       window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", tick);
+      document.removeEventListener("visibilitychange", check);
     };
-  }, [router, seconds]);
+  }, [orderId, router, seconds]);
+
   return null;
 }

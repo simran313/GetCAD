@@ -33,3 +33,33 @@ export function slotContentType(slot: string, browserType: string): SlotTypeResu
   }
   return { ok: false, reason: `the ${slot} slot takes a PNG or JPEG image` };
 }
+
+/**
+ * The content type a conversation attachment is checked as (Phase 4b).
+ *
+ * Decided by the file's extension where browsers are unreliable (CAD files),
+ * otherwise by what the browser says. The gate still verifies the bytes, so
+ * a wrong extension is refused rather than trusted.
+ */
+const BY_EXTENSION: Record<string, string> = {
+  "3dm": "model/x-3dm",
+  stl: "model/stl",
+  step: "model/step",
+  stp: "model/step",
+  pdf: "application/pdf",
+  zip: "application/zip",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+};
+
+export function attachmentContentType(fileName: string, browserType: string): string {
+  const ext = fileName.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] ?? "";
+  return BY_EXTENSION[ext] ?? browserType;
+}
+
+/** File-picker hints per conversation (the database enforces the designer thread's list). */
+export const THREAD_ACCEPT = {
+  internal: ".png,.jpg,.jpeg,.step,.stp,.stl,.3dm",
+  client_team: ".png,.jpg,.jpeg,.pdf,.zip,.step,.stp,.stl,.3dm",
+} as const;

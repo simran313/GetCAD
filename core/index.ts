@@ -59,7 +59,7 @@ export {
   DELIVERABLE_ALLOWLIST,
   ASYNC_STRIPPABLE_TYPES,
 } from "./files/sanitizationGate";
-export { slotAccept, slotContentType, SLOT_ACCEPT } from "./files/slotTypes";
+export { slotAccept, slotContentType, SLOT_ACCEPT, attachmentContentType, THREAD_ACCEPT } from "./files/slotTypes";
 export type { SlotTypeResult } from "./files/slotTypes";
 export {
   stripMetadata,

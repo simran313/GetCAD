@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { slotAccept, slotContentType } from "./slotTypes";
+import { attachmentContentType, slotAccept, slotContentType } from "./slotTypes";
 
 describe("slot content types", () => {
   it("decides CAD types by slot, whatever the browser says", () => {
@@ -19,5 +19,19 @@ describe("slot content types", () => {
     expect(slotAccept("3DM")).toBe(".3dm");
     expect(slotAccept("STL")).toBe(".stl");
     expect(slotAccept("PV")).toBe(".png,.jpg,.jpeg");
+  });
+});
+
+describe("attachmentContentType (Phase 4b)", () => {
+  it("decides CAD types by extension, whatever the browser says", () => {
+    expect(attachmentContentType("ring.3DM", "")).toBe("model/x-3dm");
+    expect(attachmentContentType("ring.stl", "application/octet-stream")).toBe("model/stl");
+    expect(attachmentContentType("part.stp", "")).toBe("model/step");
+    expect(attachmentContentType("brief.pdf", "application/pdf")).toBe("application/pdf");
+  });
+
+  it("falls back to the browser's type for anything else", () => {
+    expect(attachmentContentType("notes.txt", "text/plain")).toBe("text/plain");
+    expect(attachmentContentType("noextension", "image/png")).toBe("image/png");
   });
 });
