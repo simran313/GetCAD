@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+
+import { PageHeader } from "@/components/ui/page-header";
 import { redirect } from "next/navigation";
 
 import { ErrorPanel } from "@/components/error-panel";
@@ -74,19 +76,12 @@ export default async function NewOrderForClientPage({
   const pods = (podRows ?? []) as { id: string; name: string }[];
 
   return (
-    <main className="container max-w-3xl py-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
-          New order for a client
-        </h1>
-        <Link href="/admin" className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-primary hover:underline">
-          Back to the queue
-        </Link>
-      </div>
-      <p className="mt-2 text-[length:var(--fs-4)] leading-[var(--lh-4)] text-muted-foreground">
-        For orders that came by email, WhatsApp or phone. Add a screenshot of the request; fill in the brief on the
-        order afterwards.
-      </p>
+    <main className="container max-w-5xl py-8">
+      <PageHeader
+        eyebrow="On behalf of a client"
+        title="Create order for a client"
+        description="For orders that came by email, WhatsApp or phone. Add a screenshot of the request; fill in the brief on the order afterwards."
+      />
 
       <form method="get" className={`${card} flex flex-wrap items-end gap-2`}>
         <label className={`${label} flex-1`}>

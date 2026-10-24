@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+
+import { PageHeader } from "@/components/ui/page-header";
 import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
@@ -102,13 +104,11 @@ export default async function ApplicationsPage({
   }
 
   return (
-    <main className="container max-w-3xl py-8">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Designer applications</h1>
-        <Link href="/admin" className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground hover:text-foreground">
-          Staff console →
-        </Link>
-      </div>
+    <main className="container max-w-5xl py-8">
+      <PageHeader
+        eyebrow="Approve to send the agreement"
+        title="Designer applications"
+      />
 
       <div className="mt-4 flex flex-wrap gap-2">
         {FILTERS.map((f) => {

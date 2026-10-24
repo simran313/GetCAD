@@ -379,6 +379,28 @@ Tests: `tests/config/route-reachability.test.ts` extended to every route; per-ro
 - **Core:** `core/work/view.ts` (job tabs and states, category time words, the Start-work clock, QC pay formula, load words).
 - Server actions now revalidate the whole app layout, so the new routes refresh after a tick, upload or decision.
 
+### Phase 5d — owner answers and as built
+- **Owner answers:** A9 is a client list with account managers, no business-check gate. A8 is a read-only money overview; invoices and wallet wait for Phase 9. Paid or confirmed orders join the pod automatically when there is exactly one pod; otherwise admin chooses in the Queue. DECISIONS v1.2 §11 records both rules.
+- **Migration 0048 / policy 0037:** see db/README.
+- **Navigation:** "Admin workspace" for Sales, Ops and Finance. Tabs: Queue · Create order · All orders · Billing · Clients · Access · Applications · Leads · Account. On the phone: Queue, Create order, All orders, Account. `/home` sends admins to `/admin`.
+- **A1 `/admin` Queue:**
+  - stage counters, linking to the filtered All orders;
+  - late-credit banner;
+  - "Most urgent first" table (disputes, then nearest client deadline) with why and the one move;
+  - "Choose a pod" inline.
+  - The words come from `core/orders/staffView.ts`.
+- **A2 `/admin/orders`:** the P3 list, shared as `components/work/orders-list.tsx`, plus a stage filter and Export CSV (`/admin/orders/export`).
+- **A3 order page (team):** header with order ref, client code, designer ref and pod lead. A two-column layout from `OrderDetail` (`layout="team"`):
+  - main column: intake, revisions, messages, files, timeline;
+  - side column: next move (pod picker, QC review link, work counts), dispute, first look and confirm, assign, order actions, price, money.
+  - The client's own layout is unchanged.
+- **A4 `/admin/access`** (moved from `/admin/users`, which redirects): tabs by role, references, activity. **`/admin/access/pods`:** create pods, set the pod lead, add, move or remove designers. This replaces the rollout SQL.
+- **A5 / A6 / A10 / payouts / credits:** design headers. Create order keeps its Phase 4a form.
+- **A7 Account:** all roles listed. `/account/security` is Clerk's profile (password, two-step, devices).
+- **A8 `/admin/billing`:** held, paid this month, refunded, credits to decide, the money ledger, team payouts owed.
+- **A9 `/admin/clients`:** client code, orders, spend, last order, account manager.
+- **Not changed:** release, refund and dispute resolution still need FINANCE or OPS as the *primary* role (the database functions check it), so an admin whose primary role is OPS does not see Release or Refund. Changing that is a database decision for later.
+
 ---
 
 ## Phase 6 — Marketing website

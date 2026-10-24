@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+
+import { PageHeader } from "@/components/ui/page-header";
 import { redirect } from "next/navigation";
 
 import { ErrorPanel } from "@/components/error-panel";
@@ -56,18 +58,12 @@ export default async function CreditsPage() {
   const credits = (data ?? []) as PendingCredit[];
 
   return (
-    <main className="container max-w-4xl py-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
-          Late-order credits
-        </h1>
-        <Link href="/admin" className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-primary hover:underline">
-          Back to the queue
-        </Link>
-      </div>
-      <p className="mt-2 text-[length:var(--fs-4)] leading-[var(--lh-4)] text-muted-foreground">
-        Standard orders that missed the 6-hour first look. The client sees nothing until you decide.
-      </p>
+    <main className="container max-w-5xl py-8">
+      <PageHeader
+        eyebrow="First look missed"
+        title="Late-order credits"
+        description="Standard orders that missed the 6-hour first look. The client sees nothing until you decide."
+      />
 
       <div className="mt-6 overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {credits.length === 0 ? (

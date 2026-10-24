@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.1 · October 2026 · Owner: Fazil Zaidi
+Version 1.2 · October 2026 · Owner: Fazil Zaidi
 
-Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -145,6 +145,8 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
   - Visible in the client's portal.
   - The clock starts only when the order is paid and confirmed (section 6).
 - **Flow:** admin → pod lead → designer. Capacity 480 category-minutes per designer per shift; over capacity needs an admin override with a reason.
+- **Pod routing:** when an order is paid or confirmed and has no pod, it joins the pod automatically if exactly one pod has a pod lead. With several pods, admin chooses the pod from the queue.
+- **Account managers:** admin can name one team member as each client's account manager. There is no business check before pricing: a new client is never held back from a quote.
 - **Messaging:**
   - Client ↔ team thread: admin and pod lead appear as "Team · first name".
   - Designer ↔ pod lead/admin internal thread.
