@@ -23,8 +23,8 @@ import { POST_AUTH_PATH } from "../../config/auth-redirects";
 const read = (relative: string) => readFileSync(join(process.cwd(), relative), "utf8");
 
 const ENTRY_POINTS = [
-  "app/(app)/sign-in/[[...sign-in]]/page.tsx",
-  "app/(app)/sign-up/[[...sign-up]]/page.tsx",
+  "app/(auth)/sign-in/[[...sign-in]]/page.tsx",
+  "app/(auth)/sign-up/[[...sign-up]]/page.tsx",
   "app/(app)/layout.tsx",
 ];
 
@@ -133,8 +133,8 @@ describe("authentication stays on this origin", () => {
   });
 
   it("names sign-in routes that actually exist", () => {
-    expect(read("app/(app)/sign-in/[[...sign-in]]/page.tsx")).toContain("SignIn");
-    expect(read("app/(app)/sign-up/[[...sign-up]]/page.tsx")).toContain("SignUp");
+    expect(read("app/(auth)/sign-in/[[...sign-in]]/page.tsx")).toContain("SignIn");
+    expect(read("app/(auth)/sign-up/[[...sign-up]]/page.tsx")).toContain("SignUp");
   });
 
   // The installed app launches straight into start_url. If that were behind

@@ -17,7 +17,7 @@ export { availableTransitions } from "./orders/availableTransitions";
 export type { TransitionRow, ActorContext } from "./orders/availableTransitions";
 export { installAdvice, isIos, isIosSafari } from "./pwa/install";
 export type { InstallAdvice, InstallContext } from "./pwa/install";
-export { tabsForRole, activeTabKey, workspaceFor } from "./nav/tabs";
+export { tabsForRole, activeTabKey, workspaceFor, mobileTabs } from "./nav/tabs";
 export type { Tab, Workspace } from "./nav/tabs";
 export { orderActions, primaryAction } from "./orders/actions";
 export type { OrderAction, ActionIntent } from "./orders/actions";
@@ -113,3 +113,5 @@ export { payoutBatchCsv, paiseToRupees, csvCell, PAYOUT_CSV_HEADER } from "./pay
 export type { PayoutBatchRow } from "./payouts/batchCsv";
 export { remaining } from "./time/remaining";
 export type { Remaining } from "./time/remaining";
+export { clientTab, clientNextStep, clientStepsDone, CLIENT_STEPS } from "./orders/clientView";
+export type { ClientTab, ClientStep } from "./orders/clientView";

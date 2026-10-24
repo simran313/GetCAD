@@ -15,8 +15,10 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
  * a real order id means a real URL, so closing the tab on step 4 of a long form
  * loses nothing.
  */
-export async function startBriefAction(): Promise<void> {
+export async function startBriefAction(formData?: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
+  // CAD or renders (N0 → N1 / N7). Anything else is CAD.
+  const service = formData?.get("service")?.toString() === "render" ? "render" : "cad";
 
   // orders.client_id has a foreign key to users.id, and a person who signed up
   // and pressed "New order" before visiting any screen that calls this has no
@@ -30,9 +32,13 @@ export async function startBriefAction(): Promise<void> {
   const { error } = await supabase.rpc("create_order", {
     p_id: id,
     p_product_type: "CAD_MODEL",
-    p_currency: "INR",
+    p_currency: "USD",
   });
   if (error) throw new Error(error.message);
+  if (service === "render") {
+    const { error: serviceError } = await supabase.rpc("set_order_service", { p_order_id: id, p_service: "render" });
+    if (serviceError) throw new Error(serviceError.message);
+  }
   redirect(`/orders/${id}/brief`);
 }
 
@@ -90,6 +96,11 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
     p_based_on_order_id: str(formData, "based_on_order_id"),
     p_change_summary: str(formData, "change_summary"),
     p_notes: str(formData, "notes"),
+    // The size the piece is made to (DECISIONS §11 minimum), in µm.
+    p_ring_size: str(formData, "ring_size"),
+    p_inner_circumference_um: num(formData, "inner_circumference_um"),
+    p_inner_diameter_um: num(formData, "inner_diameter_um"),
+    p_length_um: num(formData, "length_um"),
   });
   if (error) throw new Error(error.message);
 
@@ -121,4 +132,19 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
 
   revalidatePath(`/orders/${orderId}`);
   revalidatePath(`/orders/${orderId}/brief`);
+  // "Review and send" (N5) checks the minimum and sends from there.
+  if (formData.get("intent") === "review") redirect(`/orders/${orderId}/brief/review`);
+}
+
+/**
+ * Send the brief for a price (N5). submit_brief() refuses until the
+ * DECISIONS §11 minimum is there and names what is missing.
+ */
+export async function sendBriefAction(formData: FormData): Promise<void> {
+  const orderId = formData.get("order_id")?.toString() ?? "";
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("submit_brief", { p_order_id: orderId });
+  if (error) throw new Error(error.message);
+  revalidatePath("/orders");
+  redirect(`/orders/${orderId}/sent`);
 }

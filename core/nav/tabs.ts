@@ -27,6 +27,8 @@ export interface Tab {
   href: string;
   /** Icon name; the component maps it. Kept as data so this stays framework-free. */
   icon: "home" | "list" | "work" | "queue" | "user" | "plus" | "message" | "wallet" | "file" | "board" | "money";
+  /** False keeps it out of the phone's bottom bar (the mockups show four there). */
+  mobile?: boolean;
 }
 
 const ACCOUNT: Tab = { key: "account", label: "Account", href: "/account", icon: "user" };
@@ -44,11 +46,14 @@ const ACCOUNT: Tab = { key: "account", label: "Account", href: "/account", icon:
  */
 const CLIENT_TABS: Tab[] = [
   { key: "home", label: "Home", href: "/home", icon: "home" },
-  // Second, as in the mockups (C1): starting a job is what a client comes for.
-  // `activeTabKey` prefers the longer match, so /orders/new lights this rather
-  // than Orders. Messages, Wallet and Files join with their screens (5b).
-  { key: "new", label: "New order", href: "/orders/new", icon: "plus" },
+  // Second on a desk, as in the mockups (C1). On a phone the bottom bar keeps
+  // Home · Orders · Messages · Account and New order lives on Home and Orders.
+  // `activeTabKey` prefers the longer match, so /orders/new lights this.
+  { key: "new", label: "New order", href: "/orders/new", icon: "plus", mobile: false },
   { key: "orders", label: "Orders", href: "/orders", icon: "list" },
+  { key: "messages", label: "Messages", href: "/messages", icon: "message" },
+  { key: "wallet", label: "Wallet", href: "/wallet", icon: "wallet", mobile: false },
+  { key: "files", label: "Files", href: "/files", icon: "file", mobile: false },
   ACCOUNT,
 ];
 
@@ -131,4 +136,9 @@ export function activeTabKey(pathname: string, tabs: Tab[]): string | null {
     }
   }
   return best?.key ?? null;
+}
+
+/** The tabs the phone's bottom bar shows. */
+export function mobileTabs(tabs: Tab[]): Tab[] {
+  return tabs.filter((t) => t.mobile !== false);
 }

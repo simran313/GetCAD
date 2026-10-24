@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Pin } from "@/core";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { ErrorPanel } from "@/components/error-panel";
+import { PageHeader } from "@/components/ui/page-header";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
@@ -42,6 +43,12 @@ interface SpecRow {
   centre_depth_um: number | null;
   centre_carat_mct: number | null;
   centre_certified: boolean;
+  ring_size?: string | null;
+  inner_circumference_um?: number | null;
+  inner_diameter_um?: number | null;
+  length_um?: number | null;
+  render_views?: number | null;
+  notes?: string | null;
 }
 
 interface ImageRow {
@@ -75,7 +82,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   const isDesigner = rel === "DESIGNER";
 
   const [orderRes, specRes, accentsRes, imagesRes] = await Promise.all([
-    supabase.rpc("visible_orders", { p_order_id: id }).select("id, status, relation, source").maybeSingle(),
+    supabase.rpc("visible_orders", { p_order_id: id }).select("id, status, relation, source, service, display_ref").maybeSingle(),
     isDesigner
       ? supabase.rpc("job_brief", { p_order_id: id })
       : supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
@@ -157,21 +164,21 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   }));
 
   return (
-    <main className="container max-w-2xl py-8">
+    <main className="container max-w-3xl py-8">
       <BackLink id={id} />
 
-      <h1 className="mt-4 text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
-        The brief
-      </h1>
-      <p className="mt-1 text-[length:var(--fs-3)] text-muted-foreground">
-        What we are making. The more of this that is answered, the less a designer has to guess —
-        and guessing is what a first version coming back wrong is made of.
-      </p>
+      <PageHeader
+        className="mt-4"
+        eyebrow={`${order.display_ref ?? "New order"} · ${order.service === "render" ? "Renders" : "CAD design"}`}
+        title={order.service === "render" ? "New render order" : "New CAD order"}
+        description="What we are making. The more of this that is answered, the less a designer has to guess. Add reference pictures below."
+      />
 
       <div className="mt-6">
         {isOwner ? (
           <BriefWizard
             orderId={id}
+            service={order.service ?? "cad"}
             readOnly={frozen}
             referenceImageCount={images.length}
             pinnedImageCount={pinnedImageCount}
@@ -190,6 +197,12 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
               centreLengthUm: spec?.centre_length_um,
               centreWidthUm: spec?.centre_width_um,
               centreDepthUm: spec?.centre_depth_um,
+              ringSize: spec?.ring_size,
+              innerCircumferenceUm: spec?.inner_circumference_um,
+              innerDiameterUm: spec?.inner_diameter_um,
+              lengthUm: spec?.length_um,
+              renderViews: spec?.render_views,
+              notes: spec?.notes,
               accents,
             }}
           />

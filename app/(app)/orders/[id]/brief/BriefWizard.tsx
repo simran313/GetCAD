@@ -38,7 +38,7 @@ import { saveBriefAction } from "./actions";
  * than completeness. "Every field is filled" and "a designer can build this"
  * are different claims, and only the second one is worth telling somebody.
  */
-const PRODUCTS = ["RING", "PENDANT", "EARRING", "BRACELET", "BANGLE", "BROOCH", "OTHER"];
+const PRODUCTS = ["RING", "BAND", "PENDANT", "EARRING", "BRACELET", "BANGLE", "NECKLACE", "OTHER"];
 const SHAPES = [
   "ROUND", "OVAL", "CUSHION", "PRINCESS", "EMERALD", "PEAR", "MARQUISE",
   "RADIANT", "ASSCHER", "HEART", "TRILLION", "BAGUETTE", "OTHER",
@@ -77,24 +77,49 @@ export interface AccentRow {
 
 export interface BriefDefaults extends Partial<OrderSpecInput> {
   accents?: AccentRow[];
+  ringSize?: string | null;
+  innerCircumferenceUm?: number | null;
+  innerDiameterUm?: number | null;
+  lengthUm?: number | null;
+  renderViews?: number | null;
+  notes?: string | null;
 }
 
-const STEPS = ["Your reference", "The piece", "Centre stone", "Accent stones", "Material & output"];
+/**
+ * The sections (docs/design N1–N4, N7). On a desk they are one page; on a
+ * phone they are steps. A render order (N7) asks for views instead of stones
+ * and size.
+ */
+const CAD_STEPS = ["The piece", "Stones", "Size", "Metal & finish"];
+const RENDER_STEPS = ["The piece", "Views", "Metal & finish"];
+
+/** Which size a product is made to (DECISIONS §11 minimum). */
+function sizeKind(product: string): "ring" | "wrist" | "length" | "none" {
+  if (product === "RING" || product === "BAND") return "ring";
+  if (product === "BANGLE" || product === "BRACELET") return "wrist";
+  if (product === "NECKLACE") return "length";
+  return "none";
+}
 
 export function BriefWizard({
   orderId,
   defaults,
+  service = "cad",
   readOnly = false,
   referenceImageCount = 0,
   pinnedImageCount = 0,
 }: {
   orderId: string;
   defaults: BriefDefaults;
+  /** cad, render or cad_render (0035); render briefs skip stones and size. */
+  service?: string;
   /** True once the order has been quoted — the brief is frozen from then on. */
   readOnly?: boolean;
   referenceImageCount?: number;
   pinnedImageCount?: number;
 }) {
+  const isRender = service === "render";
+  const STEPS = isRender ? RENDER_STEPS : CAD_STEPS;
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, string>>({
     reference_name: defaults.referenceName ?? "",
@@ -112,9 +137,13 @@ export function BriefWizard({
     centre_depth_mm: defaults.centreDepthUm ? String(micronsToMm(defaults.centreDepthUm)) : "",
     stones_supplied_by: "NONE",
     component_count: "1",
-    render_views: "0",
+    render_views: String(defaults.renderViews ?? (isRender ? 5 : 0)),
     priority: "STANDARD",
-    notes: "",
+    notes: defaults.notes ?? "",
+    ring_size: defaults.ringSize ?? "",
+    inner_circumference_mm: defaults.innerCircumferenceUm ? String(micronsToMm(defaults.innerCircumferenceUm)) : "",
+    inner_diameter_mm: defaults.innerDiameterUm ? String(micronsToMm(defaults.innerDiameterUm)) : "",
+    length_mm: defaults.lengthUm ? String(micronsToMm(defaults.lengthUm)) : "",
   });
   const [hasCentre, setHasCentre] = useState(defaults.hasCentreStone ?? false);
   const [certified, setCertified] = useState(false);
@@ -181,10 +210,13 @@ export function BriefWizard({
       <input type="hidden" name="centre_length_um" value={mm("centre_length_mm") ?? ""} />
       <input type="hidden" name="centre_width_um" value={mm("centre_width_mm") ?? ""} />
       <input type="hidden" name="centre_depth_um" value={mm("centre_depth_mm") ?? ""} />
+      <input type="hidden" name="inner_circumference_um" value={mm("inner_circumference_mm") ?? ""} />
+      <input type="hidden" name="inner_diameter_um" value={mm("inner_diameter_mm") ?? ""} />
+      <input type="hidden" name="length_um" value={mm("length_mm") ?? ""} />
 
-      <StepBar step={step} onPick={setStep} />
+      <StepBar step={step} steps={STEPS} onPick={setStep} />
 
-      <Pane show={step === 0}>
+      <Pane show={step === 0} title={STEPS[0]!}>
         <Field
           id="reference_name"
           label="Name this job"
@@ -199,9 +231,6 @@ export function BriefWizard({
             className="min-h-[var(--ctl)]"
           />
         </Field>
-      </Pane>
-
-      <Pane show={step === 1}>
         <Choice
           name="product"
           legend="What are we modelling?"
@@ -212,7 +241,29 @@ export function BriefWizard({
         />
       </Pane>
 
-      <Pane show={step === 2}>
+      {isRender ? (
+        <Pane show={step === 1} title="Views">
+          <input type="hidden" name="has_centre_stone" value="" />
+          <Choice
+            name="render_views"
+            legend="How many views?"
+            hint="Top, perspective, side, front and back are the usual five."
+            options={[
+              ["3", "3 views"],
+              ["5", "5 views"],
+              ["8", "5 views + close-ups"],
+            ]}
+            value={form.render_views ?? "5"}
+            onChange={set("render_views")}
+          />
+          <p className="mt-3 text-[length:var(--fs-2)] text-muted-foreground">
+            Attach your 3DM or STL on the order page after sending, or ask in Messages. Reference pictures go
+            below.
+          </p>
+        </Pane>
+      ) : null}
+
+      <Pane show={!isRender && step === 1} title="Stones" hidden={isRender}>
         <Toggle
           name="has_centre_stone"
           checked={hasCentre}
@@ -287,9 +338,8 @@ export function BriefWizard({
             No centre stone. The head questions are gone — go straight to accents.
           </p>
         )}
-      </Pane>
 
-      <Pane show={step === 3}>
+        <h3 className="mt-8 text-[length:var(--fs-4)] font-medium">Accent stones</h3>
         <p className="text-[length:var(--fs-3)] text-muted-foreground">
           One row per group of stones sharing a size and a setting — eighteen 1.30&nbsp;mm rounds
           pavé set is one row, not eighteen.
@@ -383,7 +433,75 @@ export function BriefWizard({
         />
       </Pane>
 
-      <Pane show={step === 4}>
+      <Pane show={!isRender && step === 2} title="Size" hidden={isRender}>
+        {sizeKind(form.product ?? "") === "ring" && (
+          <>
+            <Field id="ring_size" label="Ring size" hint="As you would order it, e.g. US 6.5 or UK M.">
+              <Input
+                id="ring_size"
+                name="ring_size"
+                value={form.ring_size}
+                onChange={(e) => set("ring_size")(e.target.value)}
+                placeholder="US 6.5"
+                className="min-h-[var(--ctl)]"
+              />
+            </Field>
+            <Field id="inner_circumference_mm" label="Or inner circumference (mm)">
+              <Input
+                id="inner_circumference_mm"
+                inputMode="decimal"
+                value={form.inner_circumference_mm}
+                onChange={(e) => set("inner_circumference_mm")(e.target.value)}
+                placeholder="53.1"
+                className="min-h-[var(--ctl)]"
+              />
+            </Field>
+          </>
+        )}
+        {sizeKind(form.product ?? "") === "wrist" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Field id="inner_diameter_mm" label="Inner diameter (mm)">
+              <Input
+                id="inner_diameter_mm"
+                inputMode="decimal"
+                value={form.inner_diameter_mm}
+                onChange={(e) => set("inner_diameter_mm")(e.target.value)}
+                placeholder="62"
+                className="min-h-[var(--ctl)]"
+              />
+            </Field>
+            <Field id="length_mm" label="Or length (mm)">
+              <Input
+                id="length_mm"
+                inputMode="decimal"
+                value={form.length_mm}
+                onChange={(e) => set("length_mm")(e.target.value)}
+                placeholder="180"
+                className="min-h-[var(--ctl)]"
+              />
+            </Field>
+          </div>
+        )}
+        {sizeKind(form.product ?? "") === "length" && (
+          <Field id="length_mm" label="Length (mm)">
+            <Input
+              id="length_mm"
+              inputMode="decimal"
+              value={form.length_mm}
+              onChange={(e) => set("length_mm")(e.target.value)}
+              placeholder="450"
+              className="min-h-[var(--ctl)]"
+            />
+          </Field>
+        )}
+        {sizeKind(form.product ?? "") === "none" && (
+          <p className="mt-3 text-[length:var(--fs-3)] text-muted-foreground">
+            No size needed for this piece. Give any measurements that matter in the notes.
+          </p>
+        )}
+      </Pane>
+
+      <Pane show={step === STEPS.length - 1} title="Metal & finish">
         <Choice
           name="metal"
           legend="Metal colour"
@@ -403,6 +521,13 @@ export function BriefWizard({
           />
         </Field>
 
+        {isRender ? (
+          <>
+            <input type="hidden" name="purpose" value="RENDER_ONLY" />
+            <input type="hidden" name="format" value={form.format} />
+          </>
+        ) : (
+        <>
         <Choice
           name="purpose"
           legend="What is the CAD for?"
@@ -419,6 +544,8 @@ export function BriefWizard({
           value={form.format ?? ""}
           onChange={set("format")}
         />
+        </>
+        )}
 
         <Choice
           name="finish"
@@ -446,16 +573,16 @@ export function BriefWizard({
         </Field>
 
         <input type="hidden" name="component_count" value={form.component_count} />
-        <input type="hidden" name="render_views" value={form.render_views} />
+        {!isRender && <input type="hidden" name="render_views" value={form.render_views} />}
       </Pane>
 
-      <QualityPanel quality={quality} onJump={(field) => setStep(stepForField(field))} />
+      <QualityPanel quality={quality} onJump={(field) => setStep(Math.min(stepForField(field), STEPS.length - 1))} />
 
-      <div className="sticky bottom-0 mt-4 flex gap-2 border-t border-border bg-background/95 py-3 backdrop-blur">
+      <div className="sticky bottom-0 mt-4 flex flex-wrap gap-2 border-t border-border bg-background/95 py-3 backdrop-blur">
         <Button
           type="button"
           variant="ghost"
-          className="min-h-[var(--ctl)]"
+          className="min-h-[var(--ctl)] md:hidden"
           disabled={step === 0}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
         >
@@ -464,16 +591,24 @@ export function BriefWizard({
         {step < STEPS.length - 1 ? (
           <Button
             type="button"
-            className="min-h-[var(--ctl)] flex-1"
+            className="min-h-[var(--ctl)] flex-1 md:hidden"
             onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
           >
             Next
           </Button>
         ) : null}
         {/* Saving is always available, from any step: a partly-finished brief is
-            worth keeping, and the database decides what is complete enough. */}
-        <Button type="submit" variant={step === STEPS.length - 1 ? "default" : "outline"} className="min-h-[var(--ctl)] flex-1">
-          Save brief
+            worth keeping. Review shows what is still missing before sending. */}
+        <Button type="submit" name="intent" value="save" variant="outline" className="min-h-[var(--ctl)] flex-1 md:flex-none">
+          Save draft
+        </Button>
+        <Button
+          type="submit"
+          name="intent"
+          value="review"
+          className={cn("min-h-[var(--ctl)] flex-1 md:flex-none", step !== STEPS.length - 1 && "hidden md:inline-flex")}
+        >
+          Review and send
         </Button>
       </div>
     </form>
@@ -492,16 +627,14 @@ function updateAccent(
 
 /** Which step to jump to when someone taps a gap in the quality panel. */
 function stepForField(field: string): number {
-  if (field === "referenceName") return 0;
-  if (field === "product") return 1;
-  if (field.startsWith("centre")) return 2;
-  if (field === "references") return 3;
-  return 4;
+  if (field === "referenceName" || field === "product" || field === "references") return 0;
+  if (field.startsWith("centre")) return 1;
+  return 3;
 }
 
-function StepBar({ step, onPick }: { step: number; onPick: (n: number) => void }) {
+function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]; onPick: (n: number) => void }) {
   return (
-    <div className="mb-5">
+    <div className="mb-5 md:hidden">
       <p className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
         Step {step + 1} of {STEPS.length}
       </p>
@@ -532,8 +665,25 @@ function StepBar({ step, onPick }: { step: number; onPick: (n: number) => void }
  * Hidden, not unmounted. Unmounting would drop the inputs from the form, so a
  * field answered on step 2 would silently not be submitted from step 5.
  */
-function Pane({ show, children }: { show: boolean; children: React.ReactNode }) {
-  return <div hidden={!show}>{children}</div>;
+function Pane({
+  show,
+  title,
+  hidden: never = false,
+  children,
+}: {
+  show: boolean;
+  title: string;
+  /** Not part of this kind of brief at all (e.g. stones on a render order). */
+  hidden?: boolean;
+  children: React.ReactNode;
+}) {
+  if (never) return null;
+  return (
+    <section className={cn("md:mb-10 md:border-b md:border-border md:pb-10", show ? "block" : "hidden md:block")}>
+      <h2 className="mb-2 hidden font-display text-[length:var(--fs-6)] leading-[var(--lh-6)] md:block">{title}</h2>
+      {children}
+    </section>
+  );
 }
 
 function Field({
@@ -593,10 +743,10 @@ function Choice({
           <label
             key={v}
             className={cn(
-              "flex min-h-[var(--ctl)] cursor-pointer items-center rounded-[var(--r-md)] border px-3 py-2",
+              "flex min-h-[var(--ctl)] cursor-pointer items-center rounded-[var(--r-sm)] border px-3 py-2",
               "text-[length:var(--fs-3)] transition-colors duration-[var(--dur-fast)]",
               value === v
-                ? "border-primary bg-[var(--accent-quiet)] font-medium"
+                ? "border-primary bg-primary font-medium text-primary-foreground"
                 : "border-border hover:bg-accent",
             )}
           >

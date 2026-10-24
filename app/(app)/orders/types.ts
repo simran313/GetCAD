@@ -31,6 +31,8 @@ export interface OrderRow {
   paid_at: string | null;
   /** Where the order came in (0035): portal, or placed by the team from email / WhatsApp / phone. Null for a designer. */
   source: "portal" | "email" | "whatsapp" | "phone" | null;
+  service?: string;
+  created_at?: string;
 }
 
 /** One row of public.thread_attachments() (0045): a file sent in a thread this viewer may read. */

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { NavIcon } from "@/components/nav/icons";
-import { activeTabKey, type Tab } from "@/core";
+import { activeTabKey, mobileTabs, type Tab } from "@/core";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,7 +43,7 @@ export function BottomNav({ tabs }: { tabs: Tab[] }) {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="flex">
-        {tabs.map((tab) => {
+        {mobileTabs(tabs).map((tab) => {
           const isActive = tab.key === active;
           return (
             <li key={tab.key} className="flex-1">

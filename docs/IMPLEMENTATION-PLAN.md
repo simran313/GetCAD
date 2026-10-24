@@ -348,6 +348,21 @@ Tests: `tests/config/route-reachability.test.ts` extended to every route; per-ro
   - `/login` → `/sign-in` and `/signup` → `/sign-up`;
   - the manifest `start_url` is `/home`, and its `id` stays `/dashboard` so installed apps are not treated as new.
 
+### Phase 5b — as built
+- **Migration 0046:** quotes always in US dollars (bug fix, see db/README); `set_order_service`; `submit_brief` enforces the DECISIONS §11 minimum (`brief_missing`) when the client sends the brief — the app uses it, `transition_order` is unchanged; `my_conversations` feeds Messages.
+- **Client screens (the views branch on role; designers and the team keep the old order page until 5c/5d):**
+  - S1/S2 sign-in and sign-up in the black brand panel (`components/auth-shell.tsx`); the pages moved to an `(auth)` route group, addresses unchanged.
+  - S3 `/welcome`: business details, notifications, install, first order. A client without a profile lands there from `/home`.
+  - C1 `/home`: needs-you cards, unread messages, in-progress list with timers, wallet credit.
+  - N0 `/orders/new`: CAD or renders, continue a draft, order a change.
+  - N1–N4 brief: steps The piece · Stones · **Size** (new: ring size or inner diameter/circumference, bracelet/necklace length; DECISIONS §11 minimum) · Metal & finish; renders: The piece · Views (3/5/8) · Metal & finish. One page on desktop, stepped on phones. Save draft or Review and send.
+  - N5 review (lists what is missing; send disabled until complete), N6 sent.
+  - C3 `/orders` (Needs you · In progress · Reopened · Completed · Cancelled), C4 order page (next step, 7-step progress, files, revisions, messages, history, first-look timer, cancel, raise a problem), C5 pay (Razorpay; Wise/bank/PayPal → message the team, no bank details stored; decline the price), C6 review renders (approve or ask for changes).
+  - C7/C7b `/messages`, C8 `/files` (download, or locked until paid), C9 business details on Account.
+  - W1–W3 `/wallet`, `/wallet/transactions`, `/wallet/invoices` — read-only: credit, money held in orders, refunds, paid orders. Top-ups and invoice PDFs come with the payment providers (Phase 9).
+- **Navigation:** client tabs Home · New order · Orders · Messages · Wallet · Files · Account; the phone bar keeps Home · Orders · Messages · Account (`Tab.mobile`).
+- **Core:** `core/orders/clientView.ts` (`clientTab`, `clientNextStep`, the 7 client steps).
+
 ---
 
 ## Phase 6 — Marketing website

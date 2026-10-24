@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activeTabKey, tabsForRole, workspaceFor } from "./tabs";
+import { activeTabKey, mobileTabs, tabsForRole, workspaceFor } from "./tabs";
 
 const hrefs = (role: string) => tabsForRole(role).map((t) => t.href);
 
@@ -58,6 +58,9 @@ describe("tabsForRole", () => {
   it("offers no tab that is not a real route", () => {
     const known = new Set([
       "/home",
+      "/messages",
+      "/wallet",
+      "/files",
       "/admin/new-order",
       "/orders",
       "/orders/new",
@@ -118,7 +121,15 @@ describe("workspaceFor (Phase 5)", () => {
     expect(workspaceFor("SOMETHING_NEW").tone).toBe("light");
   });
 
-  it("orders the client's tabs as the mockups do: Home, New order, Orders, Account", () => {
-    expect(tabsForRole("CLIENT").map((t) => t.key)).toEqual(["home", "new", "orders", "account"]);
+  it("orders the client's tabs as the mockups do (C1)", () => {
+    expect(tabsForRole("CLIENT").map((t) => t.key)).toEqual([
+      "home", "new", "orders", "messages", "wallet", "files", "account",
+    ]);
+  });
+
+  it("keeps the phone bar to Home, Orders, Messages, Account for a client", () => {
+    expect(mobileTabs(tabsForRole("CLIENT")).map((t) => t.key)).toEqual(["home", "orders", "messages", "account"]);
+    // Every other role keeps all its tabs on the phone.
+    expect(mobileTabs(tabsForRole("DESIGNER"))).toEqual(tabsForRole("DESIGNER"));
   });
 });

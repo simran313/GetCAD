@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
+import { loadClientOrders } from "@/lib/client/orders";
+
+import { ClientOrders } from "./ClientOrders";
 import { createOrderAction } from "./actions";
 import type { LedgerRow, OrderRow } from "./types";
 
@@ -27,16 +30,31 @@ export const dynamic = "force-dynamic";
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ focus?: string }>;
+  searchParams: Promise<{ focus?: string; tab?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const focus = (await searchParams).focus;
+  const { focus, tab } = await searchParams;
   if (focus) redirect(`/orders/${encodeURIComponent(focus)}`);
 
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
+
+  // Clients get the redesigned list (C3, Phase 5b); designers and the team
+  // keep this one until 5c / 5d.
+  const { data: me } = await supabase.from("users").select("role").maybeSingle();
+  if ((me?.role ?? "CLIENT") === "CLIENT") {
+    try {
+      return <ClientOrders orders={await loadClientOrders(supabase)} tab={tab ?? "all"} />;
+    } catch (e) {
+      return (
+        <main className="container max-w-4xl py-8">
+          <ErrorPanel title="Couldn't load your orders" message={`${(e as Error).message} — reload the page to try again.`} />
+        </main>
+      );
+    }
+  }
 
   const [ordersRes, ledgerRes] = await Promise.all([
     // Through visible_orders() so a designer's list (their jobs, by job code,
