@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ORDER_STATUS_META, statusMeta } from "./status";
+import { ORDER_STATUS_META, statusKind, statusMeta } from "./status";
 
 describe("statusMeta", () => {
   it("maps known statuses to a label + tone", () => {
@@ -20,5 +20,22 @@ describe("statusMeta", () => {
 
   it("humanises unknown statuses as a neutral fallback (never throws)", () => {
     expect(statusMeta("SOME_NEW_STATE")).toEqual({ label: "Some new state", tone: "neutral" });
+  });
+});
+
+describe("statusKind (Phase 5, docs/design tags)", () => {
+  it("asks for action on revisions, previews and disputes", () => {
+    for (const s of ["REVISION_REQUESTED", "CLIENT_PREVIEW", "DISPUTED"]) expect(statusKind(s)).toBe("needs");
+  });
+  it("is in flight from submission to QC", () => {
+    for (const s of ["SUBMITTED", "QUOTED", "PAYMENT_HELD", "ASSIGNED", "IN_PROGRESS", "QC_REVIEW"]) {
+      expect(statusKind(s)).toBe("active");
+    }
+  });
+  it("is done once approved", () => {
+    for (const s of ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"]) expect(statusKind(s)).toBe("done");
+  });
+  it("is muted for drafts and orders that ended without landing", () => {
+    for (const s of ["DRAFT", "REFUNDED", "CANCELLED", "SOMETHING_NEW"]) expect(statusKind(s)).toBe("muted");
   });
 });

@@ -23,6 +23,7 @@
  * payment. Its security is the HMAC signature.
  */
 export const PROTECTED_PREFIXES = [
+  "/home",
   "/dashboard",
   "/orders",
   "/account",

@@ -5,6 +5,10 @@ import type { Metadata, Viewport } from "next";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
 
+// Instrument Serif, the display face (docs/design): bundled from npm like
+// Geist, so no page asks a third party for it.
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
 import "./globals.css";
 
 // Self-hosted rather than fetched from Google at build time: the build must not
@@ -44,10 +48,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0d0f" },
-  ],
+  // Light only (Phase 5): the installed app's bars match the white portal.
+  themeColor: "#ffffff",
 };
 
 // Minimal shell: ClerkProvider + fonts + globals only. The marketing site and

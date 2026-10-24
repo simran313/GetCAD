@@ -9,5 +9,5 @@ export async function markNotificationsReadAction(): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("mark_notifications_read", { p_id: null });
   if (error) throw new Error(error.message);
-  revalidatePath("/dashboard");
+  revalidatePath("/home");
 }

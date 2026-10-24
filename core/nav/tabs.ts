@@ -26,7 +26,7 @@ export interface Tab {
   label: string;
   href: string;
   /** Icon name; the component maps it. Kept as data so this stays framework-free. */
-  icon: "home" | "list" | "work" | "queue" | "user" | "plus";
+  icon: "home" | "list" | "work" | "queue" | "user" | "plus" | "message" | "wallet" | "file" | "board" | "money";
 }
 
 const ACCOUNT: Tab = { key: "account", label: "Account", href: "/account", icon: "user" };
@@ -43,17 +43,17 @@ const ACCOUNT: Tab = { key: "account", label: "Account", href: "/account", icon:
  * that is not there yet.
  */
 const CLIENT_TABS: Tab[] = [
-  { key: "home", label: "Home", href: "/dashboard", icon: "home" },
-  { key: "orders", label: "Orders", href: "/orders", icon: "list" },
-  // Ranked ahead of Account because starting a job is the thing a client comes
-  // here to do. `activeTabKey` prefers the longer match, so /orders/new lights
-  // this rather than Orders.
+  { key: "home", label: "Home", href: "/home", icon: "home" },
+  // Second, as in the mockups (C1): starting a job is what a client comes for.
+  // `activeTabKey` prefers the longer match, so /orders/new lights this rather
+  // than Orders. Messages, Wallet and Files join with their screens (5b).
   { key: "new", label: "New order", href: "/orders/new", icon: "plus" },
+  { key: "orders", label: "Orders", href: "/orders", icon: "list" },
   ACCOUNT,
 ];
 
 const DESIGNER_TABS: Tab[] = [
-  { key: "home", label: "Home", href: "/dashboard", icon: "home" },
+  { key: "home", label: "Home", href: "/home", icon: "home" },
   { key: "orders", label: "My work", href: "/orders", icon: "work" },
   // Restoring a link that scoping navigation by role accidentally dropped.
   // Before that change the header showed every destination to everyone, which
@@ -67,8 +67,35 @@ const DESIGNER_TABS: Tab[] = [
 const STAFF_TABS: Tab[] = [
   { key: "queue", label: "Queue", href: "/admin", icon: "queue" },
   { key: "orders", label: "Orders", href: "/orders", icon: "list" },
+  // Admins and pod leads place orders from email, WhatsApp and phone (Phase
+  // 4a); the page refuses anyone else.
+  { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus" },
   ACCOUNT,
 ];
+
+/**
+ * Which workspace the shell says it is (docs/design). Clients and designers
+ * get the white sidebar; the team (admins and pod leads) the black one, so a
+ * staff member who is also a client can tell at a glance which hat is on.
+ */
+export interface Workspace {
+  label: string;
+  tone: "light" | "dark";
+}
+
+export function workspaceFor(role: string): Workspace {
+  switch (role) {
+    case "DESIGNER":
+      return { label: "Designer workspace", tone: "light" };
+    case "OPS":
+    case "SALES":
+    case "FINANCE":
+    case "QC":
+      return { label: "Team workspace", tone: "dark" };
+    default:
+      return { label: "Client workspace", tone: "light" };
+  }
+}
 
 export function tabsForRole(role: string): Tab[] {
   switch (role) {

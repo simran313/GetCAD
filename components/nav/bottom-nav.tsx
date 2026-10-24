@@ -53,9 +53,7 @@ export function BottomNav({ tabs }: { tabs: Tab[] }) {
                 className={cn(
                   "flex min-h-[var(--ctl)] flex-col items-center justify-center gap-1 px-1 py-2",
                   "transition-colors duration-[var(--dur-fast)]",
-                  isActive
-                    ? "font-semibold text-primary"
-                    : "text-muted-foreground",
+                  isActive ? "font-medium text-foreground" : "text-muted-foreground",
                 )}
               >
                 <NavIcon icon={tab.icon} className="h-6 w-6" />

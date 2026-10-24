@@ -8,7 +8,7 @@ import { ConnectionStatus } from "@/components/pwa/connection-status";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 import { POST_AUTH_PATH } from "@/config/auth-redirects";
-import { tabsForRole } from "@/core";
+import { tabsForRole, workspaceFor, type Workspace } from "@/core";
 import { cn } from "@/lib/utils";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
@@ -44,15 +44,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // Signed out there is no role to scope by. The per-page auth guards handle
   // the redirect; this only avoids a pointless query.
   let tabs = null;
+  let workspace: Workspace | null = null;
   if (userId) {
     const supabase = await createUserSupabaseClient();
     const { data } = await supabase.from("users").select("role").maybeSingle();
     tabs = tabsForRole(data?.role ?? "CLIENT");
+    workspace = workspaceFor(data?.role ?? "CLIENT");
   }
 
   return (
     <>
-      {tabs ? <SideNav tabs={tabs} /> : null}
+      {tabs && workspace ? <SideNav tabs={tabs} workspace={workspace} /> : null}
 
       {/* The sidebar is fixed, so the content column is inset past it rather
           than flowing under it. Done once here, not as a class every page has
@@ -79,7 +81,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           )}
         >
           <div className="container flex h-14 items-center justify-between">
-            <Link href="/dashboard" aria-label="The CAD Pillar — dashboard">
+            <Link href={tabs?.[0]?.href ?? "/home"} aria-label="The CAD Pillar — home">
               <Wordmark />
             </Link>
             <nav className="flex items-center gap-1">

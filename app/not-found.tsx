@@ -9,7 +9,7 @@ export default function NotFound() {
       <p className="mt-2 text-sm text-muted-foreground">
         The page you&apos;re looking for doesn&apos;t exist, or the link is out of date.
       </p>
-      <Link href="/dashboard" className="mt-5 inline-flex">
+      <Link href="/home" className="mt-5 inline-flex">
         <Button>Go to dashboard</Button>
       </Link>
     </main>

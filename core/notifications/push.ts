@@ -125,7 +125,7 @@ export function pushMessageFor(kind: string, orderId: string | null): PushMessag
     body: copy.body,
     // Without an order there is nowhere specific to go; the dashboard lists
     // everything and is never wrong.
-    url: orderId ? `/orders/${orderId}` : "/dashboard",
+    url: orderId ? `/orders/${orderId}` : "/home",
     tag: `${kind}:${orderId ?? "none"}`,
   };
 }

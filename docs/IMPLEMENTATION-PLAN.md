@@ -311,6 +311,43 @@ Rules: desktop ordering is one page (N1/N7); N2–N4 mobile only; C3b/C7b mobile
 
 Tests: `tests/config/route-reachability.test.ts` extended to every route; per-role tab tests in `core/nav/tabs.test.ts`; N1 submit blocked until DECISIONS §11 minimum (unit test on `core/orders/briefQuality.ts` successor).
 
+### Phase 5 — split and owner answers (October 2026)
+- **Split into four PRs:**
+  - **5a:** look, shared components, role navigation, routes.
+  - **5b:** client screens and ordering.
+  - **5c:** designer and pod lead screens.
+  - **5d:** admin screens.
+- **Q13:** the client home is `/home`; `/dashboard` redirects there. The website keeps `/`.
+- **Q19:** light only. Dark mode is removed; it can return later in the new palette.
+- **Readability over pixel-matching:** the mockups' look (palette, fonts, square corners, black primary, mono tags) with the existing floors kept:
+  - body text 17px on client and designer screens (staff screens stay compact);
+  - secondary text `#52524C` (7.3:1) instead of `#6B6B66` (5:1);
+  - field borders `#85857E` (3.7:1, WCAG 1.4.11) instead of `#CFCFC9`;
+  - controls 48px on phones.
+
+### Phase 5a — as built
+- **Tokens (`app/globals.css`):**
+  - black `#0A0A0A` primary with no accent colour;
+  - neutrals `#F7F7F5` ground, `#F0F0ED` fills, `#E3E3DF` borders;
+  - radii 2–4 px;
+  - the five status families redrawn in black and greys (danger stays red for errors);
+  - `.dark` removed and the `--fs-display` title token added.
+- **Fonts:** Instrument Serif bundled from `@fontsource/instrument-serif` (`font-display`), next to Geist and Geist Mono.
+- **Components:**
+  - `StatusTag` (needs / active / done / muted, mapped by `core` `statusKind`) and `StatusBadge` on top of it;
+  - `CategoryBadge`, `Timer` (`core/time/remaining`), `Field`, `Pills` (radio), `ListRow`, `ChecklistRow` + `CheckBox`, `UploadSlot`, `PageHeader`;
+  - Button, Badge, Input, Select and Textarea restyled.
+  - Preview page: `/account/kit`.
+- **Navigation (`core/nav/tabs`):**
+  - `workspaceFor` gives white sidebars for clients and designers and a black one for the team, as in the mockups;
+  - the mockups' icons;
+  - client tabs ordered Home, New order, Orders, Account;
+  - the team gets "Create order".
+- **Routes:**
+  - `/home` (moved from `/dashboard`, which redirects);
+  - `/login` → `/sign-in` and `/signup` → `/sign-up`;
+  - the manifest `start_url` is `/home`, and its `id` stays `/dashboard` so installed apps are not treated as new.
+
 ---
 
 ## Phase 6 — Marketing website
