@@ -30,7 +30,7 @@ export default function GlobalError({
       )}
       <div className="mt-5 flex gap-3">
         <Button onClick={() => reset()}>Try again</Button>
-        <Link href="/dashboard" className="inline-flex">
+        <Link href="/home" className="inline-flex">
           <Button variant="outline">Go to dashboard</Button>
         </Link>
       </div>

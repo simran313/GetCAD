@@ -53,7 +53,7 @@ export default async function PayoutSettingsPage() {
   const { data: me } = await supabase.from("users").select("id, role, status").maybeSingle();
   // Only roles that actually receive escrow releases have a payout account.
   // A client landing here is a wrong turn, not an error.
-  if (me && me.role !== "DESIGNER" && me.role !== "QC") redirect("/dashboard");
+  if (me && me.role !== "DESIGNER" && me.role !== "QC") redirect("/home");
 
   // The raw table is unreadable by design (policies/0019). This function is the
   // only read path, and it returns display fragments — never the full account

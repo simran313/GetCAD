@@ -32,10 +32,10 @@ const Select = React.forwardRef<
     <select
       ref={ref}
       className={cn(
-        "h-[var(--ctl)] w-full appearance-none rounded-[var(--r-md)] border border-input bg-background",
+        "h-[var(--ctl)] w-full appearance-none rounded-[var(--r-sm)] border border-input bg-background",
         // Right padding clears the chevron; without it a long option runs
         // underneath and reads as a rendering fault.
-        "pl-3.5 pr-10 text-[length:var(--fs-3)] shadow-sm",
+        "pl-3.5 pr-10 text-[length:var(--fs-3)]",
         "transition-colors duration-[var(--dur-fast)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         "focus-visible:ring-offset-1 focus-visible:ring-offset-background",

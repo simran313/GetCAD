@@ -3,22 +3,29 @@
 @tailwind utilities;
 
 /*
- * The CAD Pillar — design tokens.
- * Infrastructure software: near-monochrome (black / white / greys) + ONE
- * restrained functional accent (interactive / primary action / focus). Colour
- * carries information (order status), never mood. Neutral greys are hue-less.
+ * The CAD Pillar — design tokens (docs/design, Phase 5).
+ * Black #0A0A0A on white, warm neutrals (#F7F7F5 #F0F0ED #E6E6E2), borders
+ * #E3E3DF, no accent colour: the primary action is black. Light only (owner
+ * answer, Phase 5). Display type is Instrument Serif; UI is Geist; references,
+ * numbers and labels are Geist Mono.
+ *
+ * Readability floors are kept over the mockups where they differ (owner
+ * answer, Phase 5): secondary text #52524C instead of the mockups' #6B6B66
+ * (7.3:1 on the ground instead of 5:1), field borders #85857E instead of
+ * #CFCFC9 (3.7:1, WCAG 1.4.11), and the comfortable type and control sizes
+ * below. tests/config/color-contrast.test.ts recomputes every pair.
  */
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    --foreground: 0 0% 3.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 0 0% 3.9%;
 
-    --muted: 0 0% 96.5%;
+    --muted: 60 9.1% 93.5%; /* #F0F0ED */
     /*
      * 7.0:1 on white, up from 5.33:1.
      *
@@ -30,13 +37,13 @@
      * someone in their fifties. 33% clears 7:1 on white AND on the tinted app ground below, which
      * 35% did not — a 3% tint is enough to cost you the threshold.
      */
-    --muted-foreground: 0 0% 33%;
-    --subtle: 0 0% 98%; /* faint panel fill */
+    --muted-foreground: 60 4% 31%; /* #52524C */
+    --subtle: 60 11.1% 96.5%; /* #F7F7F5 */
 
-    --secondary: 0 0% 96.5%;
-    --secondary-foreground: 0 0% 12%;
-    --accent: 0 0% 94.5%; /* hover surface (shadcn convention) */
-    --accent-foreground: 0 0% 9%;
+    --secondary: 60 9.1% 93.5%; /* #F0F0ED */
+    --secondary-foreground: 0 0% 3.9%;
+    --accent: 60 9.1% 93.5%; /* hover surface (shadcn convention) */
+    --accent-foreground: 0 0% 3.9%;
 
     /*
      * Two different jobs, and they were nearly the same colour.
@@ -50,13 +57,13 @@
      * was a set of invisible boxes. 58% is 3.03:1, the minimum that standard
      * accepts, and it is why the forms suddenly look like forms.
      */
-    --border: 0 0% 85%;
-    --input: 0 0% 58%;
+    --border: 60 6.7% 88.2%; /* #E3E3DF */
+    --input: 60 2.8% 50.8%; /* #85857E */
 
-    /* The single functional accent — #2F51D9, from the design system. */
-    --primary: 228 69% 52%;
+    /* No accent colour: the primary action is black (docs/design). */
+    --primary: 0 0% 3.9%;
     --primary-foreground: 0 0% 100%;
-    --ring: 228 69% 52%;
+    --ring: 0 0% 3.9%;
 
     --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
@@ -82,62 +89,11 @@
      * value here matches the background exactly, so the shell is a no-op in
      * dark and the light theme catches up to it.
      */
-    --app-ground: hsl(0 0% 97%);
+    --app-ground: hsl(60 11.1% 96.5%); /* #F7F7F5 */
 
     --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas,
       "Liberation Mono", monospace;
-  }
-
-  .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 96%;
-
-    --card: 0 0% 9.5%;
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 9.5%;
-    --popover-foreground: 0 0% 96%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 68%; /* 8.4:1 on the dark ground, was 6.99:1 */
-    --subtle: 0 0% 11%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 96%;
-    --accent: 0 0% 17%;
-    --accent-foreground: 0 0% 96%;
-
-    /*
-     * Re-derived, not inverted. A light border on a dark ground needs more
-     * lightness difference than a dark border on a light one to read as the
-     * same edge, and --input carries the same 3:1 obligation here: 22% was
-     * 1.6:1 against the background, which is a field you find by clicking
-     * around. 38% is 3.02:1.
-     */
-    --border: 0 0% 24%;
-    --input: 0 0% 38%;
-
-    /* Already correct here — dark has always had a ground darker than its
-     * cards. Declared so the token resolves in both themes. */
-    --app-ground: hsl(0 0% 7%);
-
-    --primary: 227 86% 72%; /* #7B96F5 */
-    /*
-     * DARK INK ON THE LIGHT ACCENT — the one real defect this pass found.
-     *
-     * Dark mode lightens the accent to #7B96F5 so it reads against a near-black
-     * ground, which is right. The foreground stayed white, which is not: white
-     * on #7B96F5 is 2.82:1, and every primary button in dark mode — including
-     * "Approve", "Pay" and "Release" — had a label you had to lean in to read.
-     * Inverting it costs nothing and lands at 6.4:1.
-     */
-    --primary-foreground: 228 60% 12%;
-    --ring: 227 86% 72%;
-
-    /* 50%, not 55%: white on the 55% fill was 4.39:1, just under AA, and this
-     * is the colour on "Refund" and "Cancel". Still 3.8:1 against the
-     * background, so the button itself remains obvious. */
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --font-display: "Instrument Serif", "Times New Roman", serif;
   }
 
   /*
@@ -189,6 +145,9 @@
     --fs-5: 22px;   --lh-5: 28px;  --ls-5: -0.019em;  /* section titles */
     --fs-6: 28px;   --lh-6: 34px;  --ls-6: -0.026em;  /* screen titles */
     --fs-b: 17px;   --lh-b: 26px;                     /* body / long-form */
+    /* Screen titles in Instrument Serif (docs/design): 30px on a phone,
+     * 40px from 640px up (below). */
+    --fs-display: 30px; --lh-display: 36px;
     --fs-l: 17px;   --lh-l: 25px;                     /* list rows */
 
     --fw-regular: 400;
@@ -203,7 +162,7 @@
     /* Softer corners at the comfortable density. A 3px radius reads as
      * precision instrumentation; on a screen someone uses twice a month it
      * reads as unfinished. */
-    --r-xs: 6px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+    --r-xs: 2px; --r-sm: 3px; --r-md: 4px; --r-lg: 4px; --r-xl: 6px;
     --r-full: 999px;
 
     /*
@@ -230,15 +189,17 @@
     --ease-spring: cubic-bezier(0.16, 1.12, 0.3, 1);
 
     /* Light-mode surfaces and depth. */
-    --accent-quiet: #edf0fd;
-    --accent-quiet-hover: #e3e8fc;
-    --accent-line: rgba(47, 81, 217, 0.32);
-    --border-subtle: rgba(18, 19, 22, 0.07);
-    --border-strong: rgba(18, 19, 22, 0.15);
+    --accent-quiet: #f0f0ed;
+    --accent-quiet-hover: #e6e6e2;
+    --accent-line: #cfcfc9;
+    --border-subtle: rgba(10, 10, 10, 0.07);
+    --border-strong: #cfcfc9;
     --e-0: none;
-    --e-1: 0 1px 2px rgba(18, 19, 22, 0.05);
-    --e-2: 0 4px 14px -3px rgba(18, 19, 22, 0.09);
-    --focus-ring: 0 0 0 3px rgba(47, 81, 217, 0.34);
+    /* The mockups draw panels flat with a 1px border; a hairline shadow keeps
+     * a white panel distinct from the #F7F7F5 ground on a dim phone screen. */
+    --e-1: 0 1px 0 rgba(10, 10, 10, 0.03);
+    --e-2: 0 4px 14px -3px rgba(10, 10, 10, 0.08);
+    --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0a0a0a;
 
     /*
      * ------------------------------------------------------------ status --
@@ -253,12 +214,16 @@
      *
      * Now: one definition, three values per family, and screens compose them.
      *
-     * WHAT THE COLOURS MEAN — this is information, never mood:
-     *   neutral    nothing is happening (Draft)
-     *   info       in flight, nothing is owed by you (Submitted → In QC review)
-     *   attention  you are the one holding it up (Revision requested, Ready to preview)
-     *   success    it landed (Approved, Delivered, Closed, Payout released)
-     *   danger     it went wrong (Disputed, Refunded, Cancelled)
+     * WHAT THE FAMILIES MEAN — information, never mood. Since Phase 5 they
+     * are drawn in black and greys like the mockups' four tags
+     * (core/orders/status statusKind):
+     *   neutral    nothing is happening (Draft)            → muted: grey fill
+     *   info       in flight, nothing owed by you          → active: black outline
+     *   attention  you are the one holding it up           → needs: solid black
+     *   success    it landed                               → done: black + tick
+     *   danger     it went wrong (Disputed, Refunded, Cancelled) — kept red
+     *              for errors and refusals; as a tag, Disputed is "needs" and
+     *              Refunded / Cancelled are "muted"
      *
      * Every `-fg` clears 7:1 against white and 4.5:1 against its own `-bg`,
      * measured, not eyeballed — tests/config/color-contrast.test.ts recomputes
@@ -273,33 +238,28 @@
      * costs nothing. That is the constraint that made five families safe at
      * all.
      */
-    --tone-neutral-fg: hsl(0 0% 35%);
-    --tone-neutral-bg: hsl(0 0% 96.5%);
-    --tone-neutral-line: hsl(0 0% 35% / 0.22);
+    --tone-neutral-fg: hsl(60 4% 31%);
+    --tone-neutral-bg: hsl(60 9.1% 93.5%);
+    --tone-neutral-line: hsl(60 4% 31% / 0.24);
 
-    /* The brand hue. In-flight work is the app's default state, so its status
-     * colour being the accent is what keeps the other four meaningful. */
-    --tone-info-fg: hsl(228 69% 46%);
-    --tone-info-bg: hsl(228 78% 96.5%);
-    --tone-info-line: hsl(228 69% 46% / 0.28);
+    /* Active: in flight, nothing owed by you. Outlined in black. */
+    --tone-info-fg: hsl(0 0% 3.9%);
+    --tone-info-bg: hsl(0 0% 100%);
+    --tone-info-line: hsl(0 0% 3.9% / 0.9);
 
-    /* Ochre, not yellow. Yellow at a lightness dark enough to read as text
-     * stops looking like yellow, and at a lightness that looks like yellow it
-     * cannot be read. */
-    --tone-attention-fg: hsl(32 92% 26%);
-    --tone-attention-bg: hsl(36 90% 95.5%);
-    --tone-attention-line: hsl(32 92% 26% / 0.28);
+    /* Needs you. The mockups fill these solid black (components/status-badge);
+     * as a pale surface or a line of text they are black on the neutral fill. */
+    --tone-attention-fg: hsl(0 0% 3.9%);
+    --tone-attention-bg: hsl(60 9.1% 93.5%);
+    --tone-attention-line: hsl(0 0% 3.9% / 0.9);
 
-    /* Deep, because green is intrinsically the lightest hue on this wheel —
-     * the emerald-700 this replaces was the one tone that never quite got
-     * there. */
-    --tone-success-fg: hsl(152 80% 20%);
-    --tone-success-bg: hsl(152 60% 95.5%);
-    --tone-success-line: hsl(152 80% 20% / 0.26);
+    /* Done: black with a tick, on the ground colour. */
+    --tone-success-fg: hsl(0 0% 3.9%);
+    --tone-success-bg: hsl(60 11.1% 96.5%);
+    --tone-success-line: hsl(60 6.7% 70% / 0.6);
 
-    /* Distinct from --destructive, deliberately. --destructive is a BUTTON
-     * fill that white text sits on; this is text that sits on a pale fill.
-     * One value cannot be both without one of the two being wrong. */
+    /* The one colour kept from before: errors and refused actions must not
+     * look like ordinary text. */
     --tone-danger-fg: hsl(0 72% 36%);
     --tone-danger-bg: hsl(0 78% 96.5%);
     --tone-danger-line: hsl(0 72% 36% / 0.26);
@@ -313,6 +273,12 @@
    * removed by a `className` edit, and so a screenshot of the DOM tells you
    * which density you are looking at.
    */
+  @media (min-width: 640px) {
+    :root {
+      --fs-display: 40px; --lh-display: 44px;
+    }
+  }
+
   [data-density="compact"] {
     --fs-1: 11px;   --lh-1: 16px;  --ls-1: 0.055em;
     --fs-2: 12px;   --lh-2: 18px;  --ls-2: 0.002em;
@@ -323,61 +289,12 @@
     --fs-b: 16px;   --lh-b: 24px;
     --fs-l: 14px;   --lh-l: 20px;
 
-    --r-xs: 3px; --r-sm: 5px; --r-md: 7px; --r-lg: 10px; --r-xl: 14px;
+    --r-xs: 2px; --r-sm: 3px; --r-md: 4px; --r-lg: 4px; --r-xl: 6px;
 
     --ctl-sm: 32px;
     --ctl: 36px;
     --ctl-lg: 40px;
     --ctl-icon: 36px;
-  }
-
-  .dark {
-    /*
-     * Dark is not light inverted. Borders become light-on-dark at a DIFFERENT
-     * opacity, and shadows get heavier rather than lighter, because a shadow on
-     * a dark surface has almost no contrast to work with.
-     */
-    --accent-quiet: #1a1f32;
-    --accent-quiet-hover: #212840;
-    --accent-line: rgba(123, 150, 245, 0.34);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-strong: rgba(255, 255, 255, 0.17);
-    --e-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-    --e-2: 0 4px 14px -3px rgba(0, 0, 0, 0.55);
-    --focus-ring: 0 0 0 3px rgba(123, 150, 245, 0.4);
-
-    /*
-     * The five families, derived for dark rather than inverted into it.
-     *
-     * Hue and saturation carry over so a status is the same IDEA in both
-     * themes; lightness is re-solved, because the light values would be
-     * illegible here and their mirror images would not land in the same place.
-     * Each `-fg` is solved to ~8:1 against the dark ground — a deliberately
-     * uniform target, since on a dark surface an unequal one shows up as one
-     * family shouting while another mumbles.
-     *
-     * The fills are near-black tints rather than the light theme's near-whites:
-     * a 96% fill turned into a 4% fill is a fill nobody can see.
-     */
-    --tone-neutral-fg: hsl(0 0% 68%);
-    --tone-neutral-bg: hsl(0 0% 15%);
-    --tone-neutral-line: hsl(0 0% 68% / 0.24);
-
-    --tone-info-fg: hsl(228 72% 76%);
-    --tone-info-bg: hsl(228 42% 14%);
-    --tone-info-line: hsl(228 72% 76% / 0.3);
-
-    --tone-attention-fg: hsl(36 80% 53%);
-    --tone-attention-bg: hsl(34 48% 12%);
-    --tone-attention-line: hsl(36 80% 53% / 0.3);
-
-    --tone-success-fg: hsl(152 52% 49%);
-    --tone-success-bg: hsl(152 40% 11%);
-    --tone-success-line: hsl(152 52% 49% / 0.3);
-
-    --tone-danger-fg: hsl(0 70% 75%);
-    --tone-danger-bg: hsl(0 40% 13%);
-    --tone-danger-line: hsl(0 70% 75% / 0.28);
   }
 
   * {

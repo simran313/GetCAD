@@ -5,13 +5,16 @@ import type { MetadataRoute } from "next";
  *
  * Served from `/manifest.webmanifest` and linked automatically by Next.
  *
- * `start_url` is `/dashboard`, not `/`. Someone who has installed the app to
+ * `start_url` is `/home` (the client home since Phase 5), not `/`. Someone who has installed the app to
  * their home screen has already decided what this is; landing them on the
  * marketing homepage every time makes it feel like a bookmark rather than an
  * application. Signed-out visitors are redirected to sign-in from there, which
  * is the right destination for them anyway.
  *
- * `scope` deliberately covers the whole origin rather than just `/dashboard`.
+ * `id` stays `/dashboard`: it is the installed app's identity, and changing
+ * it would make every phone treat the new version as a different app.
+ *
+ * `scope` deliberately covers the whole origin rather than just `/home`.
  * Order detail, account and the admin queues all live outside it, and a
  * navigation outside scope would eject the user into a browser tab mid-task.
  *
@@ -25,12 +28,13 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "CAD Pillar",
     description: "The operational infrastructure for jewelry CAD production.",
     id: "/dashboard",
-    start_url: "/dashboard",
+    start_url: "/home",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0c0d0f",
-    theme_color: "#0c0d0f",
+    // Light only (Phase 5): the splash and bars match the white portal.
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     categories: ["business", "productivity"],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

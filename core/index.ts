@@ -17,8 +17,8 @@ export { availableTransitions } from "./orders/availableTransitions";
 export type { TransitionRow, ActorContext } from "./orders/availableTransitions";
 export { installAdvice, isIos, isIosSafari } from "./pwa/install";
 export type { InstallAdvice, InstallContext } from "./pwa/install";
-export { tabsForRole, activeTabKey } from "./nav/tabs";
-export type { Tab } from "./nav/tabs";
+export { tabsForRole, activeTabKey, workspaceFor } from "./nav/tabs";
+export type { Tab, Workspace } from "./nav/tabs";
 export { orderActions, primaryAction } from "./orders/actions";
 export type { OrderAction, ActionIntent } from "./orders/actions";
 export {
@@ -47,8 +47,8 @@ export { pushMessageFor, isNotificationKind, NOTIFICATION_KINDS } from "./notifi
 export type { PushMessage, NotificationKind } from "./notifications/push";
 export { gradeBrief, qualitySummary } from "./orders/briefQuality";
 export type { BriefQuality, BriefGap, BriefGrade, BriefContext, GapSeverity } from "./orders/briefQuality";
-export { ORDER_STATUS_META, statusMeta } from "./orders/status";
-export type { StatusTone, StatusMeta } from "./orders/status";
+export { ORDER_STATUS_META, statusMeta, statusKind } from "./orders/status";
+export type { StatusTone, StatusMeta, StatusKind } from "./orders/status";
 export { buildTimeline } from "./orders/timeline";
 export type { TimelineRawRow, TimelineStep, QcOutcome } from "./orders/timeline";
 export {
@@ -111,3 +111,5 @@ export type { EmailTemplate, EmailPayloads, RenderedEmail } from "./email/templa
 // Server-side callers import it directly from core/payments/razorpaySignature.
 export { payoutBatchCsv, paiseToRupees, csvCell, PAYOUT_CSV_HEADER } from "./payouts/batchCsv";
 export type { PayoutBatchRow } from "./payouts/batchCsv";
+export { remaining } from "./time/remaining";
+export type { Remaining } from "./time/remaining";

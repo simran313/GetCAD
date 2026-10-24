@@ -76,7 +76,7 @@ describe("pushMessageFor", () => {
   });
 
   it("falls back to the dashboard when there is no order", () => {
-    expect(pushMessageFor("PAYOUT", null)!.url).toBe("/dashboard");
+    expect(pushMessageFor("PAYOUT", null)!.url).toBe("/home");
   });
 
   // Six files uploaded during one delivery must be one notification, not six

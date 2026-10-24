@@ -4,6 +4,7 @@ import { isProtectedPath } from "./session";
 
 describe("isProtectedPath", () => {
   it("protects the dashboard and everything under it", () => {
+    expect(isProtectedPath("/home")).toBe(true);
     expect(isProtectedPath("/dashboard")).toBe(true);
     expect(isProtectedPath("/dashboard/")).toBe(true);
     expect(isProtectedPath("/dashboard/orders")).toBe(true);

@@ -106,22 +106,22 @@ function tokensFor(selector: string): Record<string, string> {
   return out;
 }
 
+// Light only since Phase 5 (owner answer): the mockups have no dark theme.
 const THEMES = {
   light: tokensFor(":root"),
-  dark: tokensFor(".dark"),
 } as const;
 
 const TONES = ["neutral", "info", "attention", "success", "danger"] as const;
 
-/** Resolves a token, falling back to light — dark only overrides what it changes. */
+/** Resolves a token in a theme. */
 function colorOf(theme: keyof typeof THEMES, token: string): Rgb {
-  const raw = THEMES[theme][token] ?? THEMES.light[token];
+  const raw = THEMES[theme][token];
   const rgb = raw === undefined ? null : parseColor(raw);
   if (!rgb) throw new Error(`${theme}: ${token} is missing or unparseable (${raw})`);
   return rgb;
 }
 
-describe.each(["light", "dark"] as const)("%s theme", (theme) => {
+describe.each(["light"] as const)("%s theme", (theme) => {
   const check = (fg: string, bg: string, floor: number) => {
     const ratio = contrast(colorOf(theme, fg), colorOf(theme, bg));
     expect(

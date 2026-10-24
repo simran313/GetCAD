@@ -41,3 +41,27 @@ export function statusMeta(status: string): StatusMeta {
     }
   );
 }
+
+/**
+ * The four tags of the mockups (docs/design): what a status asks of the
+ * reader, drawn in black and greys.
+ *   needs   solid black — someone must act (a revision, a preview, a dispute)
+ *   active  black outline — in flight, nothing owed by the reader
+ *   done    black with a tick — it landed
+ *   muted   grey — nothing happening, or it ended without landing
+ */
+export type StatusKind = "needs" | "active" | "done" | "muted";
+
+const KIND_BY_TONE: Record<StatusTone, StatusKind> = {
+  attention: "needs",
+  info: "active",
+  success: "done",
+  neutral: "muted",
+  danger: "needs",
+};
+
+/** The tag a status shows. Refunded and cancelled orders are over, so muted. */
+export function statusKind(status: string): StatusKind {
+  if (status === "REFUNDED" || status === "CANCELLED") return "muted";
+  return KIND_BY_TONE[statusMeta(status).tone];
+}

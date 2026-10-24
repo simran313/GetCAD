@@ -28,9 +28,9 @@
  */
 
 /**
- * The dashboard, not the homepage: it is the one authenticated screen every
+ * The app home (/home, Phase 5), not the website: it is the one authenticated screen every
  * role has, and it is what the installed PWA opens on (`start_url` in the
  * manifest), so signing in through the browser and launching from the home
  * screen agree about where "in the app" begins.
  */
-export const POST_AUTH_PATH = "/dashboard";
+export const POST_AUTH_PATH = "/home";

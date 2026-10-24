@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activeTabKey, tabsForRole } from "./tabs";
+import { activeTabKey, tabsForRole, workspaceFor } from "./tabs";
 
 const hrefs = (role: string) => tabsForRole(role).map((t) => t.href);
 
@@ -57,7 +57,8 @@ describe("tabsForRole", () => {
 
   it("offers no tab that is not a real route", () => {
     const known = new Set([
-      "/dashboard",
+      "/home",
+      "/admin/new-order",
       "/orders",
       "/orders/new",
       "/onboarding/designer",
@@ -85,7 +86,7 @@ describe("activeTabKey", () => {
 
   it("matches the tab itself", () => {
     expect(activeTabKey("/orders", tabs)).toBe("orders");
-    expect(activeTabKey("/dashboard", tabs)).toBe("home");
+    expect(activeTabKey("/home", tabs)).toBe("home");
   });
 
   // Guards against `/orders` matching `/orders-archive` by naive prefix.
@@ -104,5 +105,20 @@ describe("activeTabKey", () => {
     ];
     expect(activeTabKey("/orders/new", nested)).toBe("new");
     expect(activeTabKey("/orders/ord_1", nested)).toBe("orders");
+  });
+});
+
+describe("workspaceFor (Phase 5)", () => {
+  it("draws the team in the dark sidebar and everyone else in the light one", () => {
+    for (const role of ["OPS", "SALES", "FINANCE", "QC"]) {
+      expect(workspaceFor(role)).toEqual({ label: "Team workspace", tone: "dark" });
+    }
+    expect(workspaceFor("CLIENT")).toEqual({ label: "Client workspace", tone: "light" });
+    expect(workspaceFor("DESIGNER")).toEqual({ label: "Designer workspace", tone: "light" });
+    expect(workspaceFor("SOMETHING_NEW").tone).toBe("light");
+  });
+
+  it("orders the client's tabs as the mockups do: Home, New order, Orders, Account", () => {
+    expect(tabsForRole("CLIENT").map((t) => t.key)).toEqual(["home", "new", "orders", "account"]);
   });
 });

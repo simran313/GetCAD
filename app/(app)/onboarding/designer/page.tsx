@@ -141,7 +141,7 @@ export default async function DesignerOnboardingPage() {
     <main className="container max-w-2xl py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Become a designer</h1>
-        <Link href="/dashboard" className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground hover:text-foreground">
+        <Link href="/home" className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground hover:text-foreground">
           Dashboard
         </Link>
       </div>
