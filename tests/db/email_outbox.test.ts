@@ -162,10 +162,49 @@ describe("Test BB3 — claiming and recording", () => {
     );
     expect((await outbox(key)).status).toBe("FAILED");
 
+    // Not straight away (0044): a failed email waits before its next try.
+    const tooSoon = await db.query("SELECT * FROM public.claim_emails(100)");
+    expect(tooSoon.rows.some((r) => r.idempotency_key === key)).toBe(false);
+
+    await db.query("UPDATE email_outbox SET updated_at = now() - interval '3 minutes' WHERE idempotency_key = $1", [key]);
     const reclaimed = await db.query("SELECT * FROM public.claim_emails(100)");
     const again = reclaimed.rows.find((r) => r.idempotency_key === key);
     expect(again.status).toBe("SENDING");
     expect(again.attempts).toBe(2);
+  });
+
+  it("new emails go first: failing old ones cannot starve them (0044)", async () => {
+    // Fill a whole batch with old failures, then queue one new email.
+    const old: string[] = [];
+    for (let i = 0; i < 5; i++) {
+      const key = `k:old:${generateId()}`;
+      await queued(key);
+      old.push(key);
+    }
+    await db.query(
+      `UPDATE email_outbox SET status = 'FAILED', attempts = 1, failure_reason = 'provider 403',
+              created_at = now() - interval '1 day', updated_at = now() - interval '1 hour'
+       WHERE idempotency_key = ANY($1)`,
+      [old],
+    );
+    const fresh = `k:new:${generateId()}`;
+    await queued(fresh);
+
+    const { rows } = await db.query("SELECT * FROM public.claim_emails(1)");
+    expect(rows.map((r) => r.idempotency_key)).toEqual([fresh]);
+  });
+
+  it("gives up after 8 tries", async () => {
+    const key = `k:dead:${generateId()}`;
+    await queued(key);
+    await db.query(
+      `UPDATE email_outbox SET status = 'FAILED', attempts = 8, failure_reason = 'provider 403',
+              updated_at = now() - interval '2 hours'
+       WHERE idempotency_key = $1`,
+      [key],
+    );
+    const { rows } = await db.query("SELECT * FROM public.claim_emails(100)");
+    expect(rows.some((r) => r.idempotency_key === key)).toBe(false);
   });
 
   it("rejects a nonsense batch size", async () => {
