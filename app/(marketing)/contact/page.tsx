@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Eyebrow } from "@/components/marketing/blocks";
 import { pageMetadata } from "@/lib/seo";
 
 import { submitLeadAction } from "./actions";
@@ -26,8 +27,8 @@ export default async function ContactPage({
 
   return (
     <section className="container max-w-xl py-16">
-      <p className="text-sm font-medium text-primary">Contact sales</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">Get in touch</h1>
+      <Eyebrow>Contact</Eyebrow>
+      <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.25rem)] font-normal leading-[1.05]">Talk to us</h1>
       <p className="mt-4 text-sm text-muted-foreground">
         Evaluating The CAD Pillar for your business, or have a question before signing up? Tell us
         a bit about what you need and we&apos;ll follow up by email.

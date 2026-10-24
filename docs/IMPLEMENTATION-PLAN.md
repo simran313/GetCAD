@@ -426,6 +426,30 @@ Tracking: `lib/analytics/utm.ts` (first-touch cookie), `marketing_attribution` t
 
 Tests: every A8 route returns 200 and carries UTMs to signup; "How did you hear" required; no TCC mention; no testimonials/logos/stats rendered while placeholders empty / `public_stats` off.
 
+### Phase 6 — owner answers and as built
+- **Owner answers:**
+  - Q14: Terms and Privacy are drafted from DECISIONS and marked "Draft · pending legal review".
+  - Q15: `/about` → `/`, `/security` → `/guarantee`, `/blog` and `/blog/*` → `/`, `/for-designers` → `/apply-designer`, `/quality-control` → `/quality` (301, `next.config.mjs`); `/contact` and `/apply-designer` kept.
+  - Q16: our own database only, with no third-party scripts.
+- **Pages** (LANDING-COPY words in `components/marketing/content.ts`, blocks in `components/marketing/blocks.tsx`, portal look):
+  - `/` (hero, proof strip, 5 steps, deliverables, guarantees, audiences, final CTA);
+  - `/jewelry-cad`; `/how-it-works`; `/pricing` (DECISIONS §4 bands, volume plans as "talk to us"); `/guarantee`;
+  - `/quality` (19 checks in 7 groups; a DB test keeps them equal to `checklist_items`);
+  - `/faq`; `/terms`; `/privacy`.
+  - New header (How it works · Pricing · Guarantee · Quality · FAQ, Sign in, Start for $49, a no-script phone menu) and footer.
+  - The sitemap lists the new pages.
+- **/jewelry-cad form:**
+  - piece + email (+ an optional note) → `start_brief_lead`, plus a `brief_started` event;
+  - then `/sign-up` with the email prefilled;
+  - signed-in visitors go to `/orders/new`.
+  - **Deviation from LANDING-COPY:** the "upload a sketch or photo" field moved to the brief after sign-up, so no files are accepted from people without an account.
+- **Attribution:**
+  - the middleware sets a first-party `tcp_ft` cookie once (utm tags, referring host, landing path; `core/analytics/utm.ts`);
+  - S3 Welcome asks "How did you hear about us?" (required) and saves it with the cookie;
+  - funnel events come from triggers (submitted, paid, approved) and from the app (brief started, first look opened);
+  - admins see "Where clients come from" on `/admin/clients`.
+- **Not built here:** `preview_link_created` and `spec_claim_opened` arrive with Phase 7. The sample row of pieces on `/jewelry-cad` waits for real renders (LANDING-COPY placeholders).
+
 ---
 
 ## Phase 7 — Certificate, fingerprinting, weight sheet, preview link, claims

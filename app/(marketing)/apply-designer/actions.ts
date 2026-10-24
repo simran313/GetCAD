@@ -64,7 +64,7 @@ export async function submitDesignerApplicationAction(
       for (const file of files) {
         const bytes = new Uint8Array(await file.arrayBuffer());
         const opaqueId = generateId();
-        // NOT the double-blind path: this portfolio arrives attached to the
+        // NOT the anonymised order path: this portfolio arrives attached to the
         // applicant's own name, email and phone, and only staff read it. So the
         // broad allowlist applies (PDF/ZIP portfolios are normal here) and no
         // metadata stripping is required — there is no identity to protect.

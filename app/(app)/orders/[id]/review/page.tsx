@@ -36,6 +36,10 @@ export default async function ReviewRendersPage({ params }: { params: Promise<{ 
     .maybeSingle();
   const o = data as { id: string; relation: string; status: string; display_ref: string | null; product_type: string } | null;
   if (!o || o.relation !== "CLIENT") redirect(`/orders/${id}`);
+  // The funnel (Phase 6, 0049): the client opened their first look.
+  if (o.status === "CLIENT_PREVIEW") {
+    await supabase.rpc("record_marketing_event", { p_event: "first_look_viewed", p_order_id: id });
+  }
 
   const [{ data: row }, { data: slots }, { data: spec }, { data: allowance }] = await Promise.all([
     supabase.from("orders").select("work_version").eq("id", id).maybeSingle(),

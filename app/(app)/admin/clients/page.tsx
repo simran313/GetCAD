@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { HEARD_ABOUT } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Select } from "@/components/ui/select";
@@ -20,6 +21,14 @@ import { setAccountManagerAction } from "../actions";
  * price. Names stay out; Create order finds a client by name when needed.
  */
 export const dynamic = "force-dynamic";
+
+const FUNNEL: [string, string][] = [
+  ["brief_started", "Briefs started"],
+  ["brief_submitted", "Briefs sent"],
+  ["payment_completed", "Payments"],
+  ["first_look_viewed", "First looks opened"],
+  ["approved", "Approved"],
+];
 
 interface ClientRow {
   client_id: string;
@@ -50,7 +59,14 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       </main>
     );
   }
-  const { data: staff } = await supabase.from("staff_profiles").select("user_id, first_name").order("first_name");
+  const [{ data: staff }, { data: report }] = await Promise.all([
+    supabase.from("staff_profiles").select("user_id, first_name").order("first_name"),
+    supabase.rpc("attribution_report"),
+  ]);
+  // Where clients come from (Phase 6, 0049): "How did you hear about us?",
+  // the first-touch source, and the funnel over 30 days.
+  const r = (report ?? null) as { heard_about: Record<string, number>; sources: Record<string, number>; events_30d: Record<string, number> } | null;
+  const heardLabel = new Map<string, string>(HEARD_ABOUT.map(([k, l]) => [k, l]));
   const managers = (staff ?? []) as { user_id: string; first_name: string }[];
   const rows = ((res.data ?? []) as ClientRow[]).filter((r) => !q || (r.client_code ?? "").toUpperCase().includes(q));
   const unassigned = rows.filter((r) => !r.manager_id).length;
@@ -62,6 +78,44 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         title="Clients"
         description={unassigned > 0 ? `${unassigned} client${unassigned === 1 ? "" : "s"} without an account manager.` : undefined}
       />
+      {r && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Where clients come from</CardTitle>
+          </CardHeader>
+          <CardBody className="grid gap-6 text-[length:var(--fs-2)] sm:grid-cols-3">
+            {(
+              [
+                ["How they heard", Object.entries(r.heard_about).map(([k, n]) => [heardLabel.get(k) ?? k, n] as const)],
+                ["First visit from", Object.entries(r.sources)],
+                [
+                  "Last 30 days",
+                  FUNNEL.map(([k, l]) => [l, r.events_30d[k] ?? 0] as const),
+                ],
+              ] as [string, (readonly [string, number])[]][]
+            ).map(([title, rows]) => (
+              <div key={title}>
+                <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">{title}</p>
+                {rows.length === 0 ? (
+                  <p className="mt-2 text-muted-foreground">Nothing yet.</p>
+                ) : (
+                  <dl className="mt-2 space-y-1">
+                    {[...rows]
+                      .sort((a, b) => (title === "Last 30 days" ? 0 : b[1] - a[1]))
+                      .map(([k, n]) => (
+                        <div key={k} className="flex justify-between gap-3">
+                          <dt>{k}</dt>
+                          <dd className="tabular font-mono">{n}</dd>
+                        </div>
+                      ))}
+                  </dl>
+                )}
+              </div>
+            ))}
+          </CardBody>
+        </Card>
+      )}
+
       <form className="w-full sm:w-72" role="search">
         <Input name="q" defaultValue={rawQ ?? ""} placeholder="Client code" aria-label="Search by client code" />
       </form>

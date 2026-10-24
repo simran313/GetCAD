@@ -1,6 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-import { isProtectedPath } from "@/core";
+import { encodeFirstTouch, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, firstTouchFrom, isProtectedPath } from "@/core";
 
 // Clerk runs on every matched request. Protection decisions come from the pure,
 // unit-tested isProtectedPath() in core/ — the middleware is just the wiring.
@@ -8,6 +9,20 @@ export default clerkMiddleware(
   async (auth, req) => {
     if (isProtectedPath(req.nextUrl.pathname)) {
       await auth.protect();
+    }
+    // First touch (Phase 6): where a visitor first arrived from, kept once
+    // in our own cookie and saved with "How did you hear about us?" at
+    // sign-up. Never overwritten; no third-party script.
+    if (req.method === "GET" && !req.nextUrl.pathname.startsWith("/api") && !req.cookies.has(FIRST_TOUCH_COOKIE)) {
+      const res = NextResponse.next();
+      res.cookies.set(FIRST_TOUCH_COOKIE, encodeFirstTouch(firstTouchFrom(req.nextUrl, req.headers.get("referer"))), {
+        maxAge: FIRST_TOUCH_MAX_AGE,
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
+      return res;
     }
   },
   {

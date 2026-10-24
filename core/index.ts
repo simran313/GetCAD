@@ -119,3 +119,13 @@ export { jobTab, isOpenJob, jobState, minutesWord, jobClockDue, qcPayoutPaise, r
 export type { JobTab } from "./work/view";
 export { staffStage, staffNext, queueRank, STAFF_STAGES, STAGE_LABELS } from "./orders/staffView";
 export type { StaffStage, StaffFacts, StaffNext } from "./orders/staffView";
+export {
+  FIRST_TOUCH_COOKIE,
+  FIRST_TOUCH_MAX_AGE,
+  firstTouchFrom,
+  encodeFirstTouch,
+  decodeFirstTouch,
+  HEARD_ABOUT,
+  isHeardAbout,
+} from "./analytics/utm";
+export type { FirstTouch, HeardAbout } from "./analytics/utm";

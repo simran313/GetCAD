@@ -35,6 +35,18 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/orders/**": ["./node_modules/rhino3dm/rhino3dm.wasm"],
   },
+  // Pages from the old site (owner answer Q15, Phase 6): kept as addresses
+  // so links and search results still land, on the page that replaced them.
+  async redirects() {
+    return [
+      { source: "/about", destination: "/", statusCode: 301 },
+      { source: "/security", destination: "/guarantee", statusCode: 301 },
+      { source: "/blog", destination: "/", statusCode: 301 },
+      { source: "/blog/:slug*", destination: "/", statusCode: 301 },
+      { source: "/for-designers", destination: "/apply-designer", statusCode: 301 },
+      { source: "/quality-control", destination: "/quality", statusCode: 301 },
+    ];
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: `${UPLOAD_BODY_LIMIT_MB}mb`,
