@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -7,8 +7,12 @@ import { partyLabel } from "@/components/domain";
 import { InstallHint } from "@/components/pwa/install-hint";
 import { PushOptIn } from "@/components/pwa/push-opt-in";
 import { Button } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { pushIsConfiguredForBrowser } from "@/config/push";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+
+import { ClientProfileForm, type ClientProfile } from "./ClientProfileForm";
 
 /**
  * Account.
@@ -40,13 +44,35 @@ export default async function AccountPage() {
   // Read here rather than in the client component: an unconfigured deployment
   // should show nothing at all, not a button that fails when pressed.
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+
+  // C9: a client edits their business details here (Phase 5b).
+  const isClient = role === "CLIENT";
+  const { data: profile } = isClient
+    ? await supabase.from("client_profiles").select("business_name, legal_name, email, phone").maybeSingle()
+    : { data: null };
+  const { data: account } = isClient
+    ? await supabase.from("client_accounts").select("client_code").maybeSingle()
+    : { data: null };
+  const email = isClient ? (await currentUser())?.primaryEmailAddress?.emailAddress ?? null : null;
   const pushOffered = pushIsConfiguredForBrowser(vapidPublicKey);
 
   return (
     <main className="container max-w-2xl py-8">
-      <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
-        Account
-      </h1>
+      <PageHeader
+        eyebrow={(account as { client_code?: string } | null)?.client_code ? `Client code ${(account as { client_code: string }).client_code}` : undefined}
+        title="Account"
+      />
+
+      {isClient && (
+        <Card as="section" className="mt-6">
+          <CardHeader>
+            <CardTitle>Your business</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <ClientProfileForm profile={profile as ClientProfile | null} email={email} next="/account" submitLabel="Save" />
+          </CardBody>
+        </Card>
+      )}
 
       <dl className="mt-6 divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         <Row label="Signed in as" value={partyLabel(role)} />

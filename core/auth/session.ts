@@ -24,6 +24,10 @@
  */
 export const PROTECTED_PREFIXES = [
   "/home",
+  "/welcome",
+  "/messages",
+  "/wallet",
+  "/files",
   "/dashboard",
   "/orders",
   "/account",

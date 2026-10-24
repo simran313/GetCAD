@@ -11,6 +11,9 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { SITE_URL } from "@/lib/seo";
 
+import { productWord } from "@/lib/client/orders";
+
+import { ClientOrderView } from "../ClientOrderView";
 import { OrderDetail } from "../OrderDetail";
 import type { PayoutStateSummary } from "../PayoutPanel";
 import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPanel";
@@ -57,7 +60,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       supabase
         .rpc("visible_orders", { p_order_id: id })
         .select(
-          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission, designer_payout_paise, qc_payout_paise, category, tier, complex_deadline_hours, sla_status, sla_due_at, first_look_at, confirmed_at, paid_at, source",
+          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission, designer_payout_paise, qc_payout_paise, category, tier, complex_deadline_hours, sla_status, sla_due_at, first_look_at, confirmed_at, paid_at, source, service, created_at",
         )
         .maybeSingle(),
       supabase.from("order_transitions").select("from_status, to_status, actor_role, actor_scope"),
@@ -208,6 +211,55 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       p_order_id: order.id,
     });
     payoutState = (data as PayoutStateSummary | null) ?? null;
+  }
+
+  // The client's own view (C4, Phase 5b). Designers and the team keep the
+  // working view below until 5c / 5d.
+  if (order.relation === "CLIENT" && role === "CLIENT") {
+    const [specRes, poRes] = await Promise.all([
+      supabase.from("order_specs").select("*").eq("order_id", order.id).maybeSingle(),
+      supabase.from("orders").select("client_po").eq("id", order.id).maybeSingle(),
+    ]);
+    const spec = specRes.data as Record<string, string | number | boolean | null> | null;
+    const pretty = (v: unknown) =>
+      typeof v === "string" && v ? v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : null;
+    const briefLines = spec
+      ? (
+          [
+            ["Product", productWord(spec.product as string)],
+            ["Metal", [pretty(spec.metal), spec.karatage].filter(Boolean).join(" · ") || null],
+            ["Ring size", (spec.ring_size as string) || null],
+            ["Inner diameter", spec.inner_diameter_um ? `${Number(spec.inner_diameter_um) / 1000} mm` : null],
+            ["Length", spec.length_um ? `${Number(spec.length_um) / 1000} mm` : null],
+            ["Centre stone", spec.has_centre_stone ? [pretty(spec.centre_shape), pretty(spec.centre_setting)].filter(Boolean).join(" · ") : "None"],
+            ["Finish", pretty(spec.finish)],
+          ] as [string, string | null][]
+        )
+          .filter((l): l is [string, string] => !!l[1])
+          .map(([label, value]) => ({ label, value }))
+      : [];
+    return (
+      <>
+        <ClientOrderView
+          order={order}
+          title={(spec?.reference_name as string) || productWord(order.product_type)}
+          clientPo={(poRes.data as { client_po: string | null } | null)?.client_po ?? null}
+          briefLines={briefLines}
+          held={held}
+          revisions={{
+            allowance: (allowanceRes.data as RevisionAllowance | null) ?? null,
+            rounds: (roundsRes.data as RevisionRow[] | null) ?? [],
+            lineage: (lineageRes.data as LineageRow[] | null) ?? [],
+          }}
+          threads={(threadsRes.data as ThreadRow[] | null) ?? []}
+          messages={messages}
+          attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
+          intake={intake}
+          timelineRows={timelineRes.data ?? []}
+        />
+        <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
+      </>
+    );
   }
 
   return (

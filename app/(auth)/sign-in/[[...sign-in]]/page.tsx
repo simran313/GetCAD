@@ -2,6 +2,7 @@ import { SignIn } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { AuthShell, CLERK_APPEARANCE } from "@/components/auth-shell";
 import { POST_AUTH_PATH } from "@/config/auth-redirects";
 
 export const metadata = { title: "Sign in" };
@@ -16,11 +17,11 @@ export default async function SignInPage() {
   if (userId) redirect(POST_AUTH_PATH);
 
   return (
-    <main className="flex min-h-[80vh] items-center justify-center py-16">
+    <AuthShell title="Sign in">
       {/* Without fallbackRedirectUrl, Clerk returns people to `/` — the marketing
           homepage — which looks exactly like sign-in having failed. See
           config/auth-redirects for why this is fallback rather than force. */}
-      <SignIn fallbackRedirectUrl={POST_AUTH_PATH} signUpUrl="/sign-up" />
-    </main>
+      <SignIn fallbackRedirectUrl={POST_AUTH_PATH} signUpUrl="/sign-up" appearance={CLERK_APPEARANCE} />
+    </AuthShell>
   );
 }

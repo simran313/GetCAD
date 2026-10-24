@@ -2,6 +2,7 @@ import { SignUp } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { AuthShell, CLERK_APPEARANCE } from "@/components/auth-shell";
 import { POST_AUTH_PATH } from "@/config/auth-redirects";
 
 export const metadata = { title: "Create an account" };
@@ -14,8 +15,8 @@ export default async function SignUpPage() {
   if (userId) redirect(POST_AUTH_PATH);
 
   return (
-    <main className="flex min-h-[80vh] items-center justify-center py-16">
-      <SignUp fallbackRedirectUrl={POST_AUTH_PATH} signInUrl="/sign-in" />
-    </main>
+    <AuthShell title="Open your studio account">
+      <SignUp fallbackRedirectUrl={POST_AUTH_PATH} signInUrl="/sign-in" appearance={CLERK_APPEARANCE} />
+    </AuthShell>
   );
 }

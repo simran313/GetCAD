@@ -8,7 +8,10 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrustLine } from "@/components/trust-line";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
+import { loadClientOrders } from "@/lib/client/orders";
+
 import { markNotificationsReadAction } from "./actions";
+import { ClientHome } from "./ClientHome";
 
 // Authenticated, per-request data — never cache it.
 export const dynamic = "force-dynamic";
@@ -45,6 +48,39 @@ export default async function DashboardPage() {
     .from("users")
     .select("id, role, status")
     .maybeSingle();
+  // Clients get the redesigned home (C1, Phase 5b); designers and the team
+  // keep this one until 5c / 5d. A client who has never said who they are is
+  // asked once (S3).
+  if (me?.role === "CLIENT") {
+    const { data: profile } = await supabase
+      .from("client_profiles")
+      .select("business_name, legal_name")
+      .maybeSingle();
+    if (!profile) redirect("/welcome");
+    const [orders, credits, unread] = await Promise.all([
+      loadClientOrders(supabase),
+      supabase.from("client_credits").select("status, amount_cents, decided_amount_cents"),
+      supabase
+        .from("notifications")
+        .select("order_id, created_at")
+        .eq("kind", "MESSAGE")
+        .is("read_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
+    const creditCents = ((credits.data ?? []) as { status: string; amount_cents: number; decided_amount_cents: number | null }[])
+      .filter((c) => c.status === "apply_next" || c.status === "partial")
+      .reduce((s, c) => s + (c.decided_amount_cents ?? c.amount_cents), 0);
+    return (
+      <ClientHome
+        name={(profile as { business_name: string | null; legal_name: string }).business_name ?? (profile as { legal_name: string }).legal_name}
+        orders={orders}
+        creditCents={creditCents}
+        unreadMessages={(unread.data ?? []) as { order_id: string | null; created_at: string }[]}
+      />
+    );
+  }
+
   const { data: visible } = await supabase.rpc("visible_orders").select("id");
   const myOrders = Array.isArray(visible) ? visible.length : 0;
   const { data: notifData } = await supabase
