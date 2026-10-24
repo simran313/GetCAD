@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.2 · October 2026 · Owner: Fazil Zaidi
+Version 1.3 · October 2026 · Owner: Fazil Zaidi
 
-Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -116,8 +116,8 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 - 3DM + STL (mesh max distance/edge 0.005).
 - 3 render views.
 - QC certificate PDF, which doubles as the spec sheet.
-- Weight and metal-cost sheet.
-- Branded 3D preview link the jeweler can send their own customer.
+- Weight sheet: estimated grams in 10K, 14K, 18K, Pt950 and Ag925 from the model volume. No metal cost in v1.
+- Branded 3D preview link the jeweler can send their own customer (3D view built from the STL; renders alongside).
 - Required designer upload slots: 3DM, STL, TV, PV, RV, FV, BV, M, DD, GW.
 - Files are auto-named `{ORDER}_{SLOT}_v{n}.{ext}`; metadata stripped; delivered files fingerprinted (SHA-256) and archived read-only.
 

@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL(".", import.meta.url)) },
   },
+  // The PDF documents (lib/pdf) are JSX; tsconfig's "preserve" leaves that to
+  // Next, so tests use React's automatic runtime explicitly.
+  esbuild: { jsx: "automatic" },
   test: {
     environment: "node",
     include: ["core/**/*.test.ts", "tests/**/*.test.ts"],

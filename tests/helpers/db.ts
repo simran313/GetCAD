@@ -168,6 +168,13 @@ export async function completeDesignerWork(client: Client, orderId: string, desi
        SET designer_by = EXCLUDED.designer_by, designer_at = EXCLUDED.designer_at`,
     [orderId, version, designerId],
   );
+  // The model volume for this version (0050): a CAD version cannot be
+  // submitted without it.
+  await client.query(
+    `INSERT INTO job_volumes (order_id, version, volume_mm3, entered_by) VALUES ($1, $2, 250, $3)
+     ON CONFLICT (order_id, version) DO NOTHING`,
+    [orderId, version, designerId],
+  );
   const slots = await client.query("SELECT code FROM deliverable_slots WHERE required ORDER BY position");
   for (const { code } of slots.rows as { code: string }[]) {
     const fileId = `fx_${orderId}_${code}_${version}`;
@@ -195,6 +202,14 @@ export async function completeQcTicks(client: Client, orderId: string, podLeadId
      SELECT o.id, o.work_version, i.id, $2, now() FROM orders o CROSS JOIN checklist_items i
      WHERE o.id = $1
      ON CONFLICT (order_id, version, item_id) DO UPDATE SET qc_by = EXCLUDED.qc_by, qc_at = EXCLUDED.qc_at`,
+    [orderId, podLeadId],
+  );
+  // The QC measurements for this version (0050): a CAD version cannot pass
+  // without them.
+  await client.query(
+    `INSERT INTO qc_measurements (order_id, version, min_wall_um, min_prong_um, recorded_by)
+     SELECT id, work_version, 800, 800, $2 FROM orders WHERE id = $1
+     ON CONFLICT (order_id, version) DO NOTHING`,
     [orderId, podLeadId],
   );
 }

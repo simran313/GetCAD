@@ -127,6 +127,25 @@ export function ClientOrderView({
         </div>
 
         <aside className="space-y-4">
+          {["CLIENT_PREVIEW", "APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED", "DISPUTED", "REVISION_REQUESTED"].includes(o.status) &&
+            o.service !== "render" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documents</CardTitle>
+                </CardHeader>
+                <CardBody className="space-y-2 text-[length:var(--fs-2)]">
+                  <a href={`/api/orders/${o.id}/certificate`} className="block underline underline-offset-4">
+                    QC certificate and spec sheet (PDF)
+                  </a>
+                  <a href={`/api/orders/${o.id}/weight-sheet`} className="block underline underline-offset-4">
+                    Weight sheet (PDF)
+                  </a>
+                  <p className="text-muted-foreground">
+                    The certificate lists the measured minimums, the 19 checks and each file&apos;s fingerprint.
+                  </p>
+                </CardBody>
+              </Card>
+            )}
           <Card>
             <CardHeader>
               <CardTitle>First look</CardTitle>

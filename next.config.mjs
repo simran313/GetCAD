@@ -31,7 +31,9 @@ const nextConfig = {
   // a WebAssembly file from its own folder at runtime. Left to the bundler,
   // that file would not be found; kept external, it is required from
   // node_modules, and the explicit include makes sure the .wasm is deployed.
-  serverExternalPackages: ["rhino3dm"],
+  // @react-pdf/renderer (Phase 7a certificate and weight sheet) runs in Node,
+  // required at runtime rather than bundled.
+  serverExternalPackages: ["rhino3dm", "@react-pdf/renderer"],
   outputFileTracingIncludes: {
     "/orders/**": ["./node_modules/rhino3dm/rhino3dm.wasm"],
   },

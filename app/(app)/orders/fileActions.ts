@@ -17,6 +17,7 @@ import {
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { strip3dm } from "@/lib/files/strip3dm";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { recordFingerprint } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 /**
@@ -139,8 +140,9 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
   }
 
   const supabase = await createUserSupabaseClient();
+  const fileVersionId = generateId();
   const { error } = await supabase.rpc("add_slot_file", {
-    p_id: generateId(),
+    p_id: fileVersionId,
     p_order_id: orderId,
     p_slot: slot,
     p_object_key: objectKey,
@@ -152,6 +154,10 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
     await admin.storage.from(ORDER_FILES_BUCKET).remove([objectKey]);
     throw new Error(error.message);
   }
+
+  // The fingerprint of exactly the bytes stored (A3, 0050): what a spec
+  // claim is matched against later.
+  await recordFingerprint(fileVersionId, gate.file.bytes);
 
   revalidatePath("/", "layout");
 }

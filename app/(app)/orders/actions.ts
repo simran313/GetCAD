@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateId } from "@/core";
+import { issueCertificate } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 // Create a DRAFT order for the current user. The DB function is the source of
@@ -55,6 +56,74 @@ export async function qcDecisionAction(formData: FormData): Promise<void> {
     p_notes: notes,
   });
   if (error) throw new Error(error.message);
+  // The certificate goes out with the first look (A2). Best effort: the pass
+  // stands either way, and the order page offers "Issue certificate" if this
+  // did not finish.
+  if (outcome === "PASS") {
+    try {
+      await issueCertificate(supabase, orderId);
+    } catch (e) {
+      console.error("certificate not issued", orderId, (e as Error).message);
+    }
+  }
+  revalidatePath("/", "layout");
+}
+
+// Phase 7a (0050): the designer's model volume, the pod lead's measured
+// minimums, a client's waiver, and issuing a certificate by hand.
+export async function setVolumeAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("set_job_volume", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_volume_mm3: Number(formData.get("volume_mm3")),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/", "layout");
+}
+
+const um = (form: FormData, key: string): number | null => {
+  const raw = form.get(key)?.toString().trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.round(n * 1000) : null;
+};
+
+export async function recordMeasurementsAction(formData: FormData): Promise<void> {
+  const seats = formData
+    .getAll("seat")
+    .map((v) => v.toString().trim())
+    .filter(Boolean)
+    .map((line) => ({ size_mm: line }));
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("record_qc_measurements", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_min_wall_um: um(formData, "min_wall_mm"),
+    p_min_prong_um: um(formData, "min_prong_mm"),
+    p_stone_seats: seats,
+    p_ring_size: formData.get("ring_size")?.toString() ?? null,
+    p_inner_diameter_um: um(formData, "inner_diameter_mm"),
+    p_mesh_tolerance_um: um(formData, "mesh_tolerance_mm") ?? 5,
+    p_open_edges: Number(formData.get("open_edges") ?? 0) || 0,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/", "layout");
+}
+
+export async function addWaiverAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("add_spec_waiver", {
+    p_order_id: formData.get("order_id")?.toString() ?? "",
+    p_spec: formData.get("spec")?.toString() ?? "",
+    p_requested: formData.get("requested")?.toString() ?? "",
+    p_note: formData.get("note")?.toString() || null,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/", "layout");
+}
+
+export async function issueCertificateAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  await issueCertificate(supabase, formData.get("order_id")?.toString() ?? "");
   revalidatePath("/", "layout");
 }
 
