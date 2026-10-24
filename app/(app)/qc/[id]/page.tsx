@@ -2,13 +2,17 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { minutesWord, rupeesWord } from "@/core";
+import { minutesWord, mmWord, rupeesWord } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import type { VersionSpec } from "@/lib/work/spec";
 import { Timer } from "@/components/ui/timer";
 import { Checklist } from "@/components/work/checklist";
 import { References } from "@/components/work/references";
@@ -21,7 +25,7 @@ import { requireTeam } from "@/lib/work/team";
 import { cn } from "@/lib/utils";
 
 import { AutoRefresh } from "../../orders/AutoRefresh";
-import { qcDecisionAction } from "../../orders/actions";
+import { addWaiverAction, qcDecisionAction, recordMeasurementsAction } from "../../orders/actions";
 import type { ChecklistRow } from "../../orders/WorkPanels";
 
 /**
@@ -62,7 +66,7 @@ export default async function QcReviewPage({
   }
   const version = Math.min(Math.max(Number(v) || job.work_version, 1), job.work_version);
 
-  const [filesRes, checklistRes, specRes, accentsRes, stampRes, refs, relRes] = await Promise.all([
+  const [filesRes, checklistRes, specRes, accentsRes, stampRes, refs, relRes, vsRes] = await Promise.all([
     supabase.from("deliverables").select("slot, file_version_id, file_name").eq("order_id", id).eq("version", version),
     supabase.rpc("job_checklist", { p_order_id: id }),
     supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
@@ -70,7 +74,14 @@ export default async function QcReviewPage({
     supabase.rpc("order_activity_stamp", { p_order_id: id }),
     loadReferences(supabase, id),
     supabase.rpc("my_order_relation", { p_order_id: id }),
+    supabase.rpc("version_spec", { p_order_id: id }),
   ]);
+  // Phase 7a (0050): this version's measured minimums, the designer's
+  // volume and any waivers; Pass needs the measurements, with no open edges.
+  const vs = (vsRes.data ?? null) as VersionSpec | null;
+  const m = vs?.measurements ?? null;
+  const isCad = job.service !== "render";
+  const measured = !isCad || (!!m && m.open_edges === 0);
   const files = (filesRes.data ?? []) as { slot: string; file_version_id: string; file_name: string }[];
   const images = files.filter((f) => IMAGE.test(f.file_name));
   const others = files.filter((f) => !IMAGE.test(f.file_name));
@@ -171,7 +182,7 @@ export default async function QcReviewPage({
               <CardHeader>
                 <CardTitle>Decision</CardTitle>
                 <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
-                  Pass unlocks at 19 / 19
+                  Pass unlocks at 19 / 19{isCad ? " + measurements" : ""}
                   {job.qc_payout_paise ? ` · your QC payout ${rupeesWord(job.qc_payout_paise)}` : ""}
                   {job.price_total ? ` (${formatMoney(job.price_total, job.currency ?? "USD")} order)` : ""}
                 </span>
@@ -191,10 +202,104 @@ export default async function QcReviewPage({
                 <form action={qcDecisionAction} className="flex items-end">
                   <input type="hidden" name="order_id" value={id} />
                   <input type="hidden" name="outcome" value="PASS" />
-                  <Button type="submit" disabled={qcDone < 19} className="w-full md:w-auto">
+                  <Button type="submit" disabled={qcDone < 19 || !measured} className="w-full md:w-auto">
                     Pass to client
                   </Button>
                 </form>
+              </CardBody>
+            </Card>
+          )}
+
+          {isCad && (
+            <Card as="section">
+              <CardHeader>
+                <CardTitle>Measured specification</CardTitle>
+                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                  {m ? `Recorded · v${vs?.version}` : "Needed to pass"} · goes on the certificate
+                </span>
+              </CardHeader>
+              <CardBody className="space-y-4">
+                <p className="text-[length:var(--fs-2)] text-muted-foreground">
+                  Model volume from the designer: {vs?.volume_mm3 != null ? `${Number(vs.volume_mm3).toFixed(1)} mm³` : "not entered"}.
+                  Minimums: wall {mmWord(vs?.minimums.wall_um)}, prong {mmWord(vs?.minimums.prong_um)}.
+                </p>
+                {inReview ? (
+                  <form action={recordMeasurementsAction} className="grid gap-3 sm:grid-cols-3">
+                    <input type="hidden" name="order_id" value={id} />
+                    {(
+                      [
+                        ["min_wall_mm", "Minimum wall (mm)", m ? m.min_wall_um / 1000 : "", true],
+                        ["min_prong_mm", "Minimum prong (mm)", m?.min_prong_um != null ? m.min_prong_um / 1000 : "", false],
+                        ["inner_diameter_mm", "Inner diameter (mm)", m?.inner_diameter_um != null ? m.inner_diameter_um / 1000 : "", false],
+                        ["mesh_tolerance_mm", "Mesh tolerance (mm)", m ? m.mesh_tolerance_um / 1000 : 0.005, true],
+                      ] as [string, string, number | string, boolean][]
+                    ).map(([name, label, value, required]) => (
+                      <Field key={name} label={label} htmlFor={name}>
+                        <Input id={name} name={name} type="number" step="0.001" min="0.001" inputMode="decimal" required={required} defaultValue={value} />
+                      </Field>
+                    ))}
+                    <Field label="Ring size" htmlFor="ring_size">
+                      <Input id="ring_size" name="ring_size" maxLength={40} defaultValue={m?.ring_size ?? ""} />
+                    </Field>
+                    <Field label="Open edges" htmlFor="open_edges" hint="Must be 0 to pass">
+                      <Input id="open_edges" name="open_edges" type="number" min="0" step="1" required defaultValue={m?.open_edges ?? 0} />
+                    </Field>
+                    {[0, 1, 2].map((i) => (
+                      <Field key={i} label={`Stone seat ${i + 1}`} htmlFor={`seat${i}`} optional>
+                        <Input
+                          id={`seat${i}`}
+                          name="seat"
+                          maxLength={80}
+                          placeholder={i === 0 ? "Centre oval 9 × 7" : ""}
+                          defaultValue={m?.stone_seats[i]?.size_mm ?? ""}
+                        />
+                      </Field>
+                    ))}
+                    <div className="sm:col-span-3">
+                      <Button type="submit" variant="outline">
+                        {m ? "Update measurements" : "Record measurements"}
+                      </Button>
+                    </div>
+                  </form>
+                ) : m ? (
+                  <p className="text-[length:var(--fs-2)]">
+                    Wall {mmWord(m.min_wall_um)} · prong {mmWord(m.min_prong_um)} · open edges {m.open_edges}
+                  </p>
+                ) : null}
+
+                <div className="space-y-2 border-t border-border pt-[var(--s-3)]">
+                  <p className="text-[length:var(--fs-2)] font-medium">Client waivers</p>
+                  {(vs?.waivers ?? []).length === 0 ? (
+                    <p className="text-[length:var(--fs-2)] text-muted-foreground">None. Record one when the client asks for less than a minimum.</p>
+                  ) : (
+                    <ul className="space-y-1 text-[length:var(--fs-2)]">
+                      {vs!.waivers.map((w, i) => (
+                        <li key={i}>
+                          {w.spec}: client requested {w.requested}
+                          {w.note ? ` — ${w.note}` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <form action={addWaiverAction} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="order_id" value={id} />
+                    <Select name="spec" required defaultValue="" aria-label="Which spec" className="w-auto">
+                      <option value="" disabled>
+                        Spec…
+                      </option>
+                      {["wall", "prong", "stone_seat", "size", "mesh", "other"].map((x) => (
+                        <option key={x} value={x}>
+                          {x.replace("_", " ")}
+                        </option>
+                      ))}
+                    </Select>
+                    <Input name="requested" required maxLength={200} placeholder="e.g. 0.6 mm wall" aria-label="What the client asked for" className="w-48" />
+                    <Input name="note" maxLength={300} placeholder="Note (optional)" aria-label="Note" className="min-w-0 flex-1" />
+                    <Button type="submit" size="sm" variant="outline">
+                      Add waiver
+                    </Button>
+                  </form>
+                </div>
               </CardBody>
             </Card>
           )}

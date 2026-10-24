@@ -223,6 +223,9 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
 
   it("submitting goes straight to the pod lead's QC queue", async () => {
     await fillSlots(id, ["TV", "3DM", "STL", "PV", "RV", "FV", "BV", "M", "DD"]); // only GW was missing
+    // Phase 7a (0050): the model volume first.
+    await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(/model volume/i);
+    await q(designer, "SELECT public.set_job_volume($1, 312.5)", [id]);
     const r = await q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED') AS r", [id]);
     expect(r.rows[0].r.to).toBe("QC_REVIEW");
     expect((await status(id)).status).toBe("QC_REVIEW");
@@ -262,8 +265,14 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
   it("a full second pass reaches the client", async () => {
     await fillSlots(id, ["TV"]);
     await tickAll(id, "designer", designer);
+    await q(designer, "SELECT public.set_job_volume($1, 298)", [id]);
     await q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id]);
     await tickAll(id, "qc", podLead);
+    // Phase 7a (0050): the measured minimums, with no open edges.
+    await expect(q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id])).rejects.toThrow(/QC measurements/i);
+    await q(podLead, "SELECT public.record_qc_measurements($1, 820, 810, '[]'::jsonb, 'US 6.5', NULL, 5, 2)", [id]);
+    await expect(q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id])).rejects.toThrow(/open edges/i);
+    await q(podLead, "SELECT public.record_qc_measurements($1, 820, 810, '[]'::jsonb, 'US 6.5', NULL, 5, 0)", [id]);
     await q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id]);
     expect((await status(id)).status).toBe("CLIENT_PREVIEW");
   });

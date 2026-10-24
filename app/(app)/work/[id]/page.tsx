@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { jobClockDue, jobState, minutesWord, slotAccept } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
@@ -18,7 +19,7 @@ import { versionNote } from "@/lib/work/notes";
 import { loadReferences } from "@/lib/work/references";
 
 import { AutoRefresh } from "../../orders/AutoRefresh";
-import { transitionAction } from "../../orders/actions";
+import { setVolumeAction, transitionAction } from "../../orders/actions";
 import { uploadSlotAction } from "../../orders/fileActions";
 import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../../orders/types";
@@ -55,7 +56,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note] = await Promise.all([
+  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes] = await Promise.all([
     supabase.rpc("job_brief", { p_order_id: id }),
     supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", id).order("position"),
     supabase.rpc("job_slots", { p_order_id: id }),
@@ -66,7 +67,10 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     supabase.rpc("order_activity_stamp", { p_order_id: id }),
     loadReferences(supabase, id),
     versionNote(supabase, id, job.work_version),
+    supabase.rpc("version_spec", { p_order_id: id }),
   ]);
+  const volume = (specRes.data as { volume_mm3: number | null } | null)?.volume_mm3 ?? null;
+  const needsVolume = job.service !== "render";
 
   const brief = briefRes.data as BriefRow | null;
   const slots = ((slotsRes.data ?? []) as SlotRow[]).filter((s) => s.required);
@@ -74,7 +78,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const ticked = checklist.filter((r) => r.designer_at).length;
   const filled = slots.filter((s) => s.file_version_id).length;
   const working = job.status === "IN_PROGRESS";
-  const canSubmit = working && ticked === 19 && filled === slots.length && slots.length > 0;
+  const canSubmit = working && ticked === 19 && filled === slots.length && slots.length > 0 && (!needsVolume || volume != null);
   const clock = jobClockDue(job.started_at, job.minutes);
   const state = jobState(job.status);
   const lines = briefLines(brief, (accentsRes.data ?? []) as AccentLine[]);
@@ -218,6 +222,39 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             </CardBody>
           </Card>
 
+          {needsVolume && (
+            <Card as="section">
+              <CardHeader>
+                <CardTitle>Model volume</CardTitle>
+                {volume != null && <span className="tabular font-mono text-[length:var(--fs-2)]">{Number(volume).toFixed(1)} mm³</span>}
+              </CardHeader>
+              <CardBody className="space-y-2">
+                <p className="text-[length:var(--fs-2)] text-muted-foreground">
+                  From Rhino (Analyze → Mass properties → Volume) on the final model. The weight sheet is made from it.
+                </p>
+                {working && (
+                  <form action={setVolumeAction} className="flex items-end gap-2">
+                    <input type="hidden" name="order_id" value={id} />
+                    <Input
+                      name="volume_mm3"
+                      type="number"
+                      inputMode="decimal"
+                      step="0.001"
+                      min="0.001"
+                      required
+                      defaultValue={volume ?? ""}
+                      aria-label="Model volume in cubic millimetres"
+                      className="flex-1"
+                    />
+                    <Button type="submit" variant="outline">
+                      Save
+                    </Button>
+                  </form>
+                )}
+              </CardBody>
+            </Card>
+          )}
+
           <Card as="section">
             <CardHeader>
               <CardTitle>Designer checklist</CardTitle>
@@ -236,7 +273,8 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               </form>
               {!canSubmit && working && (
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                  Finish the checklist ({ticked}/19) and the files ({filled}/{slots.length}) to submit.
+                  Finish the checklist ({ticked}/19), the files ({filled}/{slots.length})
+                  {needsVolume ? ` and the model volume${volume != null ? " ✓" : ""}` : ""} to submit.
                 </p>
               )}
               {job.status === "QC_REVIEW" && (

@@ -61,11 +61,19 @@ export default async function FilesPage() {
         supabase.from("deliverables").select("file_version_id, file_name").in("order_id", ids),
       ])
     : [{ data: [] }, { data: [] }];
+  // Fingerprints (A3, 0050) for orders past QC, and their documents.
+  const POST_QC = ["CLIENT_PREVIEW", "APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED", "DISPUTED", "REVISION_REQUESTED"];
+  const fpRows = await Promise.all(
+    orders
+      .filter((o) => POST_QC.includes(o.status))
+      .map(async (o) => ((await supabase.rpc("order_fingerprints", { p_order_id: o.id })).data ?? []) as { file_version_id: string; sha256: string }[]),
+  );
+  const shaOf = new Map(fpRows.flat().map((r) => [r.file_version_id, r.sha256]));
   const nameOf = new Map(((names ?? []) as { file_version_id: string; file_name: string }[]).map((n) => [n.file_version_id, n.file_name]));
   const byOrder = new Map<string, VersionRow[]>();
   for (const v of (versions ?? []) as VersionRow[]) byOrder.set(v.order_id, [...(byOrder.get(v.order_id) ?? []), v]);
 
-  const withFiles = orders.filter((o) => (byOrder.get(o.id) ?? []).length > 0);
+  const withFiles = orders.filter((o) => (byOrder.get(o.id) ?? []).length > 0 || POST_QC.includes(o.status));
 
   return (
     <main className="container max-w-4xl space-y-6 py-8">
@@ -110,6 +118,16 @@ export default async function FilesPage() {
                   STL, 3DM and the summary sheet unlock when you approve the design.
                 </p>
               )}
+              {POST_QC.includes(o.status) && o.service !== "render" && (
+                <p className="flex flex-wrap gap-3 text-[length:var(--fs-2)]">
+                  <a href={`/api/orders/${o.id}/certificate`} className="underline underline-offset-4">
+                    QC certificate (PDF)
+                  </a>
+                  <a href={`/api/orders/${o.id}/weight-sheet`} className="underline underline-offset-4">
+                    Weight sheet (PDF)
+                  </a>
+                </p>
+              )}
               <ul className="divide-y divide-border">
                 {rows.map(({ f, grant }) => {
                   const [what, how] = KIND_WORDS[f.kind] ?? ["File", ""];
@@ -120,6 +138,11 @@ export default async function FilesPage() {
                         <span className="block truncate font-mono text-[length:var(--fs-1)] text-muted-foreground">
                           {[nameOf.get(f.id), how, size(f.size_bytes)].filter(Boolean).join(" · ")}
                         </span>
+                        {shaOf.get(f.id) && (
+                          <span className="block truncate font-mono text-[length:var(--fs-1)] text-muted-foreground" title={shaOf.get(f.id)}>
+                            SHA-256 {shaOf.get(f.id)!.slice(0, 16)}…
+                          </span>
+                        )}
                       </span>
                       {grant === "ALLOW" ? (
                         <a href={`/api/files/${f.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>

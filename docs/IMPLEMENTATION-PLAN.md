@@ -465,6 +465,28 @@ Migrations `0047_certificates.sql`, `0048_deliverable_files.sql`, `0049_weight_s
 
 Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities change weights; preview link shows jeweler logo, no TCP; expired/revoked → "not available"; token can't reach another order; claim button gone after 30 days; hash mismatch blocks claim; upheld claim credits once.
 
+### Phase 7 — owner answers (October 2026)
+- **Split:** two PRs. 7a covers the certificate, fingerprints and weight sheet; 7b covers the preview link, claims and stats.
+- **Q17:** PDFs come from `@react-pdf/renderer` on the server.
+- **Q18:** the preview link's 3D view is built from the STL, not a designer GLB slot.
+- **Weight sheet:** grams only, with no metal cost (DECISIONS v1.3 §9).
+
+### Phase 7a — as built
+- **Migration 0050 / policy 0039:** see db/README. Numbered 0050, not 0047–0049 as planned above, because those numbers were used in Phase 5–6.
+- **Designer (D4):** a "Model volume" card (mm³, from Rhino's mass properties). Submit to QC also needs the volume.
+- **Pod lead (P2):** a "Measured specification" form records minimum wall, prong, inner diameter, mesh tolerance, ring size, open edges and up to 3 stone seats, and shows the volume and the minimums. Client waivers are listed and can be added there. Pass needs 19/19 plus measurements with 0 open edges.
+- **Certificate:**
+  - on PASS, `qcDecisionAction` builds the PDF from `certificate_data` as the caller (`lib/pdf/certificate.tsx`), stores it under a new key and registers it (`lib/certificates/issue.ts`);
+  - this is best effort: the team order page offers "Issue certificate" when one is missing;
+  - the PDF carries no studio name, and shows the designer by DSG ref and the pod by name.
+- **Fingerprints:** `uploadSlotAction` records the SHA-256 of the exact stored bytes. Delivery stamps the version's files archived. The client's Files page shows each fingerprint.
+- **Weight sheet:** made on request (`/api/orders/[id]/weight-sheet`, `lib/pdf/weightSheet.tsx`, `core/weights`) from the volume and the admin densities.
+- **Downloads:** `/api/orders/[id]/certificate` serves a signed URL; anything not found or not allowed returns 404.
+- **Where it shows:**
+  - client C4 "Documents" and C8 links;
+  - team order page links.
+- **Not done:** files uploaded before 0050 have no fingerprint, and orders that passed QC before it have no certificate.
+
 ---
 
 ## Phase 8 — End-to-end tests

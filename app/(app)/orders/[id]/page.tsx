@@ -6,11 +6,13 @@ import { escrowSign, staffNext, type TransitionRow } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { TrustLine } from "@/components/trust-line";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { PodPicker, type PodOption } from "@/components/work/pod-picker";
 import type { PodJob } from "@/lib/work/load";
+import type { VersionSpec } from "@/lib/work/spec";
+import { issueCertificateAction } from "../actions";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
@@ -274,10 +276,14 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   // A3 — the team's order page (Phase 5d): references in the header, the
   // next move first, then the work and conversation beside the controls.
   if (order.relation !== "CLIENT") {
-    const [jobRes, podsRes] = await Promise.all([
+    const [jobRes, podsRes, vsRes] = await Promise.all([
       supabase.rpc("pod_jobs", { p_order_id: order.id }).maybeSingle(),
       order.relation === "ADMIN" ? supabase.rpc("pods_overview") : Promise.resolve({ data: null }),
+      supabase.rpc("version_spec", { p_order_id: order.id }),
     ]);
+    // Phase 7a (0050): the certificate and weight sheet once QC has passed.
+    const vs = (vsRes.data ?? null) as VersionSpec | null;
+    const postQc = ["CLIENT_PREVIEW", "APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED", "DISPUTED"].includes(order.status);
     const job = (jobRes.data as PodJob | null) ?? null;
     const pods = (podsRes.data as PodOption[] | null) ?? null;
     const next = staffNext({
@@ -318,9 +324,31 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               {checklistRows.filter((r) => r.qc_at).length}/19 · files {slotRows.filter((r) => r.file_version_id).length}/{slotRows.length}
             </p>
           )}
-          <Link href={`/orders/${order.id}/brief`} className="inline-block text-[length:var(--fs-2)] underline underline-offset-4">
-            The brief
-          </Link>
+          <p className="flex flex-wrap gap-3 text-[length:var(--fs-2)]">
+            <Link href={`/orders/${order.id}/brief`} className="underline underline-offset-4">
+              The brief
+            </Link>
+            {postQc && order.service !== "render" && (
+              <>
+                {vs?.certificate && (
+                  <a href={`/api/orders/${order.id}/certificate`} className="underline underline-offset-4">
+                    Certificate
+                  </a>
+                )}
+                <a href={`/api/orders/${order.id}/weight-sheet`} className="underline underline-offset-4">
+                  Weight sheet
+                </a>
+              </>
+            )}
+          </p>
+          {postQc && order.service !== "render" && vs && !vs.certificate && (
+            <form action={issueCertificateAction}>
+              <input type="hidden" name="order_id" value={order.id} />
+              <Button type="submit" size="sm" variant="outline">
+                Issue certificate
+              </Button>
+            </form>
+          )}
         </CardBody>
       </Card>
     );

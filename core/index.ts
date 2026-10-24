@@ -129,3 +129,5 @@ export {
   isHeardAbout,
 } from "./analytics/utm";
 export type { FirstTouch, HeardAbout } from "./analytics/utm";
+export { METALS, METAL_NAMES, grams, gramsWord, weightTable, mmWord } from "./weights/weights";
+export type { Metal } from "./weights/weights";
