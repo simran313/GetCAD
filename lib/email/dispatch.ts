@@ -3,6 +3,7 @@ import "server-only";
 import { isEmailTemplate, renderEmail, type EmailPayloads, type EmailTemplate } from "@/core";
 import { isEmailConfigured } from "@/config/email";
 import { sendEmail } from "@/lib/email/client";
+import { SITE_URL } from "@/lib/seo";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 /**
@@ -59,7 +60,10 @@ export async function dispatchEmails(limit = 20): Promise<DispatchOutcome[]> {
 
     try {
       const template = row.template as EmailTemplate;
-      const rendered = renderEmail(template, row.payload as EmailPayloads[typeof template]);
+      // The site's address is configuration, not data: it is added here
+      // rather than stored with each email (templates that link use it).
+      const payload = { ...row.payload, site_url: SITE_URL } as EmailPayloads[typeof template];
+      const rendered = renderEmail(template, payload);
       const { id } = await sendEmail({
         to: row.recipient_email,
         subject: rendered.subject,

@@ -273,6 +273,13 @@ Migrations `0044_on_behalf_intake.sql`, `0045_threads.sql`.
 
 **Tests** — no screenshot = rejected; on-behalf order visible to client; clock starts only at payment; designer post to `client_team` rejected by RLS; designer cannot list `client_team` threads; aliases differ across orders; Realtime subscription for designer on a `client_team` thread receives nothing.
 
+### Phase 4 — split and owner answers (October 2026)
+- **New clients:** the team opens the client's account (email, no password; the client signs in with an emailed code) and places the order in one step. An email that already has an account is reused.
+- **Q11 (notifying):** both channels. An automatic email (outbox template `ORDER_PLACED_FOR_YOU`) and a "Send on WhatsApp" button (a `wa.me` link with the message written; the team presses send). Orders come by email as often as WhatsApp, so the source is recorded as email, WhatsApp or phone.
+- **Screenshots:** the client and the team only; never designers. The pod lead gives designers clean reference pictures through the brief, which the team may now write on orders it placed.
+- **Q12:** unchanged (old client↔designer messages frozen, admins only).
+- Split into **4a** (on-behalf orders, client accounts, screenshots, email + WhatsApp, team-written brief, staff posting in both threads, 20-second page refresh; migration `0043`, policy `0034`, runbook `docs/PHASE-4A-ROLLOUT.md`) and **4b** (attachments in threads through the sanitization gate, Supabase Realtime in place of the refresh).
+
 ---
 
 ## Phase 5 — Portal screens from docs/design

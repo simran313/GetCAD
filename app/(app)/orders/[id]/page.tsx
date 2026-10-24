@@ -8,12 +8,16 @@ import { StatusBadge } from "@/components/status-badge";
 import { TrustLine } from "@/components/trust-line";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { ORDER_FILES_BUCKET } from "@/config/supabase";
+import { SITE_URL } from "@/lib/seo";
 
 import { OrderDetail } from "../OrderDetail";
 import type { PayoutStateSummary } from "../PayoutPanel";
 import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPanel";
+import type { ClientContact, Screenshot } from "../IntakePanel";
+import { AutoRefresh } from "../AutoRefresh";
 import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
-import type { DisputeRow, LedgerRow, MessageRow, OrderRow, VersionRow } from "../types";
+import type { DisputeRow, LedgerRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "../types";
 
 /**
  * One order, on its own route.
@@ -53,7 +57,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       supabase
         .rpc("visible_orders", { p_order_id: id })
         .select(
-          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission, designer_payout_paise, qc_payout_paise, category, tier, complex_deadline_hours, sla_status, sla_due_at, first_look_at, confirmed_at, paid_at",
+          "id, relation, display_ref, product_type, status, currency, price_total, designer_payout, qc_payout, platform_commission, designer_payout_paise, qc_payout_paise, category, tier, complex_deadline_hours, sla_status, sla_due_at, first_look_at, confirmed_at, paid_at, source",
         )
         .maybeSingle(),
       supabase.from("order_transitions").select("from_status, to_status, actor_role, actor_scope"),
@@ -141,6 +145,43 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     supabase.rpc("order_lineage", { p_order_id: order.id }),
   ]);
 
+  // Phase 4a: the threads this viewer may read, and for a team-placed order
+  // its screenshots (client and team only — policies/0034) and, for the team,
+  // the client's contact for the WhatsApp / email buttons.
+  const team = order.relation === "ADMIN" || order.relation === "POD_LEAD";
+  const placedByTeam = !!order.source && order.source !== "portal";
+  const [threadsRes, shotsRes, contactRes] = await Promise.all([
+    supabase.rpc("order_threads", { p_order_id: order.id }),
+    placedByTeam && order.relation !== "DESIGNER"
+      ? supabase
+          .from("order_screenshots")
+          .select("id, object_key, position")
+          .eq("order_id", order.id)
+          .order("position")
+      : Promise.resolve({ data: null }),
+    placedByTeam && team
+      ? supabase.rpc("order_client_contact", { p_order_id: order.id }).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const screenshots: Screenshot[] = [];
+  const shotRows = (shotsRes.data ?? []) as { id: string; object_key: string; position: number }[];
+  if (shotRows.length > 0) {
+    // Rows already filtered by RLS; the service role only signs what this
+    // viewer may see (same pattern as the brief's reference pictures).
+    const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
+    for (const row of shotRows) {
+      const { data: signed } = await storage.createSignedUrl(row.object_key, 60 * 30);
+      if (signed?.signedUrl) screenshots.push({ id: row.id, position: row.position, url: signed.signedUrl });
+    }
+  }
+  const intake = placedByTeam
+    ? {
+        screenshots,
+        contact: (contactRes.data as ClientContact | null) ?? null,
+        orderUrl: SITE_URL.startsWith("https://") ? `${SITE_URL}/orders/${order.id}` : null,
+      }
+    : null;
+
   // Staff only (policies/0028): the rate for showing payouts as a share of
   // the price. A client or designer gets no row, and no margin line.
   const { data: settingRows } = await supabase
@@ -204,6 +245,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             rounds: (roundsRes.data as RevisionRow[] | null) ?? [],
             lineage: (lineageRes.data as LineageRow[] | null) ?? [],
           }}
+          intake={intake}
+          threads={(threadsRes.data as ThreadRow[] | null) ?? []}
           transitions={transitions}
           versions={versions}
           messages={messages}
@@ -216,6 +259,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       </div>
 
       <TrustLine className="mt-6" />
+      <AutoRefresh />
     </main>
   );
 }

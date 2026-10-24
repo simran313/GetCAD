@@ -29,6 +29,15 @@ export interface OrderRow {
   first_look_at: string | null;
   confirmed_at: string | null;
   paid_at: string | null;
+  /** Where the order came in (0035): portal, or placed by the team from email / WhatsApp / phone. Null for a designer. */
+  source: "portal" | "email" | "whatsapp" | "phone" | null;
+}
+
+/** One row of public.order_threads() (0036): the threads this viewer may read. */
+export interface ThreadRow {
+  id: string;
+  kind: "client_team" | "internal" | "legacy";
+  can_post: boolean;
 }
 
 export interface VersionRow {

@@ -45,6 +45,7 @@ export const NOTIFICATION_KINDS = [
   "APPROVED",
   "CHANGE_ORDER",
   "DUE_SOON",
+  "PLACED",
 ] as const;
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -99,6 +100,7 @@ const COPY: Record<NotificationKind, Copy> = {
   APPROVED: { title: "Design approved", body: "A design you worked on was approved." },
   CHANGE_ORDER: { title: "Change ordered", body: "A change was ordered and needs a quote." },
   DUE_SOON: { title: "Due soon", body: "A job is due for QC within the hour." },
+  PLACED: { title: "Order placed", body: "The team placed an order for you." },
 };
 
 export function isNotificationKind(value: string): value is NotificationKind {
