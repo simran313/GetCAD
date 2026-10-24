@@ -142,6 +142,8 @@ export function OrderDetail({
   payoutState,
   timelineRows,
   timelineError,
+  layout = "stack",
+  teamTop = null,
 }: {
   order: OrderRow;
   role: string;
@@ -167,6 +169,10 @@ export function OrderDetail({
   payoutState?: PayoutStateSummary | null;
   timelineRows: TimelineRawRow[];
   timelineError?: string | null;
+  /** "team": the two-column admin / pod lead layout (A3, Phase 5d). */
+  layout?: "stack" | "team";
+  /** The team layout's first card: the next move, pod and refs. */
+  teamTop?: React.ReactNode;
 }) {
   const isOrderClient = o.relation === "CLIENT";
   const isOrderDesigner = o.relation === "DESIGNER";
@@ -224,6 +230,7 @@ export function OrderDetail({
   // acting in a staff role. The server action enforces the same pair.
   const isActingAsClient = role === "CLIENT" && isOrderClient;
   const canFund = isActingAsClient && o.status === "QUOTED";
+  // release_escrow / refund_escrow / resolve_dispute check the PRIMARY role.
   const canRelease = role === "FINANCE" && o.status === "CLOSED";
   const canRefund = role === "FINANCE" && (o.status === "PAYMENT_HELD" || o.status === "DISPUTED");
   // raise_dispute() requires role CLIENT too — without this the button appears
@@ -254,8 +261,8 @@ export function OrderDetail({
       )
     : null;
 
-  return (
-    <div className="space-y-4">
+  const timelineEl = (
+    <>
       {/* Timeline — every state explicit, visible, timestamped. The flagship
           trust surface: the client always sees exactly where their order is. */}
       <Panel title="Timeline">
@@ -267,11 +274,19 @@ export function OrderDetail({
           <OrderTimeline rows={timelineRows} currency={currency} />
         )}
       </Panel>
+    </>
+  );
 
+  const intakeEl = (
+    <>
       {intake && (
         <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />
       )}
+    </>
+  );
 
+  const slaEl = (
+    <>
       {/* The first-look clock (DECISIONS §6). */}
       {showSla && (
         <Panel title="First look">
@@ -294,8 +309,17 @@ export function OrderDetail({
           )}
         </Panel>
       )}
+    </>
+  );
 
+  const assignEl = (
+    <>
       {designers && <AssignPanel orderId={o.id} designers={designers} />}
+    </>
+  );
+
+  const checklistEl = (
+    <>
       {checklist && (
         <ChecklistPanel
           orderId={o.id}
@@ -304,8 +328,17 @@ export function OrderDetail({
           canTickQc={o.relation === "POD_LEAD" && o.status === "QC_REVIEW"}
         />
       )}
-      {slots && <SlotsPanel orderId={o.id} slots={slots} canUpload={isOrderDesigner && o.status === "IN_PROGRESS"} />}
+    </>
+  );
 
+  const slotsEl = (
+    <>
+      {slots && <SlotsPanel orderId={o.id} slots={slots} canUpload={isOrderDesigner && o.status === "IN_PROGRESS"} />}
+    </>
+  );
+
+  const qcEl = (
+    <>
       {/* Independent QC decision — the visible quality gate for this order. */}
       {isQcDecision && (
         <Panel title="Independent QC review">
@@ -340,11 +373,19 @@ export function OrderDetail({
           </div>
         </Panel>
       )}
+    </>
+  );
 
+  const revisionsEl = (
+    <>
       {revisions && (
         <RevisionsPanel orderId={o.id} status={o.status} isActingAsClient={isActingAsClient} data={revisions} />
       )}
+    </>
+  );
 
+  const orderEl = (
+    <>
       {/* Overview + generic actions */}
       <Panel title="Order" aside={<StatusBadge status={o.status} />}>
         <dl className="grid grid-cols-[auto,1fr] gap-x-6 gap-y-1.5 text-[length:var(--fs-3)] leading-[var(--lh-3)]">
@@ -385,7 +426,11 @@ export function OrderDetail({
           ))}
         </div>
       </Panel>
+    </>
+  );
 
+  const moneyEl = (
+    <>
       {/* Payment / escrow */}
       {showMoney && (
         <Panel title="Payment">
@@ -507,7 +552,11 @@ export function OrderDetail({
           </div>
         </Panel>
       )}
+    </>
+  );
 
+  const payoutsEl = (
+    <>
       {/* Payouts — FINANCE only. Released money is an OBLIGATION; this is the
           only view of whether it actually reached the people owed it. */}
       {role === "FINANCE" && payoutState && payoutState.owed > 0 && (
@@ -515,7 +564,11 @@ export function OrderDetail({
           <PayoutPanel orderId={o.id} currency={currency} state={payoutState} />
         </Panel>
       )}
+    </>
+  );
 
+  const disputeEl = (
+    <>
       {/* Dispute — critical state, shown as a persistent banner (never a toast) */}
       {(openDispute || canRaiseDispute) && (
         <Panel title="Dispute">
@@ -564,7 +617,11 @@ export function OrderDetail({
           )}
         </Panel>
       )}
+    </>
+  );
 
+  const filesEl = (
+    <>
       {/* Files */}
       {(visibleFiles.length > 0 || isParticipant) && (
         <Panel title="Files">
@@ -635,7 +692,11 @@ export function OrderDetail({
           )}
         </Panel>
       )}
+    </>
+  );
 
+  const threadsEl = (
+    <>
       {/* Conversations: client ↔ team and team ↔ designer (DECISIONS §11). */}
       <ThreadsPanel
         orderId={o.id}
@@ -644,6 +705,52 @@ export function OrderDetail({
         messages={messages}
         attachments={attachments}
       />
+    </>
+  );
+
+  // The team's layout (A3, Phase 5d): the work and the conversation on the
+  // left; moving the work, the price and the money on the right, as the
+  // design groups them by the role that acts (Ops, Sales, Finance).
+  if (layout === "team") {
+    return (
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="min-w-0 space-y-4">
+          {intakeEl}
+          {revisionsEl}
+          {threadsEl}
+          {filesEl}
+          {timelineEl}
+        </div>
+        <aside className="space-y-4">
+          {teamTop}
+          {disputeEl}
+          {slaEl}
+          {assignEl}
+          {qcEl}
+          {orderEl}
+          {moneyEl}
+          {payoutsEl}
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {timelineEl}
+      {intakeEl}
+      {slaEl}
+      {assignEl}
+      {checklistEl}
+      {slotsEl}
+      {qcEl}
+      {revisionsEl}
+      {orderEl}
+      {moneyEl}
+      {payoutsEl}
+      {disputeEl}
+      {filesEl}
+      {threadsEl}
     </div>
   );
 }

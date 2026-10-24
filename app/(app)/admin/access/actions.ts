@@ -24,7 +24,7 @@ export async function setUserRoleAction(formData: FormData): Promise<void> {
   });
   if (error) throw new Error(error.message);
 
-  revalidatePath("/admin/users");
+  revalidatePath("/admin/access");
 }
 
 export async function setUserStatusAction(formData: FormData): Promise<void> {
@@ -38,5 +38,5 @@ export async function setUserStatusAction(formData: FormData): Promise<void> {
   });
   if (error) throw new Error(error.message);
 
-  revalidatePath("/admin/users");
+  revalidatePath("/admin/access");
 }

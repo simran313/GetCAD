@@ -2,10 +2,15 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { escrowSign, type TransitionRow } from "@/core";
+import { escrowSign, staffNext, type TransitionRow } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { TrustLine } from "@/components/trust-line";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { PodPicker, type PodOption } from "@/components/work/pod-picker";
+import type { PodJob } from "@/lib/work/load";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
@@ -266,6 +271,102 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  // A3 — the team's order page (Phase 5d): references in the header, the
+  // next move first, then the work and conversation beside the controls.
+  if (order.relation !== "CLIENT") {
+    const [jobRes, podsRes] = await Promise.all([
+      supabase.rpc("pod_jobs", { p_order_id: order.id }).maybeSingle(),
+      order.relation === "ADMIN" ? supabase.rpc("pods_overview") : Promise.resolve({ data: null }),
+    ]);
+    const job = (jobRes.data as PodJob | null) ?? null;
+    const pods = (podsRes.data as PodOption[] | null) ?? null;
+    const next = staffNext({
+      status: order.status,
+      podId: job?.pod_id ?? null,
+      confirmed: !!order.confirmed_at,
+      category: order.category ?? null,
+      source: order.source ?? null,
+      disputeReason: job?.dispute_reason ?? null,
+    });
+    const checklistRows = (checklistRes.data as ChecklistRow[] | null) ?? [];
+    const slotRows = ((slotsRes.data as SlotRow[] | null) ?? []).filter((r) => r.required);
+    const movable = ["SUBMITTED", "QUOTED", "PAYMENT_HELD", "ASSIGNED"].includes(order.status);
+    const teamTop = (
+      <Card as="section">
+        <CardHeader>
+          <CardTitle>Next</CardTitle>
+          <StatusBadge status={order.status} />
+        </CardHeader>
+        <CardBody className="space-y-3 text-[length:var(--fs-3)]">
+          <p className="font-medium">{next.why}</p>
+          {order.status === "QC_REVIEW" && (
+            <Link href={`/qc/${order.id}`} className={`${buttonVariants()} w-full`}>
+              Open the QC review
+            </Link>
+          )}
+          {pods && (movable || !job?.pod_id) && (
+            <div className="space-y-1">
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">
+                Pod: {job?.pod_name ? `${job.pod_name}${job.pod_lead_name ? ` · ${job.pod_lead_name}` : ""}` : "none yet"}
+              </p>
+              <PodPicker orderId={order.id} pods={pods} label={job?.pod_id ? "Move" : "Choose"} />
+            </div>
+          )}
+          {checklistRows.length > 0 && (
+            <p className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
+              v{job?.work_version ?? 1} · designer {checklistRows.filter((r) => r.designer_at).length}/19 · QC{" "}
+              {checklistRows.filter((r) => r.qc_at).length}/19 · files {slotRows.filter((r) => r.file_version_id).length}/{slotRows.length}
+            </p>
+          )}
+          <Link href={`/orders/${order.id}/brief`} className="inline-block text-[length:var(--fs-2)] underline underline-offset-4">
+            The brief
+          </Link>
+        </CardBody>
+      </Card>
+    );
+    return (
+      <main className="container max-w-6xl space-y-6 py-8">
+        <Link
+          href={order.relation === "POD_LEAD" ? "/qc/orders" : "/admin/orders"}
+          className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground"
+        >
+          ← All orders
+        </Link>
+        <PageHeader
+          eyebrow={["Order", order.display_ref, job?.client_code, job?.designer_ref, job?.pod_lead_name].filter(Boolean).join(" · ")}
+          title={job?.title ?? productWord(order.product_type)}
+        />
+        <OrderDetail
+          layout="team"
+          teamTop={teamTop}
+          order={order}
+          role={role}
+          payoutShare={payoutShare}
+          designers={(designersRes.data as PodDesigner[] | null) ?? null}
+          checklist={null}
+          slots={null}
+          revisions={{
+            allowance: (allowanceRes.data as RevisionAllowance | null) ?? null,
+            rounds: (roundsRes.data as RevisionRow[] | null) ?? [],
+            lineage: (lineageRes.data as LineageRow[] | null) ?? [],
+          }}
+          intake={intake}
+          threads={(threadsRes.data as ThreadRow[] | null) ?? []}
+          attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
+          transitions={transitions}
+          versions={versions}
+          messages={messages}
+          openDispute={disputes.find((d) => d.status === "OPEN")}
+          held={held}
+          payoutState={payoutState}
+          timelineRows={timelineRes.data ?? []}
+          timelineError={timelineRes.error?.message ?? null}
+        />
+        <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
+      </main>
+    );
+  }
+
   return (
     <main className="container max-w-3xl py-8">
       <BackLink />
@@ -279,16 +380,6 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <p className="tabular mt-0.5 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
         {order.display_ref ?? order.id}
       </p>
-
-      {order.status === "QC_REVIEW" && order.relation === "POD_LEAD" && (
-        <Link
-          href={`/qc/${order.id}`}
-          className="mt-4 flex min-h-[var(--ctl)] items-center justify-between rounded-[var(--r-lg)] border border-foreground bg-primary px-4 text-primary-foreground"
-        >
-          <span className="text-[length:var(--fs-4)] font-medium">Open the QC review</span>
-          <span aria-hidden>→</span>
-        </Link>
-      )}
 
       {/* The brief is a route, not a panel: it is long, and it must be
           resumable and linkable. */}

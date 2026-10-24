@@ -79,14 +79,20 @@ const POD_LEAD_TABS: Tab[] = [
   ACCOUNT,
 ];
 
+// A1–A10 (Phase 5d): the admin workspace. Sales, Ops and Finance share it;
+// each page asks the database, which refuses what a single role may not do.
+// On a phone: Queue, All orders, Create order, Account.
 const STAFF_TABS: Tab[] = [
   { key: "queue", label: "Queue", href: "/admin", icon: "queue" },
-  { key: "orders", label: "Orders", href: "/orders", icon: "list" },
-  // Admins and pod leads place orders from email, WhatsApp and phone (Phase
-  // 4a); the page refuses anyone else.
   { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus" },
+  { key: "orders", label: "All orders", href: "/admin/orders", icon: "list" },
+  { key: "billing", label: "Billing", href: "/admin/billing", icon: "wallet", mobile: false },
+  { key: "clients", label: "Clients", href: "/admin/clients", icon: "user", mobile: false },
+  { key: "access", label: "Access", href: "/admin/access", icon: "board", mobile: false },
+  { key: "applications", label: "Applications", href: "/admin/applications", icon: "work", mobile: false },
+  { key: "leads", label: "Leads", href: "/admin/leads", icon: "message", mobile: false },
   ACCOUNT,
-];
+]
 
 /**
  * Which workspace the shell says it is (docs/design). Clients and designers
@@ -107,7 +113,7 @@ export function workspaceFor(role: string): Workspace {
     case "OPS":
     case "SALES":
     case "FINANCE":
-      return { label: "Team workspace", tone: "dark" };
+      return { label: "Admin workspace", tone: "dark" };
     default:
       return { label: "Client workspace", tone: "light" };
   }

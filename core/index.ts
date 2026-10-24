@@ -117,3 +117,5 @@ export { clientTab, clientNextStep, clientStepsDone, CLIENT_STEPS } from "./orde
 export type { ClientTab, ClientStep } from "./orders/clientView";
 export { jobTab, isOpenJob, jobState, minutesWord, jobClockDue, qcPayoutPaise, rupeesWord, loadWord } from "./work/view";
 export type { JobTab } from "./work/view";
+export { staffStage, staffNext, queueRank, STAFF_STAGES, STAGE_LABELS } from "./orders/staffView";
+export type { StaffStage, StaffFacts, StaffNext } from "./orders/staffView";

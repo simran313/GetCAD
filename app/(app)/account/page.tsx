@@ -36,7 +36,10 @@ export default async function AccountPage() {
 
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
-  const { data } = await supabase.from("users").select("role, status").maybeSingle();
+  const [{ data }, { data: grants }] = await Promise.all([
+    supabase.from("users").select("role, status").maybeSingle(),
+    supabase.from("user_roles").select("role"),
+  ]);
 
   const role: string = data?.role ?? "CLIENT";
   const status: string = data?.status ?? "PENDING";
@@ -75,7 +78,10 @@ export default async function AccountPage() {
       )}
 
       <dl className="mt-6 divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
-        <Row label="Signed in as" value={partyLabel(role)} />
+        <Row
+          label="Signed in as"
+          value={[role, ...((grants ?? []) as { role: string }[]).map((g) => g.role).filter((r) => r !== role)].map(partyLabel).join(" · ")}
+        />
         <Row label="Status" value={status === "ACTIVE" ? "Active" : "Pending"} />
         <Row
           label="Account reference"
@@ -84,6 +90,14 @@ export default async function AccountPage() {
           hint="Quote this if you contact us. It identifies your account without naming you."
         />
       </dl>
+
+      <Link href="/account/security" className="mt-4 flex min-h-[var(--ctl)] items-center justify-between rounded-[var(--r-lg)] border border-border bg-card px-[var(--s-5)] shadow-[var(--e-1)] hover:bg-subtle">
+        <span>
+          <span className="block text-[length:var(--fs-3)] font-medium">Sign-in and security</span>
+          <span className="block text-[length:var(--fs-2)] text-muted-foreground">Password, two-step sign-in, devices</span>
+        </span>
+        <span aria-hidden>→</span>
+      </Link>
 
       <InstallHint />
 

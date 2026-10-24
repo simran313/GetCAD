@@ -20,6 +20,16 @@ describe("tabsForRole", () => {
     expect(hrefs("OPS")).toContain("/admin");
   });
 
+  // A1–A10 (Phase 5d).
+  it("gives the admin workspace its nine tabs, four on the phone", () => {
+    expect(tabsForRole("OPS").map((t) => t.label)).toEqual([
+      "Queue", "Create order", "All orders", "Billing", "Clients", "Access", "Applications", "Leads", "Account",
+    ]);
+    expect(mobileTabs(tabsForRole("OPS")).map((t) => t.key)).toEqual(["queue", "new", "orders", "account"]);
+    expect(activeTabKey("/admin/orders", tabsForRole("OPS"))).toBe("orders");
+    expect(activeTabKey("/admin/access/pods", tabsForRole("OPS"))).toBe("access");
+  });
+
   // P1–P6 (Phase 5c): the pod lead's own workspace.
   it("gives a pod lead the QC queue, team board, orders, create order, messages, earnings", () => {
     expect(tabsForRole("QC").map((t) => t.key)).toEqual(["qc", "board", "orders", "new", "messages", "earnings", "account"]);
@@ -69,6 +79,12 @@ describe("tabsForRole", () => {
       "/qc/earnings",
       "/pod/board",
       "/admin",
+      "/admin/orders",
+      "/admin/billing",
+      "/admin/clients",
+      "/admin/access",
+      "/admin/applications",
+      "/admin/leads",
       "/account",
     ]);
     for (const role of ["CLIENT", "DESIGNER", "OPS", "QC"]) {
@@ -117,7 +133,7 @@ describe("activeTabKey", () => {
 describe("workspaceFor (Phase 5)", () => {
   it("draws the team in the dark sidebar and everyone else in the light one", () => {
     for (const role of ["OPS", "SALES", "FINANCE"]) {
-      expect(workspaceFor(role)).toEqual({ label: "Team workspace", tone: "dark" });
+      expect(workspaceFor(role)).toEqual({ label: "Admin workspace", tone: "dark" });
     }
     expect(workspaceFor("QC")).toEqual({ label: "Pod lead workspace", tone: "dark" });
     expect(workspaceFor("CLIENT")).toEqual({ label: "Client workspace", tone: "light" });

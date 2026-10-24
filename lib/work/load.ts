@@ -38,6 +38,7 @@ export interface PodJob {
   work_version: number;
   pod_id: string | null;
   pod_name: string | null;
+  pod_lead_name: string | null;
   designer_id: string | null;
   designer_ref: string | null;
   designer_name: string | null;
@@ -46,11 +47,18 @@ export interface PodJob {
   submitted_at: string | null;
   qc_ticks: number;
   designer_ticks: number;
+  sla_status: string | null;
   sla_due_at: string | null;
   designer_due_at: string | null;
+  first_look_at: string | null;
+  confirmed_at: string | null;
+  paid_at: string | null;
+  source: string | null;
+  dispute_reason: string | null;
   currency: string | null;
   price_total: number | null;
   qc_payout_paise: number | null;
+  designer_payout_paise: number | null;
   created_at: string;
 }
 

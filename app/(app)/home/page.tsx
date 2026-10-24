@@ -84,8 +84,10 @@ export default async function DashboardPage() {
     );
   }
 
-  // The pod lead's home is the QC queue (P1, Phase 5c).
+  // The pod lead's home is the QC queue (P1, Phase 5c); the admin roles'
+  // is the Queue (A1, Phase 5d).
   if (me?.role === "QC") redirect("/qc");
+  if (me?.role === "OPS" || me?.role === "SALES" || me?.role === "FINANCE") redirect("/admin");
 
   // D2 — the designer's home (Phase 5c).
   if (me?.role === "DESIGNER") {
