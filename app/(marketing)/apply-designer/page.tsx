@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Stepper } from "@/components/stepper";
+import { Eyebrow } from "@/components/marketing/blocks";
 import { pageMetadata } from "@/lib/seo";
 
 import { DesignerApplicationForm } from "./DesignerApplicationForm";
@@ -22,8 +23,8 @@ export default async function ApplyDesignerPage({
 
   return (
     <section className="container max-w-xl py-16">
-      <p className="text-sm font-medium text-primary">For CAD designers</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight">Apply as a designer</h1>
+      <Eyebrow>For CAD designers</Eyebrow>
+      <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.25rem)] font-normal leading-[1.05]">Apply as a designer</h1>
       <p className="mt-4 text-sm text-muted-foreground">
         This is a short screening application — about two minutes, seven questions. It is not a
         full account: nothing here creates a login. If your application looks like a fit, we

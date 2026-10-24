@@ -1,6 +1,8 @@
+import { HEARD_ABOUT } from "@/core";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 import { saveClientProfileAction } from "./actions";
 
@@ -21,11 +23,14 @@ export function ClientProfileForm({
   email,
   next,
   submitLabel,
+  askHeardAbout = false,
 }: {
   profile: ClientProfile | null;
   email: string | null;
   next: string;
   submitLabel: string;
+  /** S3 only: "How did you hear about us?", required once (Phase 6). */
+  askHeardAbout?: boolean;
 }) {
   return (
     <form action={saveClientProfileAction} className="grid gap-4 sm:grid-cols-2">
@@ -42,6 +47,20 @@ export function ClientProfileForm({
       <Field label="WhatsApp / phone" htmlFor="phone" optional hint="With country code, e.g. +91 98…">
         <Input id="phone" name="phone" type="tel" defaultValue={profile?.phone ?? ""} />
       </Field>
+      {askHeardAbout && (
+        <Field label="How did you hear about us?" htmlFor="heard_about">
+          <Select id="heard_about" name="heard_about" required defaultValue="">
+            <option value="" disabled>
+              Choose one
+            </option>
+            {HEARD_ABOUT.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      )}
       <div className="flex items-end sm:col-span-2">
         <Button type="submit">{submitLabel}</Button>
       </div>

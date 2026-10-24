@@ -39,6 +39,8 @@ export async function startBriefAction(formData?: FormData): Promise<void> {
     const { error: serviceError } = await supabase.rpc("set_order_service", { p_order_id: id, p_service: "render" });
     if (serviceError) throw new Error(serviceError.message);
   }
+  // The funnel (Phase 6, 0049). Best effort: a lost event never blocks an order.
+  await supabase.rpc("record_marketing_event", { p_event: "brief_started", p_order_id: id, p_props: { service } });
   redirect(`/orders/${id}/brief`);
 }
 

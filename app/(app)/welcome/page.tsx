@@ -54,7 +54,7 @@ export default async function WelcomePage() {
             <CardTitle>Your business</CardTitle>
           </CardHeader>
           <CardBody>
-            <ClientProfileForm profile={null} email={email} next="/welcome" submitLabel="Continue" />
+            <ClientProfileForm profile={null} email={email} next="/welcome" submitLabel="Continue" askHeardAbout />
           </CardBody>
         </Card>
       ) : (
