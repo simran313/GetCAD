@@ -143,21 +143,6 @@ export async function postMessageAction(formData: FormData): Promise<void> {
   revalidatePath("/orders");
 }
 
-// Post to one thread (0036). Staff choose the thread; the database decides
-// whether this person may post there — designers never in the client thread.
-export async function postThreadMessageAction(formData: FormData): Promise<void> {
-  const body = formData.get("body")?.toString() ?? "";
-  if (body.trim().length === 0) throw new Error("message is empty");
-
-  const supabase = await createUserSupabaseClient();
-  const { error } = await supabase.rpc("post_thread_message", {
-    p_thread_id: formData.get("thread_id")?.toString() ?? "",
-    p_body: body,
-  });
-  if (error) throw new Error(error.message);
-  revalidatePath("/orders");
-}
-
 // --- Disputes. The DB enforces role/state and records the reason/outcome. ---
 
 export async function raiseDisputeAction(formData: FormData): Promise<void> {

@@ -17,7 +17,7 @@ import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPan
 import type { ClientContact, Screenshot } from "../IntakePanel";
 import { AutoRefresh } from "../AutoRefresh";
 import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
-import type { DisputeRow, LedgerRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "../types";
+import type { AttachmentRow, DisputeRow, LedgerRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "../types";
 
 /**
  * One order, on its own route.
@@ -150,7 +150,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   // the client's contact for the WhatsApp / email buttons.
   const team = order.relation === "ADMIN" || order.relation === "POD_LEAD";
   const placedByTeam = !!order.source && order.source !== "portal";
-  const [threadsRes, shotsRes, contactRes] = await Promise.all([
+  const [threadsRes, shotsRes, contactRes, filesRes, stampRes] = await Promise.all([
     supabase.rpc("order_threads", { p_order_id: order.id }),
     placedByTeam && order.relation !== "DESIGNER"
       ? supabase
@@ -162,6 +162,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     placedByTeam && team
       ? supabase.rpc("order_client_contact", { p_order_id: order.id }).maybeSingle()
       : Promise.resolve({ data: null }),
+    // Phase 4b: files in the threads this viewer may read, and the stamp the
+    // live refresh compares against.
+    supabase.rpc("thread_attachments", { p_order_id: order.id }),
+    supabase.rpc("order_activity_stamp", { p_order_id: order.id }),
   ]);
   const screenshots: Screenshot[] = [];
   const shotRows = (shotsRes.data ?? []) as { id: string; object_key: string; position: number }[];
@@ -247,6 +251,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           }}
           intake={intake}
           threads={(threadsRes.data as ThreadRow[] | null) ?? []}
+          attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
           transitions={transitions}
           versions={versions}
           messages={messages}
@@ -259,7 +264,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       </div>
 
       <TrustLine className="mt-6" />
-      <AutoRefresh />
+      <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
     </main>
   );
 }

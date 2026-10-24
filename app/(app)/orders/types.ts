@@ -33,6 +33,17 @@ export interface OrderRow {
   source: "portal" | "email" | "whatsapp" | "phone" | null;
 }
 
+/** One row of public.thread_attachments() (0045): a file sent in a thread this viewer may read. */
+export interface AttachmentRow {
+  id: string;
+  message_id: string;
+  thread_id: string;
+  file_name: string;
+  content_type: string;
+  size_bytes: number;
+  created_at: string;
+}
+
 /** One row of public.order_threads() (0036): the threads this viewer may read. */
 export interface ThreadRow {
   id: string;
