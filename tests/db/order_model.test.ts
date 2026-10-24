@@ -84,7 +84,7 @@ describe("categories and price bands (DECISIONS §3, §4)", () => {
     ]);
   });
 
-  it("only an admin changes a category rate; staff read rates; clients and designers do not", async () => {
+  it("only an admin changes a category rate; staff and designers read rates; clients do not", async () => {
     await expect(q(ops, "SELECT public.set_category_rate('D', 60000)")).rejects.toThrow(/only an admin/i);
     await q(admin, "SELECT public.set_category_rate('D', 60000)");
     expect((await db.query("SELECT designer_rate_paise FROM job_categories WHERE letter='D'")).rows[0].designer_rate_paise).toBe(60000);
@@ -92,7 +92,8 @@ describe("categories and price bands (DECISIONS §3, §4)", () => {
 
     expect((await q(ops, "SELECT letter FROM job_categories")).rows).toHaveLength(12);
     expect((await q(clientMeera, "SELECT letter FROM job_categories")).rows).toHaveLength(0);
-    expect((await q(designer, "SELECT letter FROM job_categories")).rows).toHaveLength(0);
+    // Phase 5c (policies/0036): the designer's own rate card (docs/design D6).
+    expect((await q(designer, "SELECT letter FROM job_categories")).rows).toHaveLength(12);
     expect((await q(clientMeera, "SELECT code FROM price_bands")).rows).toHaveLength(4);
   });
 });

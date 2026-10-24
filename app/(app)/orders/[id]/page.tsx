@@ -118,6 +118,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  // A designer works the job on its own screen (D4, Phase 5c); links in
+  // notifications and emails still say /orders/[id].
+  if ((order.relation as string) === "DESIGNER") redirect(`/work/${order.id}`);
+
   const transitions = (transitionsRes.data ?? []) as TransitionRow[];
   const versions = (versionsRes.data ?? []) as VersionRow[];
   const ledger = (ledgerRes.data ?? []) as LedgerRow[];
@@ -213,8 +217,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     payoutState = (data as PayoutStateSummary | null) ?? null;
   }
 
-  // The client's own view (C4, Phase 5b). Designers and the team keep the
-  // working view below until 5c / 5d.
+  // The client's own view (C4, Phase 5b). The team keeps the working view
+  // below until 5d.
   if (order.relation === "CLIENT" && role === "CLIENT") {
     const [specRes, poRes] = await Promise.all([
       supabase.from("order_specs").select("*").eq("order_id", order.id).maybeSingle(),
@@ -275,6 +279,16 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <p className="tabular mt-0.5 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
         {order.display_ref ?? order.id}
       </p>
+
+      {order.status === "QC_REVIEW" && order.relation === "POD_LEAD" && (
+        <Link
+          href={`/qc/${order.id}`}
+          className="mt-4 flex min-h-[var(--ctl)] items-center justify-between rounded-[var(--r-lg)] border border-foreground bg-primary px-4 text-primary-foreground"
+        >
+          <span className="text-[length:var(--fs-4)] font-medium">Open the QC review</span>
+          <span aria-hidden>→</span>
+        </Link>
+      )}
 
       {/* The brief is a route, not a panel: it is long, and it must be
           resumable and linkable. */}

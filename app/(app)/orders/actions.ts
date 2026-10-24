@@ -17,7 +17,7 @@ export async function createOrderAction(formData: FormData): Promise<void> {
     p_currency: "USD",
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // Move an order to a new status. The DB rejects anything illegal / out-of-role.
@@ -35,7 +35,7 @@ export async function transitionAction(formData: FormData): Promise<void> {
     p_payload: payload,
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 /**
@@ -55,7 +55,7 @@ export async function qcDecisionAction(formData: FormData): Promise<void> {
     p_notes: notes,
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // --- Money layer (escrow). Each just calls the DB function AS THE USER; the DB
@@ -91,7 +91,7 @@ export async function quoteAction(formData: FormData): Promise<void> {
     p_complex_deadline_hours: deadlineHours,
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // Admin or the order's pod lead: the brief is complete, start the clock once paid (v1.1).
@@ -101,7 +101,7 @@ export async function confirmOrderAction(formData: FormData): Promise<void> {
     p_order_id: formData.get("order_id")?.toString() ?? "",
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // FINANCE (admin) records a Wise / bank / PayPal / manual payment (DECISIONS §13).
@@ -113,14 +113,14 @@ export async function markPaidAction(formData: FormData): Promise<void> {
     p_reference: formData.get("reference")?.toString().trim() || null,
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 async function escrowRpc(fn: "release_escrow" | "refund_escrow", orderId: string) {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc(fn, { p_order_id: orderId });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 export async function releaseEscrowAction(formData: FormData): Promise<void> {
@@ -140,7 +140,7 @@ export async function postMessageAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("post_message", { p_order_id: orderId, p_body: body });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // --- Disputes. The DB enforces role/state and records the reason/outcome. ---
@@ -153,7 +153,7 @@ export async function raiseDisputeAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("raise_dispute", { p_order_id: orderId, p_reason: reason });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 export async function resolveDisputeAction(formData: FormData): Promise<void> {
@@ -168,7 +168,7 @@ export async function resolveDisputeAction(formData: FormData): Promise<void> {
     p_notes: notes,
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // Admin or the order's pod lead assigns a designer from the pod (0041).
@@ -181,7 +181,7 @@ export async function assignDesignerAction(formData: FormData): Promise<void> {
     p_override_reason: formData.get("override_reason")?.toString().trim() || null,
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // Tick or untick one checklist line (0041). Which column, and whether this
@@ -195,7 +195,7 @@ export async function tickCheckAction(formData: FormData): Promise<void> {
     p_ticked: formData.get("ticked") === "true",
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // The client sends a preview back (DECISIONS §8). request_revision() checks
@@ -207,7 +207,7 @@ export async function requestRevisionAction(formData: FormData): Promise<void> {
     p_note: formData.get("note")?.toString() ?? "",
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
 }
 
 // A change after approval, or after the included rounds, is a new linked
@@ -221,6 +221,6 @@ export async function changeOrderAction(formData: FormData): Promise<void> {
     p_note: formData.get("note")?.toString() ?? "",
   });
   if (error) throw new Error(error.message);
-  revalidatePath("/orders");
+  revalidatePath("/", "layout");
   redirect(`/orders/${newId}`);
 }

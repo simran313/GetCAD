@@ -45,16 +45,32 @@ function ago(iso: string | null): string {
   return `${Math.floor(s / 86400)} d ago`;
 }
 
+// What the list is, for whoever is reading it (C7, D5; Phase 5c for the team).
+function describe(role: string): { eyebrow?: string; description: string; team: boolean } {
+  if (role === "DESIGNER") {
+    return {
+      eyebrow: "Your pod lead and admin",
+      description: "Pod lead and admin only. Client questions go through your pod lead.",
+      team: false,
+    };
+  }
+  if (role === "CLIENT") return { description: "Your conversations with the team, one per order.", team: false };
+  return { description: "Each order has a client conversation and a designer conversation.", team: true };
+}
+
 export function MessagesView({
   conversations,
   open,
+  role,
 }: {
   conversations: Conversation[];
   open: OpenConversation | null;
+  role: string;
 }) {
+  const copy = describe(role);
   return (
     <main className="container max-w-6xl space-y-6 py-8">
-      <PageHeader title="Messages" description="Your conversations with the team, one per order." />
+      <PageHeader eyebrow={copy.eyebrow} title="Messages" description={copy.description} />
       <div className="grid gap-6 md:grid-cols-[320px_1fr]">
         <Card className={cn("self-start overflow-hidden", open && "hidden md:block")}>
           {conversations.length === 0 ? (
@@ -78,6 +94,7 @@ export function MessagesView({
                       <span className="flex items-center justify-between gap-2">
                         <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
                           {c.display_ref}
+                          {copy.team && ` · ${c.kind === "internal" ? "Designer" : "Client"}`}
                         </span>
                         <span className="text-[length:var(--fs-1)] text-muted-foreground">{ago(c.last_at)}</span>
                       </span>
@@ -102,8 +119,11 @@ export function MessagesView({
                 <Link href="/messages" className="text-[length:var(--fs-2)] underline underline-offset-4 md:hidden">
                   ← All conversations
                 </Link>
-                <Link href={`/orders/${open.orderId}`} className="text-[length:var(--fs-2)] underline underline-offset-4">
-                  Open the order
+                <Link
+                  href={role === "DESIGNER" ? `/work/${open.orderId}` : `/orders/${open.orderId}`}
+                  className="text-[length:var(--fs-2)] underline underline-offset-4"
+                >
+                  {role === "DESIGNER" ? "Open the job" : "Open the order"}
                 </Link>
               </div>
               <ThreadsPanel

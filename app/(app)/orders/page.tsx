@@ -42,8 +42,11 @@ export default async function OrdersPage({
   await supabase.rpc("ensure_self");
 
   // Clients get the redesigned list (C3, Phase 5b); designers and the team
-  // keep this one until 5c / 5d.
+  // keep this one until 5d.
   const { data: me } = await supabase.from("users").select("role").maybeSingle();
+  // Designers and pod leads have their own lists (D3, P3 — Phase 5c).
+  if (me?.role === "DESIGNER") redirect("/work");
+  if (me?.role === "QC") redirect("/qc/orders");
   if ((me?.role ?? "CLIENT") === "CLIENT") {
     try {
       return <ClientOrders orders={await loadClientOrders(supabase)} tab={tab ?? "all"} />;

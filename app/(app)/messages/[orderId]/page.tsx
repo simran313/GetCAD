@@ -14,7 +14,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ o
   if (!userId) redirect("/sign-in");
   const { orderId } = await params;
   const supabase = await createUserSupabaseClient();
-  const [conversations, open] = await Promise.all([loadConversations(supabase), loadOpen(supabase, orderId)]);
+  const [conversations, open, { data: me }] = await Promise.all([
+    loadConversations(supabase),
+    loadOpen(supabase, orderId),
+    supabase.from("users").select("role").maybeSingle(),
+  ]);
   if (!open) notFound();
-  return <MessagesView conversations={conversations} open={open} />;
+  return <MessagesView conversations={conversations} open={open} role={(me as { role: string } | null)?.role ?? "CLIENT"} />;
 }
