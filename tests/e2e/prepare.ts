@@ -22,6 +22,7 @@ import { Client } from "pg";
 
 import { generateId } from "../../core/ids/generateId";
 import { assertDestroyable, freshSchema, TEST_DATABASE_URL } from "../helpers/db";
+import { asUser } from "./db";
 import { clerkIssuer, E2E_DIR, PERSONAS, type E2eState, type Persona } from "./state";
 
 // Pasted secrets often carry a stray space, newline or quotes: drop them here,
@@ -31,17 +32,6 @@ const secretKey = clean(process.env.CLERK_SECRET_KEY);
 const publishableKey = clean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 // What kind of key a value is, without printing any of the key itself.
 const kind = (v: string) => v.match(/^(sk|pk)_(test|live)_/)?.[0] ?? (v ? "not a Clerk key" : "empty");
-
-async function asUser(db: Client, sub: string, sql: string, params: unknown[] = []) {
-  await db.query("SELECT set_config('request.jwt.claims', $1, false)", [JSON.stringify({ sub, role: "authenticated" })]);
-  await db.query("SET ROLE authenticated");
-  try {
-    return await db.query(sql, params);
-  } finally {
-    await db.query("RESET ROLE");
-    await db.query("SELECT set_config('request.jwt.claims', '', false)");
-  }
-}
 
 async function clerkUsers(): Promise<Record<Persona, string>> {
   const clerk = createClerkClient({ secretKey });

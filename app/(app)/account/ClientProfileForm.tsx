@@ -29,7 +29,7 @@ export function ClientProfileForm({
   email: string | null;
   next: string;
   submitLabel: string;
-  /** S3 only: "How did you hear about us?", required once (Phase 6). */
+  /** "How did you hear about us?": asked once, when the profile is first made (Phase 6, A9.8). */
   askHeardAbout?: boolean;
 }) {
   return (

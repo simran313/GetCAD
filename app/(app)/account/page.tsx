@@ -81,7 +81,7 @@ export default async function AccountPage() {
             <CardTitle>Your business</CardTitle>
           </CardHeader>
           <CardBody>
-            <ClientProfileForm profile={profile as ClientProfile | null} email={email} next="/account" submitLabel="Save" />
+            <ClientProfileForm profile={profile as ClientProfile | null} email={email} next="/account" submitLabel="Save" askHeardAbout={!profile} />
           </CardBody>
         </Card>
       )}

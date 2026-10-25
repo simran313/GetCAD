@@ -22,6 +22,12 @@ export async function saveClientProfileAction(formData: FormData): Promise<void>
 
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
+  // Asked once, when the profile is first made (A9.8): required here, not
+  // only by the browser.
+  const heard = formData.get("heard_about")?.toString() ?? "";
+  const { data: existing } = await supabase.from("client_profiles").select("id").maybeSingle();
+  if (!existing && !heard) throw new Error("tell us how you heard about us");
+
   const { error } = await supabase.rpc("save_client_profile", {
     p_business_name: business,
     p_legal_name: name,
@@ -32,7 +38,6 @@ export async function saveClientProfileAction(formData: FormData): Promise<void>
 
   // S3 asks once how they found us; the first-touch cookie says where they
   // landed (Phase 6, 0049). Kept only the first time.
-  const heard = formData.get("heard_about")?.toString() ?? "";
   if (heard) {
     if (!isHeardAbout(heard)) throw new Error("tell us how you heard about us");
     const touch = decodeFirstTouch((await cookies()).get(FIRST_TOUCH_COOKIE)?.value);
