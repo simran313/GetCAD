@@ -40,16 +40,16 @@ const screenshots = (page: Page) => page.getByRole("group", { name: /Screenshots
 
 async function fillOrder(page: Page) {
   await page.goto(`/admin/new-order?q=${encodeURIComponent(PERSONAS.client2.business)}`);
-  // The first run found two "Came by" selects on this page, one not in its
-  // section: say what is there. Role locators below see only the visible form.
-  const all = page.locator('select[name="source"]');
-  console.log(`new-order: ${await all.count()} "source" selects, visible: ${await all.evaluateAll((els) => els.map((e) => (e as HTMLElement).offsetParent !== null))}`);
+  // While the page streams in, a hidden second copy of the form can sit in
+  // the document for a moment (seen on CI): wait until one is left, then use
+  // role locators, which see only the visible form.
+  await expect(page.locator('select[name="source"]')).toHaveCount(1);
   await expect(page.getByRole("radio").first()).toBeChecked();
   const order = page.getByRole("group", { name: /The order/ });
   await order.getByLabel("Came by").selectOption("whatsapp");
   await order.getByLabel(/What they asked for/).fill("Halo ring like the photo, 18K yellow, size US 6.");
   // No email from the tests.
-  await page.getByLabel(/Email the client that the order is placed/).uncheck();
+  await page.getByRole("checkbox", { name: /Email the client that the order is placed/ }).uncheck();
 }
 
 test("an on-behalf order without a screenshot is refused; with one, the client sees it", async ({ browser }) => {
