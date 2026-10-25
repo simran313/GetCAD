@@ -93,11 +93,11 @@ export const REQUIRED_SLOTS = ["3DM", "STL", "TV", "PV", "RV", "FV", "BV", "M", 
 /** The designer's whole version: start, volume, ten files, 19 ticks, submit. */
 export async function doDesignerVersion(page: Page, orderId: string) {
   await page.goto(`/work/${orderId}`);
+  // Assigned, or sent back by QC: either way the version starts here.
   const start = page.getByRole("button", { name: "Start work" });
-  if (await start.isVisible()) {
-    await act(page, start);
-    await expectGone(page, page.getByRole("button", { name: "Start work" }));
-  }
+  await settled(page, "Start work offered", (timeout) => expect(start).toBeVisible({ timeout }));
+  await act(page, start);
+  await expectGone(page, start);
 
   const volume = page.getByLabel("Model volume in cubic millimetres");
   await volume.fill("312.5");
