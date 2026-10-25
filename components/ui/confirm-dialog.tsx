@@ -23,8 +23,11 @@ export function ConfirmDialog({
   destructive = false,
   formId,
   onConfirm,
+  open: controlledOpen,
+  onOpenChange,
 }: {
-  trigger: React.ReactNode;
+  /** Omit when the dialog is opened from elsewhere (a menu item): pass open. */
+  trigger?: React.ReactNode;
   title: string;
   description?: React.ReactNode;
   confirmLabel: string;
@@ -33,8 +36,15 @@ export function ConfirmDialog({
   destructive?: boolean;
   formId?: string;
   onConfirm?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = controlledOpen ?? ownOpen;
+  const setOpen = (o: boolean) => {
+    setOwnOpen(o);
+    onOpenChange?.(o);
+  };
   const [text, setText] = useState("");
   const id = useId();
   const ready = !typed || text.trim().toLowerCase() === typed.toLowerCase();
@@ -46,7 +56,7 @@ export function ConfirmDialog({
         if (!o) setText("");
       }}
     >
-      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-foreground/30 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-[var(--r-xl)] border border-border bg-background p-[var(--s-6)] shadow-[var(--e-2)] outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2">
