@@ -12,9 +12,9 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { loadClientOrders } from "@/lib/client/orders";
 
-import { ClientOrders } from "./ClientOrders";
-import { createOrderAction } from "./actions";
-import type { LedgerRow, OrderRow } from "./types";
+import { ClientOrders } from "../ClientOrders";
+import { createOrderAction } from "../actions";
+import type { LedgerRow, OrderRow } from "../types";
 
 /**
  * The list of orders.

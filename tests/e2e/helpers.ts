@@ -36,31 +36,24 @@ export async function act(page: Page, button: Locator) {
 }
 
 /**
- * Check the screen after an action.
+ * Check the screen after an action. It should show the new state at once;
+ * the order, job and QC pages also re-check every 5 s, so allow 10 s.
  *
- * Known issue (Phase 8a): the order, job and QC pages sometimes keep showing
- * the state from before an action, though the action was saved. So: give the
- * screen 30 s to update by itself (those pages poll every 5 s); if it has not,
- * reload, and log a STALE SCREEN line so every case shows in the CI log while
- * the journey carries on. Still wrong after a reload means the action did not
- * happen: fail, with what the page showed.
+ * On failure, say whether a reload shows it (the screen was stale: what
+ * app/(app)/orders/loading.tsx used to cause on the team order page) or not
+ * (the action did not happen), with what the page showed.
  */
 export async function settled(page: Page, what: string, check: (timeout: number) => Promise<void>) {
-  const started = Date.now();
   try {
-    await check(30_000);
-    const s = Math.round((Date.now() - started) / 1000);
-    if (s > 3) console.log(`SLOW SCREEN: ${what} after ${s} s on ${page.url()}`);
-    return;
+    await check(10_000);
   } catch {
     const before = (await page.locator("main").innerText().catch(() => "")).slice(0, 1500);
     await page.reload();
-    try {
-      await check(5_000);
-    } catch {
-      throw new Error(`${what}: not so even after a reload.\nPage showed:\n${before}`);
-    }
-    console.log(`STALE SCREEN: ${what} only after a reload on ${page.url()}`);
+    const afterReload = await check(5_000).then(
+      () => "the screen was stale: a reload shows it",
+      () => "not even after a reload",
+    );
+    throw new Error(`${what}: ${afterReload}, on ${page.url()}.\nPage showed:\n${before}`);
   }
 }
 
