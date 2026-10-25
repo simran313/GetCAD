@@ -12,7 +12,7 @@ import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { when } from "@/lib/work/load";
 
-import { setAccountManagerAction } from "../actions";
+import { computeStatsAction, setAccountManagerAction } from "../actions";
 
 /**
  * A9 — clients and their account managers (owner answer, Phase 5d): every
@@ -59,10 +59,22 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       </main>
     );
   }
-  const [{ data: staff }, { data: report }] = await Promise.all([
+  const [{ data: staff }, { data: report }, { data: statsRow }, { data: statsFlag }] = await Promise.all([
     supabase.from("staff_profiles").select("user_id, first_name").order("first_name"),
     supabase.rpc("attribution_report"),
+    supabase.rpc("public_stats_latest").maybeSingle(),
+    supabase.from("feature_flags").select("enabled").eq("key", "public_stats").maybeSingle(),
   ]);
+  // Public numbers (Add. A7, 0051): what /results shows once the flag is on.
+  const stats = statsRow as {
+    computed_at: string;
+    designs_delivered: number;
+    first_look_on_time_pct: number | null;
+    first_pass_approval_pct: number | null;
+    late_credits_issued: number;
+    claims_upheld: number;
+  } | null;
+  const statsLive = !!(statsFlag as { enabled: boolean } | null)?.enabled;
   // Where clients come from (Phase 6, 0049): "How did you hear about us?",
   // the first-touch source, and the funnel over 30 days.
   const r = (report ?? null) as { heard_about: Record<string, number>; sources: Record<string, number>; events_30d: Record<string, number> } | null;
@@ -78,6 +90,30 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         title="Clients"
         description={unassigned > 0 ? `${unassigned} client${unassigned === 1 ? "" : "s"} without an account manager.` : undefined}
       />
+      <Card>
+        <CardHeader>
+          <CardTitle>Public numbers · last 30 days</CardTitle>
+          <form action={computeStatsAction}>
+            <Button type="submit" size="sm" variant="outline">
+              Recompute
+            </Button>
+          </form>
+        </CardHeader>
+        <CardBody className="space-y-2 text-[length:var(--fs-2)]">
+          {stats ? (
+            <p className="tabular">
+              On time {stats.first_look_on_time_pct ?? "—"}% · approved first time {stats.first_pass_approval_pct ?? "—"}% · late credits{" "}
+              {stats.late_credits_issued} · claims upheld {stats.claims_upheld} · {stats.designs_delivered} delivered · computed{" "}
+              {when(stats.computed_at)}
+            </p>
+          ) : (
+            <p className="text-muted-foreground">Not computed yet. It runs every Monday, or press Recompute.</p>
+          )}
+          <p className="text-muted-foreground">
+            {statsLive ? "Live on /results." : "Hidden from the website until the public_stats flag is turned on (after 30 days of real data)."}
+          </p>
+        </CardBody>
+      </Card>
       {r && (
         <Card>
           <CardHeader>

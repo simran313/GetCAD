@@ -11,6 +11,10 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { pushIsConfiguredForBrowser } from "@/config/push";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { ORDER_FILES_BUCKET } from "@/config/supabase";
+
+import { uploadLogoAction } from "../orders/previewActions";
 
 import { ClientProfileForm, type ClientProfile } from "./ClientProfileForm";
 
@@ -51,13 +55,18 @@ export default async function AccountPage() {
   // C9: a client edits their business details here (Phase 5b).
   const isClient = role === "CLIENT";
   const { data: profile } = isClient
-    ? await supabase.from("client_profiles").select("business_name, legal_name, email, phone").maybeSingle()
+    ? await supabase.from("client_profiles").select("business_name, legal_name, email, phone, logo_object_key").maybeSingle()
     : { data: null };
   const { data: account } = isClient
     ? await supabase.from("client_accounts").select("client_code").maybeSingle()
     : { data: null };
   const email = isClient ? (await currentUser())?.primaryEmailAddress?.emailAddress ?? null : null;
   const pushOffered = pushIsConfiguredForBrowser(vapidPublicKey);
+  // Phase 7b: the logo shown on the client's 3D preview links.
+  const logoKey = (profile as { logo_object_key?: string | null } | null)?.logo_object_key ?? null;
+  const logoUrl = logoKey
+    ? ((await createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET).createSignedUrl(logoKey, 60 * 15)).data?.signedUrl ?? null)
+    : null;
 
   return (
     <main className="container max-w-2xl py-8">
@@ -73,6 +82,27 @@ export default async function AccountPage() {
           </CardHeader>
           <CardBody>
             <ClientProfileForm profile={profile as ClientProfile | null} email={email} next="/account" submitLabel="Save" />
+          </CardBody>
+        </Card>
+      )}
+
+      {isClient && (
+        <Card as="section" className="mt-6">
+          <CardHeader>
+            <CardTitle>Your logo</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-3 text-[length:var(--fs-2)]">
+            <p className="text-muted-foreground">Shown on the 3D preview links you send your customers. PNG or JPEG, up to 2 MB.</p>
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element -- a short-lived signed URL
+              <img src={logoUrl} alt="Your logo" className="h-12 w-auto rounded-[var(--r-sm)] border border-border bg-background p-1" />
+            )}
+            <form action={uploadLogoAction} className="flex flex-wrap items-center gap-2">
+              <input type="file" name="logo" accept="image/png,image/jpeg" required aria-label="Logo file" />
+              <Button type="submit" size="sm" variant="outline">
+                {logoUrl ? "Replace" : "Upload"}
+              </Button>
+            </form>
           </CardBody>
         </Card>
       )}

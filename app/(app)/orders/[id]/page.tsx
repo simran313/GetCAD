@@ -20,7 +20,9 @@ import { SITE_URL } from "@/lib/seo";
 
 import { productWord } from "@/lib/client/orders";
 
+import { ClaimsCard, ShareCard, type ClaimRow, type PreviewLinkRow } from "../AfterDelivery";
 import { ClientOrderView } from "../ClientOrderView";
+import { TeamClaims, type TeamClaimRow } from "../TeamClaims";
 import { OrderDetail } from "../OrderDetail";
 import type { PayoutStateSummary } from "../PayoutPanel";
 import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPanel";
@@ -48,7 +50,13 @@ import type { AttachmentRow, DisputeRow, LedgerRow, MessageRow, OrderRow, Thread
  */
 export const dynamic = "force-dynamic";
 
-export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ link?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -249,9 +257,35 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           .filter((l): l is [string, string] => !!l[1])
           .map(([label, value]) => ({ label, value }))
       : [];
+    // Phase 7b (0051): share a preview once approved; spec claims once delivered.
+    const shareable = ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"].includes(order.status) && order.service !== "render";
+    const [linksRes, windowRes, claimsRes] = shareable
+      ? await Promise.all([
+          supabase.rpc("my_preview_links", { p_order_id: order.id }),
+          supabase.rpc("claim_window", { p_order_id: order.id }),
+          supabase.rpc("order_claims", { p_order_id: order.id }),
+        ])
+      : [{ data: null }, { data: null }, { data: null }];
+    const newLink = (await searchParams).link;
+    const afterDelivery = shareable ? (
+      <>
+        <ShareCard
+          orderId={order.id}
+          links={(linksRes.data as PreviewLinkRow[] | null) ?? []}
+          newLink={newLink && /^[A-Za-z0-9_-]{32}$/.test(newLink) ? newLink : null}
+          siteUrl={SITE_URL}
+        />
+        <ClaimsCard
+          orderId={order.id}
+          claims={(claimsRes.data as ClaimRow[] | null) ?? []}
+          claimWindow={(windowRes.data as { open: boolean; closes_at: string | null } | null) ?? null}
+        />
+      </>
+    ) : null;
     return (
       <>
         <ClientOrderView
+          afterDelivery={afterDelivery}
           order={order}
           title={(spec?.reference_name as string) || productWord(order.product_type)}
           clientPo={(poRes.data as { client_po: string | null } | null)?.client_po ?? null}
@@ -276,11 +310,13 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   // A3 — the team's order page (Phase 5d): references in the header, the
   // next move first, then the work and conversation beside the controls.
   if (order.relation !== "CLIENT") {
-    const [jobRes, podsRes, vsRes] = await Promise.all([
+    const [jobRes, podsRes, vsRes, teamClaimsRes] = await Promise.all([
       supabase.rpc("pod_jobs", { p_order_id: order.id }).maybeSingle(),
       order.relation === "ADMIN" ? supabase.rpc("pods_overview") : Promise.resolve({ data: null }),
       supabase.rpc("version_spec", { p_order_id: order.id }),
+      supabase.rpc("order_claims", { p_order_id: order.id }),
     ]);
+    const teamClaims = (teamClaimsRes.data as TeamClaimRow[] | null) ?? [];
     // Phase 7a (0050): the certificate and weight sheet once QC has passed.
     const vs = (vsRes.data ?? null) as VersionSpec | null;
     const postQc = ["CLIENT_PREVIEW", "APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED", "DISPUTED"].includes(order.status);
@@ -366,7 +402,16 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         />
         <OrderDetail
           layout="team"
-          teamTop={teamTop}
+          teamTop={
+            teamClaims.length > 0 ? (
+              <>
+                {teamTop}
+                <TeamClaims orderId={order.id} claims={teamClaims} isAdmin={order.relation === "ADMIN"} />
+              </>
+            ) : (
+              teamTop
+            )
+          }
           order={order}
           role={role}
           payoutShare={payoutShare}

@@ -49,6 +49,15 @@ describe("the website", () => {
     }
   });
 
+  // Add. A7: the results page reads only through the flag-gated function and
+  // is a 404 when it returns nothing.
+  it("shows the numbers only through public_stats_latest, and 404s without them", () => {
+    const page = read("app/(marketing)/results/page.tsx");
+    expect(page).toContain('rpc("public_stats_latest")');
+    expect(page).toMatch(/if \(!s\) notFound\(\)/);
+    expect(page).not.toMatch(/from\("public_stats"\)/);
+  });
+
   it("prices come from DECISIONS §4", () => {
     expect(PRICE_BANDS.map((b) => b.price)).toEqual(["$55", "$85", "From $120", "$49"]);
   });
