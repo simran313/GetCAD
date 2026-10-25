@@ -24,8 +24,13 @@ import { generateId } from "../../core/ids/generateId";
 import { assertDestroyable, freshSchema, TEST_DATABASE_URL } from "../helpers/db";
 import { clerkIssuer, E2E_DIR, PERSONAS, type E2eState, type Persona } from "./state";
 
-const secretKey = process.env.CLERK_SECRET_KEY ?? "";
-const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+// Pasted secrets often carry a stray space, newline or quotes: drop them here,
+// and hand the cleaned keys to the build and the tests through app.env.
+const clean = (v: string | undefined) => (v ?? "").trim().replace(/^["']+|["']+$/g, "");
+const secretKey = clean(process.env.CLERK_SECRET_KEY);
+const publishableKey = clean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+// What kind of key a value is, without printing any of the key itself.
+const kind = (v: string) => v.match(/^(sk|pk)_(test|live)_/)?.[0] ?? (v ? "not a Clerk key" : "empty");
 
 async function asUser(db: Client, sub: string, sql: string, params: unknown[] = []) {
   await db.query("SELECT set_config('request.jwt.claims', $1, false)", [JSON.stringify({ sub, role: "authenticated" })]);
@@ -117,11 +122,16 @@ export async function seed(db: Client, ids: Record<Persona, string>): Promise<E2
 }
 
 async function main() {
-  if (!secretKey.startsWith("sk_test_") || !publishableKey.startsWith("pk_test_")) {
-    throw new Error(
-      "e2e needs a Clerk DEVELOPMENT instance: set CLERK_SECRET_KEY (sk_test_…) and " +
-        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (pk_test_…). Live keys are refused.",
-    );
+  for (const [name, value, want] of [
+    ["CLERK_SECRET_KEY", secretKey, "sk_test_"],
+    ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", publishableKey, "pk_test_"],
+  ] as const) {
+    if (!value.startsWith(want)) {
+      throw new Error(
+        `${name} must be a Clerk DEVELOPMENT key starting ${want}; this one is: ${kind(value)}. ` +
+          "Live keys are refused. Check the matching E2E_CLERK_* repository secret.",
+      );
+    }
   }
   // A key copied from the dashboard while it is masked or shortened ("sk_test_ab…")
   // fails deep inside the Clerk client with a header error; say what it is.
@@ -180,6 +190,8 @@ async function main() {
       `NEXT_PUBLIC_SUPABASE_ANON_KEY=${state.anonKey}`,
       `SUPABASE_SERVICE_ROLE_KEY=${state.serviceKey}`,
       `CLERK_JWT_ISSUER=${issuer}`,
+      `CLERK_SECRET_KEY=${secretKey}`,
+      `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${publishableKey}`,
       `NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3100`,
       "",
     ].join("\n"),
