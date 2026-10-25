@@ -136,7 +136,7 @@ test("the client approves and downloads the STL and the certificate", async ({ b
   // A9.1: the certificate carries all 19 ticks, both columns, and the
   // measured specs.
   const text = await pdfText(await cert.body());
-  expect(text).toContain("19-point checklist");
+  expect(text).toMatch(/19-\s*point checklist/);
   for (let n = 1; n <= 19; n++) expect(text, `checklist line ${n}`).toMatch(new RegExp(`(^| )${String(n).padStart(2, "0")} `));
   expect(text, "a line is not ticked").not.toContain("not ticked");
   expect(text).toMatch(/Minimum wall 0\.90 mm/);

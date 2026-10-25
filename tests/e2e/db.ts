@@ -56,6 +56,9 @@ export async function submittedBrief(db: Client, clientId: string, reference: st
                                      p_metal => 'YELLOW', p_ring_size => 'US 7')`,
     [id, reference],
   );
+  // A brief needs a reference picture before it can go for a price; the
+  // record is enough here (no screen opens it in these tests).
+  await asUser(db, clientId, "SELECT public.add_reference_image($1, $2, 'image/png', 100)", [id, `${id}/refs/e2e.png`]);
   await asUser(db, clientId, "SELECT public.submit_brief($1)", [id]);
   return id;
 }

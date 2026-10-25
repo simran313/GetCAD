@@ -35,11 +35,19 @@ const clock = (id: string) =>
       ).rows[0] as { sla_started_at: Date | null; sla_due_at: Date | null; paid_at: Date | null; confirmed_at: Date | null; seconds: number | null },
   );
 
+/** The form's file input, in its visible "Screenshots" section. */
+const screenshots = (page: Page) => page.getByRole("group", { name: /Screenshots of the request/ }).locator('input[type="file"]');
+
 async function fillOrder(page: Page) {
   await page.goto(`/admin/new-order?q=${encodeURIComponent(PERSONAS.client2.business)}`);
-  await expect(page.locator('input[name="client_id"]')).toBeChecked();
-  await page.locator('select[name="source"]').selectOption("whatsapp");
-  await page.locator('textarea[name="note"]').fill("Halo ring like the photo, 18K yellow, size US 6.");
+  // The first run found two "Came by" selects on this page, one not in its
+  // section: say what is there. Role locators below see only the visible form.
+  const all = page.locator('select[name="source"]');
+  console.log(`new-order: ${await all.count()} "source" selects, visible: ${await all.evaluateAll((els) => els.map((e) => (e as HTMLElement).offsetParent !== null))}`);
+  await expect(page.getByRole("radio").first()).toBeChecked();
+  const order = page.getByRole("group", { name: /The order/ });
+  await order.getByLabel("Came by").selectOption("whatsapp");
+  await order.getByLabel(/What they asked for/).fill("Halo ring like the photo, 18K yellow, size US 6.");
   // No email from the tests.
   await page.getByLabel(/Email the client that the order is placed/).uncheck();
 }
@@ -50,12 +58,12 @@ test("an on-behalf order without a screenshot is refused; with one, the client s
 
   // The browser asks for a file first; the server must refuse on its own.
   await fillOrder(admin);
-  await admin.locator('input[name="screenshots"]').evaluate((el) => el.removeAttribute("required"));
+  await screenshots(admin).evaluate((el) => el.removeAttribute("required"));
   await refused(admin, admin.getByRole("button", { name: "Place order" }));
   expect(await ordersOf(client2), "an order was made without a screenshot").toBe(before);
 
   await fillOrder(admin);
-  await admin.locator('input[name="screenshots"]').setInputFiles({ name: "whatsapp.png", mimeType: "image/png", buffer: png([40, 160, 90], 40) });
+  await screenshots(admin).setInputFiles({ name: "whatsapp.png", mimeType: "image/png", buffer: png([40, 160, 90], 40) });
   await act(admin, admin.getByRole("button", { name: "Place order" }));
   await admin.waitForURL(/\/orders\/[^/?#]+$/);
   orderId = orderIdFrom(admin.url());

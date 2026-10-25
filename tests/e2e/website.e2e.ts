@@ -25,7 +25,6 @@ const PAGES = [
   "/pricing",
   "/quality",
   "/guarantee",
-  "/results",
   "/jewelry-cad",
   "/faq",
   "/contact",
@@ -51,6 +50,9 @@ test("every page of the website loads with UTM tags on", async ({ page }) => {
     const res = await page.goto(`${path}?${utm}`);
     expect(res?.status(), path).toBe(200);
   }
+  // Add. A7: the public numbers page shows nothing until the owner turns
+  // on public_stats (off in a fresh database).
+  expect((await page.goto(`/results?${utm}`))?.status(), "/results while public_stats is off").toBe(404);
 });
 
 test("a new jeweler signs up from a campaign and must say how they heard about us", async ({ browser }) => {
