@@ -39,7 +39,9 @@ export default defineConfig({
       stdout: "pipe",
     },
     {
-      command: `npx next start -p ${PORT} -H 127.0.0.1`,
+      // No -H 127.0.0.1: Next forwards requests to itself through
+      // "localhost", which fails when it listens on 127.0.0.1 only.
+      command: `npx next start -p ${PORT}`,
       url: `http://127.0.0.1:${PORT}/`,
       env,
       timeout: 120_000,
