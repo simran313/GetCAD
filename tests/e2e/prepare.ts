@@ -123,6 +123,13 @@ async function main() {
         "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (pk_test_…). Live keys are refused.",
     );
   }
+  // A key copied from the dashboard while it is masked or shortened ("sk_test_ab…")
+  // fails deep inside the Clerk client with a header error; say what it is.
+  for (const [name, value] of [["CLERK_SECRET_KEY", secretKey], ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", publishableKey]]) {
+    if (!/^[A-Za-z0-9_+/=$-]{20,}$/.test(value!)) {
+      throw new Error(`${name} is not a whole key (it has a "…", a space or is too short): copy it again with Clerk's copy button.`);
+    }
+  }
   assertDestroyable(TEST_DATABASE_URL);
   rmSync(E2E_DIR, { recursive: true, force: true });
   mkdirSync(join(E2E_DIR, "storage"), { recursive: true });
