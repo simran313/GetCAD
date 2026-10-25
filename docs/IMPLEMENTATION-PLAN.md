@@ -518,6 +518,19 @@ Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities chang
 - Re-run every Spec §12 and Add. A9 acceptance test as an e2e assertion.
 - CI: new `e2e` job (separate from the 5-minute `verify` job).
 
+### Phase 8 — owner answers (October 2026)
+- **Sign-in:** real Clerk, using the development instance (repository secrets `E2E_CLERK_PUBLISHABLE_KEY`, `E2E_CLERK_SECRET_KEY`).
+- **Split:** two PRs. 8a covers the stack, the core journey and the anonymity crawl; 8b covers the on-behalf order, SLA credit, spec claim, preview link, website → sign-up and the acceptance re-runs.
+- **When:** every PR, as a separate `e2e` check beside `verify`.
+
+### Phase 8a — as built
+- **Stack:** see `tests/e2e/README.md`.
+  - PostgREST runs from its official image; storage is a small stand-in (`tests/e2e/stack/gateway.mjs`) covering the four calls the app makes (upload, signed link, signed download, remove), service-role only.
+  - `@playwright/test` is pinned to the version of the pre-installed Chromium.
+- **Users:** one Clerk test user per persona, created on first run and reused; roles, pod and profiles are written here each run (clients through `save_client_profile`).
+- **Specs:** `00-setup`, `anonymity`, `journey` (see the README).
+- **CI:** the `e2e` job fails at once, naming the secrets, if they are missing.
+
 ---
 
 ## Phase 9 — Payment providers (last, by owner decision)

@@ -17,6 +17,11 @@
     "db:apply": "node scripts/apply-migrations.mjs",
     "secret-scan": "node scripts/secret-scan.mjs",
     "ci": "npm run typecheck && npm run lint && npm run test && npm run secret-scan",
+    "e2e:prepare": "tsx tests/e2e/prepare.ts",
+    "e2e:postgrest": "node tests/e2e/stack/postgrest.mjs",
+    "e2e:build": "node tests/e2e/stack/build.mjs",
+    "e2e:test": "playwright test",
+    "e2e": "npm run e2e:prepare && npm run e2e:postgrest && npm run e2e:build && npm run e2e:test",
     "db:status": "node scripts/apply-migrations.mjs --status",
     "db:baseline": "node scripts/apply-migrations.mjs --baseline",
     "verify:payment": "node scripts/verify-payment.mjs",
@@ -48,6 +53,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@clerk/backend": "^2.33.5",
+    "@clerk/testing": "^2.2.50",
+    "@playwright/test": "1.63.0",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",
     "@types/react": "^19.1.0",
@@ -61,6 +69,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
