@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -19,16 +19,27 @@ import { tabsForRole } from "../../core/nav/tabs";
  */
 const ROLES = ["CLIENT", "DESIGNER", "OPS", "SALES", "FINANCE", "QC"];
 
-/** Route groups like (app) and (marketing) do not appear in the URL. */
-const GROUPS = ["(app)", "(marketing)", ""];
+/**
+ * Every page file's URL. Route groups like (app), (marketing) or (list) do not
+ * appear in the URL, at any depth.
+ */
+function pageUrls(dir = join(process.cwd(), "app"), url = ""): Set<string> {
+  const urls = new Set<string>();
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const next = /^\(.+\)$/.test(entry.name) ? url : `${url}/${entry.name}`;
+      for (const u of pageUrls(join(dir, entry.name), next)) urls.add(u);
+    } else if (/^page\.(tsx|ts|jsx)$/.test(entry.name)) {
+      urls.add(url || "/");
+    }
+  }
+  return urls;
+}
+
+const PAGES = pageUrls();
 
 function pageExists(href: string): boolean {
-  const segments = href.replace(/^\//, "");
-  return GROUPS.some((group) =>
-    ["page.tsx", "page.ts", "page.jsx"].some((leaf) =>
-      existsSync(join(process.cwd(), "app", group, segments, leaf)),
-    ),
-  );
+  return PAGES.has(href);
 }
 
 describe("navigation points at routes that exist", () => {

@@ -76,30 +76,6 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
       console.log(`[trace rsc] ${rows.length} notable rows of ${body.split("\n").length}`);
     }
   });
-  // Fetch each update reply in full ourselves: its exact size, and whether it
-  // ever ends. (The browser then gets the buffered copy.)
-  await page.route(/\/orders\/[^/?]+(\?_rsc=.*)?$/, async (route) => {
-    const req = route.request();
-    const h = req.headers();
-    if (!h["next-action"] && !h["rsc"]) return route.continue();
-    const started = Date.now();
-    try {
-      const resp = await route.fetch({ timeout: 20_000 });
-      const body = await resp.text();
-      const lines = body.split("\n");
-      console.log(
-        `[trace ${at()}] FULL ${h["next-action"] ? "ACTION" : "RSC"} reply ${resp.status()} ${body.length} bytes, ${lines.length} rows, ` +
-          `${Date.now() - started} ms, has QUOTED=${body.includes("QUOTED")} PAYMENT_HELD=${body.includes("PAYMENT_HELD")}`,
-      );
-      for (const l of lines.filter((x) => /^[0-9a-f]+:(I|HL|E)\[|^[0-9a-f]+:"\$@|error/i.test(x)).slice(0, 15)) {
-        console.log(`[trace rsc] ${l.slice(0, 200)}`);
-      }
-      await route.fulfill({ response: resp, body });
-    } catch (e) {
-      console.log(`[trace ${at()}] FULL reply FAILED after ${Date.now() - started} ms: ${(e as Error).message.slice(0, 200)}`);
-      await route.continue().catch(() => {});
-    }
-  });
   const sheets = () =>
     page.evaluate(() => ({
       css: [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => (l as HTMLLinkElement).href.split("/").pop()),
