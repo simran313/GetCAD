@@ -75,6 +75,13 @@ export async function seed(db: Client, ids: Record<Persona, string>): Promise<E2
     [ids.designer, PERSONAS.designer.legalName, PERSONAS.designer.email],
   );
 
+  // The designer signs the current agreement, as onboarding does: without it
+  // they are "not signed up" and cannot be assigned (0009, 0011).
+  const agreement = await db.query(
+    "SELECT content_sha256 FROM agreement_documents WHERE kind = 'DESIGNER' ORDER BY published_at DESC LIMIT 1",
+  );
+  await asUser(db, ids.designer, "SELECT public.accept_designer_agreement($1)", [agreement.rows[0].content_sha256]);
+
   // Clients sign up the way the welcome form does it.
   for (const persona of ["client", "client2"] as const) {
     const p = PERSONAS[persona];

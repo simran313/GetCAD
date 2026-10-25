@@ -58,7 +58,15 @@ async function capture(page: Page, path: string): Promise<string> {
   return [html, ...(await Promise.all(bodies))].join("\n");
 }
 
-const tokens = (text: string) => new Set(text.match(/[A-Za-z0-9][A-Za-z0-9_+@.:-]{3,}/g) ?? []);
+// Styling class names are not data: a loading placeholder caught on one page
+// and not another would otherwise read as a link between jobs.
+const tokens = (text: string) =>
+  new Set(
+    text
+      .replace(/class(Name)?=\\?"[^"\\]*\\?"/g, " ")
+      .replace(/\\?"className\\?":\\?"[^"\\]*\\?"/g, " ")
+      .match(/[A-Za-z0-9][A-Za-z0-9_+@.:-]{3,}/g) ?? [],
+  );
 
 test("nothing the designer can reach names or links a client", async ({ browser }) => {
   test.setTimeout(480_000);

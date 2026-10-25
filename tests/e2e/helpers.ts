@@ -23,7 +23,12 @@ export async function signedIn(browser: Browser, persona: Persona): Promise<Page
  */
 export async function act(page: Page, button: Locator) {
   const [res] = await Promise.all([
-    page.waitForResponse((r) => r.request().method() === "POST" && !!r.request().headers()["next-action"]),
+    page
+      .waitForResponse((r) => r.request().method() === "POST" && !!r.request().headers()["next-action"], { timeout: 30_000 })
+      .catch(() => {
+        // Usually the browser refusing to submit: a required field it thinks is empty.
+        throw new Error(`pressing ${button} sent nothing to the server within 30 s on ${page.url()}`);
+      }),
     button.click(),
   ]);
   expect(res.status(), `server action failed on ${page.url()}`).toBeLessThan(400);
