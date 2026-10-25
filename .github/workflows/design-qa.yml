@@ -45,6 +45,8 @@ jobs:
         run: |
           stage=$(printf '%s' "$COMMIT_MESSAGE" | grep -o '\[design-qa:[a-z0-9-]*\]' | head -1 | sed 's/\[design-qa:\(.*\)\]/\1/')
           echo "DESIGN_QA_STAGE=${stage:-snapshot}" >> "$GITHUB_ENV"
+          # [design-qa:preview] captures the design preview only (no journeys needed).
+          if [ "$stage" = "preview" ]; then echo "DESIGN_QA_ONLY=preview" >> "$GITHUB_ENV"; fi
 
       - uses: actions/setup-node@v4
         with:
@@ -66,6 +68,7 @@ jobs:
 
       # The journeys fill the database with real orders in every state.
       - name: Run the journeys (data for the screens)
+        if: env.DESIGN_QA_ONLY == ''
         run: npm run e2e:test
         continue-on-error: true
 

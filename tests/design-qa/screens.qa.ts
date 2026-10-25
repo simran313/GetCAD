@@ -52,6 +52,16 @@ async function as(browser: Browser, persona: Persona | null): Promise<Page> {
 const orderPages = (id: string | null | undefined) => (id ? [`/orders/${id}`] : []);
 
 const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<string[]> }> = {
+  preview: {
+    persona: null,
+    paths: async () => [
+      "/design-preview",
+      "/design-preview/frame?view=marketing&font=a",
+      "/design-preview/frame?view=marketing&font=b",
+      "/design-preview/frame?view=portal",
+      "/design-preview/frame?view=client",
+    ],
+  },
   marketing: {
     persona: null,
     paths: async () => [
@@ -102,7 +112,9 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
   },
 };
 
-for (const [who, { persona, paths }] of Object.entries(ROUTES)) {
+// DESIGN_QA_ONLY=preview,admin limits a run to those groups.
+const ONLY = (process.env.DESIGN_QA_ONLY ?? "").split(",").filter(Boolean);
+for (const [who, { persona, paths }] of Object.entries(ROUTES).filter(([w]) => ONLY.length === 0 || ONLY.includes(w))) {
   test(`screens: ${who}`, async ({ browser }) => {
     const page = await as(browser, persona);
     for (const path of await paths()) await shoot(page, who, path);
