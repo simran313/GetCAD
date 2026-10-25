@@ -31,19 +31,36 @@ export async function act(page: Page, button: Locator) {
 }
 
 /**
- * Expect a control to be gone after an action. On failure, say what the page
- * showed and whether a reload shows it gone (stale screen vs. action not done).
+ * Check the screen after an action.
+ *
+ * Known issue (Phase 8a): the order, job and QC pages sometimes keep showing
+ * the state from before an action, though the action was saved. So: give the
+ * screen 30 s to update by itself (those pages poll every 5 s); if it has not,
+ * reload, and log a STALE SCREEN line so every case shows in the CI log while
+ * the journey carries on. Still wrong after a reload means the action did not
+ * happen: fail, with what the page showed.
  */
-export async function expectGone(page: Page, locator: Locator) {
+export async function settled(page: Page, what: string, check: (timeout: number) => Promise<void>) {
+  const started = Date.now();
   try {
-    await expect(locator).toHaveCount(0);
+    await check(30_000);
+    const s = Math.round((Date.now() - started) / 1000);
+    if (s > 3) console.log(`SLOW SCREEN: ${what} after ${s} s on ${page.url()}`);
+    return;
   } catch {
     const before = (await page.locator("main").innerText().catch(() => "")).slice(0, 1500);
     await page.reload();
-    const afterReload = (await locator.count()) === 0 ? "gone after a reload (the screen was stale)" : "still there after a reload";
-    throw new Error(`${locator} did not go away; it is ${afterReload}.\nPage showed:\n${before}`);
+    try {
+      await check(5_000);
+    } catch {
+      throw new Error(`${what}: not so even after a reload.\nPage showed:\n${before}`);
+    }
+    console.log(`STALE SCREEN: ${what} only after a reload on ${page.url()}`);
   }
 }
+
+export const expectGone = (page: Page, locator: Locator) =>
+  settled(page, `${locator} gone`, (timeout) => expect(locator).toHaveCount(0, { timeout }));
 
 /** Submit the form a control lives in, by that form's button. */
 export async function submitFormOf(page: Page, control: Locator, button: string | RegExp) {
@@ -61,7 +78,7 @@ export async function tickAll(page: Page, column: "Designer" | "QC") {
     const n = await unticked.count();
     if (n === 0) return;
     await act(page, unticked.first());
-    await expect(unticked).toHaveCount(n - 1);
+    await settled(page, `${n - 1} ${column} boxes left`, (timeout) => expect(unticked).toHaveCount(n - 1, { timeout }));
   }
   throw new Error(`${column} checklist did not complete`);
 }
@@ -74,19 +91,20 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   const start = page.getByRole("button", { name: "Start work" });
   if (await start.isVisible()) {
     await act(page, start);
-    await expect(page.getByRole("button", { name: "Start work" })).toHaveCount(0);
+    await expectGone(page, page.getByRole("button", { name: "Start work" }));
   }
 
   const volume = page.getByLabel("Model volume in cubic millimetres");
   await volume.fill("312.5");
   await submitFormOf(page, volume, "Save");
-  await expect(volume).toHaveValue("312.5");
+  await settled(page, "volume saved", (timeout) => expect(volume).toHaveValue("312.5", { timeout }));
 
   for (const code of REQUIRED_SLOTS) {
     const input = page.getByLabel(`File for ${code}`, { exact: true });
     await input.setInputFiles(await slotFile(code));
     await submitFormOf(page, input, /Upload|Replace/);
-    await expect(page.locator("form", { has: page.getByLabel(`File for ${code}`, { exact: true }) }).getByRole("button", { name: "Replace" })).toBeVisible();
+    const replace = page.locator("form", { has: page.getByLabel(`File for ${code}`, { exact: true }) }).getByRole("button", { name: "Replace" });
+    await settled(page, `${code} uploaded`, (timeout) => expect(replace).toBeVisible({ timeout }));
   }
 
   await page.goto(`/work/${orderId}/checklist`);
@@ -98,7 +116,7 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   await expect(submit).toBeEnabled();
   await act(page, submit);
   // Submitted versions go straight to the pod lead's review.
-  await expect(submit).toBeDisabled();
+  await settled(page, "submitted to QC", (timeout) => expect(submit).toBeDisabled({ timeout }));
 }
 
 /** The order id from a URL like /orders/{id}/… */

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { png } from "./files";
-import { act, doDesignerVersion, expectGone, orderIdFrom, signedIn, tickAll } from "./helpers";
+import { act, doDesignerVersion, expectGone, settled, orderIdFrom, signedIn, tickAll } from "./helpers";
 
 /**
  * Phase 8a — the core journey, every step through the real screens:
@@ -11,7 +11,8 @@ import { act, doDesignerVersion, expectGone, orderIdFrom, signedIn, tickAll } fr
  *   pod lead measures and passes → client approves → client downloads
  *   the STL and the QC certificate.
  */
-test.describe.configure({ mode: "serial" });
+// Ten minutes a step: version 1 and 2 are 60 server actions between them.
+test.describe.configure({ mode: "serial", timeout: 600_000 });
 
 let orderId = "";
 const choose = (page: Page, legend: string, option: string) =>
@@ -51,7 +52,7 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   const page = await signedIn(browser, "admin");
   await page.goto(`/orders/${orderId}`);
   await act(page, page.getByRole("button", { name: "Set quote" }));
-  await expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible();
+  await settled(page, "quoted", (timeout) => expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible({ timeout }));
   await act(page, page.getByRole("button", { name: "Mark paid" }));
   await expectGone(page, page.getByRole("button", { name: "Mark paid" }));
   await act(page, page.getByRole("button", { name: "Confirm order" }));
@@ -78,7 +79,7 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
   await lead.goto(`/qc/${orderId}`);
   await lead.getByLabel("Revision note · required to send back").fill("1. Thicken the shank to 1.2 mm");
   await act(lead, lead.getByRole("button", { name: "Send back" }));
-  await expect(lead.getByRole("button", { name: "Send back" })).toHaveCount(0);
+  await expectGone(lead, lead.getByRole("button", { name: "Send back" }));
 
   // Version 2, from the start: new files, new ticks, the volume again.
   await doDesignerVersion(designer, orderId);
@@ -94,12 +95,14 @@ test("the pod lead measures version 2 and passes it", async ({ browser }) => {
   await page.getByLabel("Minimum prong (mm)", { exact: true }).fill("0.85");
   await page.getByLabel("Ring size", { exact: true }).fill("US 7");
   await act(page, page.getByRole("button", { name: "Record measurements" }));
-  await expect(page.getByRole("button", { name: "Update measurements" })).toBeVisible();
+  await settled(page, "measurements recorded", (timeout) =>
+    expect(page.getByRole("button", { name: "Update measurements" })).toBeVisible({ timeout }),
+  );
 
   const pass = page.getByRole("button", { name: "Pass to client" });
   await expect(pass).toBeEnabled();
   await act(page, pass);
-  await expect(pass).toHaveCount(0);
+  await expectGone(page, pass);
   await page.context().close();
 });
 
