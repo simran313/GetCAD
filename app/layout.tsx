@@ -5,10 +5,9 @@ import type { Metadata, Viewport } from "next";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
 
-// Instrument Serif, the display face (docs/design): bundled from npm like
+// Newsreader (font option B, marketing H1/H2 only): bundled from npm like
 // Geist, so no page asks a third party for it.
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/newsreader/opsz.css";
 import "./globals.css";
 
 // Self-hosted rather than fetched from Google at build time: the build must not

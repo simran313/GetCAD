@@ -12,8 +12,33 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
-        // Instrument Serif (docs/design): screen titles, the wordmark, numbers set large.
+        // Geist (redesign): headings and large numbers. Serif is font option B,
+        // marketing H1/H2 only.
         display: ["var(--font-display)"],
+        serif: ["var(--font-serif)"],
+      },
+      // The redesign scale (app/globals.css): 12/14/16/18/20/24/32/40/56/72.
+      fontSize: {
+        "t-12": ["var(--text-12)", { lineHeight: "16px" }],
+        "t-14": ["var(--text-14)", { lineHeight: "20px" }],
+        "t-16": ["var(--text-16)", { lineHeight: "24px" }],
+        "t-18": ["var(--text-18)", { lineHeight: "28px" }],
+        "t-20": ["var(--text-20)", { lineHeight: "28px" }],
+        "t-24": ["var(--text-24)", { lineHeight: "30px" }],
+        "t-32": ["var(--text-32)", { lineHeight: "36px" }],
+        "t-40": ["var(--text-40)", { lineHeight: "44px" }],
+        "t-56": ["var(--text-56)", { lineHeight: "60px" }],
+        "t-72": ["var(--text-72)", { lineHeight: "76px" }],
+      },
+      maxWidth: {
+        page: "var(--page-max)",
+      },
+      boxShadow: {
+        "e-1": "var(--e-1)",
+        "e-2": "var(--e-2)",
+      },
+      transitionTimingFunction: {
+        out: "var(--ease-out)",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -41,6 +66,20 @@ const config: Config = {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        tone: {
+          "neutral-fg": "var(--tone-neutral-fg)",
+          "neutral-bg": "var(--tone-neutral-bg)",
+          "info-fg": "var(--tone-info-fg)",
+          "info-bg": "var(--tone-info-bg)",
+          "attention-fg": "var(--tone-attention-fg)",
+          "attention-bg": "var(--tone-attention-bg)",
+          "success-fg": "var(--tone-success-fg)",
+          "success-bg": "var(--tone-success-bg)",
+          "warning-fg": "var(--tone-warning-fg)",
+          "warning-bg": "var(--tone-warning-bg)",
+          "danger-fg": "var(--tone-danger-fg)",
+          "danger-bg": "var(--tone-danger-bg)",
         },
         card: {
           DEFAULT: "hsl(var(--card))",

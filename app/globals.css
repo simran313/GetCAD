@@ -3,311 +3,284 @@
 @tailwind utilities;
 
 /*
- * The CAD Pillar — design tokens (docs/design, Phase 5).
- * Black #0A0A0A on white, warm neutrals (#F7F7F5 #F0F0ED #E6E6E2), borders
- * #E3E3DF, no accent colour: the primary action is black. Light only (owner
- * answer, Phase 5). Display type is Instrument Serif; UI is Geist; references,
- * numbers and labels are Geist Mono.
+ * The CAD Pillar — design tokens (redesign, October 2026). The single source
+ * of truth: every colour, size, space, radius, shadow and duration a screen
+ * uses is declared here and nowhere else. Tailwind's theme points at these
+ * (tailwind.config.ts); components read them, never invent them.
  *
- * Readability floors are kept over the mockups where they differ (owner
- * answer, Phase 5): secondary text #52524C instead of the mockups' #6B6B66
- * (7.3:1 on the ground instead of 5:1), field borders #85857E instead of
- * #CFCFC9 (3.7:1, WCAG 1.4.11), and the comfortable type and control sizes
- * below. tests/config/color-contrast.test.ts recomputes every pair.
+ * Direction: premium black on white, quiet utility. #0A0A0A on #FFFFFF with
+ * pure neutral greys. Colour only ever carries meaning: the status tints,
+ * amber for SLA risk, red for errors and destructive confirmation.
+ *
+ * Contrast floors are computed from this file by
+ * tests/config/color-contrast.test.ts (7:1 for body and secondary text, 4.5:1
+ * for text on tints, 3:1 for control edges).
  */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* ------------------------------------------------------------ colour -- */
+    --background: 0 0% 100%;          /* #FFFFFF */
+    --foreground: 0 0% 3.9%;          /* #0A0A0A */
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
 
-    --muted: 60 9.1% 93.5%; /* #F0F0ED */
-    /*
-     * 7.0:1 on white, up from 5.33:1.
-     *
-     * This is the single highest-leverage number in the file. Muted foreground
-     * is not decoration here — it carries timestamps, amounts in escrow, order
-     * meta, the inactive navigation labels, half the captions in the product.
-     * At 42% it cleared AA and nothing more, which is a standard written for
-     * "legible" rather than "comfortable", on a phone, in a showroom, for
-     * someone in their fifties. 33% clears 7:1 on white AND on the tinted app ground below, which
-     * 35% did not — a 3% tint is enough to cost you the threshold.
-     */
-    --muted-foreground: 60 4% 31%; /* #52524C */
-    --subtle: 60 11.1% 96.5%; /* #F7F7F5 */
+    --muted: 0 0% 96.1%;              /* #F5F5F5 fills */
+    --muted-foreground: 0 0% 32%;     /* #525252 secondary text, 7.8:1 */
+    --subtle: 0 0% 98%;               /* #FAFAFA quiet surfaces */
 
-    --secondary: 60 9.1% 93.5%; /* #F0F0ED */
+    --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 3.9%;
-    --accent: 60 9.1% 93.5%; /* hover surface (shadcn convention) */
+    --accent: 0 0% 96.1%;             /* hover surface */
     --accent-foreground: 0 0% 3.9%;
 
-    /*
-     * Two different jobs, and they were nearly the same colour.
-     *
-     * --border draws dividers and card edges. It is decoration and stays quiet,
-     * though 90% was quiet to the point of absence on a bright screen.
-     *
-     * --input draws the boundary of a CONTROL — it is what tells you where a
-     * text field is before you click it, and WCAG 1.4.11 asks 3:1 of it for
-     * exactly that reason. At 87% it was 1.35:1: on a laptop outdoors the form
-     * was a set of invisible boxes. 58% is 3.03:1, the minimum that standard
-     * accepts, and it is why the forms suddenly look like forms.
-     */
-    --border: 60 6.7% 88.2%; /* #E3E3DF */
-    --input: 60 2.8% 50.8%; /* #85857E */
+    /* Hairlines: #0A0A0A at ~10% on white. Control edges stay 3:1 (WCAG 1.4.11). */
+    --border: 0 0% 90%;               /* #E5E5E5 */
+    --input: 0 0% 52%;                /* #858585, 3.7:1 */
+    --hairline: rgba(10, 10, 10, 0.08);
+    --hairline-strong: rgba(10, 10, 10, 0.12);
+    --border-subtle: rgba(10, 10, 10, 0.08);
+    --border-strong: #d4d4d4;
 
-    /* No accent colour: the primary action is black (docs/design). */
+    /* The primary action is black. One per view. */
     --primary: 0 0% 3.9%;
     --primary-foreground: 0 0% 100%;
     --ring: 0 0% 3.9%;
 
-    --destructive: 0 72% 45%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
-    /*
-     * THE GROUND THE APP SITS ON, and the reason its screens stopped looking
-     * like stacks of outlined rectangles.
-     *
-     * A white card, on a white page, with a 1px border, is not a card — it is
-     * an outline. Every panel then arrives at exactly the same visual weight,
-     * so a screen reads as a list of boxes rather than as content with some
-     * parts raised. That flatness is a large part of what "it looks like a
-     * website, not an app" actually describes.
-     *
-     * Tinting the ground by 3% is the whole fix. Cards keep `--card` (pure
-     * white) and their existing shadow suddenly has something to sit against.
-     * Nothing about the cards themselves changed.
-     *
-     * Scoped to the app shell, not to `body` — the marketing site is a website
-     * and its white page is correct there.
-     *
-     * Dark mode already had this: `--background` 7% under `--card` 9.5%. The
-     * value here matches the background exactly, so the shell is a no-op in
-     * dark and the light theme catches up to it.
+    /* The app shell's ground: a 2% tint so white cards read as raised. The
+     * marketing site keeps a white page. */
+    --app-ground: hsl(0 0% 98%);      /* #FAFAFA */
+
+    /* -------------------------------------------------------------- status --
+     * Six families, each fg / bg / line. Information, never mood; colour is
+     * never the only signal (every pill carries its label and a dot).
+     *   neutral    nothing is happening (draft, closed)
+     *   info       in flight, nothing owed by you
+     *   attention  you are the one holding it up (drawn black: the strongest)
+     *   success    it landed
+     *   warning    SLA risk: under an hour left (amber, and only that)
+     *   danger     it went wrong, or a destructive confirmation
      */
-    --app-ground: hsl(60 11.1% 96.5%); /* #F7F7F5 */
+    --tone-neutral-fg: hsl(0 0% 32%);
+    --tone-neutral-bg: hsl(0 0% 95%);
+    --tone-neutral-line: hsl(0 0% 32% / 0.2);
 
-    --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas,
-      "Liberation Mono", monospace;
-    --font-display: "Instrument Serif", "Times New Roman", serif;
-  }
+    --tone-info-fg: hsl(221 72% 38%);
+    --tone-info-bg: hsl(221 85% 96.5%);
+    --tone-info-line: hsl(221 72% 38% / 0.22);
 
-  /*
-   * The measurable half of the design system.
-   *
-   * Everything below is a NUMBER a screen should never invent for itself: a
-   * type step, a spacing step, a radius, a shadow, a duration. Screens compose
-   * these; they do not choose their own. That is what makes a later change to
-   * "how dense the app feels" or "how round things are" a single-file edit
-   * rather than a hunt through fifteen components — which is the whole point of
-   * having tokens at all.
-   *
-   * The scale is lifted from the design prototype unchanged, including the
-   * per-step line-height and letter-spacing pairings: the tightening as text
-   * gets larger is deliberate, and picking a font size without its matching
-   * pair is how a careful type scale quietly stops being one.
-   */
+    --tone-attention-fg: hsl(0 0% 3.9%);
+    --tone-attention-bg: hsl(0 0% 93%);
+    --tone-attention-line: hsl(0 0% 3.9% / 0.3);
 
-  /*
-   * TWO DENSITIES, ONE COMPONENT LIBRARY.
-   *
-   * The app serves two populations with opposite needs. A jewellery shop owner
-   * places one order a fortnight, on a phone, in a bright showroom, in their
-   * fifties — they need size and air. Staff work forty orders a day and need to
-   * see as many rows at once as will fit. Building for either one alone makes
-   * the app wrong for the other, and building two component libraries is how
-   * they drift apart.
-   *
-   * So every size in the system is a token, and `data-density` on an ancestor
-   * chooses the values. Components never branch on density; they read tokens.
-   *
-   *   default (no attribute) — COMFORTABLE, for client and designer screens
-   *   [data-density="compact"] — the previous values, for staff screens
-   *
-   * That means staff screens are pixel-identical to before, and everything else
-   * grew, from one file.
-   */
-  :root {
-    /* Type: size / line-height / tracking, paired by step.
+    --tone-success-fg: hsl(142 64% 24%);
+    --tone-success-bg: hsl(141 60% 95%);
+    --tone-success-line: hsl(142 64% 24% / 0.22);
+
+    --tone-warning-fg: hsl(26 90% 30%);
+    --tone-warning-bg: hsl(46 96% 92%);
+    --tone-warning-line: hsl(26 90% 30% / 0.25);
+
+    --tone-danger-fg: hsl(0 72% 36%);
+    --tone-danger-bg: hsl(0 78% 96.5%);
+    --tone-danger-line: hsl(0 72% 36% / 0.24);
+
+    /* ---------------------------------------------------------------- type --
+     * Geist Sans everywhere (headings 600, tracking -0.02em). Geist Mono only
+     * for reference codes and IDs. Newsreader (option B) is loaded for the
+     * marketing H1/H2 only if that option is chosen.
+     */
+    --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-serif: "Newsreader Variable", "Newsreader", Georgia, serif;
+
+    /* The scale: 12/14/16/18/20/24/32/40/56/72. Line-height 1.1 for display,
+     * 1.5 for body. Marketing and the preview read these directly. */
+    --text-12: 12px; --text-14: 14px; --text-16: 16px; --text-18: 18px;
+    --text-20: 20px; --text-24: 24px; --text-32: 32px; --text-40: 40px;
+    --text-56: 56px; --text-72: 72px;
+    --leading-display: 1.1;
+    --leading-heading: 1.25;
+    --leading-body: 1.5;
+    --tracking-heading: -0.02em;
+    --tracking-eyebrow: 0.06em;
+
+    /*
+     * Two densities, one component library. The default is COMFORTABLE (client
+     * and designer screens: a jeweler on a phone, often 40+). Staff screens set
+     * data-density="compact" (app/(app)/admin/layout.tsx). Components never
+     * branch on density; they read these.
      *
-     * Nothing informational sits below 15px, and nothing at all below 13px. The
-     * old scale bottomed out at 11px and did most of its work at 13px, which is
-     * comfortable at a desk in your thirties and guesswork on a phone at
-     * arm's length in your fifties. */
-    --fs-1: 13px;   --lh-1: 18px;  --ls-1: 0.045em;   /* micro caps, labels */
-    --fs-2: 15px;   --lh-2: 22px;  --ls-2: 0.002em;   /* meta, captions */
-    --fs-3: 17px;   --lh-3: 25px;  --ls-3: -0.008em;  /* body — the default */
-    --fs-4: 19px;   --lh-4: 26px;  --ls-4: -0.012em;  /* emphasis */
-    --fs-5: 22px;   --lh-5: 28px;  --ls-5: -0.019em;  /* section titles */
-    --fs-6: 28px;   --lh-6: 34px;  --ls-6: -0.026em;  /* screen titles */
-    --fs-b: 17px;   --lh-b: 26px;                     /* body / long-form */
-    /* Screen titles in Instrument Serif (docs/design): 30px on a phone,
-     * 40px from 640px up (below). */
-    --fs-display: 30px; --lh-display: 36px;
-    --fs-l: 17px;   --lh-l: 25px;                     /* list rows */
+     *   --fs-1  eyebrow labels only (uppercase allowed here, nowhere else)
+     *   --fs-2  meta, captions          --fs-3  body (the default)
+     *   --fs-4  emphasis                --fs-5  section titles
+     *   --fs-6  screen titles           --fs-display  large numbers, hero titles
+     */
+    --fs-1: 12px;  --lh-1: 16px;  --ls-1: 0.06em;
+    --fs-2: 16px;  --lh-2: 24px;  --ls-2: 0;
+    --fs-3: 18px;  --lh-3: 27px;  --ls-3: -0.005em;
+    --fs-4: 20px;  --lh-4: 28px;  --ls-4: -0.01em;
+    --fs-5: 24px;  --lh-5: 30px;  --ls-5: -0.02em;
+    --fs-6: 32px;  --lh-6: 36px;  --ls-6: -0.02em;
+    --fs-b: 18px;  --lh-b: 27px;
+    --fs-l: 18px;  --lh-l: 26px;
+    --fs-display: 32px; --lh-display: 36px;
 
     --fw-regular: 400;
     --fw-medium: 500;
     --fw-semibold: 600;
 
-    /* Spacing, in 4px steps. */
+    /* ------------------------------------------------------------- spacing --
+     * 4/8 steps. Section padding: 56–72px on a phone, 96–128px at desk. */
     --s-0: 0px;   --s-05: 2px;  --s-1: 4px;   --s-2: 8px;   --s-3: 12px;
     --s-4: 16px;  --s-5: 20px;  --s-6: 24px;  --s-8: 32px;  --s-10: 40px;
-    --s-12: 48px; --s-16: 64px;
+    --s-12: 48px; --s-16: 64px; --s-20: 80px; --s-24: 96px; --s-32: 128px;
+    --section-y: 64px;
+    --page-max: 1120px;
 
-    /* Softer corners at the comfortable density. A 3px radius reads as
-     * precision instrumentation; on a screen someone uses twice a month it
-     * reads as unfinished. */
-    --r-xs: 2px; --r-sm: 3px; --r-md: 4px; --r-lg: 4px; --r-xl: 6px;
+    /* -------------------------------------------------------------- shape -- */
+    --r-xs: 4px; --r-sm: 6px; --r-md: 8px; --r-lg: 10px; --r-xl: 14px;
     --r-full: 999px;
 
-    /*
-     * Interactive heights. 48px default, not the 44px platform minimum, because
-     * these are one-way money and state actions taken on a phone — an
-     * accidental "Approve and release" is not undoable.
-     *
-     * --ctl-sm exists so `size="sm"` still means something at the compact
-     * density without dropping below 44px at the comfortable one. Every button,
-     * input and select reads these rather than hard-coding a height, which is
-     * what lets one component serve both densities.
-     */
+    /* Interactive heights: 48px default on a client screen, never under 44. */
     --ctl-sm: 44px;
     --ctl: 48px;
     --ctl-lg: 56px;
     --ctl-icon: 44px;
 
-    --dur-instant: 80ms;
-    --dur-fast: 120ms;
-    --dur-base: 180ms;
-    --dur-slow: 280ms;
-    --ease-out: cubic-bezier(0.22, 0.68, 0.24, 1);
-    --ease-inout: cubic-bezier(0.5, 0, 0.2, 1);
-    --ease-spring: cubic-bezier(0.16, 1.12, 0.3, 1);
-
-    /* Light-mode surfaces and depth. */
-    --accent-quiet: #f0f0ed;
-    --accent-quiet-hover: #e6e6e2;
-    --accent-line: #cfcfc9;
-    --border-subtle: rgba(10, 10, 10, 0.07);
-    --border-strong: #cfcfc9;
+    /* Two shadow levels only: resting and lifted (menus, sheets, dialogs). */
     --e-0: none;
-    /* The mockups draw panels flat with a 1px border; a hairline shadow keeps
-     * a white panel distinct from the #F7F7F5 ground on a dim phone screen. */
-    --e-1: 0 1px 0 rgba(10, 10, 10, 0.03);
-    --e-2: 0 4px 14px -3px rgba(10, 10, 10, 0.08);
+    --e-1: 0 1px 2px rgba(10, 10, 10, 0.04);
+    --e-2: 0 12px 32px -12px rgba(10, 10, 10, 0.18), 0 2px 6px rgba(10, 10, 10, 0.04);
     --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0a0a0a;
 
-    /*
-     * ------------------------------------------------------------ status --
-     *
-     * SEVENTEEN STATUSES, FIVE COLOURS. `core/orders/status.ts` already maps
-     * every order status onto one of five tones; what did not exist was a
-     * single definition of what those five tones LOOK like. Five files each
-     * reached for a raw Tailwind swatch and each picked its own recipe — a 5%
-     * fill here and a 10% fill there, a /25 border here and a /30 there,
-     * amber-700 in one place and amber-600 in another. The result read as more
-     * than five states, which defeats the point of having five.
-     *
-     * Now: one definition, three values per family, and screens compose them.
-     *
-     * WHAT THE FAMILIES MEAN — information, never mood. Since Phase 5 they
-     * are drawn in black and greys like the mockups' four tags
-     * (core/orders/status statusKind):
-     *   neutral    nothing is happening (Draft)            → muted: grey fill
-     *   info       in flight, nothing owed by you          → active: black outline
-     *   attention  you are the one holding it up           → needs: solid black
-     *   success    it landed                               → done: black + tick
-     *   danger     it went wrong (Disputed, Refunded, Cancelled) — kept red
-     *              for errors and refusals; as a tag, Disputed is "needs" and
-     *              Refunded / Cancelled are "muted"
-     *
-     * Every `-fg` clears 7:1 against white and 4.5:1 against its own `-bg`,
-     * measured, not eyeballed — tests/config/color-contrast.test.ts recomputes
-     * these from this file and fails the build if an edit drops below.
-     *
-     * `-line` is the `-fg` hue at low alpha rather than a fourth hand-picked
-     * lightness, so an edge cannot drift out of family when someone retunes a
-     * text colour. The dot in a badge is `currentColor` for the same reason.
-     *
-     * COLOUR IS NEVER THE ONLY SIGNAL. Every badge carries its label, so a
-     * red/green confusion — 1 in 12 men, and this product's users skew male —
-     * costs nothing. That is the constraint that made five families safe at
-     * all.
-     */
-    --tone-neutral-fg: hsl(60 4% 31%);
-    --tone-neutral-bg: hsl(60 9.1% 93.5%);
-    --tone-neutral-line: hsl(60 4% 31% / 0.24);
+    /* ------------------------------------------------------------- motion --
+     * 150–250ms, ease-out. Zeroed under prefers-reduced-motion (below). */
+    --dur-instant: 100ms;
+    --dur-fast: 150ms;
+    --dur-base: 200ms;
+    --dur-slow: 250ms;
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-    /* Active: in flight, nothing owed by you. Outlined in black. */
-    --tone-info-fg: hsl(0 0% 3.9%);
-    --tone-info-bg: hsl(0 0% 100%);
-    --tone-info-line: hsl(0 0% 3.9% / 0.9);
-
-    /* Needs you. The mockups fill these solid black (components/status-badge);
-     * as a pale surface or a line of text they are black on the neutral fill. */
-    --tone-attention-fg: hsl(0 0% 3.9%);
-    --tone-attention-bg: hsl(60 9.1% 93.5%);
-    --tone-attention-line: hsl(0 0% 3.9% / 0.9);
-
-    /* Done: black with a tick, on the ground colour. */
-    --tone-success-fg: hsl(0 0% 3.9%);
-    --tone-success-bg: hsl(60 11.1% 96.5%);
-    --tone-success-line: hsl(60 6.7% 70% / 0.6);
-
-    /* The one colour kept from before: errors and refused actions must not
-     * look like ordinary text. */
-    --tone-danger-fg: hsl(0 72% 36%);
-    --tone-danger-bg: hsl(0 78% 96.5%);
-    --tone-danger-line: hsl(0 72% 36% / 0.26);
+    /* Kept for screens written before the redesign; same meaning. */
+    --accent-quiet: #f5f5f5;
+    --accent-quiet-hover: #ebebeb;
+    --accent-line: #d4d4d4;
   }
 
-  /*
-   * COMPACT — the staff density, and exactly the values the whole app used
-   * before. Applied by app/(app)/admin/layout.tsx and nowhere else.
-   *
-   * Written as an attribute selector rather than a class so it cannot be
-   * removed by a `className` edit, and so a screenshot of the DOM tells you
-   * which density you are looking at.
-   */
   @media (min-width: 640px) {
     :root {
       --fs-display: 40px; --lh-display: 44px;
     }
   }
 
+  @media (min-width: 1024px) {
+    :root {
+      --section-y: 112px;
+    }
+  }
+
+  /*
+   * COMPACT — staff screens (admin and pod lead). Denser, never below 16px for
+   * body text and never below 44px for a control on a phone.
+   */
   [data-density="compact"] {
-    --fs-1: 11px;   --lh-1: 16px;  --ls-1: 0.055em;
-    --fs-2: 12px;   --lh-2: 18px;  --ls-2: 0.002em;
-    --fs-3: 13px;   --lh-3: 20px;  --ls-3: -0.006em;
-    --fs-4: 15px;   --lh-4: 22px;  --ls-4: -0.011em;
-    --fs-5: 20px;   --lh-5: 27px;  --ls-5: -0.019em;
-    --fs-6: 28px;   --lh-6: 34px;  --ls-6: -0.026em;
-    --fs-b: 16px;   --lh-b: 24px;
-    --fs-l: 14px;   --lh-l: 20px;
+    --fs-1: 12px;  --lh-1: 16px;  --ls-1: 0.06em;
+    --fs-2: 14px;  --lh-2: 20px;  --ls-2: 0;
+    --fs-3: 16px;  --lh-3: 24px;  --ls-3: -0.005em;
+    --fs-4: 18px;  --lh-4: 26px;  --ls-4: -0.01em;
+    --fs-5: 20px;  --lh-5: 28px;  --ls-5: -0.015em;
+    --fs-6: 24px;  --lh-6: 30px;  --ls-6: -0.02em;
+    --fs-b: 16px;  --lh-b: 24px;
+    --fs-l: 16px;  --lh-l: 24px;
+    --fs-display: 32px; --lh-display: 36px;
 
-    --r-xs: 2px; --r-sm: 3px; --r-md: 4px; --r-lg: 4px; --r-xl: 6px;
+    --ctl-sm: 44px;
+    --ctl: 44px;
+    --ctl-lg: 48px;
+    --ctl-icon: 44px;
+  }
 
-    --ctl-sm: 32px;
-    --ctl: 36px;
-    --ctl-lg: 40px;
-    --ctl-icon: 36px;
+  @media (min-width: 768px) {
+    [data-density="compact"] {
+      --ctl-sm: 32px;
+      --ctl: 36px;
+      --ctl-lg: 40px;
+      --ctl-icon: 36px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --dur-instant: 0.01ms;
+      --dur-fast: 0.01ms;
+      --dur-base: 0.01ms;
+      --dur-slow: 0.01ms;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   * {
     border-color: hsl(var(--border));
   }
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Tabular figures for IDs, amounts, timestamps. */
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: var(--text-16);
+    line-height: var(--leading-body);
+    /* Tabular numerals everywhere: prices, counts and countdowns line up. */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* Headings: Geist 600, tight tracking, no orphans. */
+  h1,
+  h2,
+  h3 {
+    font-weight: var(--fw-semibold);
+    letter-spacing: var(--tracking-heading);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Uppercase is for tiny eyebrow labels only (≤12px, ≤0.08em). */
+  .eyebrow {
+    font-size: var(--text-12);
+    line-height: 16px;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    font-weight: var(--fw-medium);
+    color: hsl(var(--muted-foreground));
   }
 }
