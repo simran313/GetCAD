@@ -4,8 +4,7 @@ name: CI
 on:
   pull_request:
   push:
-    # TEMPORARY: run on this branch without a PR (stale-screen diagnosis).
-    branches: [main, claude/gracious-hopper-amum18]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}

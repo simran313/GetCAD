@@ -530,6 +530,7 @@ Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities chang
 - **Users:** one Clerk test user per persona, created on first run and reused; roles, pod and profiles are written here each run (clients through `save_client_profile`).
 - **Specs:** `00-setup`, `anonymity`, `journey` (see the README).
 - **CI:** the `e2e` job fails at once, naming the secrets, if they are missing.
+- **Found by these tests, fixed after:** the team order page kept showing the state from before an admin action (quote, mark paid, confirm) until a reload. The server sent the new page; `app/(app)/orders/loading.tsx` wrapped every `/orders/*` page in a loading boundary that held streamed updates back. The skeleton now covers only the orders list (`app/(app)/orders/(list)/`), and the browser tests fail if a screen does not update within 10 s.
 
 ---
 

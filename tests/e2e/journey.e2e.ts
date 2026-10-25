@@ -50,40 +50,6 @@ test("a client sends a CAD brief", async ({ browser }) => {
 
 test("the admin quotes it, records the payment and confirms the brief", async ({ browser }) => {
   const page = await signedIn(browser, "admin");
-  // TEMPORARY trace (stale-screen diagnosis): every page request, the change
-  // checks and the console, with times.
-  const t0 = Date.now();
-  const at = () => `${((Date.now() - t0) / 1000).toFixed(2)}s`;
-  page.on("console", (m) => console.log(`[trace ${at()}] console.${m.type()}: ${m.text().slice(0, 300)}`));
-  page.on("request", (r) => {
-    const u = new URL(r.url());
-    if (!u.pathname.startsWith("/orders/") && !u.pathname.startsWith("/api/orders/")) return;
-    const h = r.headers();
-    const kind = h["next-action"] ? "ACTION" : h["rsc"] ? "RSC" : r.resourceType();
-    console.log(`[trace ${at()}] -> ${r.method()} ${kind} ${u.pathname}${u.search.slice(0, 40)}`);
-  });
-  page.on("response", async (r) => {
-    const u = new URL(r.url());
-    if (!u.pathname.startsWith("/orders/") && !u.pathname.startsWith("/api/orders/")) return;
-    const req = r.request().headers();
-    const isRsc = !!req["next-action"] || !!req["rsc"];
-    const body = u.pathname.endsWith("/stamp") || isRsc ? await r.text().catch(() => "") : "";
-    console.log(`[trace ${at()}] <- ${r.status()} ${u.pathname} ${u.pathname.endsWith("/stamp") ? body : `${body.length} bytes`}`);
-    if (isRsc && u.pathname.split("/").length === 3) {
-      // Client components (I), resource hints (HL), stylesheets, promises.
-      const rows = body.split("\n").filter((l) => /^[0-9a-f]+:(I|HL)\[/.test(l) || /stylesheet|precedence|\$@/.test(l));
-      for (const l of rows.slice(0, 25)) console.log(`[trace rsc] ${l.slice(0, 220)}`);
-      console.log(`[trace rsc] ${rows.length} notable rows of ${body.split("\n").length}`);
-    }
-  });
-  const sheets = () =>
-    page.evaluate(() => ({
-      css: [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => (l as HTMLLinkElement).href.split("/").pop()),
-      visible: document.visibilityState,
-      main: (document.querySelector("main")?.textContent ?? "").match(/(SUBMITTED|QUOTED|PAYMENT_HELD)/)?.[0],
-    }));
-  page.on("load", () => void sheets().then((x) => console.log(`[trace ${at()}] page ${JSON.stringify(x)}`)).catch(() => {}));
-  const watcher = setInterval(() => void sheets().then((x) => console.log(`[trace ${at()}] now ${JSON.stringify(x)}`)).catch(() => {}), 2500);
   await page.goto(`/orders/${orderId}`);
   await act(page, page.getByRole("button", { name: "Set quote" }));
   await settled(page, "quoted", (timeout) => expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible({ timeout }));
@@ -91,7 +57,6 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   await expectGone(page, page.getByRole("button", { name: "Mark paid" }));
   await act(page, page.getByRole("button", { name: "Confirm order" }));
   await expectGone(page, page.getByRole("button", { name: "Confirm order" }));
-  clearInterval(watcher);
   // One pod: the order went to it on payment (0048).
   await expect(page.getByText("Pod One").first()).toBeVisible();
   await page.context().close();

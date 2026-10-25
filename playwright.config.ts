@@ -43,7 +43,7 @@ export default defineConfig({
       // "localhost", which fails when it listens on 127.0.0.1 only.
       command: `npx next start -p ${PORT}`,
       url: `http://127.0.0.1:${PORT}/`,
-      env: { ...env, E2E_TRACE: "1" },
+      env,
       timeout: 120_000,
       reuseExistingServer: false,
       stdout: "pipe",
