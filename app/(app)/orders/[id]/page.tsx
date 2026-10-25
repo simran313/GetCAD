@@ -397,6 +397,7 @@ export default async function OrderPage({
         </CardBody>
       </Card>
     );
+    if (process.env.E2E_TRACE === "1") console.log(`[trace] team render done ${order.id} at=${new Date().toISOString()}`);
     return (
       <main className="container max-w-6xl space-y-6 py-8">
         <Link
