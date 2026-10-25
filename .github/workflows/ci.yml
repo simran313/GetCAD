@@ -53,6 +53,15 @@ jobs:
       - name: Lint (includes core/ boundary rule)
         run: npm run lint
 
+      # The DB tests raise errors on purpose (refusals are what they test), and
+      # Postgres logs each one; that log is printed after the job and pushes the
+      # test output out of view. Log only what is actually broken.
+      - name: Quiet the expected database errors
+        run: |
+          psql "$DATABASE_URL" -c "ALTER SYSTEM SET log_min_messages = 'fatal'" \
+                               -c "ALTER SYSTEM SET log_min_error_statement = 'panic'" \
+                               -c "SELECT pg_reload_conf()"
+
       - name: Tests (vitest — boundary + schema/RLS)
         run: npm run test
 
@@ -109,6 +118,12 @@ jobs:
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+
+      - name: Quiet the expected database errors
+        run: |
+          psql "$DATABASE_URL" -c "ALTER SYSTEM SET log_min_messages = 'fatal'" \
+                               -c "ALTER SYSTEM SET log_min_error_statement = 'panic'" \
+                               -c "SELECT pg_reload_conf()"
 
       - name: Prepare the database, keys and Clerk test users
         run: npm run e2e:prepare
