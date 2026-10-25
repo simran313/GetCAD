@@ -134,7 +134,11 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
     await admin.getByLabel("Over-capacity reason (admin)").fill("Rush for a regular client; Rohan agreed to stay late.");
     const assign = admin.getByRole("button", { name: "Assign", exact: true });
     await act(admin, assign);
-    await expectGone(admin, assign);
+    // The panel stays (an order can be reassigned until work starts): the
+    // timeline is the proof.
+    await settled(admin, "assigned", (timeout) =>
+      expect(admin.getByText("Assigned to a designer", { exact: true })).toBeVisible({ timeout }),
+    );
     const reason = await withDb(async (db) => (await db.query("SELECT override_reason FROM job_assignments WHERE order_id = $1", [orderId])).rows[0]?.override_reason);
     expect(reason).toMatch(/Rush for a regular client/);
   } finally {
