@@ -143,9 +143,16 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
     expect(reason).toMatch(/Rush for a regular client/);
   } finally {
     await setSetting(admin, "shift_minutes", "480");
+    // Wait for the switch before deciding: count() does not wait, and on a
+    // streamed page it read 0 and left capacity blocking on (redesign audit).
     await admin.goto("/admin/settings");
     const off = admin.getByRole("button", { name: "Turn off capacity_blocking" });
-    if (await off.count()) await act(admin, off);
+    const on = admin.getByRole("button", { name: "Turn on capacity_blocking" });
+    await expect(off.or(on)).toBeVisible();
+    if (await off.isVisible()) {
+      await act(admin, off);
+      await settled(admin, "capacity blocking off", (timeout) => expect(on).toBeVisible({ timeout }));
+    }
   }
   await admin.context().close();
 });
