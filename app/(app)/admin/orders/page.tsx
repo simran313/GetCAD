@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { STAGE_LABELS, type StaffStage } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { buttonVariants } from "@/components/ui/button";
+import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
 import { OrdersList, parseTab } from "@/components/work/orders-list";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
@@ -30,19 +31,19 @@ export default async function AdminOrdersPage({
     jobs = await loadPodJobs(supabase);
   } catch (e) {
     return (
-      <main className="container max-w-6xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load the orders" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader
-        eyebrow="References only · never names"
         title="All orders"
+        description="Every order, by reference. Tap one to see where it is."
         actions={
           <>
-            <a href="/admin/orders/export" className={buttonVariants({ variant: "outline" })}>
+            <a href="/admin/orders/export" className={buttonVariants({ variant: "secondary" })}>
               Export CSV
             </a>
             <Link href="/admin/new-order" className={buttonVariants()}>
@@ -52,6 +53,6 @@ export default async function AdminOrdersPage({
         }
       />
       <OrdersList jobs={jobs} basePath="/admin/orders" tab={parseTab(tab)} q={q} stage={stage} />
-    </main>
+    </Page>
   );
 }

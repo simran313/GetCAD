@@ -22,6 +22,8 @@ export function ResponsiveDataList<T>({
   rows,
   rowKey,
   rowHref,
+  linkKey,
+  onRowClick,
   empty,
   caption,
 }: {
@@ -29,10 +31,15 @@ export function ResponsiveDataList<T>({
   rows: T[];
   rowKey: (row: T) => string;
   rowHref?: (row: T) => string | undefined;
+  /** The column whose content names the row link (default: the first). */
+  linkKey?: string;
+  /** Open the row in place (a detail drawer) instead of following a link. */
+  onRowClick?: (row: T) => void;
   empty?: React.ReactNode;
   caption?: string;
 }) {
   if (rows.length === 0 && empty) return <>{empty}</>;
+  const linkCol = linkKey ?? columns[0]?.key;
   const by = (place: Column<T>["card"]) => columns.filter((c) => (c.card ?? "meta") === place);
   return (
     <>
@@ -60,8 +67,8 @@ export function ResponsiveDataList<T>({
             {rows.map((row) => {
               const href = rowHref?.(row);
               return (
-                <tr key={rowKey(row)} className={cn("border-b border-border last:border-0", href && "relative transition-colors hover:bg-subtle")}>
-                  {columns.map((c, i) => (
+                <tr key={rowKey(row)} className={cn("border-b border-border last:border-0", (href || onRowClick) && "relative transition-colors hover:bg-subtle")}>
+                  {columns.map((c) => (
                     <td
                       key={c.key}
                       className={cn(
@@ -70,10 +77,14 @@ export function ResponsiveDataList<T>({
                         c.className,
                       )}
                     >
-                      {i === 0 && href ? (
-                        <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none">
+                      {c.key === linkCol && href ? (
+                        <Link href={href} className="after:absolute after:inset-0 focus-visible:shadow-none focus-visible:after:rounded-[var(--r-xs)] focus-visible:after:shadow-[inset_0_0_0_2px_hsl(var(--foreground))]">
                           {c.cell(row)}
                         </Link>
+                      ) : c.key === linkCol && onRowClick ? (
+                        <button type="button" onClick={() => onRowClick(row)} className="w-full text-left after:absolute after:inset-0 focus-visible:shadow-none focus-visible:after:rounded-[var(--r-xs)] focus-visible:after:shadow-[inset_0_0_0_2px_hsl(var(--foreground))]">
+                          {c.cell(row)}
+                        </button>
                       ) : (
                         <span className={cn(c.card === "action" && "relative z-10")}>{c.cell(row)}</span>
                       )}
@@ -94,9 +105,15 @@ export function ResponsiveDataList<T>({
             <>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 text-[length:var(--fs-3)] font-medium leading-[var(--lh-3)]">
-                  {title.map((c) => (
-                    <div key={c.key}>{c.cell(row)}</div>
-                  ))}
+                  {title.map((c, i) =>
+                    i === 0 && onRowClick && !href ? (
+                      <button key={c.key} type="button" onClick={() => onRowClick(row)} className="block w-full text-left after:absolute after:inset-0 after:rounded-[var(--r-lg)] focus-visible:shadow-none focus-visible:after:shadow-[var(--focus-ring)]">
+                        {c.cell(row)}
+                      </button>
+                    ) : (
+                      <div key={c.key}>{c.cell(row)}</div>
+                    ),
+                  )}
                 </div>
                 {by("badge").map((c) => (
                   <div key={c.key} className="shrink-0">
@@ -117,7 +134,7 @@ export function ResponsiveDataList<T>({
             </>
           );
           return (
-            <li key={rowKey(row)} className="rounded-[var(--r-lg)] border border-border bg-card p-[var(--s-4)] shadow-[var(--e-1)]">
+            <li key={rowKey(row)} className="relative rounded-[var(--r-lg)] border border-border bg-card p-[var(--s-4)] shadow-[var(--e-1)]">
               {href ? (
                 <Link href={href} className="block">
                   {body}
@@ -126,7 +143,7 @@ export function ResponsiveDataList<T>({
                 body
               )}
               {by("action").map((c) => (
-                <div key={c.key} className="mt-3 [&>*]:w-full">
+                <div key={c.key} className="relative z-10 mt-3 [&>*]:w-full">
                   {c.cell(row)}
                 </div>
               ))}
