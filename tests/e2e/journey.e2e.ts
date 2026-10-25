@@ -65,9 +65,25 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   page.on("response", async (r) => {
     const u = new URL(r.url());
     if (!u.pathname.startsWith("/orders/") && !u.pathname.startsWith("/api/orders/")) return;
-    const body = u.pathname.endsWith("/stamp") ? await r.text().catch(() => "") : "";
-    console.log(`[trace ${at()}] <- ${r.status()} ${u.pathname} ${body}`);
+    const req = r.request().headers();
+    const isRsc = !!req["next-action"] || !!req["rsc"];
+    const body = u.pathname.endsWith("/stamp") || isRsc ? await r.text().catch(() => "") : "";
+    console.log(`[trace ${at()}] <- ${r.status()} ${u.pathname} ${u.pathname.endsWith("/stamp") ? body : `${body.length} bytes`}`);
+    if (isRsc && u.pathname.split("/").length === 3) {
+      // Client components (I), resource hints (HL), stylesheets, promises.
+      const rows = body.split("\n").filter((l) => /^[0-9a-f]+:(I|HL)\[/.test(l) || /stylesheet|precedence|\$@/.test(l));
+      for (const l of rows.slice(0, 25)) console.log(`[trace rsc] ${l.slice(0, 220)}`);
+      console.log(`[trace rsc] ${rows.length} notable rows of ${body.split("\n").length}`);
+    }
   });
+  const sheets = () =>
+    page.evaluate(() => ({
+      css: [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => (l as HTMLLinkElement).href.split("/").pop()),
+      visible: document.visibilityState,
+      main: (document.querySelector("main")?.textContent ?? "").match(/(SUBMITTED|QUOTED|PAYMENT_HELD)/)?.[0],
+    }));
+  page.on("load", () => void sheets().then((x) => console.log(`[trace ${at()}] page ${JSON.stringify(x)}`)).catch(() => {}));
+  const watcher = setInterval(() => void sheets().then((x) => console.log(`[trace ${at()}] now ${JSON.stringify(x)}`)).catch(() => {}), 2500);
   await page.goto(`/orders/${orderId}`);
   await act(page, page.getByRole("button", { name: "Set quote" }));
   await settled(page, "quoted", (timeout) => expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible({ timeout }));
@@ -75,6 +91,7 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   await expectGone(page, page.getByRole("button", { name: "Mark paid" }));
   await act(page, page.getByRole("button", { name: "Confirm order" }));
   await expectGone(page, page.getByRole("button", { name: "Confirm order" }));
+  clearInterval(watcher);
   // One pod: the order went to it on payment (0048).
   await expect(page.getByText("Pod One").first()).toBeVisible();
   await page.context().close();
