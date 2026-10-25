@@ -70,11 +70,9 @@ const TONE_NOTE: Record<(typeof TONES)[number], string> = {
 const SCALE = [12, 14, 16, 18, 20, 24, 32, 40, 56, 72];
 
 export function Preview() {
-  const [font, setFont] = useState<"a" | "b">("a");
   const [palette, setPalette] = useState(false);
   const [density, setDensity] = useState("13.10");
   const saved = "13.10";
-  const display = font === "b" ? "font-serif font-medium tracking-[-0.015em]" : "font-semibold tracking-[-0.03em]";
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,38 +80,17 @@ export function Preview() {
         <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 md:px-8">
           <span className="text-[16px] font-semibold tracking-[-0.02em]">Design preview</span>
           <span className="hidden text-[14px] text-muted-foreground sm:inline">The CAD Pillar · redesign step 3</span>
-          <div className="ml-auto flex items-center gap-1 rounded-[var(--r-sm)] border border-border p-0.5" role="group" aria-label="Font option">
-            {(["a", "b"] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                aria-pressed={font === f}
-                onClick={() => setFont(f)}
-                className={cn("h-8 rounded-[var(--r-xs)] px-3 text-[14px] font-medium", font === f ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
-              >
-                Option {f.toUpperCase()}
-              </button>
-            ))}
-          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-[1200px] px-4 pb-40 md:px-8">
-        <Section id="type" title="Type" note="Option A: Geist Sans everywhere, headings 600 at −0.02em. Option B: the same, plus Newsreader for marketing H1/H2 only. Geist Mono only for references and IDs. Every number is tabular.">
-          <div className="grid gap-8 lg:grid-cols-2">
-            {(["a", "b"] as const).map((f) => {
-              const d = f === "b" ? "font-serif font-medium tracking-[-0.015em]" : "font-semibold tracking-[-0.03em]";
-              return (
-                <div key={f} className={cn("rounded-[var(--r-lg)] border p-6", font === f ? "border-foreground" : "border-border")}>
-                  <p className="eyebrow">Option {f.toUpperCase()}</p>
-                  <p className={cn("mt-3 text-[40px] leading-[1.1] sm:text-[56px]", d)}>Factory-ready jewelry CAD, checked twice.</p>
-                  <p className={cn("mt-4 text-[32px] leading-[1.1]", d)}>Every file is made to be cast.</p>
-                  <p className="mt-4 text-[18px] leading-[1.5] text-muted-foreground">Senior designers build every file to cast first time. Body copy stays Geist at 16–18px for comfort at arm&apos;s length.</p>
-                  <p className="mt-4 text-[32px] font-semibold tracking-[-0.03em] tabular">$55 · 5h 42m · 19/19</p>
-                  <p className="mt-2 font-mono text-[14px] text-muted-foreground">MJ1-RN-C-10 · DSG-0001</p>
-                </div>
-              );
-            })}
+        <Section id="type" title="Type" note="Geist Sans everywhere (option A, chosen), headings 600 at −0.02em. Geist Mono only for references and IDs. Every number is tabular.">
+          <div className="rounded-[var(--r-lg)] border border-border p-6">
+            <p className="text-[40px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[56px]">Factory-ready jewelry CAD, checked twice.</p>
+            <p className="mt-4 text-[32px] font-semibold leading-[1.1] tracking-[-0.03em]">Every file is made to be cast.</p>
+            <p className="mt-4 text-[18px] leading-[1.5] text-muted-foreground">Senior designers build every file to cast first time. Body copy at 16–18px for comfort at arm&apos;s length.</p>
+            <p className="mt-4 text-[32px] font-semibold tracking-[-0.03em] tabular">$55 · 5h 42m · 19/19</p>
+            <p className="mt-2 font-mono text-[14px] text-muted-foreground">MJ1-RN-C-10 · DSG-0001</p>
           </div>
           <ol className="mt-10 space-y-3">
             {SCALE.map((s) => (
@@ -270,9 +247,9 @@ export function Preview() {
           />
         </Section>
 
-        <Section id="screens" title="Screens at 390 and 1440" note="Sample screens built from the components above (placeholder content). The marketing frame follows the font option at the top of the page.">
+        <Section id="screens" title="Screens at 390 and 1440" note="Sample screens built from the components above (placeholder content).">
           {[
-            ["Marketing", `/design-preview/frame?view=marketing&font=${font}`],
+            ["Marketing", "/design-preview/frame?view=marketing"],
             ["Admin queue", "/design-preview/frame?view=portal"],
             ["Client home", "/design-preview/frame?view=client"],
           ].map(([label, src]) => (
@@ -286,7 +263,6 @@ export function Preview() {
           ))}
         </Section>
 
-        <p className={cn("pb-10 text-[14px] text-muted-foreground", display)}>Type option on screen: {font.toUpperCase()}</p>
       </main>
 
       <StickySaveBar

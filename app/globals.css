@@ -91,13 +91,11 @@
     --tone-danger-line: hsl(0 72% 36% / 0.24);
 
     /* ---------------------------------------------------------------- type --
-     * Geist Sans everywhere (headings 600, tracking -0.02em). Geist Mono only
-     * for reference codes and IDs. Newsreader (option B) is loaded for the
-     * marketing H1/H2 only if that option is chosen.
+     * Geist Sans everywhere (owner choice: option A), headings 600 at
+     * -0.02em. Geist Mono only for reference codes and IDs.
      */
     --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
     --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-    --font-serif: "Newsreader Variable", "Newsreader", Georgia, serif;
 
     /* The scale: 12/14/16/18/20/24/32/40/56/72. Line-height 1.1 for display,
      * 1.5 for body. Marketing and the preview read these directly. */

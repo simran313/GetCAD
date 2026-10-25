@@ -56,8 +56,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
     persona: null,
     paths: async () => [
       "/design-preview",
-      "/design-preview/frame?view=marketing&font=a",
-      "/design-preview/frame?view=marketing&font=b",
+      "/design-preview/frame?view=marketing",
       "/design-preview/frame?view=portal",
       "/design-preview/frame?view=client",
     ],

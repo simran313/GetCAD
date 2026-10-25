@@ -5,9 +5,6 @@ import type { Metadata, Viewport } from "next";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
 
-// Newsreader (font option B, marketing H1/H2 only): bundled from npm like
-// Geist, so no page asks a third party for it.
-import "@fontsource-variable/newsreader/opsz.css";
 import "./globals.css";
 
 // Self-hosted rather than fetched from Google at build time: the build must not

@@ -32,8 +32,8 @@ import { cn } from "@/lib/utils";
 
 const inMinutes = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
 
-export function MarketingSample({ font }: { font: "a" | "b" }) {
-  const display = font === "b" ? "font-serif font-medium tracking-[-0.015em]" : "font-semibold tracking-[-0.03em]";
+export function MarketingSample() {
+  const display = "font-semibold tracking-[-0.03em]";
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
@@ -116,7 +116,7 @@ export function MarketingSample({ font }: { font: "a" | "b" }) {
       </section>
       <section className="mx-auto max-w-[1200px] px-4 py-14 md:px-8">
         <h2 className={cn("text-[32px] leading-[1.1] sm:text-[40px]", display)}>Every file is made to be cast.</h2>
-        <p className="mt-3 max-w-xl text-[18px] text-muted-foreground">Option {font.toUpperCase()}: {font === "a" ? "Geist Sans everywhere." : "Newsreader for marketing H1/H2, Geist for everything else."}</p>
+        <p className="mt-3 max-w-xl text-[18px] text-muted-foreground">Geist Sans everywhere (option A).</p>
       </section>
     </div>
   );

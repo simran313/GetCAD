@@ -12,10 +12,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
-        // Geist (redesign): headings and large numbers. Serif is font option B,
-        // marketing H1/H2 only.
+        // Geist (redesign, option A): headings and large numbers.
         display: ["var(--font-display)"],
-        serif: ["var(--font-serif)"],
       },
       // The redesign scale (app/globals.css): 12/14/16/18/20/24/32/40/56/72.
       fontSize: {
