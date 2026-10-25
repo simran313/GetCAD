@@ -40,7 +40,7 @@ function Frame({ src, width, height, scale }: { src: string; width: number; heig
   return (
     <figure className="shrink-0">
       <div className="overflow-hidden rounded-[var(--r-lg)] border border-border bg-background shadow-[var(--e-2)]" style={{ width: width * scale, height: height * scale }}>
-        <iframe title={`${src} at ${width}`} src={src} width={width} height={height} loading="lazy" className="origin-top-left border-0" style={{ transform: `scale(${scale})` }} />
+        <iframe title={`${src} at ${width}`} src={src} width={width} height={height} loading="eager" className="origin-top-left border-0" style={{ transform: `scale(${scale})` }} />
       </div>
       <figcaption className="mt-2 text-[14px] text-muted-foreground tabular">
         {width} × {height}

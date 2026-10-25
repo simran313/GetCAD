@@ -109,7 +109,7 @@ export function ResponsiveDataList<T>({
                   {by("meta").map((c) => (
                     <div key={c.key} className="min-w-0">
                       <dt className="text-muted-foreground">{c.header}</dt>
-                      <dd className="truncate">{c.cell(row)}</dd>
+                      <dd className="line-clamp-2 break-words">{c.cell(row)}</dd>
                     </div>
                   ))}
                 </dl>

@@ -10,10 +10,13 @@ const TONE: Record<string, PillTone> = {
   danger: "danger",
 };
 
+/** Ended without landing: shown quietly. Red is kept for what needs action (Disputed). */
+const QUIET = new Set(["REFUNDED", "CANCELLED"]);
+
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
   const meta = statusMeta(status);
   return (
-    <StatusPill tone={TONE[meta.tone] ?? "neutral"} className={className}>
+    <StatusPill tone={QUIET.has(status) ? "neutral" : (TONE[meta.tone] ?? "neutral")} className={className}>
       {meta.label}
     </StatusPill>
   );
