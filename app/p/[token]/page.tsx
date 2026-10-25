@@ -13,7 +13,14 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
  * expired, revoked or unknown link reads the same: "not available".
  */
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Design preview", robots: { index: false, follow: false } };
+// Nothing of ours, in the tab either: no "| The CAD Pillar" title suffix,
+// no favicon or home-screen name from the root layout (A9.4).
+export const metadata: Metadata = {
+  title: { absolute: "Design preview" },
+  robots: { index: false, follow: false },
+  icons: { icon: [], apple: [] },
+  appleWebApp: { title: "Design preview" },
+};
 
 interface Preview {
   jeweler: string;

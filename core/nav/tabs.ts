@@ -91,6 +91,7 @@ const STAFF_TABS: Tab[] = [
   { key: "access", label: "Access", href: "/admin/access", icon: "board", mobile: false },
   { key: "applications", label: "Applications", href: "/admin/applications", icon: "work", mobile: false },
   { key: "leads", label: "Leads", href: "/admin/leads", icon: "message", mobile: false },
+  { key: "settings", label: "Settings", href: "/admin/settings", icon: "board", mobile: false },
   ACCOUNT,
 ]
 

@@ -36,6 +36,27 @@ export async function act(page: Page, button: Locator) {
 }
 
 /**
+ * Press a button whose server action must be refused (a second credit, an
+ * order without a screenshot): the server answers with an error.
+ */
+export async function refused(page: Page, button: Locator) {
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST" && !!r.request().headers()["next-action"], { timeout: 30_000 }),
+    button.click(),
+  ]);
+  expect(res.status(), `server action was accepted on ${page.url()}`).toBeGreaterThanOrEqual(400);
+}
+
+/** Set one admin setting on the Settings screen (Phase 8b). */
+export async function setSetting(page: Page, key: string, value: string) {
+  await page.goto("/admin/settings");
+  const form = page.locator("form", { has: page.locator(`input[name="key"][value="${key}"]`) });
+  await form.locator('input[name="value"]').fill(value);
+  await act(page, form.getByRole("button", { name: "Save" }));
+  await settled(page, `${key} saved`, (timeout) => expect(form.locator('input[name="value"]')).toHaveValue(value, { timeout }));
+}
+
+/**
  * Check the screen after an action. It should show the new state at once;
  * the order, job and QC pages also re-check every 5 s, so allow 10 s.
  *

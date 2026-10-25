@@ -1,7 +1,12 @@
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { expect, test, type Page } from "@playwright/test";
 
 import { png } from "./files";
 import { act, doDesignerVersion, expectGone, settled, orderIdFrom, signedIn, tickAll } from "./helpers";
+import { pdfText } from "./pdf";
+import { E2E_DIR } from "./state";
 
 /**
  * Phase 8a — the core journey, every step through the real screens:
@@ -10,6 +15,9 @@ import { act, doDesignerVersion, expectGone, settled, orderIdFrom, signedIn, tic
  *   designer works v1 → pod lead sends back → designer works v2 →
  *   pod lead measures and passes → client approves → client downloads
  *   the STL and the QC certificate.
+ *
+ * post-delivery.e2e.ts carries the same order on (delivery, preview link,
+ * spec claims, weight sheet): its id is left in .e2e/journey.json.
  */
 // Ten minutes a step: version 1 and 2 are 60 server actions between them.
 test.describe.configure({ mode: "serial", timeout: 600_000 });
@@ -24,6 +32,7 @@ test("a client sends a CAD brief", async ({ browser }) => {
   await page.getByRole("button", { name: "Start a CAD brief" }).click();
   await page.waitForURL(/\/orders\/[^/]+\/brief$/);
   orderId = orderIdFrom(page.url());
+  writeFileSync(join(E2E_DIR, "journey.json"), JSON.stringify({ orderId }));
 
   // A reference picture first: it reloads the page.
   await page.getByLabel("Add a picture").setInputFiles({ name: "ref.png", mimeType: "image/png", buffer: png([200, 180, 120], 32) });
@@ -123,5 +132,15 @@ test("the client approves and downloads the STL and the certificate", async ({ b
   const cert = await page.request.get(`/api/orders/${orderId}/certificate`);
   expect(cert.status()).toBe(200);
   expect((await cert.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
+  // A9.1: the certificate carries all 19 ticks, both columns, and the
+  // measured specs.
+  const text = await pdfText(await cert.body());
+  expect(text).toMatch(/19-\s*point checklist/);
+  for (let n = 1; n <= 19; n++) expect(text, `checklist line ${n}`).toMatch(new RegExp(`(^| )${String(n).padStart(2, "0")} `));
+  expect(text, "a line is not ticked").not.toContain("not ticked");
+  expect(text).toMatch(/Minimum wall 0\.90 mm/);
+  expect(text).toMatch(/Minimum prong 0\.85 mm/);
+  expect(text).toMatch(/Ring size US 7/);
   await page.context().close();
 });

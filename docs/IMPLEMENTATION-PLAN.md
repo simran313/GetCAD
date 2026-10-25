@@ -532,6 +532,15 @@ Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities chang
 - **CI:** the `e2e` job fails at once, naming the secrets, if they are missing.
 - **Found by these tests, fixed after:** the team order page kept showing the state from before an admin action (quote, mark paid, confirm) until a reload. The server sent the new page; `app/(app)/orders/loading.tsx` wrapped every `/orders/*` page in a loading boundary that held streamed updates back. The skeleton now covers only the orders list (`app/(app)/orders/(list)/`), and the browser tests fail if a screen does not update within 10 s.
 
+### Phase 8b — as built
+- **Specs:** `money`, `on-behalf`, `post-delivery`, `website`, and the certificate's text in `journey` (see `tests/e2e/README.md`). Every Spec §12 and A9 check a screen can show is driven in the browser; §12.7 (messaging split) stays a database test, as no screen lets a designer post to a client thread.
+- **Settings screen (owner answer):** `/admin/settings` (admin tab "Settings"). An admin edits every `app_settings` value and turns feature switches on and off; pod leads see them read-only. Each change goes through `set_app_setting` / `set_feature_flag`, so it is audited. The tests use it for the densities (A9.3), the claim window (A9.5), the shift and capacity blocking (§12.4).
+- **Sign-up user (owner answer):** the new jeweler in `website` is made by Clerk's API for the run and deleted after it.
+- **Found by these tests, fixed:**
+  - "How did you hear about us?" was required only by the browser. The server now refuses a first profile without it, and `/account` asks it too for a client with no profile yet.
+  - The preview page's tab read "Design preview | The CAD Pillar" and carried our favicon and home-screen name. It now shows "Design preview" and nothing of ours (A9.4).
+- **Dev dependency:** `pdfjs-dist` (5.4.624, runs on CI's Node 20) to read the certificate and weight-sheet text.
+
 ---
 
 ## Phase 9 — Payment providers (last, by owner decision)
