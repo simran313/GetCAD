@@ -72,11 +72,14 @@ describe("record_identity_lookup", () => {
     const [entry] = await identityReads();
     expect(entry.actor_id).toBe(admin);
     expect(entry.is_identity_read).toBe(true);
+    // The database sorts by its collation (en_US on CI: "r" before "V"),
+    // JavaScript by code unit ("V" before "r"): compare as sets.
     expect(entry.payload).toEqual({
       purpose: "access screen",
-      user_ids: [client, designer].sort(),
+      user_ids: expect.arrayContaining([client, designer]),
       count: 2,
     });
+    expect(entry.payload.user_ids).toHaveLength(2);
   });
 
   it("needs a purpose", async () => {
