@@ -12,7 +12,7 @@ import { c } from "@/content/claims";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
-  "Factory-ready jewelry CAD, checked by two experts",
+  "Factory-ready jewelry CAD. Checked twice.",
   "Senior designers build every file to cast first time; a master craftsman signs it off. First look within 6 hours of order confirmation, or it's free. From $55 a design, your first $49.",
   "/",
 );

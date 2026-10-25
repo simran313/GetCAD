@@ -79,20 +79,24 @@ export function SwitchGrid() {
 export function WorkGallery() {
   const stages = ["Sketch", "CAD", "Render"];
   return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((n) => (
-        <div key={n} className="grid grid-cols-3 gap-2 sm:gap-4">
-          {stages.map((s) => (
-            <figure key={s} className="min-w-0">
-              <div className="flex aspect-square items-center justify-center rounded-[var(--r-lg)] border border-dashed border-border bg-subtle text-[13px] text-muted-foreground">
-                Piece {n}
-              </div>
-              <figcaption className="mt-2 text-[14px] text-muted-foreground">{s}</figcaption>
-            </figure>
-          ))}
-        </div>
-      ))}
-      <p className="text-[14px] text-muted-foreground">Placeholder slots: real work goes here only with the client&apos;s written permission, with nothing that identifies them.</p>
+    <div>
+      <ul className="grid gap-4 md:grid-cols-3">
+        {[1, 2, 3].map((n) => (
+          <li key={n} className="rounded-[var(--r-xl)] border border-border bg-card p-3 shadow-[var(--e-1)]">
+            <div className="grid grid-cols-3 gap-1.5">
+              {stages.map((s) => (
+                <figure key={s} className="min-w-0">
+                  <div className="flex aspect-square items-center justify-center rounded-[var(--r-sm)] border border-dashed border-border bg-subtle text-[12px] text-muted-foreground">
+                    {s}
+                  </div>
+                </figure>
+              ))}
+            </div>
+            <p className="px-1 pb-1 pt-3 text-[15px] font-medium">Piece {n} <span className="font-normal text-muted-foreground">· placeholder</span></p>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-4 text-[14px] text-muted-foreground">Real work goes here only with the client&apos;s written permission, with nothing that identifies them.</p>
     </div>
   );
 }

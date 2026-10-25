@@ -38,20 +38,22 @@ function Stage({ n, title, who, rows, delay }: { n: string; title: string; who: 
           <motion.li
             key={row}
             className="flex items-start gap-3 text-[16px] leading-[1.45]"
-            initial={reduce ? false : { opacity: 0.35 }}
+            initial={reduce ? false : { opacity: 0.6 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.25, ease: "easeOut", delay: reduce ? 0 : delay + i * 0.18 }}
           >
-            <motion.span
-              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground text-background"
-              initial={reduce ? false : { scale: 0 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.2, ease: "easeOut", delay: reduce ? 0 : delay + i * 0.18 }}
-            >
-              <Check className="h-3 w-3" strokeWidth={3} />
-            </motion.span>
+            <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[color:var(--border-strong)]">
+              <motion.span
+                className="absolute inset-[-1px] flex items-center justify-center rounded-full bg-foreground text-background"
+                initial={reduce ? false : { scale: 0 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.2, ease: "easeOut", delay: reduce ? 0 : delay + i * 0.18 }}
+              >
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </motion.span>
+            </span>
             {row}
           </motion.li>
         ))}

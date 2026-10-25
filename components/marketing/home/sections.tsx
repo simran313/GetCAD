@@ -13,7 +13,7 @@ import { LiveOrderCard } from "./live-order-card";
  * come from content/claims.ts; prices from DECISIONS §4.
  */
 
-export const H1 = "text-[40px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[52px] lg:text-[60px]";
+export const H1 = "text-[38px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[52px] lg:text-[56px]";
 export const H2 = "text-[32px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[40px]";
 export const LEAD = "text-[18px] leading-[1.55] text-muted-foreground";
 
@@ -65,7 +65,9 @@ export function Hero() {
       <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-16 lg:px-8 lg:pb-24 lg:pt-24">
         <div>
           <p className="eyebrow">Jewelry CAD for the trade</p>
-          <h1 className={cn(H1, "mt-4 max-w-[13ch] lg:max-w-[14ch]")}>Factory-ready jewelry CAD, checked by two experts.</h1>
+          <h1 className={cn(H1, "mt-4")}>
+            Factory-ready jewelry CAD. <span className="whitespace-nowrap">Checked twice.</span>
+          </h1>
           <p className={cn(LEAD, "mt-5 max-w-[36rem]")}>
             Senior designers build every file to cast first time, and a master craftsman signs it off before you see it.
             We work US hours, and it&apos;s guaranteed in writing.
@@ -120,7 +122,7 @@ export function ProofBar() {
 /* d. How it works -------------------------------------------------------- */
 function Snippet({ children }: { children: React.ReactNode }) {
   return (
-    <div aria-hidden className="h-[220px] overflow-hidden rounded-[var(--r-lg)] border border-border bg-[color:var(--app-ground)] p-4">
+    <div aria-hidden className="h-[244px] overflow-hidden rounded-[var(--r-lg)] border border-border bg-[color:var(--app-ground)] p-4">
       <div className="rounded-[var(--r-md)] border border-border bg-card p-4 shadow-[var(--e-1)]">{children}</div>
     </div>
   );
@@ -150,7 +152,7 @@ export function HowItWorks() {
             <p className="mt-3 text-[15px] font-semibold">First look · Halo ring</p>
             <div className="mt-2 grid grid-cols-3 gap-1.5">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="flex aspect-square items-center justify-center rounded-[var(--r-xs)] bg-muted text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>
+                <div key={i} className="flex aspect-[4/3] items-center justify-center rounded-[var(--r-xs)] bg-muted text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>
               ))}
             </div>
             <div className="mt-3 flex gap-1.5">
