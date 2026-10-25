@@ -7,7 +7,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { CLAIMS, c } from "@/content/claims";
+import { CLAIMS, c, showClaim } from "@/content/claims";
 import { cn } from "@/lib/utils";
 
 /* f. Why it costs less: an illustrative cost stack, no numbers ---------- */
@@ -54,7 +54,7 @@ export function SwitchGrid() {
     [<EyeOff key="i" />, "Your designs stay yours", "Designers never see who you are or who your customer is. Your work is never shown to anyone."],
     [<UsersRound key="i" />, "Two experts, every file", "A designer builds it and a master craftsman checks it. No single sign-off reaches you."],
     [<Clock key="i" />, "We work your hours", "The studio runs US business hours. Brief at 6pm, first look by morning."],
-    [<Phone key="i" />, "A real person, live", `Call or video your account team ${c("LIVE_CALL_HOURS")}. No ticket queues.`],
+    [<Phone key="i" />, "A real person, live", `Call or video your account team ${showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "in US business hours"}. No ticket queues.`],
     [<ShieldCheck key="i" />, "Guaranteed in writing", `Miss the ${c("FIRST_LOOK_HOURS")}-hour first look and the full amount comes back as credit. We still finish it.`],
     [<ReceiptText key="i" />, "Pay per design", "No retainer, no contract, no minimums. Reorder in one click."],
   ];

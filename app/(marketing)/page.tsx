@@ -8,7 +8,7 @@ import { CostStack, SwitchGrid, TeamStrip, WorkGallery } from "@/components/mark
 import { QuoteWidget } from "@/components/marketing/home/quote-widget";
 import { FinalCta, Hero, HowItWorks, ProofBar, Section } from "@/components/marketing/home/sections";
 import { StickyMobileCta } from "@/components/marketing/home/sticky-cta";
-import { c } from "@/content/claims";
+import { c, showClaim } from "@/content/claims";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
@@ -36,7 +36,7 @@ export default function HomePage() {
       <ProofBar />
       <HowItWorks />
       <Section id="quality" tone="subtle" eyebrow="Quality" title="Every file is made to be cast." lead="Two people sign every file before you see it: the designer who built it, and a master craftsman who checks it against the same list and your factory's own rules.">
-        <CastPipeline checkpoints={c("QC_CHECKPOINTS")} years={c("MIN_EXPERIENCE_YEARS")} />
+        <CastPipeline checkpoints={c("QC_CHECKPOINTS")} years={showClaim("MIN_EXPERIENCE_YEARS") ? c("MIN_EXPERIENCE_YEARS") : null} />
       </Section>
       <Section eyebrow="Why it costs less" title={c("AI_LINE")} lead="AI handles intake, routing, scheduling, checklists and tracking, so you pay for design time, not overhead. Every file is still built and checked by people.">
         <CostStack />
@@ -53,9 +53,11 @@ export default function HomePage() {
           firstLookHours={c("FIRST_LOOK_HOURS")}
         />
       </Section>
-      <Section eyebrow="The team" title="Senior people on every file." lead="Names stay private, both ways: you don't see who designed your piece, and they never see who you are.">
-        <TeamStrip />
-      </Section>
+      {showClaim("TEAM") && (
+        <Section eyebrow="The team" title="Senior people on every file." lead="Names stay private, both ways: you don't see who designed your piece, and they never see who you are.">
+          <TeamStrip />
+        </Section>
+      )}
       <Section id="faq" eyebrow="Questions" title="What jewelers ask first.">
         <Faq items={faq} />
       </Section>

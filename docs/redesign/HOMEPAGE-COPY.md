@@ -1,6 +1,6 @@
-# Homepage copy, for approval (redesign step 4)
+# Homepage copy (redesign step 4) — approved as is, with the proposals (owner, October 2026)
 
-Every line on the new homepage, in page order. Values in `{BRACES}` come from
+Every line on the new homepage, in page order. Unconfirmed claims (⚠) show on preview builds only; on the live site each falls back to a confirmed line until it is confirmed in `content/claims.ts`. Values in `{BRACES}` come from
 `content/claims.ts`; ⚠ marks a claim not yet confirmed. Edit anything here
 (or tell me), and I'll apply it.
 

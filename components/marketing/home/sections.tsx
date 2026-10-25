@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
-import { c } from "@/content/claims";
+import { c, showClaim } from "@/content/claims";
 import { cn } from "@/lib/utils";
 
 import { LiveOrderCard } from "./live-order-card";
@@ -81,7 +81,7 @@ export function Hero() {
             </Link>
           </div>
           <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[15px] text-muted-foreground">
-            {["Guaranteed in writing", "We work your hours", `Live call ${c("LIVE_CALL_HOURS")}`].map((chip) => (
+            {["Guaranteed in writing", "We work your hours", showClaim("LIVE_CALL_HOURS") ? `Live call ${c("LIVE_CALL_HOURS")}` : "Live call in US business hours"].map((chip) => (
               <li key={chip} className="flex items-center gap-1.5">
                 <Check className="h-4 w-4 text-foreground" aria-hidden />
                 {chip}
@@ -97,8 +97,14 @@ export function Hero() {
 
 /* c. Proof bar --------------------------------------------------------- */
 export function ProofBar() {
+  // D2: the team numbers show only once confirmed; until then the bar leads
+  // with the entry price, which is fixed by DECISIONS §4.
+  const team: [string, string, string] =
+    showClaim("DESIGNER_COUNT") && showClaim("MIN_EXPERIENCE_YEARS")
+      ? [c("DESIGNER_COUNT"), "senior CAD designers", `${c("MIN_EXPERIENCE_YEARS")} years each in production CAD`]
+      : [c("ENTRY_PRICE"), "a design", `Your first design ${c("FIRST_DESIGN_PRICE")}. No retainer`];
   const items: [string, string, string][] = [
-    [c("DESIGNER_COUNT"), "senior CAD designers", `${c("MIN_EXPERIENCE_YEARS")} years each in production CAD`],
+    team,
     ["2", "experts on every file", "Designer builds, master craftsman signs off"],
     [String(c("QC_CHECKPOINTS")), "point factory check", "Castable, to spec, first time"],
     [`${c("FIRST_LOOK_HOURS")}h`, "first look", "Or the order is free"],
@@ -217,7 +223,7 @@ export function FinalCta() {
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-background text-foreground"><Phone className="h-5 w-5" /></span>
               <span>
                 <span className="block text-[18px] font-semibold">Talk to us live</span>
-                <span className="block text-[15px] text-background/70">{c("LIVE_CALL_HOURS")} · a real person, no ticket queue</span>
+                <span className="block text-[15px] text-background/70">{showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours"} · a real person, no ticket queue</span>
               </span>
             </a>
           </li>
@@ -231,11 +237,11 @@ export function FinalCta() {
             </a>
           </li>
           <li>
-            <a href={`mailto:${email}`} className="flex items-center gap-4 p-5 hover:bg-background/5">
+            <a href={showClaim("EMAIL") ? `mailto:${email}` : "/contact"} className="flex items-center gap-4 p-5 hover:bg-background/5">
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-background/25"><FileText className="h-5 w-5" /></span>
               <span>
                 <span className="block text-[16px] font-medium">Email</span>
-                <span className="block text-[15px] text-background/70">{email}</span>
+                <span className="block text-[15px] text-background/70">{showClaim("EMAIL") ? email : "Write to the team"}</span>
               </span>
             </a>
           </li>

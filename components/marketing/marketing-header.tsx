@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { POST_AUTH_PATH } from "@/config/auth-redirects";
-import { c } from "@/content/claims";
+import { c, showClaim } from "@/content/claims";
 import { cn } from "@/lib/utils";
 
 import { MobileMenu } from "./mobile-menu";
@@ -56,7 +56,7 @@ export function MarketingHeader() {
               <UserButton />
             </div>
           </SignedIn>
-          <MobileMenu nav={NAV} phone={phone} hours={c("LIVE_CALL_HOURS")} />
+          <MobileMenu nav={NAV} phone={phone} hours={showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours"} />
         </div>
       </div>
     </header>

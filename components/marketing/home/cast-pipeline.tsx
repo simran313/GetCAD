@@ -62,10 +62,10 @@ function Stage({ n, title, who, rows, delay }: { n: string; title: string; who: 
   );
 }
 
-export function CastPipeline({ checkpoints, years }: { checkpoints: number; years: string }) {
+export function CastPipeline({ checkpoints, years }: { checkpoints: number; years: string | null }) {
   return (
     <div className="grid items-stretch gap-4 lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
-      <Stage n="1" title="Senior designer builds and ticks" who={`${years} years of manufacturable CAD`} rows={STAGE_1} delay={0} />
+      <Stage n="1" title="Senior designer builds and ticks" who={years ? `${years} years of manufacturable CAD` : "Manufacturable CAD, every day"} rows={STAGE_1} delay={0} />
       <div aria-hidden className="flex items-center justify-center lg:flex-col">
         <div className={cn("h-8 w-px bg-border lg:h-px lg:w-8")} />
         <span className="mx-3 my-0 rounded-[var(--r-full)] border border-border bg-background px-3 py-1 text-[13px] font-medium text-muted-foreground lg:mx-0 lg:my-3">

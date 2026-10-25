@@ -63,6 +63,16 @@ export function c<K extends ClaimKey>(key: K): (typeof CLAIMS)[K]["value"] {
   return CLAIMS[key].value;
 }
 
+/**
+ * Whether a claim may be shown here. Unconfirmed claims show on preview and
+ * local builds (with the draft banner) so the page can be reviewed, and never
+ * on the production deployment, where each one falls back to a confirmed line
+ * (owner decision, redesign step 4: D2, D5, D6).
+ */
+export function showClaim(key: ClaimKey): boolean {
+  return CLAIMS[key].confirmed || process.env.NEXT_PUBLIC_VERCEL_ENV !== "production";
+}
+
 /** Claims not yet confirmed, for the draft banner. */
 export function unconfirmedClaims(): { key: ClaimKey; todo: string }[] {
   return (Object.keys(CLAIMS) as ClaimKey[])
