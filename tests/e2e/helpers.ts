@@ -8,6 +8,9 @@ import { PERSONAS, type Persona } from "./state";
 export async function signedIn(browser: Browser, persona: Persona): Promise<Page> {
   const context = await browser.newContext();
   const page = await context.newPage();
+  // Browser-side errors go to the CI log: a page that throws in the browser
+  // is otherwise invisible from here.
+  page.on("pageerror", (e) => console.log(`[browser:${persona}] ${e.message}`));
   await page.goto("/");
   await clerk.signIn({ page, emailAddress: PERSONAS[persona].email });
   return page;
@@ -25,6 +28,21 @@ export async function act(page: Page, button: Locator) {
   ]);
   expect(res.status(), `server action failed on ${page.url()}`).toBeLessThan(400);
   await page.waitForLoadState("networkidle");
+}
+
+/**
+ * Expect a control to be gone after an action. On failure, say what the page
+ * showed and whether a reload shows it gone (stale screen vs. action not done).
+ */
+export async function expectGone(page: Page, locator: Locator) {
+  try {
+    await expect(locator).toHaveCount(0);
+  } catch {
+    const before = (await page.locator("main").innerText().catch(() => "")).slice(0, 1500);
+    await page.reload();
+    const afterReload = (await locator.count()) === 0 ? "gone after a reload (the screen was stale)" : "still there after a reload";
+    throw new Error(`${locator} did not go away; it is ${afterReload}.\nPage showed:\n${before}`);
+  }
 }
 
 /** Submit the form a control lives in, by that form's button. */

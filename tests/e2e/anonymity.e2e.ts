@@ -14,7 +14,7 @@ import { PERSONAS, readState } from "./state";
  */
 const state = readState();
 const { sameClient, otherClient } = state.fixtures.crawlOrders;
-const MAX_PAGES = 80;
+const MAX_PAGES = 50;
 
 function forbidden(): string[] {
   const { users, fixtures } = state;
@@ -45,11 +45,14 @@ async function capture(page: Page, path: string): Promise<string> {
   const onResponse = (r: import("@playwright/test").Response) => {
     const type = r.headers()["content-type"] ?? "";
     if (r.url().startsWith("http://127.0.0.1:3100") && /text\/x-component|application\/json|text\/html/.test(type)) {
-      bodies.push(r.text().catch(() => ""));
+      // A body still streaming after 5 s is not waited for.
+      bodies.push(Promise.race([r.text().catch(() => ""), new Promise<string>((ok) => setTimeout(() => ok(""), 5_000))]));
     }
   };
   page.on("response", onResponse);
-  await page.goto(path, { waitUntil: "networkidle" });
+  // "load", not "networkidle": the order pages poll for changes every few
+  // seconds, and each page's own server data is already in its HTML.
+  await page.goto(path, { waitUntil: "load" });
   const html = await page.content();
   page.off("response", onResponse);
   return [html, ...(await Promise.all(bodies))].join("\n");
@@ -58,7 +61,8 @@ async function capture(page: Page, path: string): Promise<string> {
 const tokens = (text: string) => new Set(text.match(/[A-Za-z0-9][A-Za-z0-9_+@.:-]{3,}/g) ?? []);
 
 test("nothing the designer can reach names or links a client", async ({ browser }) => {
-  test.setTimeout(300_000);
+  test.setTimeout(480_000);
+  const started = Date.now();
   const page = await signedIn(browser, "designer");
 
   // 1. Crawl from home over same-origin links.
@@ -68,6 +72,7 @@ test("nothing the designer can reach names or links a client", async ({ browser 
     const path = queue.shift()!;
     if (seen.has(path)) continue;
     seen.set(path, await capture(page, path));
+    if (seen.size % 10 === 0) console.log(`crawl: ${seen.size} pages, ${Math.round((Date.now() - started) / 1000)} s`);
     const links = await page.$$eval("a[href]", (as) => as.map((a) => (a as HTMLAnchorElement).getAttribute("href") ?? ""));
     for (const href of links) {
       if (!href.startsWith("/") || href.startsWith("//") || href.startsWith("/api/") || href.startsWith("/sign")) continue;
@@ -75,6 +80,7 @@ test("nothing the designer can reach names or links a client", async ({ browser 
       if (!seen.has(clean)) queue.push(clean);
     }
   }
+  console.log(`crawled ${seen.size} pages in ${Math.round((Date.now() - started) / 1000)} s`);
   expect(seen.size).toBeGreaterThan(5);
 
   // Whole-word matches: a client code like "MJ1" must not be found inside

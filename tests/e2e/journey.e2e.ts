@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { png } from "./files";
-import { act, doDesignerVersion, orderIdFrom, signedIn, tickAll } from "./helpers";
+import { act, doDesignerVersion, expectGone, orderIdFrom, signedIn, tickAll } from "./helpers";
 
 /**
  * Phase 8a — the core journey, every step through the real screens:
@@ -53,9 +53,9 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   await act(page, page.getByRole("button", { name: "Set quote" }));
   await expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible();
   await act(page, page.getByRole("button", { name: "Mark paid" }));
-  await expect(page.getByRole("button", { name: "Mark paid" })).toHaveCount(0);
+  await expectGone(page, page.getByRole("button", { name: "Mark paid" }));
   await act(page, page.getByRole("button", { name: "Confirm order" }));
-  await expect(page.getByRole("button", { name: "Confirm order" })).toHaveCount(0);
+  await expectGone(page, page.getByRole("button", { name: "Confirm order" }));
   // One pod: the order went to it on payment (0048).
   await expect(page.getByText("Pod One").first()).toBeVisible();
   await page.context().close();
