@@ -3,14 +3,13 @@
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Search, User } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 /**
  * The portal sidebar (redesign): 240px, grouped, one unique icon per
- * destination, exactly one active row, collapsible to icons (remembered per
- * browser). The user block at the foot opens Account and Sign out.
+ * destination, exactly one active row, collapsible to icons (the parent keeps
+ * the state). The user block at the foot opens Account and Sign out.
  */
 export interface NavItem {
   key: string;
@@ -18,13 +17,13 @@ export interface NavItem {
   href: string;
   icon: React.ReactNode;
   badge?: number;
+  /** Draw the item yourself (the bottom bar's More sheet), given the cell's classes. */
+  render?: (className: string) => React.ReactNode;
 }
 export interface NavGroup {
   label?: string;
   items: NavItem[];
 }
-
-const STORE = "tcp.sidebar.collapsed";
 
 export function Sidebar({
   groups,
@@ -32,7 +31,9 @@ export function Sidebar({
   workspace,
   user,
   onSearch,
-  signOut,
+  onSignOut,
+  collapsed = false,
+  onToggle,
   homeHref = "/home",
 }: {
   groups: NavGroup[];
@@ -40,23 +41,11 @@ export function Sidebar({
   workspace: string;
   user: { name: string; role: string; initials: string };
   onSearch?: () => void;
-  /** The sign-out control (Clerk's button in the app; a plain one in the preview). */
-  signOut?: React.ReactNode;
+  onSignOut?: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
   homeHref?: string;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => {
-    try {
-      setCollapsed(localStorage.getItem(STORE) === "1");
-    } catch {}
-  }, []);
-  useEffect(() => {
-    document.documentElement.style.setProperty("--sidebar-w", collapsed ? "64px" : "240px");
-    try {
-      localStorage.setItem(STORE, collapsed ? "1" : "0");
-    } catch {}
-  }, [collapsed]);
-
   return (
     <aside
       className={cn(
@@ -74,7 +63,7 @@ export function Sidebar({
         )}
         <button
           type="button"
-          onClick={() => setCollapsed((c) => !c)}
+          onClick={onToggle}
           className="inline-flex h-[var(--ctl-icon)] w-[var(--ctl-icon)] shrink-0 items-center justify-center rounded-[var(--r-sm)] text-muted-foreground hover:bg-accent hover:text-foreground"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -155,7 +144,7 @@ export function Sidebar({
               <>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px] font-medium leading-5">{user.name}</span>
-                  <span className="block truncate text-[13px] leading-4 text-muted-foreground">{user.role} · {workspace}</span>
+                  <span className="block truncate text-[13px] leading-4 text-muted-foreground">{user.role === workspace ? workspace : `${workspace} · ${user.role}`}</span>
                 </span>
                 <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
               </>
@@ -170,11 +159,9 @@ export function Sidebar({
               </Menu.Item>
               <Menu.Separator className="my-1 h-px bg-border" />
               <Menu.Item asChild>
-                {signOut ?? (
-                  <button type="button" className="flex h-[var(--ctl-sm)] w-full items-center gap-2 rounded-[var(--r-xs)] px-2.5 text-[15px] outline-none data-[highlighted]:bg-accent">
-                    <LogOut className="h-4 w-4" /> Sign out
-                  </button>
-                )}
+                <button type="button" onClick={onSignOut} className="flex h-[var(--ctl-sm)] w-full items-center gap-2 rounded-[var(--r-xs)] px-2.5 text-[15px] outline-none data-[highlighted]:bg-accent">
+                  <LogOut className="h-4 w-4" /> Sign out
+                </button>
               </Menu.Item>
             </Menu.Content>
           </Menu.Portal>

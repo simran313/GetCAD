@@ -1,15 +1,16 @@
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
-import { BottomNav } from "@/components/nav/bottom-nav";
-import { SideNav } from "@/components/nav/side-nav";
 import { ConnectionStatus } from "@/components/pwa/connection-status";
+import { AppShell, type ShellOrder } from "@/components/shell/app-shell";
+import { ROLE_LABEL, shellKind } from "@/components/shell/nav-config";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 import { POST_AUTH_PATH } from "@/config/auth-redirects";
-import { tabsForRole, workspaceFor, type Workspace } from "@/core";
-import { cn } from "@/lib/utils";
+import { c, showClaim } from "@/content/claims";
+import { tabsForRole } from "@/core";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 /**
@@ -37,51 +38,23 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
  *
  * Signed out there is no role and nothing to navigate to, so the header keeps
  * its full-width form with Sign in / Get started and no shell appears at all.
+ *
+ * REDESIGN (step 5): the shell itself is components/shell/app-shell — a
+ * grouped 240px sidebar (collapsible; the state is a cookie so the page does
+ * not jump), a compact top bar and a five-slot bottom bar on a phone, Cmd+K,
+ * and "Talk to your team" for clients. The palette lists orders through
+ * visible_orders() — the same per-role, reference-only read the order lists
+ * use — so it never shows anyone more than their own pages do.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
 
-  // Signed out there is no role to scope by. The per-page auth guards handle
-  // the redirect; this only avoids a pointless query.
-  let tabs = null;
-  let workspace: Workspace | null = null;
-  if (userId) {
-    const supabase = await createUserSupabaseClient();
-    const { data } = await supabase.from("users").select("role").maybeSingle();
-    tabs = tabsForRole(data?.role ?? "CLIENT");
-    workspace = workspaceFor(data?.role ?? "CLIENT");
-  }
-
-  return (
-    <>
-      {tabs && workspace ? <SideNav tabs={tabs} workspace={workspace} /> : null}
-
-      {/* The sidebar is fixed, so the content column is inset past it rather
-          than flowing under it. Done once here, not as a class every page has
-          to remember.
-
-          The tinted ground is what makes the cards read as cards: a white
-          panel on a white page with a 1px border is an outline, and a screen
-          made of those is a stack of rectangles at identical weight. It stops
-          at the app shell — the marketing site keeps its white page. */}
-      <div
-        className={cn(
-          "min-h-screen bg-[color:var(--app-ground)]",
-          tabs && "md:pl-64",
-        )}
-      >
-        <header
-          className={cn(
-            "sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur",
-            // With a sidebar on screen this header is phone-only chrome. The
-            // wordmark and the account control both live in the sidebar there,
-            // and a second copy of them across the top is the website look this
-            // is getting rid of.
-            tabs && "md:hidden",
-          )}
-        >
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-[color:var(--app-ground)]">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
           <div className="container flex h-14 items-center justify-between">
-            <Link href={tabs?.[0]?.href ?? "/home"} aria-label="The CAD Pillar — home">
+            <Link href="/" aria-label="The CAD Pillar — home">
               <Wordmark />
             </Link>
             <nav className="flex items-center gap-1">
@@ -101,19 +74,68 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </nav>
           </div>
         </header>
-
-        {/* Above everything else, so the answer to "did that save?" is on
-            screen before the question is asked. Its sticky offset follows the
-            header: 56px under it on a phone, flush to the top once the header
-            is gone and the sidebar has taken over. */}
-        <ConnectionStatus className={tabs ? "top-14 md:top-0" : "top-14"} />
-
-        {/* The tab bar is fixed too, so every screen needs clearance beneath it
-            or its last row sits under the bar. */}
-        <div className={tabs ? "pb-24 md:pb-0" : undefined}>{children}</div>
+        <ConnectionStatus className="top-14" />
+        {children}
       </div>
+    );
+  }
 
-      {tabs ? <BottomNav tabs={tabs} /> : null}
-    </>
+  const supabase = await createUserSupabaseClient();
+  const [{ data: me }, ordersRes, jar] = await Promise.all([
+    supabase.from("users").select("role").maybeSingle(),
+    supabase.rpc("visible_orders").select("id, display_ref, product_type, status").limit(200),
+    cookies(),
+  ]);
+  const role = me?.role ?? "CLIENT";
+  const kind = shellKind(role);
+  const tabs = tabsForRole(role);
+
+  // The name in the user block, from the person's own profile row (each
+  // readable only by its owner), not from Clerk, so no page load waits on
+  // Clerk's API.
+  const profile =
+    kind === "client"
+      ? await supabase.from("client_profiles").select("business_name, legal_name").maybeSingle()
+      : kind === "designer"
+        ? await supabase.from("designer_profiles").select("legal_name").maybeSingle()
+        : await supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle();
+  const p = (profile.data ?? {}) as { business_name?: string | null; legal_name?: string | null; first_name?: string | null };
+
+  // Client codes for Cmd+K: admins only (admin_clients refuses anyone else).
+  let clients: string[] = [];
+  if (kind === "staff") {
+    const res = await supabase.rpc("admin_clients").select("client_code");
+    clients = ((res.data ?? []) as { client_code: string | null }[]).flatMap((r) => (r.client_code ? [r.client_code] : []));
+  }
+
+  const name = p.first_name || p.business_name || p.legal_name || "Your account";
+  const initials = name
+    .split(/\s+/)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const orders: ShellOrder[] = ((ordersRes.data ?? []) as { id: string; display_ref: string | null; product_type: string | null; status: string }[]).map((o) => ({
+    id: o.id,
+    ref: o.display_ref ?? o.id,
+    product: o.product_type,
+    status: o.status,
+  }));
+
+  return (
+    <AppShell
+      kind={kind}
+      tabs={tabs}
+      user={{ name, initials, detail: ROLE_LABEL[kind] }}
+      orders={orders}
+      clients={clients}
+      call={{ phone: c("LIVE_CALL_PHONE"), hours: showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours" }}
+      initialCollapsed={jar.get("tcp_sidebar")?.value === "collapsed"}
+    >
+      {/* Above everything else, so the answer to "did that save?" is on
+          screen before the question is asked. */}
+      <ConnectionStatus className="top-14 md:top-0" />
+      {children}
+    </AppShell>
   );
 }

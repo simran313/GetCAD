@@ -24,15 +24,17 @@ export function MobileBottomNav({
   const right = create ? items.slice(half) : [];
   const cell = (item: NavItem) => {
     const active = item.key === activeKey;
+    const cls = cn(
+      "flex h-14 w-full flex-col items-center justify-center gap-0.5 text-[12px] font-medium [&_svg]:h-[22px] [&_svg]:w-[22px]",
+      active ? "text-foreground" : "text-muted-foreground",
+    );
+    if (item.render) return <li key={item.key} className="flex-1">{item.render(cls)}</li>;
     return (
       <li key={item.key} className="flex-1">
         <Link
           href={item.href}
           aria-current={active ? "page" : undefined}
-          className={cn(
-            "flex h-14 flex-col items-center justify-center gap-0.5 text-[12px] font-medium [&_svg]:h-[22px] [&_svg]:w-[22px]",
-            active ? "text-foreground" : "text-muted-foreground",
-          )}
+          className={cls}
         >
           {item.icon}
           <span className="max-w-full truncate px-1">{item.label}</span>
