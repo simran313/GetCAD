@@ -44,3 +44,4 @@ npm-debug.log*
 /.e2e/
 /test-results/
 /playwright-report/
+/design-qa/
