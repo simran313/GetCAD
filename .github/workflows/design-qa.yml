@@ -45,8 +45,13 @@ jobs:
         run: |
           stage=$(printf '%s' "$COMMIT_MESSAGE" | grep -o '\[design-qa:[a-z0-9-]*\]' | head -1 | sed 's/\[design-qa:\(.*\)\]/\1/')
           echo "DESIGN_QA_STAGE=${stage:-snapshot}" >> "$GITHUB_ENV"
-          # [design-qa:preview] captures the design preview only (no journeys needed).
-          if [ "$stage" = "preview" ]; then echo "DESIGN_QA_ONLY=preview" >> "$GITHUB_ENV"; fi
+          # A stage named after a group captures only that group, e.g.
+          # [design-qa:preview] or [design-qa:marketing]; those two need no
+          # journeys (no signed-in data), so the e2e run is skipped for them.
+          case "$stage" in
+            preview|marketing) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV"; echo "DESIGN_QA_SKIP_JOURNEYS=1" >> "$GITHUB_ENV" ;;
+            admin|client|client2|designer|podLead) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV" ;;
+          esac
 
       - uses: actions/setup-node@v4
         with:
@@ -68,7 +73,7 @@ jobs:
 
       # The journeys fill the database with real orders in every state.
       - name: Run the journeys (data for the screens)
-        if: env.DESIGN_QA_ONLY == ''
+        if: env.DESIGN_QA_SKIP_JOURNEYS != '1'
         run: npm run e2e:test
         continue-on-error: true
 

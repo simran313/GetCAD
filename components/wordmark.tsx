@@ -1,15 +1,14 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The CAD Pillar wordmark, as the mockups set it (docs/design): the name in
- * Instrument Serif, nothing else. Inherits its colour, so it sits on the
- * white client sidebar and the black team sidebar alike.
+ * The CAD Pillar wordmark (redesign): the name in Geist 600, tight tracking,
+ * never wrapping. Inherits its colour.
  */
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "font-display text-[length:var(--fs-6)] font-normal leading-none tracking-[-0.01em]",
+        "whitespace-nowrap text-[18px] font-semibold leading-none tracking-[-0.02em]",
         className,
       )}
     >

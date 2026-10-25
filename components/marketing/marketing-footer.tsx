@@ -32,20 +32,20 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-subtle">
-      <div className="container grid max-w-6xl gap-8 py-12 sm:grid-cols-2 md:grid-cols-4">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
           <Wordmark />
-          <p className="mt-3 max-w-xs text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
+          <p className="mt-3 max-w-xs text-[15px] leading-[1.5] text-muted-foreground">
             Jewelry CAD for the trade. Studio in Mumbai, working US business hours.
           </p>
         </div>
         {COLUMNS.map((col) => (
           <div key={col.title}>
-            <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.12em] text-muted-foreground">{col.title}</p>
-            <ul className="mt-3 space-y-2">
+            <p className="eyebrow">{col.title}</p>
+            <ul className="mt-2">
               {col.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-[length:var(--fs-2)] text-muted-foreground hover:text-foreground">
+                  <Link href={l.href} className="inline-flex min-h-11 items-center text-[15px] text-muted-foreground hover:text-foreground">
                     {l.label}
                   </Link>
                 </li>
@@ -54,8 +54,8 @@ export function MarketingFooter() {
           </div>
         ))}
       </div>
-      <div className="border-t border-border py-4">
-        <p className="container max-w-6xl text-[length:var(--fs-1)] text-muted-foreground">
+      <div className="border-t border-border pb-24 pt-5 md:pb-5">
+        <p className="mx-auto max-w-[1200px] px-4 text-[14px] text-muted-foreground sm:px-6 lg:px-8">
           © {new Date().getFullYear()} The CAD Pillar. All rights reserved.
         </p>
       </div>
