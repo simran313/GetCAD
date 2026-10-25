@@ -487,6 +487,27 @@ Tests (Add. A9): PDF has 19 ticks + specs; edited file detected; densities chang
   - team order page links.
 - **Not done:** files uploaded before 0050 have no fingerprint, and orders that passed QC before it have no certificate.
 
+### Phase 7b — owner answers (October 2026)
+- **Fix job designer pay:** none. An upheld claim's fix order pays the designer nothing; the pod lead's QC fee stands.
+- **Who decides a claim:** the pod lead; the admin overrides (and decides anything sent to admin review).
+- **Logo:** clients upload one on Account.
+
+### Phase 7b — as built
+- **Migration 0051 / policy 0040:** see db/README. One migration, not 0050–0052 as planned above (numbers already used).
+- **Preview link (A5):**
+  - client order page, APPROVED onward: "Share a 3D preview" makes a link open for 7, 30 or 90 days; the link is shown once (only its hash is stored); each link lists views and can be extended or turned off;
+  - `/p/[token]`: public, noindex, disallowed in robots; the jeweler's logo and name, an auto-rotating 3D view built from the STL (three.js, loaded on demand) and the renders; no price, reference or anything of ours; anything not valid shows "This preview is not available";
+  - Account has a logo upload (PNG/JPEG ≤ 2 MB, cleaned).
+- **Spec claims (A6):**
+  - `/orders/[id]/claim` while the window is open: spec, description, casting details, the file they cast from (kept byte for byte; the server hashes it) and 1–10 photos (cleaned);
+  - the client sees each claim's state, measured value, note and the free fix order;
+  - the team order page has a "Spec claims" panel with the evidence (15-minute links) and uphold/reject; `/qc` and `/admin` list claims waiting.
+- **Stats (A7):**
+  - weekly: on-time first looks (standard tier), approved with no revision round, late-order credits granted, claims upheld, over 30 days;
+  - `/results` shows them only while `public_stats` is on (otherwise 404) and is not in the sitemap;
+  - admin sees them and can recompute on `/admin/clients`.
+- **Not done:** the e2e checks for the preview link and claims are Phase 8.
+
 ---
 
 ## Phase 8 — End-to-end tests

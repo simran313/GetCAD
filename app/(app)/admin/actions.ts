@@ -55,3 +55,11 @@ export async function setAccountManagerAction(formData: FormData): Promise<void>
   if (error) throw new Error(error.message);
   revalidatePath("/admin/clients");
 }
+
+// Recompute the public numbers now (Add. A7); also runs weekly by schedule.
+export async function computeStatsAction(): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("compute_public_stats");
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/clients");
+}

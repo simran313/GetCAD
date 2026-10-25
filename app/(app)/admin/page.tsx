@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Timer } from "@/components/ui/timer";
 import { PodPicker, type PodOption } from "@/components/work/pod-picker";
+import { ClaimsQueue, type ClaimQueueRow } from "@/components/work/claims-queue";
 import { SectionLabel } from "@/components/work/stats";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadPodJobs, type PodJob } from "@/lib/work/load";
@@ -44,7 +45,11 @@ export default async function QueuePage() {
       </main>
     );
   }
-  const [podsRes, creditsRes] = await Promise.all([supabase.rpc("pods_overview"), supabase.rpc("pending_sla_credits")]);
+  const [podsRes, creditsRes, claimsRes] = await Promise.all([
+    supabase.rpc("pods_overview"),
+    supabase.rpc("pending_sla_credits"),
+    supabase.rpc("claims_queue"),
+  ]);
   const pods = (podsRes.data ?? []) as PodOption[];
   const pendingCredits = ((creditsRes.data ?? []) as unknown[]).length;
 
@@ -107,6 +112,8 @@ export default async function QueuePage() {
           </CardBody>
         </Card>
       )}
+
+      <ClaimsQueue rows={(claimsRes.data ?? []) as ClaimQueueRow[]} />
 
       <section className="space-y-3">
         <SectionLabel>Most urgent first · disputes, then anything blocking a client deadline</SectionLabel>

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { ListRow } from "@/components/ui/list-row";
 import { PageHeader } from "@/components/ui/page-header";
 import { Timer } from "@/components/ui/timer";
+import { ClaimsQueue, type ClaimQueueRow } from "@/components/work/claims-queue";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ago, loadEarnings, loadPodJobs, type PodJob } from "@/lib/work/load";
@@ -29,6 +30,7 @@ export default async function QcQueuePage() {
 
   let jobs: PodJob[];
   let earned = 0;
+  const claims = ((await supabase.rpc("claims_queue")).data ?? []) as ClaimQueueRow[];
   try {
     const [all, earnings] = await Promise.all([loadPodJobs(supabase), loadEarnings(supabase)]);
     jobs = all;
@@ -77,6 +79,7 @@ export default async function QcQueuePage() {
         </p>
       )}
 
+      <ClaimsQueue rows={claims} />
       <Queue title="Awaiting QC · oldest first" rows={waiting} action="Start review" empty="Nothing waiting for a check." />
       <Queue title="In your review" rows={reviewing} action="Continue" empty="No reviews in progress." />
     </main>

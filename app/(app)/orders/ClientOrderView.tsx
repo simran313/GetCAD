@@ -43,6 +43,7 @@ export function ClientOrderView({
   attachments,
   intake,
   timelineRows,
+  afterDelivery = null,
 }: {
   order: OrderRow & { service?: string; created_at?: string };
   title: string;
@@ -55,6 +56,8 @@ export function ClientOrderView({
   attachments: AttachmentRow[];
   intake: { screenshots: Screenshot[]; contact: ClientContact | null; orderUrl: string | null } | null;
   timelineRows: TimelineRawRow[];
+  /** Phase 7b: the share-a-preview card and spec claims, once approved. */
+  afterDelivery?: React.ReactNode;
 }) {
   const step = clientNextStep(o.id, o.status);
   const done = clientStepsDone(o.status);
@@ -91,6 +94,8 @@ export function ClientOrderView({
           </div>
         </CardBody>
       </Card>
+
+      {afterDelivery}
 
       <ol aria-label="Progress" className="grid grid-cols-7 gap-1">
         {CLIENT_STEPS.map((s, i) => (
