@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { escrowSign, staffNext, type TransitionRow } from "@/core";
@@ -310,6 +311,14 @@ export default async function OrderPage({
   // A3 — the team's order page (Phase 5d): references in the header, the
   // next move first, then the work and conversation beside the controls.
   if (order.relation !== "CLIENT") {
+    // TEMPORARY e2e trace (stale-screen diagnosis; removed before review).
+    if (process.env.E2E_TRACE === "1") {
+      const h = await headers();
+      console.log(
+        `[trace] team render ${order.id} status=${order.status} confirmed=${order.confirmed_at ?? "-"} stamp=${String(stampRes.data)} ` +
+          `kind=${h.get("next-action") ? "action" : h.get("rsc") ? "rsc" : "document"} at=${new Date().toISOString()}`,
+      );
+    }
     const [jobRes, podsRes, vsRes, teamClaimsRes] = await Promise.all([
       supabase.rpc("pod_jobs", { p_order_id: order.id }).maybeSingle(),
       order.relation === "ADMIN" ? supabase.rpc("pods_overview") : Promise.resolve({ data: null }),

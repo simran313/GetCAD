@@ -50,6 +50,24 @@ test("a client sends a CAD brief", async ({ browser }) => {
 
 test("the admin quotes it, records the payment and confirms the brief", async ({ browser }) => {
   const page = await signedIn(browser, "admin");
+  // TEMPORARY trace (stale-screen diagnosis): every page request, the change
+  // checks and the console, with times.
+  const t0 = Date.now();
+  const at = () => `${((Date.now() - t0) / 1000).toFixed(2)}s`;
+  page.on("console", (m) => console.log(`[trace ${at()}] console.${m.type()}: ${m.text().slice(0, 300)}`));
+  page.on("request", (r) => {
+    const u = new URL(r.url());
+    if (!u.pathname.startsWith("/orders/") && !u.pathname.startsWith("/api/orders/")) return;
+    const h = r.headers();
+    const kind = h["next-action"] ? "ACTION" : h["rsc"] ? "RSC" : r.resourceType();
+    console.log(`[trace ${at()}] -> ${r.method()} ${kind} ${u.pathname}${u.search.slice(0, 40)}`);
+  });
+  page.on("response", async (r) => {
+    const u = new URL(r.url());
+    if (!u.pathname.startsWith("/orders/") && !u.pathname.startsWith("/api/orders/")) return;
+    const body = u.pathname.endsWith("/stamp") ? await r.text().catch(() => "") : "";
+    console.log(`[trace ${at()}] <- ${r.status()} ${u.pathname} ${body}`);
+  });
   await page.goto(`/orders/${orderId}`);
   await act(page, page.getByRole("button", { name: "Set quote" }));
   await settled(page, "quoted", (timeout) => expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible({ timeout }));
