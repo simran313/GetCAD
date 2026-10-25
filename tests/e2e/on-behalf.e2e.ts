@@ -75,7 +75,8 @@ test("an on-behalf order without a screenshot is refused; with one, the client s
 
   const client = await signedIn(browser, "client2");
   await client.goto("/orders");
-  await expect(client.locator(`a[href^="/orders/${orderId}"]`).first()).toBeVisible();
+  // A phone list and a desk table: the visible one at this width.
+  await expect(client.locator(`a[href^="/orders/${orderId}"]`).filter({ visible: true }).first()).toBeVisible();
   await client.goto(`/orders/${orderId}`);
   await expect(client.getByText("Halo ring like the photo", { exact: false }).first()).toBeVisible();
   await client.context().close();
