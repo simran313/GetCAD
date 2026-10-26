@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
+import AxeBuilder from "@axe-core/playwright";
 import { clerk } from "@clerk/testing/playwright";
-import { test, type Browser, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 
 import { withDb } from "../e2e/db";
 import { E2E_DIR, PERSONAS, readState, type Persona } from "../e2e/state";
@@ -11,6 +12,11 @@ import { E2E_DIR, PERSONAS, readState, type Persona } from "../e2e/state";
  * Every route at 390 (phone), 768 (tablet) and 1440 (desk), signed in as
  * each role, into design-qa/<stage>/<who>/<route>@<width>.png. The stage
  * ("before", "after", …) comes from DESIGN_QA_STAGE.
+ *
+ * Each route is also run through axe (WCAG 2.2 A/AA) at the phone and desk
+ * widths. Serious and critical findings go to design-qa/<stage>/<who>/axe.md
+ * beside the screenshots; DESIGN_QA_AXE_STRICT=1 fails the run on any.
+ * Clerk's own sign-in widget is left out (not ours to change).
  */
 const STAGE = process.env.DESIGN_QA_STAGE || "local";
 const OUT = join(process.cwd(), "design-qa", STAGE);
@@ -28,6 +34,48 @@ const [crawl] = state.fixtures.crawlOrders.sameClient;
 
 const slug = (path: string) => (path === "/" ? "home" : path.replace(/^\//, "").replace(/[/?=&]+/g, "_")).slice(0, 80);
 
+interface Finding {
+  path: string;
+  width: number;
+  rule: string;
+  impact: string;
+  help: string;
+  targets: string[];
+}
+const findings = new Map<string, Finding[]>();
+
+async function audit(page: Page, who: string, path: string, width: number) {
+  const result = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .exclude(".cl-rootBox")
+    .analyze()
+    .catch((e) => {
+      console.log(`! axe ${who} ${path} @${width}: ${e}`);
+      return null;
+    });
+  if (!result) return;
+  const serious = result.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  const list = findings.get(who) ?? [];
+  for (const v of serious) {
+    list.push({ path, width, rule: v.id, impact: v.impact ?? "", help: v.help, targets: v.nodes.slice(0, 5).map((n) => n.target.join(" ")) });
+  }
+  findings.set(who, list);
+  if (serious.length) console.log(`axe ${who} ${path} @${width}: ${serious.map((v) => `${v.id}×${v.nodes.length}`).join(", ")}`);
+}
+
+function writeAxeReport(who: string) {
+  const list = findings.get(who) ?? [];
+  const file = join(OUT, who, "axe.md");
+  mkdirSync(dirname(file), { recursive: true });
+  const lines = [`# axe: ${who}`, "", list.length === 0 ? "No serious or critical findings." : `${list.length} serious or critical findings.`, ""];
+  for (const f of list) {
+    lines.push(`- \`${f.path}\` @${f.width} — **${f.rule}** (${f.impact}): ${f.help}`);
+    for (const t of f.targets) lines.push(`  - \`${t}\``);
+  }
+  writeFileSync(file, `${lines.join("\n")}\n`);
+  return list.length;
+}
+
 async function shoot(page: Page, who: string, path: string) {
   for (const [width, height] of WIDTHS) {
     await page.setViewportSize({ width, height });
@@ -39,6 +87,7 @@ async function shoot(page: Page, who: string, path: string) {
     mkdirSync(dirname(file), { recursive: true });
     await page.screenshot({ path: file, fullPage: true, animations: "disabled" }).catch((e) => console.log(`! ${who} ${path}: ${e}`));
     console.log(`${who} ${path} @${width}: ${res?.status() ?? "no response"} → ${page.url().replace(/^https?:\/\/[^/]+/, "")}`);
+    if (width !== 768) await audit(page, who, path, width);
   }
 }
 
@@ -118,5 +167,8 @@ for (const [who, { persona, paths }] of Object.entries(ROUTES).filter(([w]) => O
     const page = await as(browser, persona);
     for (const path of await paths()) await shoot(page, who, path);
     await page.context().close();
+    const serious = writeAxeReport(who);
+    console.log(`axe ${who}: ${serious} serious or critical`);
+    if (process.env.DESIGN_QA_AXE_STRICT === "1") expect(serious, `axe findings for ${who}: see design-qa/${STAGE}/${who}/axe.md`).toBe(0);
   });
 }

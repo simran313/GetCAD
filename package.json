@@ -61,6 +61,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@clerk/backend": "^2.33.5",
     "@clerk/testing": "^2.2.50",
     "@playwright/test": "1.63.0",
