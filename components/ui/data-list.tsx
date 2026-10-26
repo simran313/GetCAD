@@ -142,11 +142,14 @@ export function ResponsiveDataList<T>({
               ) : (
                 body
               )}
-              {by("action").map((c) => (
-                <div key={c.key} className="relative z-10 mt-3 [&>*]:w-full">
-                  {c.cell(row)}
-                </div>
-              ))}
+              {by("action").map((c) => {
+                const content = c.cell(row);
+                return content == null || content === false ? null : (
+                  <div key={c.key} className="relative z-10 mt-3 [&>*]:w-full">
+                    {content}
+                  </div>
+                );
+              })}
             </li>
           );
         })}
