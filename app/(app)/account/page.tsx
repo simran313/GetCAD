@@ -113,7 +113,7 @@ export default async function AccountPage() {
     <Page form>
       <PageHeader title="Account" description="Who you are signed in as, and the settings that are yours." />
 
-      <section aria-label="Your identity" className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]">
+      <section aria-label="Your identity" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
         <div className="flex items-start gap-4">
           <span aria-hidden className="flex size-14 shrink-0 items-center justify-center rounded-full bg-foreground text-[length:var(--fs-4)] font-semibold text-background">
             {initials(name ?? ROLE_WORD[role] ?? "")}
@@ -155,7 +155,7 @@ export default async function AccountPage() {
       </section>
 
       {isClient && (
-        <section aria-labelledby="acc-business" className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]">
+        <section aria-labelledby="acc-business" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
           <h2 id="acc-business" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
             Your business
           </h2>
@@ -166,7 +166,7 @@ export default async function AccountPage() {
       )}
 
       {isClient && (
-        <section aria-labelledby="acc-logo" className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]">
+        <section aria-labelledby="acc-logo" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
           <h2 id="acc-logo" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
             Your logo
           </h2>
@@ -206,7 +206,7 @@ export default async function AccountPage() {
       </section>
 
       {pushOffered ? (
-        <section aria-label="Notifications" className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]">
+        <section aria-label="Notifications" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
           <PushOptIn publicKey={vapidPublicKey} />
         </section>
       ) : null}

@@ -3,7 +3,7 @@ import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { jobClockDue, jobState, jobTab, minutesWord, rupeesWord, type JobTab } from "@/core";
+import { jobClockDue, jobState, jobTab, rupeesWord, type JobTab } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -18,6 +18,7 @@ import { jobTitle, loadMyWork, type Job } from "@/lib/work/load";
 
 import { StartWorkButton } from "./StartWorkButton";
 import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * D3 — Open jobs (docs/design). Only the jobs the pod lead assigned to this
@@ -78,7 +79,7 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
       cell: (j) => (
         <span className="inline-flex items-center gap-2">
           <CategoryBadge letter={j.category} />
-          <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesWord(j.minutes)}</span>
+          <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(j.minutes)}</span>
         </span>
       ),
     },

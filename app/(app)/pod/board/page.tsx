@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { isOpenJob, jobState, loadWord, minutesWord } from "@/core";
+import { isOpenJob, jobState, loadWord } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { requireTeam } from "@/lib/work/team";
 
 import { assignDesignerAction } from "../../orders/actions";
 import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * P5 — the team board (docs/design): who is working on what. Paid orders
@@ -172,7 +173,7 @@ function JobCard({ job, children }: { job: PodJob; children: React.ReactNode }) 
       </Link>
       <span className="flex items-center gap-2">
         <CategoryBadge letter={job.category} />
-        <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(job.minutes)}</span>
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <span className="tabular font-mono text-[length:var(--fs-1)] text-muted-foreground">{job.order_ref}</span>
       </span>
       {children}

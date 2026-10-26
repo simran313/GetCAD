@@ -48,10 +48,14 @@ export function ChecklistRow({
         signoff && "border-t border-t-foreground pt-[var(--s-3)]",
       )}
     >
-      <span className="tabular font-mono text-[length:var(--fs-1)] text-muted-foreground">{String(index).padStart(2, "0")}</span>
+      <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">{index}</span>
       <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)]">
         {label}
-        {flag && <span className="ml-2 font-mono text-[length:var(--fs-2)] text-muted-foreground">{flag}</span>}
+        {flag && (
+          <span className="ml-2 inline-flex rounded-[var(--r-full)] border border-[color:var(--border-strong)] px-2 align-[1px] text-[length:var(--fs-1)] font-medium leading-5">
+            {flag.charAt(0).toUpperCase() + flag.slice(1).toLowerCase()}
+          </span>
+        )}
       </span>
       {designer}
       {qc}

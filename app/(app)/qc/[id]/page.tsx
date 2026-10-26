@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { minutesWord, mmWord, rupeesWord } from "@/core";
+import { mmWord, rupeesWord } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -28,6 +28,7 @@ import { AutoRefresh } from "../../orders/AutoRefresh";
 import { addWaiverAction, qcDecisionAction, recordMeasurementsAction } from "../../orders/actions";
 import type { ChecklistRow } from "../../orders/WorkPanels";
 import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * P2 — QC review (docs/design). The designer's files for this version (and
@@ -110,7 +111,7 @@ export default async function QcReviewPage({
       />
       <div className="flex flex-wrap items-center gap-3">
         <CategoryBadge letter={job.category} />
-        <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(job.minutes)}</span>
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <StatusBadge status={job.status} />
         {job.sla_due_at && job.status === "QC_REVIEW" && <Timer dueAt={job.sla_due_at} label="First look due" />}
       </div>

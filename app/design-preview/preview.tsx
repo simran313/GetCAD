@@ -137,7 +137,7 @@ export function Preview() {
             ))}
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]"><p className="font-medium">Resting · e-1</p><p className="text-[14px] text-muted-foreground">Cards, rows, inputs</p></div>
+            <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]"><p className="font-medium">Resting · e-1</p><p className="text-[14px] text-muted-foreground">Cards, rows, inputs</p></div>
             <div className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-2)]"><p className="font-medium">Lifted · e-2</p><p className="text-[14px] text-muted-foreground">Menus, sheets, dialogs</p></div>
             <div className="group rounded-[var(--r-lg)] border border-border bg-card p-5 transition-transform duration-[var(--dur-base)] ease-out hover:-translate-y-1"><p className="font-medium">Motion · 200ms</p><p className="text-[14px] text-muted-foreground">Hover me</p></div>
           </div>

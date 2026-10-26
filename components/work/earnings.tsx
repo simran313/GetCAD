@@ -1,7 +1,7 @@
 import { Banknote } from "lucide-react";
 import Link from "next/link";
 
-import { minutesWord, rupeesWord } from "@/core";
+import { rupeesWord } from "@/core";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -12,6 +12,7 @@ import { StatusTag } from "@/components/ui/status-tag";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { productWord } from "@/lib/client/orders";
 import { when, type Earning } from "@/lib/work/load";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * D6 / P4 — earnings (docs/design). What the caller is owed and was paid,
@@ -85,7 +86,7 @@ export function EarningsView({
                     </span>
                     <span className="flex items-center gap-2">
                       <CategoryBadge letter={r.category} />
-                      <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesWord(r.minutes)}</span>
+                      <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(r.minutes)}</span>
                     </span>
                     <span className="tabular font-mono text-[length:var(--fs-3)]">{rupeesWord(r.amount_paise)}</span>
                     <StatusTag kind={STATE[r.status].kind}>{STATE[r.status].word}</StatusTag>

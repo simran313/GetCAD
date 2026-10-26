@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/ui/page-header";
@@ -6,7 +7,8 @@ import { redirect } from "next/navigation";
 
 import { paiseToRupees } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { exportPayoutsAction, markBatchPaidAction } from "./actions";
@@ -62,8 +64,8 @@ export default async function PayoutsPage() {
   if (error) {
     return (
       <Page>
-        <h1 className="text-[length:var(--fs-6)] font-semibold tracking-[var(--ls-6)]">Payouts</h1>
-        <ErrorPanel title="Not available to your role" message={error.message} className="mt-4" />
+        <PageHeader title="Payouts" />
+        <ErrorPanel title="Not available to your role" message={error.message} />
       </Page>
     );
   }
@@ -79,18 +81,17 @@ export default async function PayoutsPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Designer and QC pay"
         title="Payouts"
         description="Designer and QC pay, owed when an order closes. Export, pay by bank transfer, then mark the batch paid."
       />
 
-      <section className="mt-6 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)]">
+      <section className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-[length:var(--fs-4)] font-medium">Owed</h2>
-          <span className="tabular font-mono">{rupees(sum(owed))}</span>
+          <h2 className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">Owed</h2>
+          <span className="tabular text-[length:var(--fs-4)] font-semibold">{rupees(sum(owed))}</span>
         </div>
         {owed.length === 0 ? (
-          <p className={`mt-2 ${small}`}>Nothing owed.</p>
+          <EmptyState icon={<CircleCheck />} title="Nothing owed" description="Pay is added here when an order closes." className="py-8" />
         ) : (
           <ul className="mt-2 divide-y divide-border">
             {owed.map((r) => (
@@ -102,7 +103,7 @@ export default async function PayoutsPage() {
                   </Link>
                   <span className={`ml-2 ${small}`}>{bankLabel(r.bank_status)}</span>
                 </span>
-                <span className="tabular font-mono">{rupees(r.amount_paise)}</span>
+                <span className="tabular font-medium">{rupees(r.amount_paise)}</span>
               </li>
             ))}
           </ul>
@@ -124,11 +125,11 @@ export default async function PayoutsPage() {
         return (
           <section
             key={batch}
-            className="mt-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)]"
+            className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="font-mono text-[length:var(--fs-3)]">{batch}</h2>
-              <span className="tabular font-mono">{rupees(sum(items))}</span>
+              <span className="tabular font-semibold">{rupees(sum(items))}</span>
             </div>
             <p className={small}>
               {items.length} payment{items.length === 1 ? "" : "s"} ·{" "}
@@ -137,16 +138,13 @@ export default async function PayoutsPage() {
                 : `paid ${items[0]!.paid_at ? when(items[0]!.paid_at) : ""}`}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a
-                href={`/admin/payouts/${batch}`}
-                className="rounded-md border border-border px-3 py-1.5 text-[length:var(--fs-3)] hover:bg-accent"
-              >
+              <a href={`/admin/payouts/${batch}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
                 Download CSV
               </a>
               {open && (
                 <form action={markBatchPaidAction}>
                   <input type="hidden" name="batch" value={batch} />
-                  <Button type="submit" size="sm" variant="outline">
+                  <Button type="submit" size="sm" variant="secondary">
                     Mark batch paid
                   </Button>
                 </form>

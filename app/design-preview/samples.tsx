@@ -221,7 +221,7 @@ export function ClientSample() {
       </header>
       <main className="mx-auto max-w-3xl space-y-6 px-4 pb-28 pt-6">
         <PageHeader eyebrow="Meera Jewels (sample)" title="Good morning" description="One design is ready for you to look at." actions={<Button>New order</Button>} />
-        <section className="rounded-[var(--r-lg)] border-2 border-foreground bg-card p-5 shadow-[var(--e-1)]">
+        <section className="rounded-[var(--r-lg)] border-2 border-foreground bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
           <div className="flex items-start justify-between gap-3">
             <div>
               <StatusPill tone="attention">Ready for you</StatusPill>

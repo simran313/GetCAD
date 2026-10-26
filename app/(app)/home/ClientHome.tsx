@@ -84,7 +84,7 @@ export function ClientHome({
                   const step = clientNextStep(o.id, o.status);
                   const price = o.status === "QUOTED" && o.price_total ? formatMoney(o.price_total, o.currency ?? "USD") : null;
                   return (
-                    <li key={o.id} className="flex flex-col gap-4 rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)] sm:flex-row sm:items-center">
+                    <li key={o.id} className="flex flex-col gap-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)] sm:flex-row sm:items-center">
                       <div className="min-w-0 flex-1">
                         <p className="text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">{step.headline}</p>
                         <p className="mt-0.5 text-[length:var(--fs-3)] text-muted-foreground">
@@ -105,7 +105,7 @@ export function ClientHome({
                 {unreadMessages.slice(0, 3).map((m, i) => {
                   const o = m.order_id ? byId.get(m.order_id) : undefined;
                   return (
-                    <li key={`m${i}`} className="flex flex-col gap-4 rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)] sm:flex-row sm:items-center">
+                    <li key={`m${i}`} className="flex flex-col gap-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)] sm:flex-row sm:items-center">
                       <div className="flex min-w-0 flex-1 items-start gap-3">
                         <MessageSquare className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
                         <div className="min-w-0">
@@ -166,7 +166,7 @@ export function ClientHome({
         </div>
 
         <aside className="min-w-0 space-y-4" aria-label="Your account">
-          <section className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]">
+          <section className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">Wallet</h2>
               <Link href="/wallet" className={buttonVariants({ variant: "ghost", size: "sm" })}>

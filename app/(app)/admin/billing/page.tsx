@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { Wallet } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -12,6 +13,8 @@ import { SectionLabel, Stats } from "@/components/work/stats";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { when } from "@/lib/work/load";
+import { ResponsiveDataList, type Column } from "@/components/ui/data-list";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
 
 /**
@@ -34,13 +37,44 @@ interface Movement {
 }
 
 const KIND_WORDS: Record<string, string> = {
-  HOLD: "Paid · held",
+  HOLD: "Paid",
   RELEASE: "Released",
   REFUND: "Refunded",
   PROCESSOR_FEE: "Processor fee",
   CHARGEBACK: "Chargeback",
   REVERSAL: "Reversal",
 };
+
+const signOf = (kind: string) => {
+  try {
+    return escrowSign(kind) > 0 ? "+" : "−";
+  } catch {
+    return "";
+  }
+};
+
+const movementColumns: Column<Movement>[] = [
+  { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)] text-muted-foreground", cell: (m) => when(m.created_at) },
+  {
+    key: "order",
+    header: "Order",
+    card: "title",
+    cell: (m) => (
+      <span className="block min-w-0">
+        <span className="tabular block font-mono">{m.order_ref ?? "—"}</span>
+        <span className="tabular block font-mono text-[length:var(--fs-2)] font-normal text-muted-foreground">{m.client_code ?? "—"}</span>
+      </span>
+    ),
+  },
+  { key: "kind", header: "Movement", card: "badge", className: "whitespace-nowrap", cell: (m) => KIND_WORDS[m.kind] ?? m.kind },
+  {
+    key: "amount",
+    header: "Amount",
+    align: "right",
+    className: "tabular whitespace-nowrap font-mono",
+    cell: (m) => `${signOf(m.kind)}${formatMoney(m.amount, m.currency)}`,
+  },
+];
 
 export default async function BillingPage() {
   const { userId } = await auth();
@@ -85,17 +119,17 @@ export default async function BillingPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Client money and team payouts"
         title="Billing"
+        description="Client money in, team payouts out, and late-order credits."
         actions={
-          <a href="https://dashboard.razorpay.com/app/payments" target="_blank" rel="noreferrer" className={buttonVariants({ variant: "outline" })}>
+          <a href="https://dashboard.razorpay.com/app/payments" target="_blank" rel="noreferrer" className={buttonVariants({ variant: "secondary" })}>
             Reconcile with Razorpay
           </a>
         }
       />
       <Stats
         items={[
-          [formatMoney(held, "USD"), "held in open orders"],
+          [formatMoney(held, "USD"), "paid on open orders"],
           [formatMoney(paidThisMonth, "USD"), "paid in this month"],
           [formatMoney(refunded, "USD"), "refunded this month"],
           [String(pendingCredits.length), "late credits to decide"],
@@ -105,49 +139,19 @@ export default async function BillingPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="space-y-3">
           <SectionLabel>Money movements · newest first</SectionLabel>
-          <Card className="overflow-x-auto">
-            {ledger.length === 0 ? (
-              <CardBody className="text-[length:var(--fs-3)] text-muted-foreground">No payments yet.</CardBody>
-            ) : (
-              <table className="w-full text-left text-[length:var(--fs-2)]">
-                <thead className="border-b border-border text-[length:var(--fs-2)] text-muted-foreground">
-                  <tr>
-                    {["Date", "Client", "Order", "Movement", "Amount"].map((h) => (
-                      <th key={h} className="px-[var(--s-4)] py-[var(--s-3)] font-normal">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledger.slice(0, 200).map((m) => {
-                    let sign = "";
-                    try {
-                      sign = escrowSign(m.kind) > 0 ? "+" : "−";
-                    } catch {
-                      sign = "";
-                    }
-                    return (
-                      <tr key={m.id} className="border-b border-border last:border-b-0">
-                        <td className="px-[var(--s-4)] py-[var(--s-3)] text-muted-foreground">{when(m.created_at)}</td>
-                        <td className="tabular px-[var(--s-4)] py-[var(--s-3)] font-mono">{m.client_code ?? "—"}</td>
-                        <td className="tabular px-[var(--s-4)] py-[var(--s-3)] font-mono">
-                          <Link href={`/orders/${m.order_id}`} className="hover:underline">
-                            {m.order_ref ?? "—"}
-                          </Link>
-                        </td>
-                        <td className="px-[var(--s-4)] py-[var(--s-3)]">{KIND_WORDS[m.kind] ?? m.kind}</td>
-                        <td className="tabular px-[var(--s-4)] py-[var(--s-3)] text-right font-mono">
-                          {sign}
-                          {formatMoney(m.amount, m.currency)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </Card>
+          <ResponsiveDataList
+            caption="Money movements"
+            columns={movementColumns}
+            rows={ledger.slice(0, 200)}
+            rowKey={(m) => m.id}
+            rowHref={(m) => `/orders/${m.order_id}`}
+            linkKey="order"
+            empty={
+              <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
+                <EmptyState icon={<Wallet />} title="No payments yet" description="Card payments and transfers you mark received appear here." />
+              </div>
+            }
+          />
         </section>
 
         <aside className="space-y-4">
@@ -157,12 +161,12 @@ export default async function BillingPage() {
             </CardHeader>
             <CardBody className="space-y-2 text-[length:var(--fs-3)]">
               <p>
-                <span className="tabular font-mono">{rupeesWord(owedPaise)}</span> owed, not yet exported
+                <span className="tabular font-semibold">{rupeesWord(owedPaise)}</span> owed, not yet exported
               </p>
               <p className="text-muted-foreground">
-                <span className="tabular font-mono">{rupeesWord(sentPaise)}</span> exported to the bank file
+                <span className="tabular font-semibold">{rupeesWord(sentPaise)}</span> exported to the bank file
               </p>
-              <Link href="/admin/payouts" className={`${buttonVariants({ variant: "outline", size: "sm" })} w-full`}>
+              <Link href="/admin/payouts" className={`${buttonVariants({ variant: "secondary", size: "sm" })} w-full`}>
                 Payouts
               </Link>
             </CardBody>
@@ -176,7 +180,7 @@ export default async function BillingPage() {
               <p className="text-muted-foreground">
                 {formatMoney(pendingCredits.reduce((s, c) => s + c.amount_cents, 0), "USD")} waiting for a decision.
               </p>
-              <Link href="/admin/credits" className={`${buttonVariants({ variant: "outline", size: "sm" })} w-full`}>
+              <Link href="/admin/credits" className={`${buttonVariants({ variant: "secondary", size: "sm" })} w-full`}>
                 Credits
               </Link>
             </CardBody>

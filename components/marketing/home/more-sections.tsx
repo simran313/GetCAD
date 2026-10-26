@@ -106,7 +106,7 @@ export function TeamStrip() {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {CLAIMS.TEAM.value.map((p, i) => (
-        <li key={i} className="rounded-[var(--r-xl)] border border-border bg-card p-5 shadow-[var(--e-1)]">
+        <li key={i} className="rounded-[var(--r-xl)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
           <span aria-hidden className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-[15px] font-semibold text-muted-foreground">{p.role === "Master QC" ? "QC" : "CAD"}</span>
           <p className="mt-4 text-[17px] font-semibold">{p.role}</p>
           <p className="mt-0.5 text-[15px] text-muted-foreground">
