@@ -57,7 +57,7 @@ export default async function TeamBoardPage() {
         title="Team board"
         description={`Shift 9:30 AM–6:30 PM IST · ${shift} minutes per designer. Going over warns; capacity blocking is off.`}
         actions={
-          <Link href="/admin/new-order" className={buttonVariants()}>
+          <Link href="/admin/new-order" className={buttonVariants({ variant: "secondary" })}>
             Create order
           </Link>
         }

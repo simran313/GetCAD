@@ -1,9 +1,12 @@
+import { Banknote } from "lucide-react";
 import Link from "next/link";
 
 import { minutesWord, rupeesWord } from "@/core";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
 import { SectionLabel, Stats } from "@/components/work/stats";
@@ -57,17 +60,15 @@ export function EarningsView({
     [rupeesWord(sum(rows.filter((r) => r.status === "owed"))), "owed, not yet sent"],
   ];
   return (
-    <main className="container max-w-5xl space-y-8 py-8">
-      <PageHeader eyebrow={eyebrow} title="Earnings" />
+    <Page>
+      <PageHeader title="Earnings" description={eyebrow} />
       <Stats items={stats} />
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="space-y-3">
           <SectionLabel>Paid per job, after the order closes</SectionLabel>
           <Card>
             {rows.length === 0 ? (
-              <CardBody className="text-[length:var(--fs-3)] text-muted-foreground">
-                Nothing yet. Each job is added here when its order closes.
-              </CardBody>
+              <EmptyState icon={<Banknote />} title="Nothing earned yet" description="Each job is added here when its order closes." className="py-8" />
             ) : (
               <ul>
                 {rows.map((r) => (
@@ -84,7 +85,7 @@ export function EarningsView({
                     </span>
                     <span className="flex items-center gap-2">
                       <CategoryBadge letter={r.category} />
-                      <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(r.minutes)}</span>
+                      <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesWord(r.minutes)}</span>
                     </span>
                     <span className="tabular font-mono text-[length:var(--fs-3)]">{rupeesWord(r.amount_paise)}</span>
                     <StatusTag kind={STATE[r.status].kind}>{STATE[r.status].word}</StatusTag>
@@ -136,6 +137,6 @@ export function EarningsView({
           </Card>
         </aside>
       </div>
-    </main>
+    </Page>
   );
 }
