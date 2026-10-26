@@ -42,6 +42,17 @@ const PRODUCT_WORDS: Record<string, string> = {
   CAD_MODEL: "New piece",
 };
 
+/**
+ * The name a job gets until its client names it: "Ring · 18K yellow".
+ * Built from the brief, so it always says what the piece is.
+ */
+export function briefName(spec: { product?: string | null; karatage?: string | null; metal?: string | null } | null): string {
+  if (!spec?.product) return "Untitled brief";
+  const metal = spec.metal ? spec.metal.replace(/_/g, " ").toLowerCase() : "";
+  const alloy = [spec.karatage?.trim(), metal].filter(Boolean).join(" ");
+  return [productWord(spec.product), alloy].filter(Boolean).join(" · ");
+}
+
 export function productWord(product: string | null | undefined): string {
   if (!product) return "New piece";
   return PRODUCT_WORDS[product.toUpperCase()] ?? product;

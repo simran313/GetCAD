@@ -29,7 +29,7 @@ const choose = (page: Page, legend: string, option: string) =>
 test("a client sends a CAD brief", async ({ browser }) => {
   const page = await signedIn(browser, "client");
   await page.goto("/orders/new");
-  await page.getByRole("button", { name: "Start a CAD brief" }).click();
+  await page.getByRole("button", { name: /^CAD design/ }).click();
   await page.waitForURL(/\/orders\/[^/]+\/brief$/);
   orderId = orderIdFrom(page.url());
   writeFileSync(join(E2E_DIR, "journey.json"), JSON.stringify({ orderId }));

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateId } from "@/core";
+import { ORDER_FILES_BUCKET } from "@/config/supabase";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 /**
@@ -28,20 +30,171 @@ export async function startBriefAction(formData?: FormData): Promise<void> {
   const ensured = await supabase.rpc("ensure_self");
   if (ensured.error) throw new Error(ensured.error.message);
 
+  // An untouched draft of the same kind is reused rather than adding another
+  // empty one to the list each time "New order" is pressed.
+  const reuse = await emptyDraft(supabase, service);
+  if (reuse) redirect(`/orders/${reuse}/brief`);
+
+  const id = await newDraft(supabase, service);
+  // The funnel (Phase 6, 0049). Best effort: a lost event never blocks an order.
+  await supabase.rpc("record_marketing_event", { p_event: "brief_started", p_order_id: id, p_props: { service } });
+  redirect(`/orders/${id}/brief`);
+}
+
+type Supabase = Awaited<ReturnType<typeof createUserSupabaseClient>>;
+
+async function newDraft(supabase: Supabase, service: "cad" | "render"): Promise<string> {
   const id = generateId();
-  const { error } = await supabase.rpc("create_order", {
-    p_id: id,
-    p_product_type: "CAD_MODEL",
-    p_currency: "USD",
-  });
+  const { error } = await supabase.rpc("create_order", { p_id: id, p_product_type: "CAD_MODEL", p_currency: "USD" });
   if (error) throw new Error(error.message);
   if (service === "render") {
     const { error: serviceError } = await supabase.rpc("set_order_service", { p_order_id: id, p_service: "render" });
     if (serviceError) throw new Error(serviceError.message);
   }
-  // The funnel (Phase 6, 0049). Best effort: a lost event never blocks an order.
-  await supabase.rpc("record_marketing_event", { p_event: "brief_started", p_order_id: id, p_props: { service } });
-  redirect(`/orders/${id}/brief`);
+  return id;
+}
+
+/** The caller's newest draft of this service with no brief and no pictures. */
+async function emptyDraft(supabase: Supabase, service: "cad" | "render"): Promise<string | null> {
+  const { data } = await supabase
+    .rpc("visible_orders")
+    .select("id, status, service, relation, created_at")
+    .eq("status", "DRAFT")
+    .eq("relation", "CLIENT")
+    .order("created_at", { ascending: false });
+  const drafts = ((data ?? []) as { id: string; service: string | null }[]).filter((d) => (d.service ?? "cad") === service);
+  if (drafts.length === 0) return null;
+  const ids = drafts.map((d) => d.id);
+  const [specs, images] = await Promise.all([
+    supabase.from("order_specs").select("order_id").in("order_id", ids),
+    supabase.from("order_reference_images").select("order_id").in("order_id", ids),
+  ]);
+  const used = new Set([...(specs.data ?? []), ...(images.data ?? [])].map((r) => (r as { order_id: string }).order_id));
+  return drafts.find((d) => !used.has(d.id))?.id ?? null;
+}
+
+/**
+ * Start from a past order: a new draft with the same brief, accent stones,
+ * pictures and the marks on them, opened on Review so a repeat order is one
+ * check and one tap. Built from the same functions the wizard uses, as the
+ * client (ownership and RLS apply); pictures are copied under the new order
+ * (they were cleaned when first uploaded). Not create_change_order: that is a
+ * change to an approved design, linked to it and sent at once.
+ */
+export async function duplicateBriefAction(formData: FormData): Promise<void> {
+  const fromId = formData.get("from_order_id")?.toString() ?? "";
+  const supabase = await createUserSupabaseClient();
+
+  const { data: from } = await supabase
+    .rpc("visible_orders", { p_order_id: fromId })
+    .select("id, relation, service")
+    .maybeSingle();
+  const source = from as { id: string; relation: string; service: string | null } | null;
+  if (!source || source.relation !== "CLIENT") throw new Error("order not found");
+
+  const [specRes, accentsRes, imagesRes] = await Promise.all([
+    supabase.from("order_specs").select("*").eq("order_id", fromId).maybeSingle(),
+    supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", fromId).order("position"),
+    supabase
+      .from("order_reference_images")
+      .select("id, object_key, content_type, size_bytes, is_primary, position, order_reference_pins(x_bp, y_bp, label, position)")
+      .eq("order_id", fromId)
+      .order("position"),
+  ]);
+  const spec = specRes.data as Record<string, string | number | boolean | null> | null;
+  if (!spec) throw new Error("that order has no brief to copy");
+
+  const service = source.service === "render" ? "render" : "cad";
+  const id = await newDraft(supabase, service);
+
+  const v = (k: string) => spec[k] ?? null;
+  const { error } = await supabase.rpc("upsert_order_spec", {
+    p_order_id: id,
+    p_reference_name: v("reference_name") ?? "",
+    p_product: v("product"),
+    p_metal: v("metal"),
+    p_karatage: v("karatage") ?? "",
+    p_purpose: v("purpose") ?? "CASTING",
+    p_format: v("format") ?? "BOTH",
+    p_finish: v("finish") ?? "HIGH_POLISH",
+    p_has_centre_stone: !!spec.has_centre_stone,
+    p_centre_shape: v("centre_shape"),
+    p_centre_length_um: v("centre_length_um"),
+    p_centre_width_um: v("centre_width_um"),
+    p_centre_depth_um: v("centre_depth_um"),
+    p_centre_carat_mct: v("centre_carat_mct"),
+    p_centre_certified: !!spec.centre_certified,
+    p_centre_quantity: v("centre_quantity") ?? 0,
+    p_centre_setting: v("centre_setting"),
+    p_stones_supplied_by: v("stones_supplied_by") ?? "NONE",
+    p_component_count: v("component_count") ?? 1,
+    p_render_views: v("render_views") ?? 0,
+    p_priority: "STANDARD",
+    p_based_on_order_id: null,
+    p_change_summary: null,
+    p_notes: v("notes"),
+    p_ring_size: v("ring_size"),
+    p_inner_circumference_um: v("inner_circumference_um"),
+    p_inner_diameter_um: v("inner_diameter_um"),
+    p_length_um: v("length_um"),
+  });
+  if (error) throw new Error(error.message);
+
+  const accents = (accentsRes.data ?? []) as { shape: string; width_um: number; quantity: number; setting: string }[];
+  if (accents.length > 0) {
+    const { error: accentError } = await supabase.rpc("set_order_accents", {
+      p_order_id: id,
+      p_shapes: accents.map((a) => a.shape),
+      p_widths_um: accents.map((a) => a.width_um),
+      p_quantities: accents.map((a) => a.quantity),
+      p_settings: accents.map((a) => a.setting),
+    });
+    if (accentError) throw new Error(accentError.message);
+  }
+
+  // The rows above were read under RLS; the service role only moves those bytes.
+  const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
+  type Img = {
+    object_key: string;
+    content_type: string;
+    size_bytes: number;
+    is_primary: boolean;
+    order_reference_pins: { x_bp: number; y_bp: number; label: string; position: number }[] | null;
+  };
+  for (const img of (imagesRes.data ?? []) as Img[]) {
+    const { data: signed } = await storage.createSignedUrl(img.object_key, 60);
+    if (!signed?.signedUrl) continue;
+    const res = await fetch(signed.signedUrl);
+    if (!res.ok) continue;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    const ext = img.object_key.split(".").pop() ?? "jpg";
+    const key = `${id}/refs/${generateId()}.${ext}`;
+    const up = await storage.upload(key, bytes, { contentType: img.content_type, upsert: false });
+    if (up.error) continue;
+    const { data: imageId, error: imageError } = await supabase.rpc("add_reference_image", {
+      p_order_id: id,
+      p_object_key: key,
+      p_content_type: img.content_type,
+      p_size_bytes: img.size_bytes,
+    });
+    if (imageError || !imageId) {
+      await storage.remove([key]);
+      continue;
+    }
+    const pins = (img.order_reference_pins ?? []).slice().sort((a, b) => a.position - b.position);
+    if (pins.length > 0) {
+      await supabase.rpc("set_reference_pins", {
+        p_image_id: imageId,
+        p_xs: pins.map((p) => p.x_bp),
+        p_ys: pins.map((p) => p.y_bp),
+        p_labels: pins.map((p) => p.label),
+      });
+    }
+    if (img.is_primary) await supabase.rpc("set_primary_reference", { p_image_id: imageId });
+  }
+
+  await supabase.rpc("record_marketing_event", { p_event: "brief_started", p_order_id: id, p_props: { service, from: "past_order" } });
+  redirect(`/orders/${id}/brief/review`);
 }
 
 /** Numeric form fields arrive as strings or empty; empty means "not answered". */
