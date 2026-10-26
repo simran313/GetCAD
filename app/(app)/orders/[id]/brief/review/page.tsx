@@ -106,7 +106,7 @@ export default async function ReviewBriefPage({ params }: { params: Promise<{ id
             Send for a price
           </Button>
         </form>
-        <Link href={`/orders/${id}/brief`} className={buttonVariants({ variant: "outline", size: "lg" })}>
+        <Link href={`/orders/${id}/brief`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
           Back to edit
         </Link>
       </div>

@@ -599,7 +599,7 @@ export function BriefWizard({
         ) : null}
         {/* Saving is always available, from any step: a partly-finished brief is
             worth keeping. Review shows what is still missing before sending. */}
-        <Button type="submit" name="intent" value="save" variant="outline" className="min-h-[var(--ctl)] flex-1 md:flex-none">
+        <Button type="submit" name="intent" value="save" variant="secondary" className="min-h-[var(--ctl)] flex-1 md:flex-none">
           Save draft
         </Button>
         <Button
@@ -641,7 +641,7 @@ function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]
       <h2 className="mt-0.5 text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)] tracking-[var(--ls-5)]">
         {STEPS[step]}
       </h2>
-      <div className="mt-3 flex gap-1" role="tablist" aria-label="Brief steps">
+      <div className="mt-2 flex gap-1" role="tablist" aria-label="Brief steps">
         {STEPS.map((s, i) => (
           <button
             key={s}
@@ -651,8 +651,9 @@ function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]
             aria-label={s}
             onClick={() => onPick(i)}
             className={cn(
-              "h-1 flex-1 rounded-[var(--r-full)] transition-colors duration-[var(--dur-fast)]",
-              i <= step ? "bg-primary" : "bg-muted",
+              // A 24px tap target around a 4px bar.
+              "relative h-6 flex-1 before:absolute before:inset-x-0 before:top-1/2 before:h-1 before:-translate-y-1/2 before:rounded-[var(--r-full)] before:transition-colors before:duration-[var(--dur-fast)]",
+              i <= step ? "before:bg-primary" : "before:bg-muted",
             )}
           />
         ))}
