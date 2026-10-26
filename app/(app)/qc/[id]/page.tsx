@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { minutesWord, mmWord, rupeesWord } from "@/core";
+import { mmWord, rupeesWord } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { AutoRefresh } from "../../orders/AutoRefresh";
 import { addWaiverAction, qcDecisionAction, recordMeasurementsAction } from "../../orders/actions";
 import type { ChecklistRow } from "../../orders/WorkPanels";
+import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * P2 — QC review (docs/design). The designer's files for this version (and
@@ -56,12 +58,12 @@ export default async function QcReviewPage({
   const [job] = await loadPodJobs(supabase, id).catch(() => []);
   if (!job) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <Link href="/qc" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
           ← QC queue
         </Link>
         <Card className="mt-6 p-[var(--s-10)] text-center text-[length:var(--fs-3)]">This order is not in your pod.</Card>
-      </main>
+      </Page>
     );
   }
   const version = Math.min(Math.max(Number(v) || job.work_version, 1), job.work_version);
@@ -94,7 +96,7 @@ export default async function QcReviewPage({
   const lines = briefLines(specRes.data as BriefRow | null, (accentsRes.data ?? []) as AccentLine[]);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <Link href="/qc" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← QC queue
       </Link>
@@ -109,7 +111,7 @@ export default async function QcReviewPage({
       />
       <div className="flex flex-wrap items-center gap-3">
         <CategoryBadge letter={job.category} />
-        <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(job.minutes)}</span>
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <StatusBadge status={job.status} />
         {job.sla_due_at && job.status === "QC_REVIEW" && <Timer dueAt={job.sla_due_at} label="First look due" />}
       </div>
@@ -152,7 +154,7 @@ export default async function QcReviewPage({
                             alt={`${f.slot} view`}
                             className="aspect-square w-full rounded-[var(--r-sm)] border border-border bg-subtle object-cover"
                           />
-                          <span className="block font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em]">{f.slot}</span>
+                          <span className="block font-mono text-[length:var(--fs-2)]">{f.slot}</span>
                         </a>
                       </li>
                     ))}
@@ -162,7 +164,7 @@ export default async function QcReviewPage({
                       {others.map((f) => (
                         <li key={f.slot} className="flex items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
                           <span className="min-w-0">
-                            <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em]">{f.slot}</span>{" "}
+                            <span className="font-mono text-[length:var(--fs-2)]">{f.slot}</span>{" "}
                             <span className="truncate font-mono text-[length:var(--fs-2)] text-muted-foreground">{f.file_name}</span>
                           </span>
                           <a href={`/api/files/${f.file_version_id}`} className="text-[length:var(--fs-2)] underline underline-offset-4">
@@ -181,7 +183,7 @@ export default async function QcReviewPage({
             <Card as="section">
               <CardHeader>
                 <CardTitle>Decision</CardTitle>
-                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   Pass unlocks at 19 / 19{isCad ? " + measurements" : ""}
                   {job.qc_payout_paise ? ` · your QC payout ${rupeesWord(job.qc_payout_paise)}` : ""}
                   {job.price_total ? ` (${formatMoney(job.price_total, job.currency ?? "USD")} order)` : ""}
@@ -214,7 +216,7 @@ export default async function QcReviewPage({
             <Card as="section">
               <CardHeader>
                 <CardTitle>Measured specification</CardTitle>
-                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   {m ? `Recorded · v${vs?.version}` : "Needed to pass"} · goes on the certificate
                 </span>
               </CardHeader>
@@ -361,6 +363,6 @@ export default async function QcReviewPage({
         </aside>
       </div>
       <AutoRefresh orderId={id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
-    </main>
+    </Page>
   );
 }

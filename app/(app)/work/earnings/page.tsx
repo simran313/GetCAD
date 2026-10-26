@@ -1,12 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { minutesWord, rupeesWord } from "@/core";
+import { rupeesWord } from "@/core";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { ErrorPanel } from "@/components/error-panel";
 import { EarningsView, type Bank } from "@/components/work/earnings";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadEarnings } from "@/lib/work/load";
+import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /** D6 — the designer's earnings and bank (docs/design). */
 export const dynamic = "force-dynamic";
@@ -27,7 +29,7 @@ export default async function DesignerEarningsPage() {
       label: (
         <>
           <CategoryBadge letter={c.letter} />
-          <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(c.minutes)}</span>
+          <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(c.minutes)}</span>
         </>
       ),
       amount: rupeesWord(c.designer_rate_paise),
@@ -44,9 +46,9 @@ export default async function DesignerEarningsPage() {
     );
   } catch (e) {
     return (
-      <main className="container max-w-5xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load your earnings" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
 }

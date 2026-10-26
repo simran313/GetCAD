@@ -1,16 +1,23 @@
-import { statusKind, statusMeta } from "@/core";
-import { StatusTag } from "@/components/ui/status-tag";
+import { statusMeta } from "@/core";
+import { StatusPill, type PillTone } from "@/components/ui/status-pill";
 
-/**
- * The order status, as the mockups draw it (docs/design): one of four tags —
- * solid black when someone must act, outlined while in flight, a tick when
- * done, grey otherwise. Which status is which lives in core/orders/status
- * (statusKind); the label is always present, so nothing rests on shade alone.
- */
+/** An order status as a StatusPill, from core/orders/status (label and tone). */
+const TONE: Record<string, PillTone> = {
+  neutral: "neutral",
+  info: "info",
+  attention: "attention",
+  success: "success",
+  danger: "danger",
+};
+
+/** Ended without landing: shown quietly. Red is kept for what needs action (Disputed). */
+const QUIET = new Set(["REFUNDED", "CANCELLED"]);
+
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  const meta = statusMeta(status);
   return (
-    <StatusTag kind={statusKind(status)} className={className}>
-      {statusMeta(status).label}
-    </StatusTag>
+    <StatusPill tone={QUIET.has(status) ? "neutral" : (TONE[meta.tone] ?? "neutral")} className={className}>
+      {meta.label}
+    </StatusPill>
   );
 }

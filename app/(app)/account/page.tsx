@@ -1,14 +1,17 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { SignOutButton } from "@clerk/nextjs";
+import { ChevronRight, KeyRound, LogOut, Wallet } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { partyLabel } from "@/components/domain";
 import { InstallHint } from "@/components/pwa/install-hint";
 import { PushOptIn } from "@/components/pwa/push-opt-in";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { CopyableID } from "@/components/ui/copyable-id";
+import { FilePicker } from "@/components/ui/file-picker";
+import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatusPill } from "@/components/ui/status-pill";
 import { pushIsConfiguredForBrowser } from "@/config/push";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -31,8 +34,31 @@ import { ClientProfileForm, type ClientProfile } from "./ClientProfileForm";
  * screen for editing something nobody can see. What people actually need is
  * their role (which explains why the rest of the app looks the way it does) and
  * the settings that have real consequences.
+ *
+ * Redesign: identity first (name, roles as chips, status, reference), then
+ * the client's business and logo, sign-in and security, notifications, and
+ * Sign out as a real button. Left-aligned on the page width like every
+ * other screen.
  */
 export const dynamic = "force-dynamic";
+
+// The viewer's own roles, in the words the rest of the app uses.
+const ROLE_WORD: Record<string, string> = {
+  CLIENT: "Client",
+  DESIGNER: "Designer",
+  QC: "Pod lead",
+  OPS: "Ops",
+  SALES: "Sales",
+  FINANCE: "Finance",
+};
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("") || "?";
 
 export default async function AccountPage() {
   const { userId } = await auth();
@@ -47,6 +73,7 @@ export default async function AccountPage() {
 
   const role: string = data?.role ?? "CLIENT";
   const status: string = data?.status ?? "PENDING";
+  const roles = [role, ...((grants ?? []) as { role: string }[]).map((g) => g.role).filter((r) => r !== role)];
 
   // Read here rather than in the client component: an unconfigured deployment
   // should show nothing at all, not a button that fails when pressed.
@@ -68,124 +95,131 @@ export default async function AccountPage() {
     ? ((await createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET).createSignedUrl(logoKey, 60 * 15)).data?.signedUrl ?? null)
     : null;
 
+  // The viewer's own name, from their own profile row (the shell does the same).
+  let name: string | null = null;
+  if (isClient) {
+    const p = profile as { business_name?: string | null; legal_name?: string | null } | null;
+    name = p?.business_name || p?.legal_name || null;
+  } else if (role === "DESIGNER") {
+    const { data: d } = await supabase.from("designer_profiles").select("legal_name").eq("user_id", userId).maybeSingle();
+    name = (d as { legal_name?: string | null } | null)?.legal_name ?? null;
+  } else {
+    const { data: st } = await supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle();
+    name = (st as { first_name?: string | null } | null)?.first_name ?? null;
+  }
+  const clientCode = (account as { client_code?: string } | null)?.client_code ?? null;
+
   return (
-    <main className="container max-w-2xl py-8">
-      <PageHeader
-        eyebrow={(account as { client_code?: string } | null)?.client_code ? `Client code ${(account as { client_code: string }).client_code}` : undefined}
-        title="Account"
-      />
+    <Page form>
+      <PageHeader title="Account" description="Who you are signed in as, and the settings that are yours." />
+
+      <section aria-label="Your identity" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+        <div className="flex items-start gap-4">
+          <span aria-hidden className="flex size-14 shrink-0 items-center justify-center rounded-full bg-foreground text-[length:var(--fs-4)] font-semibold text-background">
+            {initials(name ?? ROLE_WORD[role] ?? "")}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)] tracking-[var(--ls-5)]">{name ?? "Your account"}</p>
+            {email && <p className="truncate text-[length:var(--fs-3)] text-muted-foreground">{email}</p>}
+            <ul className="mt-3 flex flex-wrap items-center gap-2" aria-label="Roles">
+              {roles.map((r) => (
+                <li key={r} className="rounded-[var(--r-full)] border border-[color:var(--border-strong)] px-2.5 text-[length:var(--fs-2)] leading-7">
+                  {ROLE_WORD[r] ?? r}
+                </li>
+              ))}
+              <li>
+                <StatusPill tone={status === "ACTIVE" ? "success" : status === "SUSPENDED" ? "attention" : "neutral"}>
+                  {status === "ACTIVE" ? "Active" : status === "SUSPENDED" ? "Suspended" : "Pending"}
+                </StatusPill>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <dl className="mt-5 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+          {clientCode && (
+            <div>
+              <dt className="sr-only">Client code</dt>
+              <dd className="text-[length:var(--fs-2)] text-muted-foreground">
+                Client code <span className="tabular block font-mono text-[length:var(--fs-3)] text-foreground">{clientCode}</span>
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt className="text-[length:var(--fs-2)] text-muted-foreground">Account reference</dt>
+            <dd>
+              <CopyableID value={userId} label="account reference" className="-ml-1.5 text-[length:var(--fs-3)]" />
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">Quote it if you contact us. It identifies you without naming you.</p>
+            </dd>
+          </div>
+        </dl>
+      </section>
 
       {isClient && (
-        <Card as="section" className="mt-6">
-          <CardHeader>
-            <CardTitle>Your business</CardTitle>
-          </CardHeader>
-          <CardBody>
+        <section aria-labelledby="acc-business" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+          <h2 id="acc-business" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
+            Your business
+          </h2>
+          <div className="mt-4">
             <ClientProfileForm profile={profile as ClientProfile | null} email={email} next="/account" submitLabel="Save" askHeardAbout={!profile} />
-          </CardBody>
-        </Card>
+          </div>
+        </section>
       )}
 
       {isClient && (
-        <Card as="section" className="mt-6">
-          <CardHeader>
-            <CardTitle>Your logo</CardTitle>
-          </CardHeader>
-          <CardBody className="space-y-3 text-[length:var(--fs-2)]">
-            <p className="text-muted-foreground">Shown on the 3D preview links you send your customers. PNG or JPEG, up to 2 MB.</p>
-            {logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element -- a short-lived signed URL
-              <img src={logoUrl} alt="Your logo" className="h-12 w-auto rounded-[var(--r-sm)] border border-border bg-background p-1" />
-            )}
-            <form action={uploadLogoAction} className="flex flex-wrap items-center gap-2">
-              <input type="file" name="logo" accept="image/png,image/jpeg" required aria-label="Logo file" />
-              <Button type="submit" size="sm" variant="outline">
-                {logoUrl ? "Replace" : "Upload"}
-              </Button>
-            </form>
-          </CardBody>
-        </Card>
+        <section aria-labelledby="acc-logo" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+          <h2 id="acc-logo" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
+            Your logo
+          </h2>
+          <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">Shown on the 3D preview links you send your customers. PNG or JPEG, up to 2 MB.</p>
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- a short-lived signed URL
+            <img src={logoUrl} alt="Your logo" className="mt-4 h-12 w-auto rounded-[var(--r-sm)] border border-border bg-background p-1" />
+          )}
+          <form action={uploadLogoAction} className="mt-4 flex flex-wrap items-center gap-3">
+            <FilePicker name="logo" label="Logo file" accept="image/png,image/jpeg" required />
+            <Button type="submit" size="sm" variant="secondary">
+              {logoUrl ? "Replace" : "Upload"}
+            </Button>
+          </form>
+        </section>
       )}
 
-      <dl className="mt-6 divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
-        <Row
-          label="Signed in as"
-          value={[role, ...((grants ?? []) as { role: string }[]).map((g) => g.role).filter((r) => r !== role)].map(partyLabel).join(" · ")}
-        />
-        <Row label="Status" value={status === "ACTIVE" ? "Active" : "Pending"} />
-        <Row
-          label="Account reference"
-          value={userId}
-          mono
-          hint="Quote this if you contact us. It identifies your account without naming you."
-        />
-      </dl>
+      <section aria-label="Security and payouts" className="divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
+        <Link href="/account/security" className="flex min-h-[var(--ctl-lg)] items-center gap-3 px-5 py-3 hover:bg-subtle">
+          <KeyRound className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[length:var(--fs-3)] font-medium">Sign-in and security</span>
+            <span className="block text-[length:var(--fs-2)] text-muted-foreground">Password, two-step sign-in, devices</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+        </Link>
+        {role === "DESIGNER" && (
+          <Link href="/settings/payouts" className="flex min-h-[var(--ctl-lg)] items-center gap-3 px-5 py-3 hover:bg-subtle">
+            <Wallet className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[length:var(--fs-3)] font-medium">Payout details</span>
+              <span className="block text-[length:var(--fs-2)] text-muted-foreground">The bank account your earnings go to</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+          </Link>
+        )}
+      </section>
 
-      <Link href="/account/security" className="mt-4 flex min-h-[var(--ctl)] items-center justify-between rounded-[var(--r-lg)] border border-border bg-card px-[var(--s-5)] shadow-[var(--e-1)] hover:bg-subtle">
-        <span>
-          <span className="block text-[length:var(--fs-3)] font-medium">Sign-in and security</span>
-          <span className="block text-[length:var(--fs-2)] text-muted-foreground">Password, two-step sign-in, devices</span>
-        </span>
-        <span aria-hidden>→</span>
-      </Link>
+      {pushOffered ? (
+        <section aria-label="Notifications" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+          <PushOptIn publicKey={vapidPublicKey} />
+        </section>
+      ) : null}
 
       <InstallHint />
 
-      {pushOffered ? (
-        <div className="mt-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
-          <PushOptIn publicKey={vapidPublicKey} />
-        </div>
-      ) : null}
-
-      {role === "DESIGNER" ? (
-        <div className="mt-4">
-          <Link href="/settings/payouts">
-            <Button variant="outline" className="min-h-[var(--ctl)] w-full">
-              Payout details
-            </Button>
-          </Link>
-        </div>
-      ) : null}
-
-      <div className="mt-8">
+      <div className="border-t border-border pt-6">
         <SignOutButton>
-          <Button variant="ghost" className="min-h-[var(--ctl)] w-full">
-            Sign out
+          <Button variant="secondary">
+            <LogOut /> Sign out
           </Button>
         </SignOutButton>
       </div>
-    </main>
-  );
-}
-
-function Row({
-  label,
-  value,
-  mono = false,
-  hint,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  hint?: string;
-}) {
-  return (
-    <div className="px-4 py-3">
-      <dt className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
-        {label}
-      </dt>
-      <dd
-        className={
-          mono
-            ? "tabular mt-0.5 break-all font-mono text-[length:var(--fs-3)]"
-            : "mt-0.5 text-[length:var(--fs-4)] font-medium"
-        }
-      >
-        {value}
-      </dd>
-      {hint ? (
-        <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">{hint}</p>
-      ) : null}
-    </div>
+    </Page>
   );
 }

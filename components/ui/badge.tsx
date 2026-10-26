@@ -4,12 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-[var(--r-xs)] border px-2 py-1 font-mono text-[length:var(--fs-1)] font-medium uppercase leading-none tracking-[0.1em]",
+  "inline-flex min-h-6 items-center gap-1.5 rounded-[var(--r-full)] border px-2.5 text-[length:var(--fs-2)] font-medium leading-[var(--lh-2)]",
   {
     variants: {
       variant: {
         default: "border-transparent bg-primary text-primary-foreground",
-        outline: "border-foreground text-foreground",
+        outline: "border-[color:var(--border-strong)] text-foreground",
         muted: "border-transparent bg-muted text-muted-foreground",
       },
     },

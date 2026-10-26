@@ -8,6 +8,8 @@ import {
 } from "@/core";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { FilePicker } from "@/components/ui/file-picker";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -444,7 +446,7 @@ export function OrderDetail({
                 ] as [string, string][]
               ).map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">{label}</dt>
+                  <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">{label}</dt>
                   <dd className="tabular font-mono">{value}</dd>
                 </div>
               ))}
@@ -588,13 +590,26 @@ export function OrderDetail({
                     </form>
                   )}
                   {role === "FINANCE" && (
-                    <form action={resolveDisputeAction}>
-                      <input type="hidden" name="order_id" value={o.id} />
-                      <input type="hidden" name="resolution" value="REFUND" />
-                      <Button type="submit" variant="destructive" size="sm">
-                        Refund the client
-                      </Button>
-                    </form>
+                    <>
+                      <form id={`refund-${o.id}`} action={resolveDisputeAction}>
+                        <input type="hidden" name="order_id" value={o.id} />
+                        <input type="hidden" name="resolution" value="REFUND" />
+                      </form>
+                      {/* Red only inside the confirmation (redesign): typed, never one tap. */}
+                      <ConfirmDialog
+                        trigger={
+                          <Button type="button" variant="secondary" size="sm">
+                            Refund the client…
+                          </Button>
+                        }
+                        title="Refund the client?"
+                        description="The full amount goes back to the client and the order closes. This cannot be undone."
+                        typed="refund"
+                        destructive
+                        confirmLabel="Refund the client"
+                        formId={`refund-${o.id}`}
+                      />
+                    </>
                   )}
                 </div>
               )}
@@ -654,7 +669,7 @@ export function OrderDetail({
                   // the work exists and what it is; the sentence above says what
                   // unlocks it. The API returns 404 for this row either way —
                   // this is presentation, not enforcement.
-                  <span className="shrink-0 text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">
+                  <span className="shrink-0 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
                     Held
                   </span>
                 )}
@@ -667,14 +682,7 @@ export function OrderDetail({
             <form action={uploadFileAction} className="mt-3">
               <input type="hidden" name="order_id" value={o.id} />
               <div className="flex flex-wrap items-center gap-2">
-                <input
-                  type="file"
-                  name="file"
-                  required
-                  accept=".png,.jpg,.jpeg,.step,.stp"
-                  aria-label="Upload a file"
-                  className="text-[length:var(--fs-3)] leading-[var(--lh-3)]"
-                />
+                <FilePicker name="file" required accept=".png,.jpg,.jpeg,.step,.stp" label="Upload a file" />
                 {/* What this file IS decides who can download it and when, so it
                     is asked for at upload time rather than guessed from the
                     extension afterwards. A client has one legitimate answer, so

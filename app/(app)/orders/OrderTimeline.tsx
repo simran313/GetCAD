@@ -49,14 +49,14 @@ export function OrderTimeline({
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-semibold">Independent QC review</p>
-                  <time className="tabular shrink-0 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] opacity-80">
+                  <time className="tabular shrink-0 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)]">
                     {formatWhen(step.createdAt)}
                   </time>
                 </div>
                 <p className="mt-0.5 text-[length:var(--fs-3)] leading-[var(--lh-3)]">
                   {step.qcOutcome === "passed" ? "Passed" : "Revision requested"}
                 </p>
-                <p className="mt-1 text-[length:var(--fs-2)] leading-[var(--lh-2)] opacity-75">Reviewed by role: QC · identity protected</p>
+                <p className="mt-1 text-[length:var(--fs-2)] leading-[var(--lh-2)]">Reviewed by role: QC · identity protected</p>
               </div>
             </li>
           );

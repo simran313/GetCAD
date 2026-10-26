@@ -51,19 +51,19 @@ export function PayoutPanel({
     <div className="space-y-3">
       <dl className="grid grid-cols-2 gap-3 text-[length:var(--fs-3)] leading-[var(--lh-3)] sm:grid-cols-4">
         <div>
-          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">Owed</dt>
+          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Owed</dt>
           <dd className="tabular mt-0.5 font-mono">{formatMoney(state.owed, currency)}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">Paid</dt>
+          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Paid</dt>
           <dd className="tabular mt-0.5 font-mono">{formatMoney(state.paid, currency)}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">In flight</dt>
+          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">In flight</dt>
           <dd className="tabular mt-0.5 font-mono">{formatMoney(state.in_flight, currency)}</dd>
         </div>
         <div>
-          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">Failed</dt>
+          <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Failed</dt>
           <dd className="tabular mt-0.5 font-mono">{formatMoney(state.failed, currency)}</dd>
         </div>
       </dl>

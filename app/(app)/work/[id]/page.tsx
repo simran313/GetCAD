@@ -2,15 +2,16 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { jobClockDue, jobState, minutesWord, slotAccept } from "@/core";
+import { jobClockDue, jobState, slotAccept } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { FilePicker } from "@/components/ui/file-picker";
 import { Input } from "@/components/ui/input";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Timer } from "@/components/ui/timer";
-import { UploadSlot } from "@/components/ui/upload-slot";
+import { Circle, CircleCheck } from "lucide-react";
 import { References } from "@/components/work/references";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
@@ -25,6 +26,8 @@ import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
 import { StartWorkButton } from "../StartWorkButton";
+import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * D4 — one job (docs/design). The brief without the client (job_brief drops
@@ -44,7 +47,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const [job] = await loadMyWork(supabase, id).catch(() => []);
   if (!job) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <Link href="/work" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
           ← Open jobs
         </Link>
@@ -52,7 +55,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           <p className="text-[length:var(--fs-3)] font-medium">Job not available</p>
           <p className="mt-1 text-[length:var(--fs-3)] text-muted-foreground">It isn&apos;t assigned to you, or the link is wrong.</p>
         </Card>
-      </main>
+      </Page>
     );
   }
 
@@ -84,7 +87,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const lines = briefLines(brief, (accentsRes.data ?? []) as AccentLine[]);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <Link href="/work" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← Open jobs
       </Link>
@@ -99,7 +102,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
       />
       <div className="flex flex-wrap items-center gap-3">
         <CategoryBadge letter={job.category} />
-        <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(job.minutes)}</span>
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <StatusTag kind={state.kind}>{state.word}</StatusTag>
         {clock && working && <Timer dueAt={clock} label="Your time left" />}
         {job.designer_due_at && ["ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(job.status) && (
@@ -112,7 +115,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           <CardBody className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[length:var(--fs-3)]">
               {job.status === "ASSIGNED"
-                ? `Read the brief, then press Start work. Your ${minutesWord(job.minutes).toLowerCase()} starts then.`
+                ? `Read the brief, then press Start work. Your ${minutesLabel(job.minutes)} starts then.`
                 : "This version needs changes. Read the notes, then press Start work."}
             </p>
             <StartWorkButton orderId={id} size="default" />
@@ -126,7 +129,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             <Card as="section">
               <CardHeader>
                 <CardTitle>{note.from === "client" ? "Changes the client asked for" : "Pod lead notes"}</CardTitle>
-                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   Version {job.work_version}
                 </span>
               </CardHeader>
@@ -143,7 +146,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           <Card as="section">
             <CardHeader>
               <CardTitle>References</CardTitle>
-              <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">Client: hidden</span>
+              <span className="text-[length:var(--fs-2)] text-muted-foreground">Client hidden</span>
             </CardHeader>
             <CardBody>
               <References images={refs} />
@@ -153,38 +156,49 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           <Card as="section">
             <CardHeader>
               <CardTitle>Version {job.work_version} deliverables</CardTitle>
-              <span className="tabular font-mono text-[length:var(--fs-2)]">
-                {filled} / {slots.length}
+              <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">
+                {filled} of {slots.length} uploaded
               </span>
             </CardHeader>
             <CardBody>
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              <ul className="divide-y divide-border">
                 {slots.map((s) => (
-                  <li key={s.code}>
-                    <UploadSlot code={s.code} label={s.label} fileName={s.file_name}>
-                      {working && (
-                        <form action={uploadSlotAction} className="space-y-2">
-                          <input type="hidden" name="order_id" value={id} />
-                          <input type="hidden" name="slot" value={s.code} />
-                          <input
-                            type="file"
-                            name="file"
-                            required
-                            accept={slotAccept(s.code)}
-                            aria-label={`File for ${s.code}`}
-                            className="w-full text-[length:var(--fs-1)]"
-                          />
-                          <Button type="submit" size="sm" variant="outline" className="w-full">
-                            {s.file_version_id ? "Replace" : "Upload"}
-                          </Button>
-                        </form>
+                  <li key={s.code} className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 md:flex-row md:items-center">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      {s.file_name ? (
+                        <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--tone-success-fg)]" aria-label="Uploaded" />
+                      ) : (
+                        <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-label="Empty" />
                       )}
-                    </UploadSlot>
+                      <div className="min-w-0">
+                        <p className="text-[length:var(--fs-3)] font-medium leading-[var(--lh-3)]">
+                          {s.label} <span className="font-mono text-[length:var(--fs-2)] font-normal text-muted-foreground">{s.code}</span>
+                        </p>
+                        <p className="truncate font-mono text-[length:var(--fs-2)] text-muted-foreground">{s.file_name ?? "Not uploaded yet"}</p>
+                      </div>
+                    </div>
+                    {working && (
+                      <form action={uploadSlotAction} className="flex flex-wrap items-center gap-2 md:justify-end">
+                        <input type="hidden" name="order_id" value={id} />
+                        <input type="hidden" name="slot" value={s.code} />
+                        <FilePicker
+                          name="file"
+                          required
+                          accept={slotAccept(s.code)}
+                          label={`File for ${s.code}`}
+                          buttonLabel="Choose"
+                          className="md:max-w-[16rem]"
+                        />
+                        <Button type="submit" size="sm" variant="secondary">
+                          {s.file_version_id ? "Replace" : "Upload"}
+                        </Button>
+                      </form>
+                    )}
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
-                Metadata removed on upload · files named by the system
+              <p className="mt-4 text-[length:var(--fs-2)] text-muted-foreground">
+                Names, authors and other details inside each file are removed on upload, and the system names the files.
               </p>
             </CardBody>
           </Card>
@@ -285,6 +299,6 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         </aside>
       </div>
       <AutoRefresh orderId={id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
-    </main>
+    </Page>
   );
 }

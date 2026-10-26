@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Page } from "@/components/ui/page";
 
 /** N6 — Brief sent (docs/design): what happens next, in DECISIONS' words. */
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export default async function BriefSentPage({ params }: { params: Promise<{ id: 
   ];
 
   return (
-    <main className="container max-w-2xl space-y-6 py-8">
+    <Page form>
       <PageHeader
         eyebrow={(data as { display_ref?: string } | null)?.display_ref ?? "Order"}
         title="Brief sent"
@@ -54,6 +55,6 @@ export default async function BriefSentPage({ params }: { params: Promise<{ id: 
           Go to home
         </Link>
       </div>
-    </main>
+    </Page>
   );
 }

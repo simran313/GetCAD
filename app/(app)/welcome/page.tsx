@@ -11,6 +11,7 @@ import { pushIsConfiguredForBrowser } from "@/config/push";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { ClientProfileForm, type ClientProfile } from "../account/ClientProfileForm";
+import { Page } from "@/components/ui/page";
 
 /**
  * S3 — Welcome (docs/design). First, who the client is (it names their client
@@ -37,7 +38,7 @@ export default async function WelcomePage() {
   const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
   return (
-    <main className="container max-w-3xl space-y-6 py-8">
+    <Page form>
       <PageHeader
         eyebrow="The CAD Pillar"
         title={profile ? `Welcome, ${(profile as ClientProfile).business_name ?? (profile as ClientProfile).legal_name}` : "Welcome"}
@@ -81,6 +82,6 @@ export default async function WelcomePage() {
           </div>
         </>
       )}
-    </main>
+    </Page>
   );
 }

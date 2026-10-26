@@ -14,6 +14,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadPodLoad, type PodDesignerLoad } from "@/lib/work/load";
 
 import { createPodAction, removePodMemberAction, setPodMemberAction } from "../../actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * Pods (Access, Phase 5d): who leads each pod and which designers are in it
@@ -49,10 +50,10 @@ export default async function PodsPage() {
   const podsRes = await supabase.rpc("pods_overview");
   if (podsRes.error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <PageHeader title="Pods" />
         <ErrorPanel title="Not available to your role" message={podsRes.error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
   const pods = (podsRes.data ?? []) as Pod[];
@@ -74,7 +75,7 @@ export default async function PodsPage() {
   const inPod = new Set(members.map((m) => m.designer_id));
 
   return (
-    <main className="container max-w-5xl space-y-6 py-8">
+    <Page>
       <Link href="/admin/access" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← Access
       </Link>
@@ -98,7 +99,7 @@ export default async function PodsPage() {
           <Card as="section" key={p.pod_id}>
             <CardHeader>
               <CardTitle>{p.name}</CardTitle>
-              <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
                 {p.designers} designer{p.designers === 1 ? "" : "s"} · {p.open_orders} open order{p.open_orders === 1 ? "" : "s"}
               </span>
             </CardHeader>
@@ -137,7 +138,7 @@ export default async function PodsPage() {
                   <li key={d.designer_id} className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
                     <span className="min-w-0">
                       <span className="block text-[length:var(--fs-3)] font-medium">{d.name ?? d.designer_ref ?? d.designer_id}</span>
-                      <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                      <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
                         {d.designer_ref ?? "No profile"} · {loadWord(d.open_minutes, d.shift_minutes)}
                       </span>
                     </span>
@@ -169,7 +170,7 @@ export default async function PodsPage() {
                     </option>
                   ))}
                 </Select>
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" variant="secondary">
                   Add
                 </Button>
               </form>
@@ -194,6 +195,6 @@ export default async function PodsPage() {
           </p>
         </CardBody>
       </Card>
-    </main>
+    </Page>
   );
 }

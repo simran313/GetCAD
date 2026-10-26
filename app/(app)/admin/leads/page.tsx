@@ -1,3 +1,4 @@
+import { Magnet } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
@@ -8,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { LeadControls } from "./LeadControls";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Page } from "@/components/ui/page";
 
 export const dynamic = "force-dynamic";
 
@@ -53,21 +56,21 @@ export default async function LeadsPage({
   if (error) {
     const denied = /only OPS or SALES/i.test(error.message);
     return (
-      <main className="container max-w-2xl py-12">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Contact leads</h1>
         <div className="mt-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)] text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">
           {denied
             ? "This inbox is for OPS and SALES. Switch to one of those roles to work leads."
             : `Couldn't load leads: ${error.message}`}
         </div>
-      </main>
+      </Page>
     );
   }
 
   const leads = (data ?? []) as LeadRow[];
 
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <PageHeader
         eyebrow="From the website contact form"
         title="Contact leads"
@@ -93,9 +96,8 @@ export default async function LeadsPage({
       </div>
 
       {leads.length === 0 ? (
-        <div className="mt-6 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-10)] text-center">
-          <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-medium">Nothing here</p>
-          <p className="mt-1 text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">No leads in this state.</p>
+        <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
+          <EmptyState icon={<Magnet />} title="No leads here" description="Messages from the website contact form land in New." />
         </div>
       ) : (
         <ul className="mt-6 space-y-4">
@@ -128,6 +130,6 @@ export default async function LeadsPage({
           ))}
         </ul>
       )}
-    </main>
+    </Page>
   );
 }

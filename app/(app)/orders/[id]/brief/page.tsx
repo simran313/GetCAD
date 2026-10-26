@@ -11,6 +11,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { BriefWizard, type AccentRow } from "./BriefWizard";
 import { ReferenceSection, type ReferenceImage } from "./ReferenceSection";
+import { Page } from "@/components/ui/page";
 
 /** Long enough to fill in a brief on a phone, short enough not to be a link. */
 const REFERENCE_URL_TTL_SECONDS = 60 * 60;
@@ -100,16 +101,16 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
 
   if (orderRes.error) {
     return (
-      <main className="container max-w-2xl py-8">
+      <Page form>
         <ErrorPanel title="Couldn't load this order" message={orderRes.error.message} />
-      </main>
+      </Page>
     );
   }
 
   const order = orderRes.data;
   if (!order) {
     return (
-      <main className="container max-w-2xl py-8">
+      <Page form>
         <BackLink id={id} />
         <div className="mt-6 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-10)] text-center">
           <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-medium">Order not available</p>
@@ -117,7 +118,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
             This order isn&apos;t visible to your role, or the reference is wrong.
           </p>
         </div>
-      </main>
+      </Page>
     );
   }
 
@@ -164,7 +165,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
   }));
 
   return (
-    <main className="container max-w-3xl py-8">
+    <Page form>
       <BackLink id={id} />
 
       <PageHeader
@@ -215,7 +216,7 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
       </div>
 
       <ReferenceSection orderId={id} images={images} readOnly={frozen || !isOwner} />
-    </main>
+    </Page>
   );
 }
 
@@ -276,7 +277,7 @@ function ReadOnlyBrief({ spec, accents }: { spec: SpecRow | null; accents: Accen
     <dl className="divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
       {rows.map(([k, v]) => (
         <div key={k} className="px-4 py-3">
-          <dt className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
+          <dt className="text-[length:var(--fs-2)] text-muted-foreground">
             {k}
           </dt>
           <dd className="mt-0.5 text-[length:var(--fs-4)]">{v}</dd>

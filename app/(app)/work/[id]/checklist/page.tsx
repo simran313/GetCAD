@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { jobClockDue, jobState, minutesWord } from "@/core";
+import { jobClockDue, jobState } from "@/core";
 import { Card, CardBody } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
@@ -13,6 +13,8 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { jobTitle, loadMyWork } from "@/lib/work/load";
 
 import type { ChecklistRow } from "../../../orders/WorkPanels";
+import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * D4b — the designer's checklist (docs/design). Ticks while the job is in
@@ -37,14 +39,14 @@ export default async function JobChecklistPage({ params }: { params: Promise<{ i
   const { data: profile } = await supabase.from("designer_profiles").select("designer_ref").maybeSingle();
 
   return (
-    <main className="container max-w-3xl space-y-6 py-8">
+    <Page>
       <Link href={`/work/${id}`} className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← Back to the job
       </Link>
       <PageHeader eyebrow={`Checklist · ${job.job_code ?? ""} · version ${job.work_version} · internal use only`} title={jobTitle(job)} />
       <div className="flex flex-wrap items-center gap-3">
         <CategoryBadge letter={job.category} />
-        <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(job.minutes)}</span>
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <StatusTag kind={jobState(job.status).kind}>{jobState(job.status).word}</StatusTag>
         {clock && working && <Timer dueAt={clock} label="Your time left" />}
         <span className="tabular ml-auto font-mono text-[length:var(--fs-2)]">Ticked {ticked} / 19</span>
@@ -67,6 +69,6 @@ export default async function JobChecklistPage({ params }: { params: Promise<{ i
           />
         </CardBody>
       </Card>
-    </main>
+    </Page>
   );
 }

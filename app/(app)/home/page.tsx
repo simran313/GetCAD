@@ -15,6 +15,7 @@ import { ClientHome } from "./ClientHome";
 import { DesignerHome } from "./DesignerHome";
 import { loadEarnings, loadMyWork } from "@/lib/work/load";
 import { versionNote } from "@/lib/work/notes";
+import { Page } from "@/components/ui/page";
 
 // Authenticated, per-request data — never cache it.
 export const dynamic = "force-dynamic";
@@ -154,7 +155,7 @@ export default async function DashboardPage() {
   const error = onboardError ?? meError;
 
   return (
-    <main className="container max-w-3xl py-8">
+    <Page>
       <div className="flex items-baseline justify-between">
         <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
           Dashboard
@@ -176,7 +177,7 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Card>
           <CardBody>
-            <p className="text-[length:var(--fs-1)] font-medium uppercase tracking-[var(--ls-1)] text-muted-foreground">
+            <p className="eyebrow">
               Verified identity
             </p>
             <p
@@ -189,7 +190,7 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardBody>
-            <p className="text-[length:var(--fs-1)] font-medium uppercase tracking-[var(--ls-1)] text-muted-foreground">
+            <p className="eyebrow">
               Orders visible to you
             </p>
             <p className="tabular mt-1 font-mono text-[length:var(--fs-6)] leading-[var(--lh-6)]">
@@ -283,6 +284,6 @@ export default async function DashboardPage() {
       )}
 
       <TrustLine className="mt-6" />
-    </main>
+    </Page>
   );
 }

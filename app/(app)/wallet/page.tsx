@@ -10,6 +10,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Lines } from "./Lines";
 import { loadWallet } from "./load";
 import { WalletNav } from "./WalletNav";
+import { Page } from "@/components/ui/page";
 
 /** W1 — Wallet (docs/design), read-only until wallet payments arrive. */
 export const dynamic = "force-dynamic";
@@ -22,23 +23,23 @@ export default async function WalletPage() {
   const w = await loadWallet(supabase);
 
   return (
-    <main className="container max-w-4xl space-y-6 py-8">
-      <PageHeader title="Wallet" />
+    <Page>
+      <PageHeader title="Wallet" description="Your credit, what you have paid on open orders, and every payment." />
       <WalletNav active="/wallet" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardBody>
             <p className="text-[length:var(--fs-2)] text-muted-foreground">Credit</p>
-            <p className="tabular font-display text-[length:var(--fs-display)] leading-[var(--lh-display)]">{formatMoney(w.creditCents, "USD")}</p>
+            <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">{formatMoney(w.creditCents, "USD")}</p>
             <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">Taken off your next order&apos;s price by the team.</p>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
-            <p className="text-[length:var(--fs-2)] text-muted-foreground">Held in orders · released after you approve</p>
-            <p className="tabular font-display text-[length:var(--fs-display)] leading-[var(--lh-display)]">{formatMoney(w.heldCents, "USD")}</p>
+            <p className="text-[length:var(--fs-2)] text-muted-foreground">Paid on open orders</p>
+            <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">{formatMoney(w.heldCents, "USD")}</p>
             <p className="mt-1 truncate text-[length:var(--fs-2)] text-muted-foreground">
-              {w.heldOrders.map((o) => o.title).join(" · ") || "Nothing held"}
+              {w.heldOrders.map((o) => o.title).join(" · ") || "No open orders paid"}
             </p>
           </CardBody>
         </Card>
@@ -52,8 +53,8 @@ export default async function WalletPage() {
           screen, or <Link href="/messages" className="underline underline-offset-4">message the team</Link>.
         </CardBody>
       </Card>
-      <h2 className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.12em] text-muted-foreground">Activity</h2>
+      <h2 className="text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">Recent activity</h2>
       <Lines lines={w.lines.slice(0, 5)} />
-    </main>
+    </Page>
   );
 }

@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { isOpenJob, jobState, loadWord, minutesWord } from "@/core";
+import { isOpenJob, jobState, loadWord } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,8 @@ import { loadPodJobs, loadPodLoad, type PodDesignerLoad, type PodJob } from "@/l
 import { requireTeam } from "@/lib/work/team";
 
 import { assignDesignerAction } from "../../orders/actions";
+import { Page } from "@/components/ui/page";
+import { minutesLabel } from "@/lib/work/minutes";
 
 /**
  * P5 — the team board (docs/design): who is working on what. Paid orders
@@ -38,9 +40,9 @@ export default async function TeamBoardPage() {
     [jobs, designers] = await Promise.all([loadPodJobs(supabase), loadPodLoad(supabase)]);
   } catch (e) {
     return (
-      <main className="container max-w-6xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load the team board" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
 
@@ -50,13 +52,13 @@ export default async function TeamBoardPage() {
   const minutes = (js: PodJob[]) => js.reduce((s, j) => s + (j.minutes ?? 0), 0);
 
   return (
-    <main className="container max-w-7xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow={`${[...new Set(designers.map((d) => d.pod_name))].join(", ") || "Your pod"} · who is working on what`}
         title="Team board"
         description={`Shift 9:30 AM–6:30 PM IST · ${shift} minutes per designer. Going over warns; capacity blocking is off.`}
         actions={
-          <Link href="/admin/new-order" className={buttonVariants()}>
+          <Link href="/admin/new-order" className={buttonVariants({ variant: "secondary" })}>
             Create order
           </Link>
         }
@@ -128,7 +130,7 @@ export default async function TeamBoardPage() {
       {designers.length === 0 && (
         <p className="text-[length:var(--fs-2)] text-muted-foreground">No designers in your pod yet. An admin adds them from Access.</p>
       )}
-    </main>
+    </Page>
   );
 }
 
@@ -150,9 +152,9 @@ function Column({
       <CardHeader>
         <div className="min-w-0">
           <CardTitle>{title}</CardTitle>
-          {sub && <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">{sub}</p>}
+          {sub && <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">{sub}</p>}
         </div>
-        <span className={`tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] ${over ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+        <span className={`tabular font-mono text-[length:var(--fs-2)] ${over ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
           {meta}
         </span>
       </CardHeader>
@@ -171,7 +173,7 @@ function JobCard({ job, children }: { job: PodJob; children: React.ReactNode }) 
       </Link>
       <span className="flex items-center gap-2">
         <CategoryBadge letter={job.category} />
-        <span className="font-mono text-[length:var(--fs-1)]">{minutesWord(job.minutes)}</span>
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <span className="tabular font-mono text-[length:var(--fs-1)] text-muted-foreground">{job.order_ref}</span>
       </span>
       {children}

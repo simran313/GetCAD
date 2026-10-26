@@ -13,7 +13,7 @@ export const ORDER_STATUS_META: Record<string, StatusMeta> = {
   DRAFT: { label: "Draft", tone: "neutral" },
   SUBMITTED: { label: "Submitted", tone: "info" },
   QUOTED: { label: "Quoted", tone: "info" },
-  PAYMENT_HELD: { label: "Payment held", tone: "info" },
+  PAYMENT_HELD: { label: "Paid", tone: "info" },
   ASSIGNED: { label: "Assigned", tone: "info" },
   IN_PROGRESS: { label: "In progress", tone: "info" },
   DESIGNER_SUBMITTED: { label: "Work submitted", tone: "info" },

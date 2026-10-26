@@ -6,6 +6,7 @@ import { ErrorPanel } from "@/components/error-panel";
 import { EarningsView, type Bank } from "@/components/work/earnings";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadEarnings } from "@/lib/work/load";
+import { Page } from "@/components/ui/page";
 
 /** P4 — the pod lead's QC earnings (docs/design; DECISIONS §5). */
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function QcEarningsPage() {
         countLabel="reviews"
         rates={EXAMPLES.map((usd) => ({
           key: String(usd),
-          label: <span className="font-mono text-[length:var(--fs-1)] uppercase">Order ${usd}</span>,
+          label: <span className="font-mono text-[length:var(--fs-2)]">Order ${usd}</span>,
           amount: rupeesWord(qcPayoutPaise(usd * 100)),
         }))}
         rateTitle="QC rate by order value"
@@ -37,9 +38,9 @@ export default async function QcEarningsPage() {
     );
   } catch (e) {
     return (
-      <main className="container max-w-5xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load your earnings" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
 }

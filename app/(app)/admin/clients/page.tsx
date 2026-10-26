@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
-import { Select } from "@/components/ui/select";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { when } from "@/lib/work/load";
 
-import { computeStatsAction, setAccountManagerAction } from "../actions";
+import { computeStatsAction } from "../actions";
+
+import { ManagerSelect } from "./ManagerSelect";
+import { Page } from "@/components/ui/page";
 
 /**
  * A9 — clients and their account managers (owner answer, Phase 5d): every
@@ -53,10 +55,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const res = await supabase.rpc("admin_clients");
   if (res.error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <PageHeader title="Clients" />
         <ErrorPanel title="Not available to your role" message={res.error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
   const [{ data: staff }, { data: report }, { data: statsRow }, { data: statsFlag }] = await Promise.all([
@@ -84,7 +86,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const unassigned = rows.filter((r) => !r.manager_id).length;
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow="Account managers · one named contact per client"
         title="Clients"
@@ -131,7 +133,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
               ] as [string, (readonly [string, number])[]][]
             ).map(([title, rows]) => (
               <div key={title}>
-                <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">{title}</p>
+                <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">{title}</p>
                 {rows.length === 0 ? (
                   <p className="mt-2 text-muted-foreground">Nothing yet.</p>
                 ) : (
@@ -160,7 +162,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       ) : (
         <Card className="overflow-x-auto">
           <table className="w-full text-left text-[length:var(--fs-2)]">
-            <thead className="border-b border-border font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+            <thead className="border-b border-border text-[length:var(--fs-2)] text-muted-foreground">
               <tr>
                 {["Client", "Orders", "Paid", "Last order", "Account manager"].map((h) => (
                   <th key={h} className="px-[var(--s-4)] py-[var(--s-3)] font-normal">
@@ -183,20 +185,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                   <td className="tabular px-[var(--s-4)] py-[var(--s-3)] font-mono">{formatMoney(Number(r.paid_cents), "USD")}</td>
                   <td className="px-[var(--s-4)] py-[var(--s-3)] text-muted-foreground">{r.last_order_at ? when(r.last_order_at) : "—"}</td>
                   <td className="px-[var(--s-4)] py-[var(--s-3)]">
-                    <form action={setAccountManagerAction} className="flex items-center gap-2">
-                      <input type="hidden" name="client_id" value={r.client_id} />
-                      <Select name="manager_id" defaultValue={r.manager_id ?? ""} aria-label={`Account manager for ${r.client_code ?? "client"}`} className="w-auto">
-                        <option value="">Unassigned</option>
-                        {managers.map((m) => (
-                          <option key={m.user_id} value={m.user_id}>
-                            {m.first_name}
-                          </option>
-                        ))}
-                      </Select>
-                      <Button type="submit" size="sm" variant="outline">
-                        Save
-                      </Button>
-                    </form>
+                    <ManagerSelect clientId={r.client_id} clientCode={r.client_code} managerId={r.manager_id} managers={managers} />
                   </td>
                 </tr>
               ))}
@@ -204,6 +193,6 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
           </table>
         </Card>
       )}
-    </main>
+    </Page>
   );
 }

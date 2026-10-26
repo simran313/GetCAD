@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Page } from "@/components/ui/page";
 
 export default function DesignerOnboardingLoading() {
   return (
-    <main className="container max-w-2xl py-8">
+    <Page>
       <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-4 w-20" />
@@ -21,6 +22,6 @@ export default function DesignerOnboardingLoading() {
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-9 w-40" />
       </div>
-    </main>
+    </Page>
   );
 }

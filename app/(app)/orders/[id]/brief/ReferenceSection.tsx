@@ -1,5 +1,6 @@
 import type { Pin } from "@/core";
 import { Button } from "@/components/ui/button";
+import { FilePicker } from "@/components/ui/file-picker";
 
 import { ReferencePinner } from "./ReferencePinner";
 import {
@@ -99,20 +100,12 @@ export function ReferenceSection({
       {!readOnly ? (
         <form action={addReferenceImageAction} className="mt-4">
           <input type="hidden" name="order_id" value={orderId} />
-          <label className="block">
-            <span className="sr-only">Add a picture</span>
-            <input
-              type="file"
-              name="image"
-              accept="image/jpeg,image/png,image/webp"
-              // `capture` is deliberately absent: offering the camera directly
-              // is right for a document scanner and wrong here, where most
-              // references are screenshots and saved photos rather than
-              // something in front of you. The picker offers the camera anyway.
-              className="block w-full text-[length:var(--fs-3)] file:mr-3 file:min-h-[var(--ctl)] file:rounded-[var(--r-md)] file:border file:border-border file:bg-background file:px-4 file:text-[length:var(--fs-3)]"
-            />
-          </label>
-          <Button type="submit" variant="outline" className="mt-3 min-h-[var(--ctl)] w-full">
+          {/* `capture` is deliberately absent: offering the camera directly is
+              right for a document scanner and wrong here, where most
+              references are screenshots and saved photos rather than
+              something in front of you. The picker offers the camera anyway. */}
+          <FilePicker name="image" label="Add a picture" accept="image/jpeg,image/png,image/webp" buttonLabel="Choose a picture" />
+          <Button type="submit" variant="secondary" className="mt-3 min-h-[var(--ctl)] w-full">
             Add picture
           </Button>
           <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">

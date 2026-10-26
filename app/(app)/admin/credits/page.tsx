@@ -1,3 +1,4 @@
+import { CircleCheck } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
@@ -12,6 +13,8 @@ import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { decideCreditAction } from "./actions";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Page } from "@/components/ui/page";
 
 /**
  * Late-order credits waiting for a decision (DECISIONS §6, owner answer Q4).
@@ -48,17 +51,17 @@ export default async function CreditsPage() {
 
   if (error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] font-semibold tracking-[var(--ls-6)]">Late-order credits</h1>
         <ErrorPanel title="Not available to your role" message={error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
 
   const credits = (data ?? []) as PendingCredit[];
 
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <PageHeader
         eyebrow="First look missed"
         title="Late-order credits"
@@ -67,9 +70,7 @@ export default async function CreditsPage() {
 
       <div className="mt-6 overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {credits.length === 0 ? (
-          <p className="p-6 text-center text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">
-            Nothing to decide. Every first look so far was on time, or already credited.
-          </p>
+          <EmptyState icon={<CircleCheck />} title="Nothing to decide" description="Every first look so far was on time, or already credited." />
         ) : (
           <ul className="divide-y divide-border">
             {credits.map((c) => (
@@ -103,9 +104,9 @@ export default async function CreditsPage() {
                   </label>
                   <label className="text-[length:var(--fs-2)] text-muted-foreground">
                     Reason (partial / reject)
-                    <Input name="reason" maxLength={1000} className="mt-0.5 w-64" />
+                    <Input name="reason" maxLength={1000} className="mt-0.5 w-full sm:w-64" />
                   </label>
-                  <Button type="submit" size="sm">
+                  <Button type="submit" size="sm" variant="secondary">
                     Decide
                   </Button>
                 </form>
@@ -114,6 +115,6 @@ export default async function CreditsPage() {
           </ul>
         )}
       </div>
-    </main>
+    </Page>
   );
 }

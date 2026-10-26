@@ -15,6 +15,7 @@ import { loadClientOrders } from "@/lib/client/orders";
 import { ClientOrders } from "../ClientOrders";
 import { createOrderAction } from "../actions";
 import type { LedgerRow, OrderRow } from "../types";
+import { Page } from "@/components/ui/page";
 
 /**
  * The list of orders.
@@ -52,9 +53,9 @@ export default async function OrdersPage({
       return <ClientOrders orders={await loadClientOrders(supabase)} tab={tab ?? "all"} />;
     } catch (e) {
       return (
-        <main className="container max-w-4xl py-8">
+        <Page>
           <ErrorPanel title="Couldn't load your orders" message={`${(e as Error).message} — reload the page to try again.`} />
-        </main>
+        </Page>
       );
     }
   }
@@ -71,7 +72,7 @@ export default async function OrdersPage({
   const queryError = ordersRes.error ?? ledgerRes.error;
   if (queryError) {
     return (
-      <main className="container max-w-4xl py-8">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
           Orders
         </h1>
@@ -80,7 +81,7 @@ export default async function OrdersPage({
           message={`${queryError.message} — reload the page to try again.`}
           className="mt-4"
         />
-      </main>
+      </Page>
     );
   }
 
@@ -96,7 +97,7 @@ export default async function OrdersPage({
       .reduce((net, l) => net + escrowSign(l.kind) * l.amount, 0);
 
   return (
-    <main className="container max-w-4xl py-8">
+    <Page>
       <div className="flex items-baseline justify-between">
         <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
           Orders
@@ -169,6 +170,6 @@ export default async function OrdersPage({
       </div>
 
       <TrustLine className="mt-6" />
-    </main>
+    </Page>
   );
 }

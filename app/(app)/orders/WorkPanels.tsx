@@ -1,5 +1,6 @@
 import { slotAccept } from "@/core";
 import { Button } from "@/components/ui/button";
+import { FilePicker } from "@/components/ui/file-picker";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -197,7 +198,7 @@ export function SlotsPanel({ orderId, slots, canUpload }: { orderId: string; slo
               <form action={uploadSlotAction} className="flex items-center gap-2">
                 <input type="hidden" name="order_id" value={orderId} />
                 <input type="hidden" name="slot" value={s.code} />
-                <input type="file" name="file" required accept={slotAccept(s.code)} aria-label={`Upload ${s.code}`} className={small} />
+                <FilePicker name="file" required accept={slotAccept(s.code)} label={`Upload ${s.code}`} buttonLabel="Choose" />
                 <Button type="submit" size="sm" variant="outline">
                   {s.file_version_id ? "Replace" : "Upload"}
                 </Button>

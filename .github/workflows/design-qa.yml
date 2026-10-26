@@ -1,0 +1,100 @@
+name: Design QA
+
+# Redesign only: screenshots of every route per role at 390 / 768 / 1440,
+# committed to the `design-qa` branch (the build container cannot sign in to
+# Clerk, so it reads them from there). Runs on a push to design/redesign whose
+# commit message carries a tag like [design-qa:before] or [design-qa:after].
+on:
+  push:
+    branches: [design/redesign]
+
+jobs:
+  screens:
+    if: contains(github.event.head_commit.message, '[design-qa')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
+      NEXT_TELEMETRY_DISABLED: "1"
+      COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage name
+        run: |
+          stage=$(printf '%s' "$COMMIT_MESSAGE" | grep -o '\[design-qa:[a-z0-9-]*\]' | head -1 | sed 's/\[design-qa:\(.*\)\]/\1/')
+          echo "DESIGN_QA_STAGE=${stage:-snapshot}" >> "$GITHUB_ENV"
+          # A stage named after a group captures only that group, e.g.
+          # [design-qa:preview] or [design-qa:marketing]; those two need no
+          # journeys (no signed-in data), so the e2e run is skipped for them.
+          case "$stage" in
+            preview|marketing) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV"; echo "DESIGN_QA_SKIP_JOURNEYS=1" >> "$GITHUB_ENV" ;;
+            admin|client|client2|designer|podLead) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV" ;;
+          esac
+          # The final capture fails on any serious or critical axe finding.
+          if [ "$stage" = "after" ]; then echo "DESIGN_QA_AXE_STRICT=1" >> "$GITHUB_ENV"; fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Quiet the expected database errors
+        run: |
+          psql "$DATABASE_URL" -c "ALTER SYSTEM SET log_min_messages = 'fatal'" \
+                               -c "ALTER SYSTEM SET log_min_error_statement = 'panic'" \
+                               -c "SELECT pg_reload_conf()"
+
+      - run: npm run e2e:prepare
+      - run: npm run e2e:postgrest
+      - run: npm run e2e:build
+
+      # The journeys fill the database with real orders in every state.
+      - name: Run the journeys (data for the screens)
+        if: env.DESIGN_QA_SKIP_JOURNEYS != '1'
+        run: npm run e2e:test
+        continue-on-error: true
+
+      - name: Screenshot every route
+        run: npx playwright test -c playwright.qa.config.ts
+
+      - name: Commit the screenshots to the design-qa branch
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          src="$GITHUB_WORKSPACE/design-qa/$DESIGN_QA_STAGE"
+          cd "$RUNNER_TEMP" && rm -rf qa && mkdir qa && cd qa
+          git init -q
+          git config user.name "design-qa"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
+          if git fetch -q --depth 1 origin design-qa; then git checkout -q -b design-qa FETCH_HEAD; else git checkout -q --orphan design-qa; fi
+          rm -rf "$DESIGN_QA_STAGE" && cp -r "$src" "$DESIGN_QA_STAGE"
+          git add -A
+          git commit -qm "design-qa: $DESIGN_QA_STAGE @ ${GITHUB_SHA::7}" || { echo "no changes"; exit 0; }
+          git push -q origin design-qa

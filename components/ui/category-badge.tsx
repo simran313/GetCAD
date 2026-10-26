@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 
-/** "CAT C" — the job category (DECISIONS §3), as the mockups label it. */
+/** "Cat C" — the job category (DECISIONS §3). Sentence case since the redesign. */
 export function CategoryBadge({ letter, className }: { letter: string | null; className?: string }) {
   if (!letter) return null;
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-[var(--r-xs)] border border-foreground px-2 py-1",
-        "font-mono text-[length:var(--fs-1)] font-medium uppercase leading-none tracking-[0.1em]",
+        "inline-flex min-h-6 items-center rounded-[var(--r-full)] border border-[color:var(--border-strong)] px-2.5",
+        "text-[length:var(--fs-2)] font-medium leading-[var(--lh-2)]",
         className,
       )}
       aria-label={`Category ${letter}`}

@@ -1,3 +1,4 @@
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 
 import { jobClockDue, jobState, jobTab, rupeesWord } from "@/core";
@@ -6,10 +7,12 @@ import { Card, CardBody } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
-import { Timer } from "@/components/ui/timer";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SlaCountdown } from "@/components/ui/sla-countdown";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { ago, jobTitle, when, type Earning, type Job } from "@/lib/work/load";
 import type { VersionNote } from "@/lib/work/notes";
+import { Page } from "@/components/ui/page";
 
 /**
  * D2 — the designer's home (docs/design). What needs them first: a job sent
@@ -49,9 +52,11 @@ export function DesignerHome({
   const revisions = open.filter((j) => j.status === "REVISION_REQUESTED");
   const fresh = open.filter((j) => j.status === "ASSIGNED");
   const going = open.filter((j) => j.status === "IN_PROGRESS");
+  // One black button on the screen: the job to open first.
+  const firstId = (revisions[0] ?? fresh[0] ?? going[0])?.order_id;
 
   return (
-    <main className="container max-w-5xl space-y-8 py-8">
+    <Page>
       <PageHeader
         eyebrow={[designerRef ? `Designer ${designerRef}` : "Designer", podName].filter(Boolean).join(" · ")}
         title="Home"
@@ -87,9 +92,12 @@ export function DesignerHome({
           <SectionLabel id="needs-title">Needs you</SectionLabel>
           {revisions.length + fresh.length + going.length === 0 ? (
             <Card>
-              <CardBody className="text-[length:var(--fs-3)] text-muted-foreground">
-                No open jobs. Your pod lead will assign the next one; you&apos;ll get a notification.
-              </CardBody>
+              <EmptyState
+                icon={<CircleCheck />}
+                title="No open jobs"
+                description="Your pod lead assigns the next one. You get a notification when they do."
+                className="py-8"
+              />
             </Card>
           ) : (
             <ul className="space-y-3">
@@ -101,7 +109,7 @@ export function DesignerHome({
                       <CardBody className="space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusTag kind="needs">Changes requested</StatusTag>
-                          {j.designer_due_at && <Timer dueAt={j.designer_due_at} label="Due" />}
+                          {j.designer_due_at && <SlaCountdown dueAt={j.designer_due_at} label="Due" />}
                         </div>
                         <p className="text-[length:var(--fs-4)] font-medium">
                           {jobTitle(j)} <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">{j.job_code}</span>
@@ -113,7 +121,7 @@ export function DesignerHome({
                             ))}
                           </ol>
                         )}
-                        <Link href={`/work/${j.order_id}`} className={buttonVariants({ size: "sm" })}>
+                        <Link href={`/work/${j.order_id}`} className={buttonVariants({ variant: j.order_id === firstId ? "default" : "secondary", className: "w-full sm:w-auto" })}>
                           Open job
                         </Link>
                       </CardBody>
@@ -138,9 +146,9 @@ export function DesignerHome({
                             {j.designer_due_at ? ` · due ${when(j.designer_due_at, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : ""}
                           </p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          {clock && <Timer dueAt={clock} label="Your time" />}
-                          <Link href={`/work/${j.order_id}`} className={buttonVariants({ variant: j.status === "ASSIGNED" ? "default" : "outline", size: "sm" })}>
+                        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+                          {clock && <SlaCountdown dueAt={clock} label="Your time" />}
+                          <Link href={`/work/${j.order_id}`} className={buttonVariants({ variant: j.order_id === firstId ? "default" : "secondary", className: "w-full sm:w-auto" })}>
                             Open job
                           </Link>
                         </div>
@@ -200,7 +208,7 @@ export function DesignerHome({
               <CardBody>
                 <p className="text-[length:var(--fs-3)] font-medium">{bankStatus === "REJECTED" ? "Bank details need fixing" : bankStatus ? "Bank details being checked" : "Add your bank details"}</p>
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">You are paid by bank transfer after each order closes.</p>
-                <Link href="/settings/payouts" className={`${buttonVariants({ variant: "outline", size: "sm" })} mt-3`}>
+                <Link href="/settings/payouts" className={`${buttonVariants({ variant: "secondary", size: "sm" })} mt-3`}>
                   Bank details
                 </Link>
               </CardBody>
@@ -208,6 +216,6 @@ export function DesignerHome({
           )}
         </aside>
       </div>
-    </main>
+    </Page>
   );
 }

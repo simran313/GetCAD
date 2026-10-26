@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { newOrderForClientAction } from "./actions";
+import { FilePicker } from "@/components/ui/file-picker";
+import { Page } from "@/components/ui/page";
 
 /**
  * A6 — place an order for a client from an email, a WhatsApp chat or a call
@@ -56,10 +58,10 @@ export default async function NewOrderForClientPage({
   const { data: isTeam } = await supabase.rpc("i_am_team");
   if (isTeam !== true) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] font-semibold tracking-[var(--ls-6)]">New order for a client</h1>
         <ErrorPanel title="Not available to your role" message="Admins and pod leads place orders for clients." className="mt-4" />
-      </main>
+      </Page>
     );
   }
 
@@ -76,7 +78,7 @@ export default async function NewOrderForClientPage({
   const pods = (podRows ?? []) as { id: string; name: string }[];
 
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <PageHeader
         eyebrow="On behalf of a client"
         title="Create order for a client"
@@ -203,13 +205,14 @@ export default async function NewOrderForClientPage({
           <p className="text-[length:var(--fs-2)] text-muted-foreground">
             At least one (PNG or JPEG, up to 20). Seen by the client and the team, never by designers.
           </p>
-          <input
-            type="file"
+          <FilePicker
             name="screenshots"
+            label="Screenshots of the request"
             accept="image/png,image/jpeg"
             multiple
             required
-            className="mt-2 text-[length:var(--fs-3)]"
+            buttonLabel="Choose screenshots"
+            className="mt-2"
           />
         </fieldset>
 
@@ -220,6 +223,6 @@ export default async function NewOrderForClientPage({
 
         <Button type="submit">Place order</Button>
       </form>
-    </main>
+    </Page>
   );
 }

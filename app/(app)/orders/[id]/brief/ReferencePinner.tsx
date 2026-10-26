@@ -62,7 +62,7 @@ export function ReferencePinner({
       <input type="hidden" name="image_id" value={imageId} />
 
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
+        <span className="text-[length:var(--fs-2)] text-muted-foreground">
           {isPrimary ? "Main sketch" : "Reference"}
         </span>
         <span className="text-[length:var(--fs-2)] text-muted-foreground">

@@ -6,9 +6,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusTag } from "@/components/ui/status-tag";
 import { Textarea } from "@/components/ui/textarea";
-import { Timer } from "@/components/ui/timer";
+import { SlaCountdown } from "@/components/ui/sla-countdown";
+import { StatusPill } from "@/components/ui/status-pill";
 import { serviceWord, shortDate } from "@/lib/client/orders";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ import { OrderTimeline } from "./OrderTimeline";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { ThreadsPanel } from "./ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "./types";
+import { Page } from "@/components/ui/page";
 
 /**
  * C4 — one order, for its client (docs/design). The next step first, the
@@ -66,7 +67,7 @@ export function ClientOrderView({
   const canDispute = ["IN_PROGRESS", "CLIENT_PREVIEW"].includes(o.status);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow={[`Order · ${o.display_ref ?? "draft"}`, o.created_at ? `Ordered ${shortDate(o.created_at)}` : null]
           .filter(Boolean)
@@ -103,7 +104,7 @@ export function ClientOrderView({
             <span className={cn("h-1 rounded-[var(--r-full)]", i < done ? "bg-primary" : "bg-muted")} aria-hidden />
             <span
               className={cn(
-                "hidden font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] sm:block",
+                "hidden text-[length:var(--fs-2)] leading-[var(--lh-2)] sm:block",
                 i < done ? "text-foreground" : "text-muted-foreground",
               )}
             >
@@ -158,11 +159,11 @@ export function ClientOrderView({
             </CardHeader>
             <CardBody className="space-y-2 text-[length:var(--fs-2)]">
               {o.sla_status === "running" && o.sla_due_at ? (
-                <Timer dueAt={o.sla_due_at} label="Due in" />
+                <SlaCountdown dueAt={o.sla_due_at} />
               ) : o.sla_status === "met" ? (
-                <StatusTag kind="done">Met</StatusTag>
+                <StatusPill tone="success">Done on time</StatusPill>
               ) : o.sla_status === "breached" || o.sla_status === "breached_credited" ? (
-                <StatusTag kind="needs">Late — credit due</StatusTag>
+                <p className="flex flex-wrap items-center gap-2"><StatusPill tone="danger">Missed</StatusPill> The full amount comes back as credit.</p>
               ) : (
                 <p className="text-muted-foreground">
                   The clock starts once you have paid and we have confirmed the brief.
@@ -205,7 +206,7 @@ export function ClientOrderView({
               <p className="tabular font-mono text-[length:var(--fs-4)]">
                 {o.price_total ? formatMoney(o.price_total, currency) : "Price coming"}
               </p>
-              {held > 0 && <p className="text-muted-foreground">{formatMoney(held, currency)} held until you approve</p>}
+              {held > 0 && <p className="text-muted-foreground">{formatMoney(held, currency)} paid</p>}
               {o.status === "QUOTED" && (
                 <Link href={`/orders/${o.id}/pay`} className={`${buttonVariants({ size: "sm" })} mt-2`}>
                   Pay
@@ -237,6 +238,6 @@ export function ClientOrderView({
           )}
         </aside>
       </div>
-    </main>
+    </Page>
   );
 }

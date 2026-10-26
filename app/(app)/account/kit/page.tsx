@@ -14,6 +14,7 @@ import { Pills } from "@/components/ui/pills";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Timer } from "@/components/ui/timer";
 import { UploadSlot } from "@/components/ui/upload-slot";
+import { Page } from "@/components/ui/page";
 
 /**
  * The shared building blocks of Phase 5 (docs/design README), on one page, so
@@ -29,7 +30,7 @@ export default async function DesignKitPage() {
   if (!userId) redirect("/sign-in");
 
   return (
-    <main className="container max-w-4xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow="Phase 5 · design kit"
         title="Building blocks"
@@ -125,6 +126,6 @@ export default async function DesignKitPage() {
           </div>
         </CardBody>
       </Card>
-    </main>
+    </Page>
   );
 }
