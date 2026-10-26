@@ -5,7 +5,8 @@ import AxeBuilder from "@axe-core/playwright";
 import { clerk } from "@clerk/testing/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { withDb } from "../e2e/db";
+import { generateId } from "../../core/ids/generateId";
+import { asUser, withDb } from "../e2e/db";
 import { E2E_DIR, PERSONAS, readState, type Persona } from "../e2e/state";
 
 /**
@@ -133,7 +134,19 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
       const quoted = await withDb(async (db) =>
         (await db.query("SELECT id FROM orders WHERE client_id = $1 AND status = 'QUOTED' LIMIT 1", [state.users.client2])).rows[0]?.id as string | undefined,
       );
-      return ["/home", "/orders", ...orderPages(quoted), ...(quoted ? [`/orders/${quoted}/pay`] : []), "/wallet"];
+      // The brief wizard: a fresh draft, so the screens show it as a client first sees it.
+      const draft = await withDb(async (db) => {
+        const found = (await db.query("SELECT id FROM orders WHERE client_id = $1 AND status = 'DRAFT' LIMIT 1", [state.users.client2])).rows[0]?.id as string | undefined;
+        if (found) return found;
+        // None left by the journeys: open one the way the New order screen does.
+        const id = generateId();
+        await asUser(db, state.users.client2, "SELECT public.create_order($1, 'Brief for the screens', 'USD')", [id]);
+        return id;
+      });
+      return [
+        "/home", "/orders", ...orderPages(quoted), ...(quoted ? [`/orders/${quoted}/pay`] : []), "/wallet",
+        ...(draft ? [`/orders/${draft}/brief`] : []),
+      ];
     },
   },
   admin: {

@@ -56,7 +56,7 @@ export default async function NewOrderPage() {
               <p className="flex-1 text-[length:var(--fs-3)] text-muted-foreground">{s.body}</p>
               <form action={startBriefAction}>
                 <input type="hidden" name="service" value={s.service} />
-                <Button type="submit" className="w-full">
+                <Button type="submit" variant={s.service === "cad" ? "default" : "secondary"} className="w-full">
                   {s.cta}
                 </Button>
               </form>
