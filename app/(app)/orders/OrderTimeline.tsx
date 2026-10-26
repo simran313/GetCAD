@@ -1,13 +1,7 @@
-import { buildTimeline, type TimelineRawRow } from "@/core";
+import { buildTimeline, type TimelineRawRow, formatDateTime } from "@/core";
 import { formatMoney } from "@/lib/money";
 import { TONE_MARK, TONE_SURFACE } from "@/lib/tone";
-
-function formatWhen(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(iso));
-}
+import { viewerZone } from "@/lib/time/zone";
 
 // Milestone box tone — success (QC passed) vs attention (revision requested).
 // Literally the same colours as StatusBadge now, rather than a second set that
@@ -19,13 +13,15 @@ const QC_TONE = {
   revision_requested: "attention",
 } as const;
 
-export function OrderTimeline({
+export async function OrderTimeline({
   rows,
   currency,
 }: {
   rows: TimelineRawRow[];
   currency: string;
 }) {
+  const tz = await viewerZone();
+  const formatDateTimeTz = (iso: string) => formatDateTime(iso, tz);
   const steps = buildTimeline(rows);
 
   if (steps.length === 0) {
@@ -50,7 +46,7 @@ export function OrderTimeline({
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-semibold">Independent QC review</p>
                   <time className="tabular shrink-0 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)]">
-                    {formatWhen(step.createdAt)}
+                    {formatDateTimeTz(step.createdAt)}
                   </time>
                 </div>
                 <p className="mt-0.5 text-[length:var(--fs-3)] leading-[var(--lh-3)]">
@@ -78,7 +74,7 @@ export function OrderTimeline({
                 )}
               </p>
               <time className="tabular shrink-0 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                {formatWhen(step.createdAt)}
+                {formatDateTimeTz(step.createdAt)}
               </time>
             </div>
             <p className="mt-0.5 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">{step.actorRole}</p>

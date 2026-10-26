@@ -1,5 +1,6 @@
 import "server-only";
 
+import { formatDay } from "@/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -80,7 +81,7 @@ export function serviceWord(service: string): string {
   return service === "render" ? "Renders" : service === "cad_render" ? "CAD + renders" : "CAD";
 }
 
-export function shortDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso));
+/** A day in a list, in the viewer's zone ("Mon, Oct 12"); "—" when unknown. */
+export function shortDate(iso: string | null, zone: string): string {
+  return iso ? formatDay(iso, zone) : "—";
 }

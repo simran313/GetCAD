@@ -112,6 +112,18 @@ export type { EmailTemplate, EmailPayloads, RenderedEmail } from "./email/templa
 export { payoutBatchCsv, paiseToRupees, csvCell, PAYOUT_CSV_HEADER } from "./payouts/batchCsv";
 export type { PayoutBatchRow } from "./payouts/batchCsv";
 export { remaining } from "./time/remaining";
+export {
+  DEFAULT_TIME_ZONE,
+  TIME_ZONE_COOKIE,
+  dayKey,
+  formatDate,
+  formatDateTime,
+  formatDay,
+  formatDayLabel,
+  formatRelative,
+  formatTime,
+  isTimeZone,
+} from "./time/format";
 export type { Remaining } from "./time/remaining";
 export { clientTab, clientNextStep, clientStepsDone, CLIENT_STEPS } from "./orders/clientView";
 export type { ClientTab, ClientStep } from "./orders/clientView";

@@ -3,7 +3,7 @@ import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { rupeesWord } from "@/core";
+import { rupeesWord, formatRelative } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,9 +14,10 @@ import { SlaCountdown } from "@/components/ui/sla-countdown";
 import { ClaimsQueue, type ClaimQueueRow } from "@/components/work/claims-queue";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
-import { ago, loadEarnings, loadPodJobs, type PodJob } from "@/lib/work/load";
+import { loadEarnings, loadPodJobs, type PodJob } from "@/lib/work/load";
 import { requireTeam } from "@/lib/work/team";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * P1 — the QC queue (docs/design). Work in the pod lead's pods that is
@@ -89,7 +90,8 @@ export default async function QcQueuePage() {
   );
 }
 
-function Queue({ title, rows, action, empty }: { title: string; rows: PodJob[]; action: string; empty: string }) {
+async function Queue({ title, rows, action, empty }: { title: string; rows: PodJob[]; action: string; empty: string }) {
+  const tz = await viewerZone();
   return (
     <section className="space-y-3">
       <SectionLabel>
@@ -105,7 +107,7 @@ function Queue({ title, rows, action, empty }: { title: string; rows: PodJob[]; 
               href={`/qc/${j.order_id}`}
               reference={j.order_ref}
               title={j.title}
-              meta={`${j.designer_ref ?? "Designer"} · v${j.work_version}${j.submitted_at ? ` · submitted ${ago(j.submitted_at)}` : ""}${
+              meta={`${j.designer_ref ?? "Designer"} · v${j.work_version}${j.submitted_at ? ` · submitted ${formatRelative(j.submitted_at, tz)}` : ""}${
                 j.qc_ticks > 0 ? ` · QC ${j.qc_ticks}/19` : ""
               }`}
               trailing={

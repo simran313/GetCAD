@@ -11,6 +11,8 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { LeadControls } from "./LeadControls";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDate } from "@/core";
 
 export const dynamic = "force-dynamic";
 
@@ -32,16 +34,13 @@ const FILTERS = [
   { key: "", label: "All" },
 ] as const;
 
-function when(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
-
 export default async function LeadsPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
 
   const status = (await searchParams).status ?? "NEW";
@@ -113,7 +112,7 @@ export default async function LeadsPage({
                     <a className="underline underline-offset-2" href={`mailto:${lead.email}`}>
                       {lead.email}
                     </a>{" "}
-                    · {lead.role.toLowerCase()} · {when(lead.created_at)}
+                    · {lead.role.toLowerCase()} · {formatDate(lead.created_at, tz)}
                   </p>
                 </div>
                 <Badge variant={lead.status === "HANDLED" ? "muted" : "outline"}>

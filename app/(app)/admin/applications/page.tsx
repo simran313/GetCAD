@@ -13,6 +13,8 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ReviewControls } from "./ReviewControls";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDate } from "@/core";
 
 export const dynamic = "force-dynamic";
 
@@ -48,16 +50,13 @@ const STATUS_TONE: Record<string, "muted" | "outline"> = {
   REJECTED: "outline",
 };
 
-function when(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
-
 export default async function ApplicationsPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
 
   const status = (await searchParams).status ?? "PENDING_REVIEW";
@@ -172,7 +171,7 @@ export default async function ApplicationsPage({
                 </div>
                 <div className="flex gap-2">
                   <dt className="text-muted-foreground">Applied</dt>
-                  <dd>{when(app.created_at)}</dd>
+                  <dd>{formatDate(app.created_at, tz)}</dd>
                 </div>
               </dl>
 

@@ -1,11 +1,4 @@
-import {
-  availableTransitions,
-  fileGrantFor,
-  grantExplanation,
-  type FileKind,
-  type TimelineRawRow,
-  type TransitionRow,
-} from "@/core";
+import { availableTransitions, fileGrantFor, grantExplanation, type FileKind, type TimelineRawRow, type TransitionRow, formatDateTime } from "@/core";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { FilePicker } from "@/components/ui/file-picker";
@@ -44,6 +37,7 @@ import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
 import { ThreadsPanel } from "./ThreadsPanel";
 import type { AttachmentRow, DisputeRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "./types";
+import { viewerZone } from "@/lib/time/zone";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
 
@@ -77,8 +71,6 @@ const FILE_KIND_LABELS: Record<string, string> = {
  */
 const CATEGORIES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
-const when = (iso: string) =>
-  new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 
 const rupees = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
@@ -86,7 +78,8 @@ const rupees = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
  * Where the first-look clock stands (DECISIONS §6, v1.1): it starts only once
  * the order is both paid and confirmed by the team.
  */
-function slaLine(o: OrderRow): string {
+function slaLine(o: OrderRow, tz: string): string {
+  const when = (iso: string) => formatDateTime(iso, tz);
   switch (o.sla_status) {
     case "running":
       return o.sla_due_at ? `First look due by ${when(o.sla_due_at)}.` : "The clock is running.";
@@ -125,7 +118,7 @@ function Panel({
   );
 }
 
-export function OrderDetail({
+export async function OrderDetail({
   order: o,
   role,
   payoutShare = null,
@@ -176,6 +169,7 @@ export function OrderDetail({
   /** The team layout's first card: the next move, pod and refs. */
   teamTop?: React.ReactNode;
 }) {
+  const tz = await viewerZone();
   const isOrderClient = o.relation === "CLIENT";
   const isOrderDesigner = o.relation === "DESIGNER";
   const isParticipant = isOrderClient || isOrderDesigner;
@@ -258,9 +252,7 @@ export function OrderDetail({
   // mechanism needed, since every action already produces a timestamped entry.
   const lastEvent = timelineRows[timelineRows.length - 1];
   const lastUpdatedAt = lastEvent
-    ? new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(
-        new Date(lastEvent.created_at),
-      )
+    ? formatDateTime(lastEvent.created_at, tz)
     : null;
 
   const timelineEl = (
@@ -292,7 +284,7 @@ export function OrderDetail({
       {/* The first-look clock (DECISIONS §6). */}
       {showSla && (
         <Panel title="First look">
-          <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)]">{slaLine(o)}</p>
+          <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)]">{slaLine(o, tz)}</p>
           {o.tier && (
             <p className="mt-1 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
               Category {o.category} · {o.tier === "complex" ? `complex, ${o.complex_deadline_hours ?? "—"} h deadline` : "standard, 6 hours"}

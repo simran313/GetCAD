@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { loadClientOrders, shortDate } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * N0 — choose a service (docs/design). CAD design or renders; each creates a
@@ -21,6 +22,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewOrderPage() {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
@@ -76,7 +78,7 @@ export default async function NewOrderPage() {
                 key={o.id}
                 href={`/orders/${o.id}/brief`}
                 title={`Continue draft · ${o.title}`}
-                meta={`Started ${shortDate(o.created_at)}`}
+                meta={`Started ${shortDate(o.created_at, tz)}`}
                 trailing={<span className="text-[length:var(--fs-2)] underline underline-offset-4">Continue</span>}
               />
             ))}

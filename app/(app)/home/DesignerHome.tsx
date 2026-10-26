@@ -1,7 +1,7 @@
 import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 
-import { jobClockDue, jobState, jobTab, rupeesWord } from "@/core";
+import { jobClockDue, jobState, jobTab, rupeesWord, formatDay, formatRelative, formatTime } from "@/core";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -10,16 +10,17 @@ import { StatusTag } from "@/components/ui/status-tag";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SlaCountdown } from "@/components/ui/sla-countdown";
 import { SectionLabel, Stats } from "@/components/work/stats";
-import { ago, jobTitle, when, type Earning, type Job } from "@/lib/work/load";
+import { jobTitle, type Earning, type Job } from "@/lib/work/load";
 import type { VersionNote } from "@/lib/work/notes";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * D2 — the designer's home (docs/design). What needs them first: a job sent
  * back with its notes, a new job to start, one due soon; then messages and
  * the last payout. Nothing about any client, ever.
  */
-export function DesignerHome({
+export async function DesignerHome({
   designerRef,
   podName,
   onboarded,
@@ -40,6 +41,7 @@ export function DesignerHome({
   unread: { order_id: string | null; created_at: string }[];
   lastPayout: { summary: string; created_at: string } | null;
 }) {
+  const tz = await viewerZone();
   const now = Date.now();
   const open = jobs.filter((j) => jobTab(j.status) === "open");
   const dueSoon = open.filter((j) => j.designer_due_at && Date.parse(j.designer_due_at) - now < 24 * 3600_000);
@@ -143,7 +145,7 @@ export function DesignerHome({
                           <p className="mt-1 text-[length:var(--fs-4)] font-medium">{jobTitle(j)}</p>
                           <p className="text-[length:var(--fs-2)] text-muted-foreground">
                             {j.job_code}
-                            {j.designer_due_at ? ` · due ${when(j.designer_due_at, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}` : ""}
+                            {j.designer_due_at ? ` · due ${`${formatDay(j.designer_due_at, tz)} ${formatTime(j.designer_due_at, tz)}`}` : ""}
                           </p>
                         </div>
                         <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
@@ -180,7 +182,7 @@ export function DesignerHome({
                           <span className="block truncate text-[length:var(--fs-3)] font-medium">
                             Pod lead{j ? ` · ${jobTitle(j)}` : ""}
                           </span>
-                          <span className="block text-[length:var(--fs-2)] text-muted-foreground">{ago(m.created_at)}</span>
+                          <span className="block text-[length:var(--fs-2)] text-muted-foreground">{formatRelative(m.created_at, tz)}</span>
                         </span>
                         <span className="text-[length:var(--fs-2)] underline underline-offset-4">Open</span>
                       </Link>
@@ -195,7 +197,7 @@ export function DesignerHome({
               <CardBody>
                 <p className="text-[length:var(--fs-3)] font-medium">Payout sent</p>
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                  {lastPayout.summary} · {ago(lastPayout.created_at)}
+                  {lastPayout.summary} · {formatRelative(lastPayout.created_at, tz)}
                 </p>
                 <Link href="/work/earnings" className="mt-2 inline-block text-[length:var(--fs-2)] underline underline-offset-4">
                   View earnings

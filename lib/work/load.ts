@@ -110,13 +110,4 @@ export const loadPodLoad = (s: SupabaseClient) => rows<PodDesignerLoad>(s.rpc("p
 
 export const loadEarnings = (s: SupabaseClient) => rows<Earning>(s.rpc("my_earnings"));
 
-export const when = (iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short" }) =>
-  new Intl.DateTimeFormat("en-GB", opts).format(new Date(iso));
 
-export function ago(iso: string): string {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
-  return `${Math.floor(s / 86400)} d ago`;
-}

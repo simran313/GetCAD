@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { redirect } from "next/navigation";
 
-import { paiseToRupees } from "@/core";
+import { paiseToRupees, formatDateTime } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,6 +13,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { exportPayoutsAction, markBatchPaidAction } from "./actions";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * What we owe designers and pod leads (DECISIONS §5, owner answer Q2).
@@ -42,8 +43,6 @@ interface PayoutRow {
 
 const rupees = (paise: number) => `₹${Number(paiseToRupees(paise)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 const sum = (rows: PayoutRow[]) => rows.reduce((s, r) => s + r.amount_paise, 0);
-const when = (iso: string) =>
-  new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 const small = "text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground";
 
 function bankLabel(status: string | null): string {
@@ -55,6 +54,7 @@ function bankLabel(status: string | null): string {
 
 export default async function PayoutsPage() {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
@@ -134,8 +134,8 @@ export default async function PayoutsPage() {
             <p className={small}>
               {items.length} payment{items.length === 1 ? "" : "s"} ·{" "}
               {open
-                ? `exported ${items[0]!.exported_at ? when(items[0]!.exported_at) : ""}, not yet marked paid`
-                : `paid ${items[0]!.paid_at ? when(items[0]!.paid_at) : ""}`}
+                ? `exported ${items[0]!.exported_at ? formatDateTime(items[0]!.exported_at, tz) : ""}, not yet marked paid`
+                : `paid ${items[0]!.paid_at ? formatDateTime(items[0]!.paid_at, tz) : ""}`}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <a href={`/admin/payouts/${batch}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>

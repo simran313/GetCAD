@@ -15,6 +15,8 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { decideCreditAction } from "./actions";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDateTime } from "@/core";
 
 /**
  * Late-order credits waiting for a decision (DECISIONS §6, owner answer Q4).
@@ -38,11 +40,10 @@ interface PendingCredit {
   created_at: string;
 }
 
-const when = (iso: string) =>
-  new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 
 export default async function CreditsPage() {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
@@ -85,7 +86,7 @@ export default async function CreditsPage() {
                 </div>
                 <p className="mt-0.5 text-[length:var(--fs-2)] text-muted-foreground">
                   {c.client_code ? `Client ${c.client_code} · ` : ""}
-                  {c.due_at ? `was due ${when(c.due_at)}` : ""}
+                  {c.due_at ? `was due ${formatDateTime(c.due_at, tz)}` : ""}
                 </p>
                 <form action={decideCreditAction} className="mt-3 flex flex-wrap items-end gap-2">
                   <input type="hidden" name="credit_id" value={c.credit_id} />

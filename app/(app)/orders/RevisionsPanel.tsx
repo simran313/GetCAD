@@ -5,6 +5,8 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 import { changeOrderAction, requestRevisionAction } from "./actions";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDateTime } from "@/core";
 
 /**
  * Client revisions and changes (Phase 3b, DECISIONS §8, owner answer Q5).
@@ -43,12 +45,10 @@ export interface RevisionsData {
 }
 
 const small = "text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground";
-const when = (iso: string) =>
-  new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 
 const CHANGE_FROM = new Set(["CLIENT_PREVIEW", "APPROVED", "DELIVERED", "CLOSED"]);
 
-export function RevisionsPanel({
+export async function RevisionsPanel({
   orderId,
   status,
   isActingAsClient,
@@ -59,6 +59,8 @@ export function RevisionsPanel({
   isActingAsClient: boolean;
   data: RevisionsData;
 }) {
+  const tz = await viewerZone();
+  const when = (iso: string) => formatDateTime(iso, tz);
   const { allowance, rounds, lineage } = data;
   const parent = lineage.find((l) => l.direction === "parent");
   const children = lineage.filter((l) => l.direction === "child");

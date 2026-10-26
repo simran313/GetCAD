@@ -8,6 +8,8 @@ import { requireTeam } from "@/lib/work/team";
 
 import { SECTIONS } from "./fields";
 import { SettingsForm, type Changed, type FlagRow, type SettingRow } from "./SettingsForm";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDate } from "@/core";
 
 /**
  * A11 — Settings (Phase 8b, redesigned). The numbers the platform runs on
@@ -24,10 +26,10 @@ interface Stamped {
   updated_at: string;
 }
 
-const day = (iso: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
 
 export default async function SettingsPage() {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
   const team = await requireTeam(supabase);
@@ -55,7 +57,7 @@ export default async function SettingsPage() {
   const latest = (rows: Stamped[]): Changed | undefined => {
     const r = rows.filter((x) => x.updated_by).sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
     if (!r) return undefined;
-    return { by: r.updated_by === userId ? "you" : (names.get(r.updated_by!) ?? "an admin"), at: day(r.updated_at) };
+    return { by: r.updated_by === userId ? "you" : (names.get(r.updated_by!) ?? "an admin"), at: formatDate(r.updated_at, tz) };
   };
   const changed: Record<string, Changed | undefined> = {
     ...Object.fromEntries(SECTIONS.map((s) => [s.id, latest(settingRows.filter((r) => s.keys.includes(r.key)))])),

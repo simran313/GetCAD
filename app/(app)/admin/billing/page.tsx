@@ -3,7 +3,7 @@ import { Wallet } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { escrowSign, rupeesWord } from "@/core";
+import { escrowSign, rupeesWord, formatDay } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,10 @@ import { StatusTag } from "@/components/ui/status-tag";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
-import { when } from "@/lib/work/load";
 import { ResponsiveDataList, type Column } from "@/components/ui/data-list";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * A8 — Billing, as a money overview (owner answer, Phase 5d): what clients
@@ -53,8 +53,8 @@ const signOf = (kind: string) => {
   }
 };
 
-const movementColumns: Column<Movement>[] = [
-  { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)] text-muted-foreground", cell: (m) => when(m.created_at) },
+const movementColumns = (tz: string): Column<Movement>[] => [
+  { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)] text-muted-foreground", cell: (m) => formatDay(m.created_at, tz) },
   {
     key: "order",
     header: "Order",
@@ -78,6 +78,7 @@ const movementColumns: Column<Movement>[] = [
 
 export default async function BillingPage() {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
@@ -141,7 +142,7 @@ export default async function BillingPage() {
           <SectionLabel>Money movements · newest first</SectionLabel>
           <ResponsiveDataList
             caption="Money movements"
-            columns={movementColumns}
+            columns={movementColumns(tz)}
             rows={ledger.slice(0, 200)}
             rowKey={(m) => m.id}
             rowHref={(m) => `/orders/${m.order_id}`}

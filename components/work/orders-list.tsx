@@ -1,8 +1,9 @@
-import { staffNext, staffStage, STAGE_LABELS, statusMeta, type StaffStage } from "@/core";
+import { staffNext, staffStage, STAGE_LABELS, statusMeta, type StaffStage, formatDay, formatTime } from "@/core";
 import type { PillTone } from "@/components/ui/status-pill";
 import { OrdersBrowser, type OrderRow, type OrdersTab } from "@/components/work/orders-browser";
 import { formatMoney } from "@/lib/money";
-import { when, type PodJob } from "@/lib/work/load";
+import { type PodJob } from "@/lib/work/load";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * The team's order list (docs/design P3 for a pod lead, A2 for admins):
@@ -23,9 +24,7 @@ export function parseTab(raw: string | undefined): OrdersTab {
   return raw === "open" || raw === "staff" || raw === "closed" ? raw : "all";
 }
 
-const stamp = (iso: string) => when(iso, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
-
-export function OrdersList({
+export async function OrdersList({
   jobs,
   basePath,
   tab,
@@ -38,6 +37,8 @@ export function OrdersList({
   q?: string;
   stage?: StaffStage | null;
 }) {
+  const tz = await viewerZone();
+  const stamp = (iso: string) => `${formatDay(iso, tz)} ${formatTime(iso, tz)}`;
   const link = (j: PodJob) => (j.status === "QC_REVIEW" && basePath.startsWith("/qc") ? `/qc/${j.order_id}` : `/orders/${j.order_id}`);
   const rows: OrderRow[] = jobs.map((j) => {
     const meta = statusMeta(j.status);

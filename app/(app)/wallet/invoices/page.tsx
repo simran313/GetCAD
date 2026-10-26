@@ -10,6 +10,8 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadWallet } from "../load";
 import { WalletNav } from "../WalletNav";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDate } from "@/core";
 
 /**
  * W3 — Invoices (docs/design): every paid order with its amount and date.
@@ -20,6 +22,7 @@ export const dynamic = "force-dynamic";
 
 export default async function InvoicesPage() {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
   const w = await loadWallet(supabase);
@@ -39,7 +42,7 @@ export default async function InvoicesPage() {
                     {o.title}
                   </Link>
                   <span className="tabular block font-mono text-[length:var(--fs-2)] text-muted-foreground">
-                    {o.display_ref} · paid {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(o.paid_at!))}
+                    {o.display_ref} · paid {formatDate(o.paid_at!, tz)}
                   </span>
                 </span>
                 <span className="tabular font-mono text-[length:var(--fs-3)]">

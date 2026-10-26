@@ -11,6 +11,8 @@ import { AutoRefresh } from "../orders/AutoRefresh";
 import { ThreadsPanel } from "../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
+import { formatRelative } from "@/core";
 
 /**
  * C7 / C7b — Messages (docs/design). Every conversation the viewer may read,
@@ -39,15 +41,6 @@ export interface OpenConversation {
   stamp: string | null;
 }
 
-function ago(iso: string | null): string {
-  if (!iso) return "";
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
-  return `${Math.floor(s / 86400)} d ago`;
-}
-
 // What the list is, for whoever is reading it (C7, D5; Phase 5c for the team).
 function describe(role: string): { eyebrow?: string; description: string; team: boolean } {
   if (role === "DESIGNER") {
@@ -61,7 +54,7 @@ function describe(role: string): { eyebrow?: string; description: string; team: 
   return { description: "Each order has a client conversation and a designer conversation.", team: true };
 }
 
-export function MessagesView({
+export async function MessagesView({
   conversations,
   open,
   role,
@@ -70,6 +63,7 @@ export function MessagesView({
   open: OpenConversation | null;
   role: string;
 }) {
+  const tz = await viewerZone();
   const copy = describe(role);
   return (
     <Page>
@@ -97,7 +91,7 @@ export function MessagesView({
                           {c.display_ref}
                           {copy.team && ` · ${c.kind === "internal" ? "Designer" : "Client"}`}
                         </span>
-                        <span className="text-[length:var(--fs-1)] text-muted-foreground">{ago(c.last_at)}</span>
+                        <span className="text-[length:var(--fs-1)] text-muted-foreground">{c.last_at ? formatRelative(c.last_at, tz) : ""}</span>
                       </span>
                       <span className="mt-1 block truncate text-[length:var(--fs-2)]">
                         {c.last_body ? `${c.last_mine ? "You" : c.last_alias}: ${c.last_body}` : "No messages yet"}

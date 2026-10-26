@@ -9,6 +9,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 import type { ClaimRow } from "./AfterDelivery";
 import { decideClaimAction } from "./previewActions";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * A6 for the team: the client's evidence, re-measure, decide. The pod lead
@@ -26,6 +27,7 @@ export interface TeamClaimRow extends ClaimRow {
 }
 
 export async function TeamClaims({ orderId, claims, isAdmin }: { orderId: string; claims: TeamClaimRow[]; isAdmin: boolean }) {
+  const tz = await viewerZone();
   const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
   const sign = async (key: string | null) => (key ? ((await storage.createSignedUrl(key, 60 * 15)).data?.signedUrl ?? null) : null);
   const signed = await Promise.all(
@@ -49,7 +51,7 @@ export async function TeamClaims({ orderId, claims, isAdmin }: { orderId: string
                 <StatusTag kind={c.status === "open" || c.status === "admin_review" ? "needs" : "muted"}>{c.status.replace("_", " ")}</StatusTag>
                 <span className="font-medium">{c.spec.replace("_", " ")}</span>
                 <span className="text-muted-foreground">
-                  · {shortDate(c.created_at)} · {c.hash_match ? `file matches v${c.matched_version ?? "?"}` : "file does not match"}
+                  · {shortDate(c.created_at, tz)} · {c.hash_match ? `file matches v${c.matched_version ?? "?"}` : "file does not match"}
                 </span>
               </p>
               <p>{c.description}</p>
