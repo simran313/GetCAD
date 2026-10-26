@@ -102,6 +102,13 @@ export function AppShell({
 
   return (
     <div style={{ ["--sidebar-w" as string]: collapsed ? "64px" : "240px" }}>
+      {/* Keyboard users jump past the navigation straight to the page. */}
+      <a
+        href="#content"
+        className="sr-only z-[70] rounded-[var(--r-sm)] bg-foreground px-4 py-3 text-background focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+      >
+        Skip to content
+      </a>
       <Sidebar
         groups={groups}
         activeKey={active}
@@ -171,7 +178,9 @@ export function AppShell({
           </div>
         </header>
 
-        <div className="pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
+        <div id="content" tabIndex={-1} className="pb-[calc(88px+env(safe-area-inset-bottom))] outline-none md:pb-0">
+          {children}
+        </div>
       </div>
 
       <MobileBottomNav
