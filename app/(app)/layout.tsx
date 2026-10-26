@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { ConnectionStatus } from "@/components/pwa/connection-status";
 import { AppShell, type ShellOrder } from "@/components/shell/app-shell";
 import { ROLE_LABEL, shellKind } from "@/components/shell/nav-config";
@@ -46,7 +47,15 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
  * visible_orders() — the same per-role, reference-only read the order lists
  * use — so it never shows anyone more than their own pages do.
  */
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <AppChrome>{children}</AppChrome>
+    </AuthProvider>
+  );
+}
+
+async function AppChrome({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
 
   if (!userId) {

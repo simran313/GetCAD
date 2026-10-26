@@ -11,8 +11,10 @@ export async function signedIn(browser: Browser, persona: Persona): Promise<Page
   // Browser-side errors go to the CI log: a page that throws in the browser
   // is otherwise invisible from here.
   page.on("pageerror", (e) => console.log(`[browser:${persona}] ${e.message}`));
-  await page.goto("/");
+  // The website does not load Clerk; the sign-in screen does.
+  await page.goto("/sign-in");
   await clerk.signIn({ page, emailAddress: PERSONAS[persona].email });
+  await page.goto("/home");
   return page;
 }
 

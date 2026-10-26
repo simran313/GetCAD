@@ -1,7 +1,6 @@
-import { ClerkProvider } from "@clerk/nextjs";
-import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
 
@@ -10,6 +9,18 @@ import "./globals.css";
 // Self-hosted rather than fetched from Google at build time: the build must not
 // depend on an outbound request succeeding, and the fonts must not be requested
 // from a third party at runtime by a page that shows people's order data.
+
+// Geist Mono as the geist package defines it, but not preloaded: it sets only
+// small labels and references, and preloading it on every page took bandwidth
+// from the first paint on a phone. It loads when a page first uses it.
+const GeistMono = localFont({
+  src: "../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2",
+  variable: "--font-geist-mono",
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Roboto Mono", "Menlo", "Monaco", "Liberation Mono", "DejaVu Sans Mono", "Courier New", "monospace"],
+  weight: "100 900",
+  preload: false,
+});
 
 export const metadata: Metadata = {
   title: {
@@ -48,38 +59,18 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-// Minimal shell: ClerkProvider + fonts + globals only. The marketing site and
-// the authenticated product each provide their own header/nav via a nested
-// layout in their respective route group — this root never renders chrome
-// specific to either, keeping the two structurally isolated.
-/**
- * `signInUrl` / `signUpUrl` / `afterSignOutUrl` are what keep authentication on
- * THIS origin.
- *
- * Unset, Clerk sends an unauthenticated visitor to its hosted Account Portal —
- * `accounts.<your-domain>` or `<slug>.accounts.dev` — which is a different
- * origin. In a browser that is merely a detour. In the installed app it is a
- * loop that never ends:
- *
- *   - the manifest's `scope` is this origin, so the portal is OUTSIDE the app;
- *   - an iOS home-screen app has a storage container SEPARATE from Safari, so
- *     the install starts signed out even when Safari is signed in;
- *   - the portal hands the session back across origins, the container does not
- *     keep it, and /dashboard redirects out again.
- *
- * The symptom is an app that opens to a spinner and reloads forever, with no
- * error anywhere. Pointing these at our own routes keeps every step inside the
- * installed app, where the cookie it sets is the cookie the next request reads.
- */
+// Minimal shell: fonts + globals only. The marketing site and the
+// authenticated product each provide their own header/nav via a nested layout
+// in their respective route group — this root never renders chrome specific
+// to either, keeping the two structurally isolated. Clerk is loaded by the
+// layouts that use it (components/auth/auth-provider), not here.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" afterSignOutUrl="/">
-      <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-        <body className="min-h-screen bg-background font-sans text-foreground antialiased">
-          {children}
-          <ServiceWorker />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+        {children}
+        <ServiceWorker />
+      </body>
+    </html>
   );
 }
