@@ -52,6 +52,8 @@ jobs:
             preview|marketing) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV"; echo "DESIGN_QA_SKIP_JOURNEYS=1" >> "$GITHUB_ENV" ;;
             admin|client|client2|designer|podLead) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV" ;;
           esac
+          # The final capture fails on any serious or critical axe finding.
+          if [ "$stage" = "after" ]; then echo "DESIGN_QA_AXE_STRICT=1" >> "$GITHUB_ENV"; fi
 
       - uses: actions/setup-node@v4
         with:

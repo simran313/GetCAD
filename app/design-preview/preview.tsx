@@ -255,7 +255,7 @@ export function Preview() {
           ].map(([label, src]) => (
             <div key={src} className="mb-12">
               <h3 className="mb-4 text-[18px]">{label}</h3>
-              <div className="flex gap-6 overflow-x-auto pb-4">
+              <div tabIndex={0} role="region" aria-label="Scrollable samples" className="flex gap-6 overflow-x-auto pb-4">
                 <Frame src={src!} width={390} height={844} scale={0.75} />
                 <Frame src={src!} width={1440} height={900} scale={0.55} />
               </div>

@@ -46,8 +46,9 @@ actions are called with the same form fields.
 | --- | --- | --- |
 | Home | Four stat tiles first, uppercase labels, overflowed on a phone | "Welcome back": what needs you first, the first item the one black button, large type, full-width buttons on a phone; in-progress list with live countdowns; wallet and totals as quiet links; "Talk to your team" always in the top bar |
 | Orders | Two hand-built layouts, mono uppercase heads | One responsive list, counts on every tab (empty tabs hidden), Pay as the row's action, designed empty states |
-| Order page | Static timer, "Late — credit due" tag | Live countdown, Missed / Done on time pills |
-| Wallet | Display-serif numbers | Semibold amounts, a real section heading |
+| Order page | Static timer, "Late — credit due" tag, "held until you approve", "Payment secured in escrow" | Live countdown, Missed / Done on time pills, "$55.00 paid", "Payment received" |
+| Wallet | Display-serif numbers, "Held in orders · released after you approve" | Semibold amounts, "Paid on open orders", a real section heading |
+| Pay | "Held until you approve" | "Once you pay, we start as soon as your brief is confirmed. If we can't deliver, the money comes back to you." |
 | Account | Centred, floating "Sign out" text, uppercase labels, native file input | Identity first (name, email, roles as chips, status, client code, copyable reference), business form, logo with the styled picker, security as a row, Sign out as a real button |
 
 ## Designer and pod lead
@@ -69,4 +70,13 @@ actions are called with the same form fields.
 - The anonymity crawl ignores React's numbered page rows when comparing two
   jobs (owner-approved); the leak check still reads the raw pages.
 - Accessibility: axe (WCAG 2.2 A/AA) on every route at 390 and 1440, report
-  per role in `axe.md` beside the screenshots.
+  per role in `axe.md` beside the screenshots. First pass (`axe/`): 19
+  serious or critical instances of 5 issues, all fixed: an unlabelled file
+  input (Create order), the save bar hidden from screen readers while its
+  buttons stayed focusable (now `inert`), an invalid definition list
+  (Account), faded text on the green QC box (order timeline), and preview
+  strips that scrolled without keyboard access. The final capture (`after/`)
+  runs with DESIGN_QA_AXE_STRICT=1, so any serious finding fails it.
+- Keyboard: "Skip to content" link; every control reachable by Tab with a
+  visible focus ring; dialogs and sheets trap focus (Radix). Reduced motion:
+  every duration is zeroed under prefers-reduced-motion (globals.css).

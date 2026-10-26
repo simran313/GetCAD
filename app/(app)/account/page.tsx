@@ -148,8 +148,8 @@ export default async function AccountPage() {
             <dt className="text-[length:var(--fs-2)] text-muted-foreground">Account reference</dt>
             <dd>
               <CopyableID value={userId} label="account reference" className="-ml-1.5 text-[length:var(--fs-3)]" />
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">Quote it if you contact us. It identifies you without naming you.</p>
             </dd>
-            <p className="text-[length:var(--fs-2)] text-muted-foreground">Quote it if you contact us. It identifies you without naming you.</p>
           </div>
         </dl>
       </section>
