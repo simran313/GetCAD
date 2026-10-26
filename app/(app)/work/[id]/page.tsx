@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { jobClockDue, jobState, minutesWord, slotAccept } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { FilePicker } from "@/components/ui/file-picker";
 import { Input } from "@/components/ui/input";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
@@ -167,14 +168,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                         <form action={uploadSlotAction} className="space-y-2">
                           <input type="hidden" name="order_id" value={id} />
                           <input type="hidden" name="slot" value={s.code} />
-                          <input
-                            type="file"
-                            name="file"
-                            required
-                            accept={slotAccept(s.code)}
-                            aria-label={`File for ${s.code}`}
-                            className="w-full text-[length:var(--fs-1)]"
-                          />
+                          <FilePicker name="file" required accept={slotAccept(s.code)} label={`File for ${s.code}`} buttonLabel="Choose" />
                           <Button type="submit" size="sm" variant="outline" className="w-full">
                             {s.file_version_id ? "Replace" : "Upload"}
                           </Button>

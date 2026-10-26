@@ -8,6 +8,7 @@ import {
 } from "@/core";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { FilePicker } from "@/components/ui/file-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -681,14 +682,7 @@ export function OrderDetail({
             <form action={uploadFileAction} className="mt-3">
               <input type="hidden" name="order_id" value={o.id} />
               <div className="flex flex-wrap items-center gap-2">
-                <input
-                  type="file"
-                  name="file"
-                  required
-                  accept=".png,.jpg,.jpeg,.step,.stp"
-                  aria-label="Upload a file"
-                  className="text-[length:var(--fs-3)] leading-[var(--lh-3)]"
-                />
+                <FilePicker name="file" required accept=".png,.jpg,.jpeg,.step,.stp" label="Upload a file" />
                 {/* What this file IS decides who can download it and when, so it
                     is asked for at upload time rather than guessed from the
                     extension afterwards. A client has one legitimate answer, so

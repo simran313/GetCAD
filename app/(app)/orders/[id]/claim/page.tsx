@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { FilePicker } from "@/components/ui/file-picker";
 import { Card, CardBody } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
@@ -82,10 +83,10 @@ export default async function ClaimPage({ params }: { params: Promise<{ id: stri
                 htmlFor="file"
                 hint="The STL or 3DM exactly as you used it. We match its fingerprint with what we delivered; an edited file is not covered."
               >
-                <input id="file" type="file" name="file" accept=".stl,.3dm" required />
+                <FilePicker id="file" name="file" label="The file you cast from" accept=".stl,.3dm" required />
               </Field>
               <Field label="Photos of the piece" htmlFor="photos" hint="1 to 10 photos, PNG or JPEG, ideally with a gauge or calliper in shot.">
-                <input id="photos" type="file" name="photos" accept="image/png,image/jpeg" multiple required />
+                <FilePicker id="photos" name="photos" label="Photos of the piece" accept="image/png,image/jpeg" multiple required buttonLabel="Choose photos" />
               </Field>
               <p className="text-[length:var(--fs-2)] text-muted-foreground">
                 Open until {w.closes_at ? shortDate(w.closes_at) : "—"}. Not covered: an edited file, a spec you asked us to change

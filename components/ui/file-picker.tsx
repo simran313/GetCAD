@@ -15,6 +15,7 @@ import { buttonVariants } from "./button";
  * exactly as before.
  */
 export function FilePicker({
+  id: givenId,
   name,
   label,
   accept,
@@ -24,6 +25,8 @@ export function FilePicker({
   className,
   disabled,
 }: {
+  /** Pass when an outside <label htmlFor> points at the input. */
+  id?: string;
   name: string;
   /** The input's accessible name (e.g. "Logo file"). */
   label: string;
@@ -34,7 +37,8 @@ export function FilePicker({
   className?: string;
   disabled?: boolean;
 }) {
-  const id = useId();
+  const autoId = useId();
+  const id = givenId ?? autoId;
   const [chosen, setChosen] = useState<string>("");
   return (
     <div className={cn("flex min-w-0 flex-wrap items-center gap-3", className)}>

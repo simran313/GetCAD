@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { FilePicker } from "@/components/ui/file-picker";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -111,12 +112,11 @@ export function ThreadsPanel({
                     />
                     <Button type="submit">Send</Button>
                   </div>
-                  <input
-                    type="file"
+                  <FilePicker
                     name="file"
                     accept={t.kind === "internal" ? THREAD_ACCEPT.internal : THREAD_ACCEPT.client_team}
-                    aria-label={`Attach a file in ${title}`}
-                    className="text-[length:var(--fs-2)]"
+                    label={`Attach a file in ${title}`}
+                    buttonLabel="Attach a file"
                   />
                   <p className={small}>
                     {t.kind === "internal"
