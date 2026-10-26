@@ -73,7 +73,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
               rounds of changes are included within 14 days of your first look.
             </p>
             <p className="text-muted-foreground">{promise}</p>
-            <p className="text-muted-foreground">Held until you approve. If we can&apos;t deliver, it comes back to you.</p>
+            <p className="text-muted-foreground">Once you pay, we start as soon as your brief is confirmed. If we can&apos;t deliver, the money comes back to you.</p>
           </CardBody>
         </Card>
 

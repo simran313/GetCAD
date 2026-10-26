@@ -24,7 +24,7 @@ export default async function WalletPage() {
 
   return (
     <Page>
-      <PageHeader title="Wallet" description="Your credit, what is held in open orders, and every payment." />
+      <PageHeader title="Wallet" description="Your credit, what you have paid on open orders, and every payment." />
       <WalletNav active="/wallet" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
@@ -36,10 +36,10 @@ export default async function WalletPage() {
         </Card>
         <Card>
           <CardBody>
-            <p className="text-[length:var(--fs-2)] text-muted-foreground">Held in orders · released after you approve</p>
+            <p className="text-[length:var(--fs-2)] text-muted-foreground">Paid on open orders</p>
             <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">{formatMoney(w.heldCents, "USD")}</p>
             <p className="mt-1 truncate text-[length:var(--fs-2)] text-muted-foreground">
-              {w.heldOrders.map((o) => o.title).join(" · ") || "Nothing held"}
+              {w.heldOrders.map((o) => o.title).join(" · ") || "No open orders paid"}
             </p>
           </CardBody>
         </Card>

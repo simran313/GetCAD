@@ -29,9 +29,9 @@ export interface Wallet {
 }
 
 const LEDGER_WORDS: Partial<Record<EscrowKind, string>> = {
-  HOLD: "Paid, held for order",
+  HOLD: "Paid for order",
   REFUND: "Refunded",
-  RELEASE: "Released to design",
+  RELEASE: "Order closed",
 };
 
 export async function loadWallet(supabase: SupabaseClient): Promise<Wallet> {

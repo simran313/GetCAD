@@ -206,7 +206,7 @@ export function ClientOrderView({
               <p className="tabular font-mono text-[length:var(--fs-4)]">
                 {o.price_total ? formatMoney(o.price_total, currency) : "Price coming"}
               </p>
-              {held > 0 && <p className="text-muted-foreground">{formatMoney(held, currency)} held until you approve</p>}
+              {held > 0 && <p className="text-muted-foreground">{formatMoney(held, currency)} paid</p>}
               {o.status === "QUOTED" && (
                 <Link href={`/orders/${o.id}/pay`} className={`${buttonVariants({ size: "sm" })} mt-2`}>
                   Pay
