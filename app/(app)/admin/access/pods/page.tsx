@@ -170,7 +170,7 @@ export default async function PodsPage() {
                     </option>
                   ))}
                 </Select>
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" variant="secondary">
                   Add
                 </Button>
               </form>

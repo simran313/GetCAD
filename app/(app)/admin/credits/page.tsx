@@ -104,9 +104,9 @@ export default async function CreditsPage() {
                   </label>
                   <label className="text-[length:var(--fs-2)] text-muted-foreground">
                     Reason (partial / reject)
-                    <Input name="reason" maxLength={1000} className="mt-0.5 w-64" />
+                    <Input name="reason" maxLength={1000} className="mt-0.5 w-full sm:w-64" />
                   </label>
-                  <Button type="submit" size="sm">
+                  <Button type="submit" size="sm" variant="secondary">
                     Decide
                   </Button>
                 </form>
