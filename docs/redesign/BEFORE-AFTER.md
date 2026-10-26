@@ -39,6 +39,8 @@ actions are called with the same form fields.
 | Create order | Native "Choose Files" | Styled picker |
 | Credits, Applications, Leads | Plain "Nothing here" | Designed empty states; per-row Decide is secondary |
 | Order page | One-tap red "Refund the client" | Secondary button opening a typed confirmation; red only on the final confirm |
+| Billing | Uppercase mono table that overflowed a phone (G1), "Paid · held", fixed-size tiles | Shared responsive list with an empty state, "Paid", compact summary strip, secondary links to Payouts and Credits |
+| Payouts | Plain "Nothing owed.", a 30px Download CSV link, duplicate eyebrow | Designed empty state, 44px secondary buttons, one header |
 
 ## Client
 
@@ -49,6 +51,8 @@ actions are called with the same form fields.
 | Order page | Static timer, "Late — credit due" tag, "held until you approve", "Payment secured in escrow" | Live countdown, Missed / Done on time pills, "$55.00 paid", "Payment received" |
 | Wallet | Display-serif numbers, "Held in orders · released after you approve" | Semibold amounts, "Paid on open orders", a real section heading |
 | Pay | "Held until you approve" | "Once you pay, we start as soon as your brief is confirmed. If we can't deliver, the money comes back to you." |
+| New order | Two black buttons | Start a CAD brief is the one black button; Renders is secondary |
+| Brief wizard | 4px phone step-bar targets, native picture picker | 24px tap targets around the same thin bar, styled picker, Save draft and Edit secondary; first captured in design QA (client2 group) |
 | Account | Centred, floating "Sign out" text, uppercase labels, native file input | Identity first (name, email, roles as chips, status, client code, copyable reference), business form, logo with the styled picker, security as a row, Sign out as a real button |
 
 ## Designer and pod lead
@@ -57,6 +61,8 @@ actions are called with the same form fields.
 | --- | --- | --- |
 | Designer Home | Every job card's button black | One black button: the job to open first; live countdowns; empty state |
 | Open jobs | Two hand-built layouts | One responsive list; your time and due-to-QC as live countdowns; Start work black only on the first job |
+| Job page | Ten upload tiles, each Choose + file name + Upload (30 cramped controls), "45 MIN", mono notes | One row per deliverable: done/empty mark, name and code, the file, Choose and Upload side by side (stacks on a phone); "45 min"; plain notes |
+| Checklist | MUST / CRITICAL / STOP IF UNSURE in uppercase mono, 01–19 padded numbers | Sentence-case chips (Must, Critical, Stop if unsure), plain numbers |
 | Earnings | Centred narrow page | Shared frame, empty state |
 | QC queue | Long uppercase eyebrow, black buttons on rows | Description line, secondary row moves, live countdowns, empty states |
 | Team board | Create order black | Secondary |
