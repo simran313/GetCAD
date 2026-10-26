@@ -47,13 +47,23 @@ export async function refused(page: Page, button: Locator) {
   expect(res.status(), `server action was accepted on ${page.url()}`).toBeGreaterThanOrEqual(400);
 }
 
-/** Set one admin setting on the Settings screen (Phase 8b). */
+/**
+ * Set one admin setting on the Settings screen (Phase 8b). Since the
+ * redesign the field is found by its key and saved with the page's one save
+ * bar; the value is typed in the unit the screen shows (g/cm³ for densities).
+ */
 export async function setSetting(page: Page, key: string, value: string) {
   await page.goto("/admin/settings");
-  const form = page.locator("form", { has: page.locator(`input[name="key"][value="${key}"]`) });
-  await form.locator('input[name="value"]').fill(value);
-  await act(page, form.getByRole("button", { name: "Save" }));
-  await settled(page, `${key} saved`, (timeout) => expect(form.locator('input[name="value"]')).toHaveValue(value, { timeout }));
+  const input = page.locator(`input[name="${key}"]`);
+  if ((await input.inputValue()) === value) return;
+  await input.fill(value);
+  await act(page, page.getByRole("button", { name: "Save changes" }));
+  await settled(page, `${key} saved`, (timeout) => expect(input).toHaveValue(value, { timeout }));
+}
+
+/** A feature switch on the Settings screen, by its label (redesign). */
+export function featureSwitch(page: Page, label: string) {
+  return page.getByRole("switch", { name: label });
 }
 
 /**

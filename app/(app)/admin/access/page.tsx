@@ -84,7 +84,7 @@ export default async function AdminUsersPage({
   // it is not a bug.
   if (error) {
     return (
-      <Page narrow>
+      <Page>
         <PageHeader title="Access" />
         <ErrorPanel title="Not available to your role" message={error.message} />
         <Link href="/admin" className={buttonVariants({ variant: "secondary" })}>

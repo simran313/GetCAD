@@ -208,11 +208,11 @@ test("the weight sheet shows 5 alloys and follows the densities on the Settings 
   }
 
   const admin = await signedIn(browser, "admin");
-  await setSetting(admin, "density_14k_mg_cm3", "14200");
+  await setSetting(admin, "density_14k_mg_cm3", "14.2");
   try {
     expect(await sheet()).toMatch(/14\s*K gold 4\.44 g/);
   } finally {
-    await setSetting(admin, "density_14k_mg_cm3", "13100");
+    await setSetting(admin, "density_14k_mg_cm3", "13.1");
   }
   await admin.context().close();
   await client.context().close();

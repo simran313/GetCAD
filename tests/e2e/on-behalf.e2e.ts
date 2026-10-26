@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { withDb } from "./db";
 import { png } from "./files";
-import { act, expectGone, orderIdFrom, refused, setSetting, settled, signedIn } from "./helpers";
+import { act, expectGone, featureSwitch, orderIdFrom, refused, setSetting, settled, signedIn } from "./helpers";
 import { PERSONAS, readState } from "./state";
 
 /**
@@ -17,6 +17,8 @@ import { PERSONAS, readState } from "./state";
 test.describe.configure({ mode: "serial", timeout: 300_000 });
 
 const state = readState();
+// The capacity_blocking switch, by its label on the Settings screen.
+const CAPACITY = "Block assignment over shift capacity";
 const client2 = state.users.client2;
 let orderId = "";
 
@@ -118,11 +120,10 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
 
   const admin = await signedIn(browser, "admin");
   await admin.goto("/admin/settings");
-  const flag = admin.getByRole("button", { name: "Turn on capacity_blocking" });
+  const flag = featureSwitch(admin, CAPACITY);
+  await expect(flag).toHaveAttribute("aria-checked", "false");
   await act(admin, flag);
-  await settled(admin, "capacity blocking on", (timeout) =>
-    expect(admin.getByRole("button", { name: "Turn off capacity_blocking" })).toBeVisible({ timeout }),
-  );
+  await settled(admin, "capacity blocking on", (timeout) => expect(flag).toHaveAttribute("aria-checked", "true", { timeout }));
   await setSetting(admin, "shift_minutes", shift);
   try {
     const lead = await signedIn(browser, "podLead");
@@ -146,12 +147,11 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
     // Wait for the switch before deciding: count() does not wait, and on a
     // streamed page it read 0 and left capacity blocking on (redesign audit).
     await admin.goto("/admin/settings");
-    const off = admin.getByRole("button", { name: "Turn off capacity_blocking" });
-    const on = admin.getByRole("button", { name: "Turn on capacity_blocking" });
-    await expect(off.or(on)).toBeVisible();
-    if (await off.isVisible()) {
-      await act(admin, off);
-      await settled(admin, "capacity blocking off", (timeout) => expect(on).toBeVisible({ timeout }));
+    const sw = featureSwitch(admin, CAPACITY);
+    await expect(sw).toBeVisible();
+    if ((await sw.getAttribute("aria-checked")) === "true") {
+      await act(admin, sw);
+      await settled(admin, "capacity blocking off", (timeout) => expect(sw).toHaveAttribute("aria-checked", "false", { timeout }));
     }
   }
   await admin.context().close();
