@@ -58,6 +58,11 @@ process.exit(status);
  * the LCP element and its phases, render-blocking files, third parties, the
  * heaviest scripts and downloads. Printed every time, so a miss says why.
  */
+// The redesign's targets. lighthouserc.json fails the job only on a
+// regression from the last measured level (owner decision); the goal is
+// reported on every run until it is met.
+const GOAL = { performance: 90, lcpMs: 2500 };
+
 function explain() {
   const dir = "lighthouse-report";
   const manifest = join(dir, "manifest.json");
@@ -69,7 +74,11 @@ function explain() {
     const lhr = JSON.parse(readFileSync(run.jsonPath, "utf8"));
     const a = lhr.audits;
     const items = (id) => a[id]?.details?.items ?? [];
-    console.log(`\n── ${run.url}  performance ${Math.round(lhr.categories.performance.score * 100)}`);
+    const score = Math.round(lhr.categories.performance.score * 100);
+    const lcp = a["largest-contentful-paint"]?.numericValue ?? Infinity;
+    const met = score >= GOAL.performance && lcp <= GOAL.lcpMs;
+    console.log(`\n── ${run.url}  performance ${score}`);
+    console.log(`  Goal (performance ${GOAL.performance}, largest paint ${GOAL.lcpMs / 1000} s): ${met ? "met" : "not met yet"}`);
     for (const id of ["first-contentful-paint", "largest-contentful-paint", "total-blocking-time", "speed-index"]) {
       console.log(`  ${a[id]?.title}: ${a[id]?.displayValue}`);
     }

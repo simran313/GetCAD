@@ -1,4 +1,3 @@
-import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 
@@ -10,11 +9,19 @@ import "./globals.css";
 // depend on an outbound request succeeding, and the fonts must not be requested
 // from a third party at runtime by a page that shows people's order data.
 
-// Geist Mono as the geist package defines it, but not preloaded: it sets only
-// small labels and references, and preloading it on every page took bandwidth
-// from the first paint on a phone. It loads when a page first uses it.
+// Geist and Geist Mono as the geist package defines them, from copies cut
+// down to the characters and typographic features the product uses
+// (scripts/subset-fonts.sh: Latin and Latin-1, punctuation, currency incl. ₹,
+// arrows; ~30 KB and ~24 KB instead of ~70 KB each). On a phone every byte
+// before the first paint delays it. Mono is not preloaded: it sets only small
+// labels and references, and loads when a page first uses it.
+const GeistSans = localFont({
+  src: "./fonts/Geist-Variable.woff2",
+  variable: "--font-geist-sans",
+  weight: "100 900",
+});
 const GeistMono = localFont({
-  src: "../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2",
+  src: "./fonts/GeistMono-Variable.woff2",
   variable: "--font-geist-mono",
   adjustFontFallback: false,
   fallback: ["ui-monospace", "SFMono-Regular", "Roboto Mono", "Menlo", "Monaco", "Liberation Mono", "DejaVu Sans Mono", "Courier New", "monospace"],
