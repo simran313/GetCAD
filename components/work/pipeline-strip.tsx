@@ -17,7 +17,7 @@ export interface Stage {
 export function PipelineStrip({ stages, active }: { stages: Stage[]; active?: string | null }) {
   return (
     <nav aria-label="Pipeline" className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-      <ol className="flex min-w-max divide-x divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
+      <ol className="flex min-w-max lg:min-w-0 divide-x divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {stages.map((s) => {
           const on = s.key === active;
           const zero = s.count === 0;
@@ -27,12 +27,12 @@ export function PipelineStrip({ stages, active }: { stages: Stage[]; active?: st
                 href={s.href}
                 aria-current={on ? "true" : undefined}
                 className={cn(
-                  "flex min-w-[112px] flex-col gap-0.5 px-4 py-3 transition-colors duration-[var(--dur-fast)] hover:bg-subtle",
+                  "flex min-w-[92px] flex-col gap-0.5 px-3 py-3 transition-colors duration-[var(--dur-fast)] hover:bg-subtle",
                   on && "bg-subtle shadow-[inset_0_-2px_0_0_hsl(var(--foreground))]",
                 )}
               >
                 <span className={cn("text-[24px] leading-8 tabular tracking-[-0.02em]", zero ? "font-normal text-muted-foreground" : "font-semibold")}>{s.count}</span>
-                <span className="whitespace-nowrap text-[length:var(--fs-2)] text-muted-foreground">{s.label}</span>
+                <span className="whitespace-nowrap text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground lg:whitespace-normal">{s.label}</span>
               </Link>
             </li>
           );
