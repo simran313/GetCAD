@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -8,7 +9,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ListRow } from "@/components/ui/list-row";
 import { PageHeader } from "@/components/ui/page-header";
-import { Timer } from "@/components/ui/timer";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SlaCountdown } from "@/components/ui/sla-countdown";
 import { ClaimsQueue, type ClaimQueueRow } from "@/components/work/claims-queue";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
@@ -58,10 +60,10 @@ export default async function QcQueuePage() {
   return (
     <Page>
       <PageHeader
-        eyebrow={`${[...new Set(jobs.map((j) => j.pod_name).filter(Boolean))].join(", ") || "Your pod"} · you see only what needs a check`}
         title="QC queue"
+        description={`${[...new Set(jobs.map((j) => j.pod_name).filter(Boolean))].join(", ") || "Your pod"}. You see only what needs a check.`}
         actions={
-          <Link href="/admin/new-order" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/admin/new-order" className={buttonVariants({ variant: "secondary" })}>
             Create order
           </Link>
         }
@@ -75,8 +77,8 @@ export default async function QcQueuePage() {
         ]}
       />
       {soonest && (
-        <p className="flex items-center gap-2 text-[length:var(--fs-2)]">
-          Next client first look <Timer dueAt={soonest} />
+        <p className="flex flex-wrap items-center gap-2 text-[length:var(--fs-3)]">
+          Next client first look <SlaCountdown dueAt={soonest} />
         </p>
       )}
 
@@ -95,7 +97,7 @@ function Queue({ title, rows, action, empty }: { title: string; rows: PodJob[]; 
       </SectionLabel>
       <Card>
         {rows.length === 0 ? (
-          <p className="p-[var(--s-6)] text-center text-[length:var(--fs-3)] text-muted-foreground">{empty}</p>
+          <EmptyState icon={<CircleCheck />} title={empty} className="py-8" />
         ) : (
           rows.map((j) => (
             <ListRow
@@ -108,8 +110,8 @@ function Queue({ title, rows, action, empty }: { title: string; rows: PodJob[]; 
               }`}
               trailing={
                 <>
-                  {j.sla_due_at && <Timer dueAt={j.sla_due_at} label="Client sees it" />}
-                  <span className={buttonVariants({ size: "sm" })}>{action}</span>
+                  {j.sla_due_at && <SlaCountdown dueAt={j.sla_due_at} label="Client sees it" />}
+                  <span className={buttonVariants({ variant: "secondary", size: "sm" })}>{action}</span>
                 </>
               }
             />
