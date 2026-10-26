@@ -9,6 +9,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { loadWallet } from "../load";
 import { WalletNav } from "../WalletNav";
+import { Page } from "@/components/ui/page";
 
 /**
  * W3 — Invoices (docs/design): every paid order with its amount and date.
@@ -23,7 +24,7 @@ export default async function InvoicesPage() {
   const supabase = await createUserSupabaseClient();
   const w = await loadWallet(supabase);
   return (
-    <main className="container max-w-4xl space-y-6 py-8">
+    <Page>
       <PageHeader title="Invoices" description="Need a formal invoice? Message the team from the order and we will send it." />
       <WalletNav active="/wallet/invoices" />
       {w.paidOrders.length === 0 ? (
@@ -49,6 +50,6 @@ export default async function InvoicesPage() {
           </ul>
         </Card>
       )}
-    </main>
+    </Page>
   );
 }

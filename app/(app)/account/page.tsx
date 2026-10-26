@@ -110,7 +110,7 @@ export default async function AccountPage() {
   const clientCode = (account as { client_code?: string } | null)?.client_code ?? null;
 
   return (
-    <Page>
+    <Page form>
       <PageHeader title="Account" description="Who you are signed in as, and the settings that are yours." />
 
       <section aria-label="Your identity" className="rounded-[var(--r-lg)] border border-border bg-card p-5 shadow-[var(--e-1)]">

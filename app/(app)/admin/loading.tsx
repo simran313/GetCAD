@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Page } from "@/components/ui/page";
 
 export default function AdminLoading() {
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <div className="flex items-baseline justify-between">
         <div>
           <Skeleton className="h-6 w-32" />
@@ -32,6 +33,6 @@ export default function AdminLoading() {
           </div>
         ))}
       </div>
-    </main>
+    </Page>
   );
 }

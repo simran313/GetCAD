@@ -25,6 +25,7 @@ import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
 import { StartWorkButton } from "../StartWorkButton";
+import { Page } from "@/components/ui/page";
 
 /**
  * D4 — one job (docs/design). The brief without the client (job_brief drops
@@ -44,7 +45,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const [job] = await loadMyWork(supabase, id).catch(() => []);
   if (!job) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <Link href="/work" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
           ← Open jobs
         </Link>
@@ -52,7 +53,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           <p className="text-[length:var(--fs-3)] font-medium">Job not available</p>
           <p className="mt-1 text-[length:var(--fs-3)] text-muted-foreground">It isn&apos;t assigned to you, or the link is wrong.</p>
         </Card>
-      </main>
+      </Page>
     );
   }
 
@@ -84,7 +85,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const lines = briefLines(brief, (accentsRes.data ?? []) as AccentLine[]);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <Link href="/work" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← Open jobs
       </Link>
@@ -285,6 +286,6 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         </aside>
       </div>
       <AutoRefresh orderId={id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
-    </main>
+    </Page>
   );
 }

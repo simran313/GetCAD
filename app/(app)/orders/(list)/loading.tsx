@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Page } from "@/components/ui/page";
 
 export default function OrdersLoading() {
   return (
-    <main className="container max-w-4xl py-8">
+    <Page>
       <div className="flex items-baseline justify-between">
         <Skeleton className="h-6 w-20" />
         <Skeleton className="h-4 w-16" />
@@ -22,6 +23,6 @@ export default function OrdersLoading() {
           </div>
         ))}
       </div>
-    </main>
+    </Page>
   );
 }

@@ -12,6 +12,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { transitionAction } from "../../actions";
 import { PayButton } from "../../PayButton";
+import { Page } from "@/components/ui/page";
 
 /**
  * C5 — Pay (docs/design). The price and what it buys, card payment through
@@ -56,7 +57,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
       : "First look within 6 hours of order confirmation, or the full price comes back to you as credit and we still finish it.";
 
   return (
-    <main className="container max-w-4xl space-y-6 py-8">
+    <Page>
       <PageHeader eyebrow={`Order · ${o.display_ref ?? ""}`} title={`Pay ${price}`} description={title} />
 
       <div className="grid gap-6 md:grid-cols-[1fr_360px]">
@@ -107,6 +108,6 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
           </form>
         </div>
       </div>
-    </main>
+    </Page>
   );
 }

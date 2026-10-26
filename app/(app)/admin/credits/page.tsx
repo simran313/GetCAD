@@ -12,6 +12,7 @@ import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { decideCreditAction } from "./actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * Late-order credits waiting for a decision (DECISIONS §6, owner answer Q4).
@@ -48,17 +49,17 @@ export default async function CreditsPage() {
 
   if (error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] font-semibold tracking-[var(--ls-6)]">Late-order credits</h1>
         <ErrorPanel title="Not available to your role" message={error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
 
   const credits = (data ?? []) as PendingCredit[];
 
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <PageHeader
         eyebrow="First look missed"
         title="Late-order credits"
@@ -114,6 +115,6 @@ export default async function CreditsPage() {
           </ul>
         )}
       </div>
-    </main>
+    </Page>
   );
 }

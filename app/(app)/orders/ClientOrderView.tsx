@@ -19,6 +19,7 @@ import { OrderTimeline } from "./OrderTimeline";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { ThreadsPanel } from "./ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "./types";
+import { Page } from "@/components/ui/page";
 
 /**
  * C4 — one order, for its client (docs/design). The next step first, the
@@ -66,7 +67,7 @@ export function ClientOrderView({
   const canDispute = ["IN_PROGRESS", "CLIENT_PREVIEW"].includes(o.status);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow={[`Order · ${o.display_ref ?? "draft"}`, o.created_at ? `Ordered ${shortDate(o.created_at)}` : null]
           .filter(Boolean)
@@ -237,6 +238,6 @@ export function ClientOrderView({
           )}
         </aside>
       </div>
-    </main>
+    </Page>
   );
 }

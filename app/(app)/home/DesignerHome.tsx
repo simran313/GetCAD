@@ -10,6 +10,7 @@ import { Timer } from "@/components/ui/timer";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { ago, jobTitle, when, type Earning, type Job } from "@/lib/work/load";
 import type { VersionNote } from "@/lib/work/notes";
+import { Page } from "@/components/ui/page";
 
 /**
  * D2 — the designer's home (docs/design). What needs them first: a job sent
@@ -51,7 +52,7 @@ export function DesignerHome({
   const going = open.filter((j) => j.status === "IN_PROGRESS");
 
   return (
-    <main className="container max-w-5xl space-y-8 py-8">
+    <Page>
       <PageHeader
         eyebrow={[designerRef ? `Designer ${designerRef}` : "Designer", podName].filter(Boolean).join(" · ")}
         title="Home"
@@ -208,6 +209,6 @@ export function DesignerHome({
           )}
         </aside>
       </div>
-    </main>
+    </Page>
   );
 }

@@ -63,7 +63,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <Page>
+    <Page form>
       <PageHeader
         title="Settings"
         description={

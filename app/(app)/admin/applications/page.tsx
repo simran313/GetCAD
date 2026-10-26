@@ -10,6 +10,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { ReviewControls } from "./ReviewControls";
+import { Page } from "@/components/ui/page";
 
 export const dynamic = "force-dynamic";
 
@@ -71,14 +72,14 @@ export default async function ApplicationsPage({
   if (error) {
     const denied = /only OPS or SALES/i.test(error.message);
     return (
-      <main className="container max-w-2xl py-12">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Designer applications</h1>
         <div className="mt-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)] text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">
           {denied
             ? "This inbox is for OPS and SALES. Switch to one of those roles to review applications."
             : `Couldn't load applications: ${error.message}`}
         </div>
-      </main>
+      </Page>
     );
   }
 
@@ -104,7 +105,7 @@ export default async function ApplicationsPage({
   }
 
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <PageHeader
         eyebrow="Approve to send the agreement"
         title="Designer applications"
@@ -217,6 +218,6 @@ export default async function ApplicationsPage({
           ))}
         </ul>
       )}
-    </main>
+    </Page>
   );
 }

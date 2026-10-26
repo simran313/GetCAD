@@ -13,6 +13,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { when } from "@/lib/work/load";
 
 import { computeStatsAction, setAccountManagerAction } from "../actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * A9 — clients and their account managers (owner answer, Phase 5d): every
@@ -53,10 +54,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const res = await supabase.rpc("admin_clients");
   if (res.error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <PageHeader title="Clients" />
         <ErrorPanel title="Not available to your role" message={res.error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
   const [{ data: staff }, { data: report }, { data: statsRow }, { data: statsFlag }] = await Promise.all([
@@ -84,7 +85,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const unassigned = rows.filter((r) => !r.manager_id).length;
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow="Account managers · one named contact per client"
         title="Clients"
@@ -204,6 +205,6 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
           </table>
         </Card>
       )}
-    </main>
+    </Page>
   );
 }

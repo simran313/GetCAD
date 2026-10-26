@@ -13,6 +13,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { jobTitle, loadMyWork } from "@/lib/work/load";
 
 import type { ChecklistRow } from "../../../orders/WorkPanels";
+import { Page } from "@/components/ui/page";
 
 /**
  * D4b — the designer's checklist (docs/design). Ticks while the job is in
@@ -37,7 +38,7 @@ export default async function JobChecklistPage({ params }: { params: Promise<{ i
   const { data: profile } = await supabase.from("designer_profiles").select("designer_ref").maybeSingle();
 
   return (
-    <main className="container max-w-3xl space-y-6 py-8">
+    <Page>
       <Link href={`/work/${id}`} className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← Back to the job
       </Link>
@@ -67,6 +68,6 @@ export default async function JobChecklistPage({ params }: { params: Promise<{ i
           />
         </CardBody>
       </Card>
-    </main>
+    </Page>
   );
 }

@@ -16,6 +16,7 @@ import { loadPodJobs, loadPodLoad, type PodDesignerLoad, type PodJob } from "@/l
 import { requireTeam } from "@/lib/work/team";
 
 import { assignDesignerAction } from "../../orders/actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * P5 — the team board (docs/design): who is working on what. Paid orders
@@ -38,9 +39,9 @@ export default async function TeamBoardPage() {
     [jobs, designers] = await Promise.all([loadPodJobs(supabase), loadPodLoad(supabase)]);
   } catch (e) {
     return (
-      <main className="container max-w-6xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load the team board" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
 
@@ -50,7 +51,7 @@ export default async function TeamBoardPage() {
   const minutes = (js: PodJob[]) => js.reduce((s, j) => s + (j.minutes ?? 0), 0);
 
   return (
-    <main className="container max-w-7xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow={`${[...new Set(designers.map((d) => d.pod_name))].join(", ") || "Your pod"} · who is working on what`}
         title="Team board"
@@ -128,7 +129,7 @@ export default async function TeamBoardPage() {
       {designers.length === 0 && (
         <p className="text-[length:var(--fs-2)] text-muted-foreground">No designers in your pod yet. An admin adds them from Access.</p>
       )}
-    </main>
+    </Page>
   );
 }
 

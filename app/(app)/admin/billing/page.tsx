@@ -12,6 +12,7 @@ import { SectionLabel, Stats } from "@/components/work/stats";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { when } from "@/lib/work/load";
+import { Page } from "@/components/ui/page";
 
 /**
  * A8 — Billing, as a money overview (owner answer, Phase 5d): what clients
@@ -50,10 +51,10 @@ export default async function BillingPage() {
   const ledgerRes = await supabase.rpc("money_ledger", { p_limit: 1000 });
   if (ledgerRes.error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <PageHeader title="Billing" />
         <ErrorPanel title="Not available to your role" message={ledgerRes.error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
   const [creditsRes, owedRes] = await Promise.all([
@@ -82,7 +83,7 @@ export default async function BillingPage() {
   const sentPaise = owed.filter((o) => o.status === "exported").reduce((s, o) => s + o.amount_paise, 0);
 
   return (
-    <main className="container max-w-6xl space-y-8 py-8">
+    <Page>
       <PageHeader
         eyebrow="Client money and team payouts"
         title="Billing"
@@ -188,6 +189,6 @@ export default async function BillingPage() {
           </Card>
         </aside>
       </div>
-    </main>
+    </Page>
   );
 }

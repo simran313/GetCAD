@@ -9,6 +9,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { loadClientOrders } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Page } from "@/components/ui/page";
 
 /**
  * C8 — Files (docs/design). Every order's files in one place. Approved
@@ -76,7 +77,7 @@ export default async function FilesPage() {
   const withFiles = orders.filter((o) => (byOrder.get(o.id) ?? []).length > 0 || POST_QC.includes(o.status));
 
   return (
-    <main className="container max-w-4xl space-y-6 py-8">
+    <Page>
       <PageHeader title="Files" description="Files unlock when you approve the design, so you only ever cast the version you signed off." />
 
       {withFiles.length === 0 && (
@@ -161,6 +162,6 @@ export default async function FilesPage() {
           </Card>
         );
       })}
-    </main>
+    </Page>
   );
 }

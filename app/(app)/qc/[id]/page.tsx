@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { AutoRefresh } from "../../orders/AutoRefresh";
 import { addWaiverAction, qcDecisionAction, recordMeasurementsAction } from "../../orders/actions";
 import type { ChecklistRow } from "../../orders/WorkPanels";
+import { Page } from "@/components/ui/page";
 
 /**
  * P2 — QC review (docs/design). The designer's files for this version (and
@@ -56,12 +57,12 @@ export default async function QcReviewPage({
   const [job] = await loadPodJobs(supabase, id).catch(() => []);
   if (!job) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <Link href="/qc" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
           ← QC queue
         </Link>
         <Card className="mt-6 p-[var(--s-10)] text-center text-[length:var(--fs-3)]">This order is not in your pod.</Card>
-      </main>
+      </Page>
     );
   }
   const version = Math.min(Math.max(Number(v) || job.work_version, 1), job.work_version);
@@ -94,7 +95,7 @@ export default async function QcReviewPage({
   const lines = briefLines(specRes.data as BriefRow | null, (accentsRes.data ?? []) as AccentLine[]);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <Link href="/qc" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← QC queue
       </Link>
@@ -361,6 +362,6 @@ export default async function QcReviewPage({
         </aside>
       </div>
       <AutoRefresh orderId={id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
-    </main>
+    </Page>
   );
 }

@@ -12,6 +12,7 @@ import { shortDate } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { openClaimAction } from "../../previewActions";
+import { Page } from "@/components/ui/page";
 
 /**
  * A6 — raise a spec claim. The file they cast from is matched against the
@@ -40,7 +41,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ id: stri
   const w = data as { open: boolean; closes_at: string | null; days: number };
 
   return (
-    <main className="container max-w-2xl space-y-6 py-8">
+    <Page form>
       <Link href={`/orders/${id}`} className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← The order
       </Link>
@@ -95,6 +96,6 @@ export default async function ClaimPage({ params }: { params: Promise<{ id: stri
           </CardBody>
         </Card>
       )}
-    </main>
+    </Page>
   );
 }

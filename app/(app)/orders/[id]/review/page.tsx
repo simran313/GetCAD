@@ -12,6 +12,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { requestRevisionAction, transitionAction } from "../../actions";
 import type { RevisionAllowance } from "../../RevisionsPanel";
+import { Page } from "@/components/ui/page";
 
 /**
  * C6 — Review renders (docs/design). The five views plus diamond details
@@ -69,7 +70,7 @@ export default async function ReviewRendersPage({ params }: { params: Promise<{ 
   const title = (spec as { reference_name?: string } | null)?.reference_name || productWord(o.product_type);
 
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader
         eyebrow={`${o.display_ref ?? ""} · version ${version}`}
         title="Review renders"
@@ -162,6 +163,6 @@ export default async function ReviewRendersPage({ params }: { params: Promise<{ 
           </Card>
         </div>
       )}
-    </main>
+    </Page>
   );
 }

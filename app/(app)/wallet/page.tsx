@@ -10,6 +10,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Lines } from "./Lines";
 import { loadWallet } from "./load";
 import { WalletNav } from "./WalletNav";
+import { Page } from "@/components/ui/page";
 
 /** W1 — Wallet (docs/design), read-only until wallet payments arrive. */
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function WalletPage() {
   const w = await loadWallet(supabase);
 
   return (
-    <main className="container max-w-4xl space-y-6 py-8">
+    <Page>
       <PageHeader title="Wallet" />
       <WalletNav active="/wallet" />
       <div className="grid gap-4 sm:grid-cols-2">
@@ -54,6 +55,6 @@ export default async function WalletPage() {
       </Card>
       <h2 className="eyebrow">Activity</h2>
       <Lines lines={w.lines.slice(0, 5)} />
-    </main>
+    </Page>
   );
 }

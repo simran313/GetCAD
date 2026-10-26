@@ -16,6 +16,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { jobTitle, loadMyWork, type Job } from "@/lib/work/load";
 
 import { StartWorkButton } from "./StartWorkButton";
+import { Page } from "@/components/ui/page";
 
 /**
  * D3 — Open jobs (docs/design). Only the jobs the pod lead assigned to this
@@ -46,16 +47,16 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
     jobs = await loadMyWork(supabase);
   } catch (e) {
     return (
-      <main className="container max-w-5xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load your jobs" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
   const count = (t: JobTab) => jobs.filter((j) => jobTab(j.status) === t).length;
   const shown = jobs.filter((j) => jobTab(j.status) === active);
 
   return (
-    <main className="container max-w-5xl space-y-6 py-8">
+    <Page>
       <PageHeader eyebrow="Assigned to you by your pod lead" title="Open jobs" />
 
       <nav aria-label="Jobs" className="border-b border-border">
@@ -163,6 +164,6 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
         You only see jobs your pod lead has assigned to you. Your timer starts when you press Start work and follows the job&apos;s
         category.
       </p>
-    </main>
+    </Page>
   );
 }

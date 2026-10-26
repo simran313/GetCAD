@@ -14,6 +14,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadPodLoad, type PodDesignerLoad } from "@/lib/work/load";
 
 import { createPodAction, removePodMemberAction, setPodMemberAction } from "../../actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * Pods (Access, Phase 5d): who leads each pod and which designers are in it
@@ -49,10 +50,10 @@ export default async function PodsPage() {
   const podsRes = await supabase.rpc("pods_overview");
   if (podsRes.error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <PageHeader title="Pods" />
         <ErrorPanel title="Not available to your role" message={podsRes.error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
   const pods = (podsRes.data ?? []) as Pod[];
@@ -74,7 +75,7 @@ export default async function PodsPage() {
   const inPod = new Set(members.map((m) => m.designer_id));
 
   return (
-    <main className="container max-w-5xl space-y-6 py-8">
+    <Page>
       <Link href="/admin/access" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
         ← Access
       </Link>
@@ -194,6 +195,6 @@ export default async function PodsPage() {
           </p>
         </CardBody>
       </Card>
-    </main>
+    </Page>
   );
 }

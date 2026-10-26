@@ -30,6 +30,7 @@ import type { ClientContact, Screenshot } from "../IntakePanel";
 import { AutoRefresh } from "../AutoRefresh";
 import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
 import type { AttachmentRow, DisputeRow, LedgerRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "../types";
+import { Page } from "@/components/ui/page";
 
 /**
  * One order, on its own route.
@@ -105,14 +106,14 @@ export default async function OrderPage({
 
   if (queryError) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <BackLink />
         <ErrorPanel
           title="Couldn't load this order"
           message={`${queryError.message} — reload the page to try again.`}
           className="mt-4"
         />
-      </main>
+      </Page>
     );
   }
 
@@ -121,7 +122,7 @@ export default async function OrderPage({
 
   if (!order) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <BackLink />
         <div className="mt-6 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-10)] text-center">
           <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-medium">Order not available</p>
@@ -129,7 +130,7 @@ export default async function OrderPage({
             This order isn&apos;t visible to your role, or the reference is wrong.
           </p>
         </div>
-      </main>
+      </Page>
     );
   }
 
@@ -389,7 +390,7 @@ export default async function OrderPage({
       </Card>
     );
     return (
-      <main className="container max-w-6xl space-y-6 py-8">
+      <Page>
         <Link
           href={order.relation === "POD_LEAD" ? "/qc/orders" : "/admin/orders"}
           className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground"
@@ -436,12 +437,12 @@ export default async function OrderPage({
           timelineError={timelineRes.error?.message ?? null}
         />
         <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
-      </main>
+      </Page>
     );
   }
 
   return (
-    <main className="container max-w-3xl py-8">
+    <Page>
       <BackLink />
 
       <div className="mt-4 flex items-center justify-between gap-4">
@@ -495,7 +496,7 @@ export default async function OrderPage({
 
       <TrustLine className="mt-6" />
       <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
-    </main>
+    </Page>
   );
 }
 

@@ -7,6 +7,7 @@ import { ErrorPanel } from "@/components/error-panel";
 import { EarningsView, type Bank } from "@/components/work/earnings";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadEarnings } from "@/lib/work/load";
+import { Page } from "@/components/ui/page";
 
 /** D6 — the designer's earnings and bank (docs/design). */
 export const dynamic = "force-dynamic";
@@ -44,9 +45,9 @@ export default async function DesignerEarningsPage() {
     );
   } catch (e) {
     return (
-      <main className="container max-w-5xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load your earnings" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
 }

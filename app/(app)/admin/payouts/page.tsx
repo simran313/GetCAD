@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { exportPayoutsAction, markBatchPaidAction } from "./actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * What we owe designers and pod leads (DECISIONS §5, owner answer Q2).
@@ -60,10 +61,10 @@ export default async function PayoutsPage() {
 
   if (error) {
     return (
-      <main className="container max-w-3xl py-8">
+      <Page>
         <h1 className="text-[length:var(--fs-6)] font-semibold tracking-[var(--ls-6)]">Payouts</h1>
         <ErrorPanel title="Not available to your role" message={error.message} className="mt-4" />
-      </main>
+      </Page>
     );
   }
 
@@ -76,7 +77,7 @@ export default async function PayoutsPage() {
   }
 
   return (
-    <main className="container max-w-5xl py-8">
+    <Page>
       <PageHeader
         eyebrow="Designer and QC pay"
         title="Payouts"
@@ -154,6 +155,6 @@ export default async function PayoutsPage() {
           </section>
         );
       })}
-    </main>
+    </Page>
   );
 }

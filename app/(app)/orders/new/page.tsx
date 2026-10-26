@@ -9,6 +9,7 @@ import { ListRow } from "@/components/ui/list-row";
 import { PageHeader } from "@/components/ui/page-header";
 import { loadClientOrders, shortDate } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Page } from "@/components/ui/page";
 
 /**
  * N0 — choose a service (docs/design). CAD design or renders; each creates a
@@ -44,7 +45,7 @@ export default async function NewOrderPage() {
   ];
 
   return (
-    <main className="container max-w-4xl space-y-8 py-8">
+    <Page>
       <PageHeader title="New order" description="Nothing is charged until you have a price and choose to pay." />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -96,6 +97,6 @@ export default async function NewOrderPage() {
         Prefer to send it by email or WhatsApp? <Link href="/messages" className="underline underline-offset-4">Message the team</Link>{" "}
         and we will place the order for you.
       </p>
-    </main>
+    </Page>
   );
 }

@@ -9,6 +9,7 @@ import { productWord } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { sendBriefAction } from "../actions";
+import { Page } from "@/components/ui/page";
 
 /**
  * N5 — Review your order (docs/design). What was asked for, what is still
@@ -65,7 +66,7 @@ export default async function ReviewBriefPage({ params }: { params: Promise<{ id
     : [];
 
   return (
-    <main className="container max-w-3xl space-y-6 py-8">
+    <Page form>
       <PageHeader eyebrow="Step 5 of 5" title="Review your order" description="Check it, then send it for a price. Nothing is charged yet." />
 
       {missing.length > 0 && (
@@ -113,6 +114,6 @@ export default async function ReviewBriefPage({ params }: { params: Promise<{ id
         You&apos;ll get a price within the hour. The clock for your first look starts once you have paid and
         we have confirmed the brief.
       </p>
-    </main>
+    </Page>
   );
 }

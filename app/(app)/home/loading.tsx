@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Page } from "@/components/ui/page";
 
 export default function DashboardLoading() {
   return (
-    <main className="container max-w-3xl py-8">
+    <Page>
       <div className="flex items-baseline justify-between">
         <Skeleton className="h-6 w-28" />
         <Skeleton className="h-5 w-24" />
@@ -29,6 +30,6 @@ export default function DashboardLoading() {
           <Skeleton className="h-4 w-2/3" />
         </div>
       </div>
-    </main>
+    </Page>
   );
 }

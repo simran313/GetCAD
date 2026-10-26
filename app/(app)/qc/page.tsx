@@ -14,6 +14,7 @@ import { SectionLabel, Stats } from "@/components/work/stats";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ago, loadEarnings, loadPodJobs, type PodJob } from "@/lib/work/load";
 import { requireTeam } from "@/lib/work/team";
+import { Page } from "@/components/ui/page";
 
 /**
  * P1 — the QC queue (docs/design). Work in the pod lead's pods that is
@@ -38,9 +39,9 @@ export default async function QcQueuePage() {
     earned = earnings.filter((e) => e.party === "QC" && e.created_at.startsWith(month)).reduce((s, e) => s + e.amount_paise, 0);
   } catch (e) {
     return (
-      <main className="container max-w-5xl py-8">
+      <Page>
         <ErrorPanel title="Couldn't load the QC queue" message={`${(e as Error).message} — reload the page to try again.`} />
-      </main>
+      </Page>
     );
   }
 
@@ -55,7 +56,7 @@ export default async function QcQueuePage() {
   const unassigned = jobs.filter((j) => j.status === "PAYMENT_HELD").length;
 
   return (
-    <main className="container max-w-5xl space-y-8 py-8">
+    <Page>
       <PageHeader
         eyebrow={`${[...new Set(jobs.map((j) => j.pod_name).filter(Boolean))].join(", ") || "Your pod"} · you see only what needs a check`}
         title="QC queue"
@@ -82,7 +83,7 @@ export default async function QcQueuePage() {
       <ClaimsQueue rows={claims} />
       <Queue title="Awaiting QC · oldest first" rows={waiting} action="Start review" empty="Nothing waiting for a check." />
       <Queue title="In your review" rows={reviewing} action="Continue" empty="No reviews in progress." />
-    </main>
+    </Page>
   );
 }
 

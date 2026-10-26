@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { AutoRefresh } from "../orders/AutoRefresh";
 import { ThreadsPanel } from "../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
+import { Page } from "@/components/ui/page";
 
 /**
  * C7 / C7b — Messages (docs/design). Every conversation the viewer may read,
@@ -69,7 +70,7 @@ export function MessagesView({
 }) {
   const copy = describe(role);
   return (
-    <main className="container max-w-6xl space-y-6 py-8">
+    <Page>
       <PageHeader eyebrow={copy.eyebrow} title="Messages" description={copy.description} />
       <div className="grid gap-6 md:grid-cols-[320px_1fr]">
         <Card className={cn("self-start overflow-hidden", open && "hidden md:block")}>
@@ -142,6 +143,6 @@ export function MessagesView({
           )}
         </div>
       </div>
-    </main>
+    </Page>
   );
 }

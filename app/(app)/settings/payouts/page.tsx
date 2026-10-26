@@ -12,6 +12,7 @@ import {
 } from "@/lib/validation/payoutAccount";
 
 import { PayoutAccountForm } from "./PayoutAccountForm";
+import { Page } from "@/components/ui/page";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function PayoutSettingsPage() {
   const payouts = (payoutData ?? []) as PayoutRow[];
 
   return (
-    <main className="container max-w-2xl py-8">
+    <Page form>
       <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Payout account</h1>
       <p className="mt-2 text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">
         Where we send your earnings once an order is closed and released. Your bank details are
@@ -174,6 +175,6 @@ export default async function PayoutSettingsPage() {
         We currently pay Indian bank accounts only. If you bank outside India, tell us — we&apos;ll
         let you know when international payouts are available.
       </p>
-    </main>
+    </Page>
   );
 }

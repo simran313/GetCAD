@@ -15,6 +15,7 @@ import { ClientHome } from "./ClientHome";
 import { DesignerHome } from "./DesignerHome";
 import { loadEarnings, loadMyWork } from "@/lib/work/load";
 import { versionNote } from "@/lib/work/notes";
+import { Page } from "@/components/ui/page";
 
 // Authenticated, per-request data — never cache it.
 export const dynamic = "force-dynamic";
@@ -154,7 +155,7 @@ export default async function DashboardPage() {
   const error = onboardError ?? meError;
 
   return (
-    <main className="container max-w-3xl py-8">
+    <Page>
       <div className="flex items-baseline justify-between">
         <h1 className="text-[length:var(--fs-6)] font-semibold leading-[var(--lh-6)] tracking-[var(--ls-6)]">
           Dashboard
@@ -283,6 +284,6 @@ export default async function DashboardPage() {
       )}
 
       <TrustLine className="mt-6" />
-    </main>
+    </Page>
   );
 }

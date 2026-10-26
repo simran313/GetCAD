@@ -13,6 +13,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { TONE_SURFACE } from "@/lib/tone";
 
 import { applyAsDesignerAction, signAgreementAction } from "./actions";
+import { Page } from "@/components/ui/page";
 
 export const dynamic = "force-dynamic";
 
@@ -94,14 +95,14 @@ export default async function DesignerOnboardingPage() {
   const queryError = meRes.error ?? profileRes.error ?? docRes.error;
   if (queryError) {
     return (
-      <main className="container max-w-2xl py-8">
+      <Page form>
         <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Become a designer</h1>
         <ErrorPanel
           title="Couldn't load this page"
           message={`${queryError.message} — reload the page to try again.`}
           className="mt-4"
         />
-      </main>
+      </Page>
     );
   }
 
@@ -138,7 +139,7 @@ export default async function DesignerOnboardingPage() {
   const currentStep = stage === "apply" ? 0 : stage === "active" ? 2 : 1;
 
   return (
-    <main className="container max-w-2xl py-8">
+    <Page form>
       <div className="flex items-center justify-between">
         <h1 className="text-[length:var(--fs-6)] leading-[var(--lh-6)] tracking-[var(--ls-6)] font-semibold">Become a designer</h1>
         <Link href="/home" className="text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground hover:text-foreground">
@@ -239,6 +240,6 @@ export default async function DesignerOnboardingPage() {
           </form>
         </section>
       )}
-    </main>
+    </Page>
   );
 }
