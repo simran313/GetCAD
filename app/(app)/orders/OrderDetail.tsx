@@ -8,6 +8,7 @@ import {
 } from "@/core";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -588,13 +589,26 @@ export function OrderDetail({
                     </form>
                   )}
                   {role === "FINANCE" && (
-                    <form action={resolveDisputeAction}>
-                      <input type="hidden" name="order_id" value={o.id} />
-                      <input type="hidden" name="resolution" value="REFUND" />
-                      <Button type="submit" variant="destructive" size="sm">
-                        Refund the client
-                      </Button>
-                    </form>
+                    <>
+                      <form id={`refund-${o.id}`} action={resolveDisputeAction}>
+                        <input type="hidden" name="order_id" value={o.id} />
+                        <input type="hidden" name="resolution" value="REFUND" />
+                      </form>
+                      {/* Red only inside the confirmation (redesign): typed, never one tap. */}
+                      <ConfirmDialog
+                        trigger={
+                          <Button type="button" variant="secondary" size="sm">
+                            Refund the client…
+                          </Button>
+                        }
+                        title="Refund the client?"
+                        description="The full amount goes back to the client and the order closes. This cannot be undone."
+                        typed="refund"
+                        destructive
+                        confirmLabel="Refund the client"
+                        formId={`refund-${o.id}`}
+                      />
+                    </>
                   )}
                 </div>
               )}
