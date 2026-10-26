@@ -1,3 +1,4 @@
+import { Magnet } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { LeadControls } from "./LeadControls";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
 
 export const dynamic = "force-dynamic";
@@ -94,9 +96,8 @@ export default async function LeadsPage({
       </div>
 
       {leads.length === 0 ? (
-        <div className="mt-6 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-10)] text-center">
-          <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-medium">Nothing here</p>
-          <p className="mt-1 text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">No leads in this state.</p>
+        <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
+          <EmptyState icon={<Magnet />} title="No leads here" description="Messages from the website contact form land in New." />
         </div>
       ) : (
         <ul className="mt-6 space-y-4">

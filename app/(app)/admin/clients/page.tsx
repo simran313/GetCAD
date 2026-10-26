@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
-import { Select } from "@/components/ui/select";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { when } from "@/lib/work/load";
 
-import { computeStatsAction, setAccountManagerAction } from "../actions";
+import { computeStatsAction } from "../actions";
+
+import { ManagerSelect } from "./ManagerSelect";
 import { Page } from "@/components/ui/page";
 
 /**
@@ -184,20 +185,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                   <td className="tabular px-[var(--s-4)] py-[var(--s-3)] font-mono">{formatMoney(Number(r.paid_cents), "USD")}</td>
                   <td className="px-[var(--s-4)] py-[var(--s-3)] text-muted-foreground">{r.last_order_at ? when(r.last_order_at) : "—"}</td>
                   <td className="px-[var(--s-4)] py-[var(--s-3)]">
-                    <form action={setAccountManagerAction} className="flex items-center gap-2">
-                      <input type="hidden" name="client_id" value={r.client_id} />
-                      <Select name="manager_id" defaultValue={r.manager_id ?? ""} aria-label={`Account manager for ${r.client_code ?? "client"}`} className="w-auto">
-                        <option value="">Unassigned</option>
-                        {managers.map((m) => (
-                          <option key={m.user_id} value={m.user_id}>
-                            {m.first_name}
-                          </option>
-                        ))}
-                      </Select>
-                      <Button type="submit" size="sm" variant="outline">
-                        Save
-                      </Button>
-                    </form>
+                    <ManagerSelect clientId={r.client_id} clientCode={r.client_code} managerId={r.manager_id} managers={managers} />
                   </td>
                 </tr>
               ))}

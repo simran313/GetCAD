@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { newOrderForClientAction } from "./actions";
+import { FilePicker } from "@/components/ui/file-picker";
 import { Page } from "@/components/ui/page";
 
 /**
@@ -204,13 +205,14 @@ export default async function NewOrderForClientPage({
           <p className="text-[length:var(--fs-2)] text-muted-foreground">
             At least one (PNG or JPEG, up to 20). Seen by the client and the team, never by designers.
           </p>
-          <input
-            type="file"
+          <FilePicker
             name="screenshots"
+            label="Screenshots of the request"
             accept="image/png,image/jpeg"
             multiple
             required
-            className="mt-2 text-[length:var(--fs-3)]"
+            buttonLabel="Choose screenshots"
+            className="mt-2"
           />
         </fieldset>
 

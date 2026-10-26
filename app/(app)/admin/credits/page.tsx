@@ -1,3 +1,4 @@
+import { CircleCheck } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
@@ -12,6 +13,7 @@ import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { decideCreditAction } from "./actions";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Page } from "@/components/ui/page";
 
 /**
@@ -68,9 +70,7 @@ export default async function CreditsPage() {
 
       <div className="mt-6 overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {credits.length === 0 ? (
-          <p className="p-6 text-center text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground">
-            Nothing to decide. Every first look so far was on time, or already credited.
-          </p>
+          <EmptyState icon={<CircleCheck />} title="Nothing to decide" description="Every first look so far was on time, or already credited." />
         ) : (
           <ul className="divide-y divide-border">
             {credits.map((c) => (
