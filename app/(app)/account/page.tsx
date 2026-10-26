@@ -177,7 +177,7 @@ export default async function AccountPage() {
           )}
           <form action={uploadLogoAction} className="mt-4 flex flex-wrap items-center gap-3">
             <FilePicker name="logo" label="Logo file" accept="image/png,image/jpeg" required />
-            <Button type="submit" size="sm">
+            <Button type="submit" size="sm" variant="secondary">
               {logoUrl ? "Replace" : "Upload"}
             </Button>
           </form>

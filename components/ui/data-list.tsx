@@ -53,7 +53,7 @@ export function ResponsiveDataList<T>({
                   key={c.key}
                   scope="col"
                   className={cn(
-                    "px-[var(--s-4)] py-2.5 text-[length:var(--fs-2)] font-medium text-muted-foreground",
+                    "px-[var(--s-4)] py-2.5 font-sans text-[length:var(--fs-2)] font-medium text-muted-foreground",
                     c.align === "right" && "text-right",
                     c.className,
                   )}
