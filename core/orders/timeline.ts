@@ -40,7 +40,7 @@ function labelFor(row: TimelineRawRow): { label: string; isQcMilestone: boolean;
   if (action === "ORDER_CREATED") return { label: "Order created", isQcMilestone: false };
 
   if (action === "ORDER_QUOTED") return { label: "Quote issued", isQcMilestone: false };
-  if (action === "ESCROW_HELD") return { label: "Payment secured in escrow", isQcMilestone: false };
+  if (action === "ESCROW_HELD") return { label: "Payment received", isQcMilestone: false };
   if (action === "ESCROW_RELEASED") return { label: "Payout released", isQcMilestone: false };
   if (action === "ESCROW_REFUNDED") return { label: "Refund issued to client", isQcMilestone: false };
 

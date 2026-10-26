@@ -63,7 +63,7 @@ describe("buildTimeline", () => {
     const held = buildOne({ action: "ESCROW_HELD", amount: 10000 });
     const refunded = buildOne({ action: "ESCROW_REFUNDED", amount: 5000 });
     expect(quoted).toMatchObject({ label: "Quote issued", amount: 10000 });
-    expect(held).toMatchObject({ label: "Payment secured in escrow", amount: 10000 });
+    expect(held).toMatchObject({ label: "Payment received", amount: 10000 });
     expect(refunded).toMatchObject({ label: "Refund issued to client", amount: 5000 });
   });
 
