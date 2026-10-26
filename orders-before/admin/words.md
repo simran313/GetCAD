@@ -1,0 +1,24 @@
+# words: admin (visible in <main> at 390)
+
+| Route | Words |
+| --- | ---: |
+| `/home` | 109 |
+| `/admin` | 109 |
+| `/admin/orders` | 251 |
+| `/admin/new-order` | 173 |
+| `/admin/credits` | 34 |
+| `/admin/clients` | 136 |
+| `/admin/access` | 190 |
+| `/admin/access/pods` | 73 |
+| `/admin/applications` | 25 |
+| `/admin/leads` | 22 |
+| `/admin/billing` | 115 |
+| `/admin/payouts` | 32 |
+| `/admin/users` | 190 |
+| `/admin/settings` | 332 |
+| `/dashboard` | 109 |
+| `/orders` | 75 |
+| `/orders/jntVdPjEUFYWcbW6G9NjC` | 498 |
+| `/orders/vg6exEcXGTAWeQSZ6Tszy` | 133 |
+| `/messages` | 185 |
+| `/account` | 45 |
