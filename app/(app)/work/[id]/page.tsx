@@ -126,7 +126,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             <Card as="section">
               <CardHeader>
                 <CardTitle>{note.from === "client" ? "Changes the client asked for" : "Pod lead notes"}</CardTitle>
-                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   Version {job.work_version}
                 </span>
               </CardHeader>
@@ -143,7 +143,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           <Card as="section">
             <CardHeader>
               <CardTitle>References</CardTitle>
-              <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">Client: hidden</span>
+              <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">Client: hidden</span>
             </CardHeader>
             <CardBody>
               <References images={refs} />
@@ -183,7 +183,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+              <p className="mt-3 font-mono text-[length:var(--fs-2)] text-muted-foreground">
                 Metadata removed on upload · files named by the system
               </p>
             </CardBody>

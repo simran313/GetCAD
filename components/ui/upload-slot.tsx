@@ -26,7 +26,7 @@ export function UploadSlot({
       )}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-[length:var(--fs-1)] font-medium uppercase tracking-[0.1em]">{code}</span>
+        <span className="font-mono text-[length:var(--fs-2)] font-medium">{code}</span>
         <span className="text-[length:var(--fs-2)] text-muted-foreground">{label}</span>
       </div>
       {filled ? (

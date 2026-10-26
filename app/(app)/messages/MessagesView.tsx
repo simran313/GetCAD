@@ -92,7 +92,7 @@ export function MessagesView({
                       )}
                     >
                       <span className="flex items-center justify-between gap-2">
-                        <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                        <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
                           {c.display_ref}
                           {copy.team && ` · ${c.kind === "internal" ? "Designer" : "Client"}`}
                         </span>

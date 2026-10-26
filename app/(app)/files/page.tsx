@@ -101,7 +101,7 @@ export default async function FilesPage() {
           <Card as="section" key={o.id}>
             <CardHeader>
               <div className="min-w-0">
-                <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   {o.display_ref}
                 </p>
                 <CardTitle>
@@ -149,7 +149,7 @@ export default async function FilesPage() {
                           Download
                         </a>
                       ) : (
-                        <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                        <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                           Locked
                         </span>
                       )}

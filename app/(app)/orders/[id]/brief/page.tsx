@@ -276,7 +276,7 @@ function ReadOnlyBrief({ spec, accents }: { spec: SpecRow | null; accents: Accen
     <dl className="divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
       {rows.map(([k, v]) => (
         <div key={k} className="px-4 py-3">
-          <dt className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
+          <dt className="text-[length:var(--fs-2)] text-muted-foreground">
             {k}
           </dt>
           <dd className="mt-0.5 text-[length:var(--fs-4)]">{v}</dd>

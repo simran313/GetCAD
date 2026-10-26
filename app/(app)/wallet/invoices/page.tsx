@@ -37,7 +37,7 @@ export default async function InvoicesPage() {
                   <Link href={`/orders/${o.id}`} className="block text-[length:var(--fs-3)] hover:underline">
                     {o.title}
                   </Link>
-                  <span className="tabular block font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                  <span className="tabular block font-mono text-[length:var(--fs-2)] text-muted-foreground">
                     {o.display_ref} · paid {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(o.paid_at!))}
                   </span>
                 </span>

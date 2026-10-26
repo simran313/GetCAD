@@ -92,11 +92,11 @@ export default async function PayoutSettingsPage() {
 
           <dl className="mt-3 grid gap-2 text-[length:var(--fs-3)] leading-[var(--lh-3)] sm:grid-cols-2">
             <div>
-              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">Account holder</dt>
+              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Account holder</dt>
               <dd className="mt-0.5">{account.beneficiary_name}</dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">Account</dt>
+              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Account</dt>
               {/* The server returns only the last four — never the full
                   number — so this masks a fragment, not a secret. */}
               <dd className="tabular mt-0.5 font-mono">
@@ -104,18 +104,18 @@ export default async function PayoutSettingsPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">IFSC</dt>
+              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">IFSC</dt>
               <dd className="tabular mt-0.5 font-mono">{account.ifsc}</dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">Type</dt>
+              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">Type</dt>
               <dd className="mt-0.5">
                 {ACCOUNT_TYPE_LABELS[account.account_type as keyof typeof ACCOUNT_TYPE_LABELS] ??
                   account.account_type}
               </dd>
             </div>
             <div>
-              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">PAN</dt>
+              <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">PAN</dt>
               <dd className="tabular mt-0.5 font-mono">{maskFromLast4(account.pan_last4)}</dd>
             </div>
           </dl>

@@ -27,7 +27,7 @@ export default async function QcEarningsPage() {
         countLabel="reviews"
         rates={EXAMPLES.map((usd) => ({
           key: String(usd),
-          label: <span className="font-mono text-[length:var(--fs-1)] uppercase">Order ${usd}</span>,
+          label: <span className="font-mono text-[length:var(--fs-2)]">Order ${usd}</span>,
           amount: rupeesWord(qcPayoutPaise(usd * 100)),
         }))}
         rateTitle="QC rate by order value"

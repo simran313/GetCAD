@@ -19,7 +19,7 @@ export function Stats({ items }: { items: [string, string][] }) {
 /** A mono section label, as the mockups set them. */
 export function SectionLabel({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
-    <h2 id={id} className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.12em] text-muted-foreground">
+    <h2 id={id} className="eyebrow">
       {children}
     </h2>
   );

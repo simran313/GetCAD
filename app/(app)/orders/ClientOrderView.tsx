@@ -103,7 +103,7 @@ export function ClientOrderView({
             <span className={cn("h-1 rounded-[var(--r-full)]", i < done ? "bg-primary" : "bg-muted")} aria-hidden />
             <span
               className={cn(
-                "hidden font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] sm:block",
+                "hidden font-mono text-[length:var(--fs-2)] sm:block",
                 i < done ? "text-foreground" : "text-muted-foreground",
               )}
             >

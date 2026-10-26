@@ -150,9 +150,9 @@ function Column({
       <CardHeader>
         <div className="min-w-0">
           <CardTitle>{title}</CardTitle>
-          {sub && <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">{sub}</p>}
+          {sub && <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">{sub}</p>}
         </div>
-        <span className={`tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] ${over ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+        <span className={`tabular font-mono text-[length:var(--fs-2)] ${over ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
           {meta}
         </span>
       </CardHeader>

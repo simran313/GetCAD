@@ -99,7 +99,7 @@ export default async function ReviewRendersPage({ params }: { params: Promise<{ 
                     loading="lazy"
                   />
                 </a>
-                <p className="flex justify-between px-[var(--s-3)] py-[var(--s-2)] font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em]">
+                <p className="flex justify-between px-[var(--s-3)] py-[var(--s-2)] font-mono text-[length:var(--fs-2)]">
                   <span>{labelOf.get(img.slot)?.label ?? img.slot}</span>
                   <span className="text-muted-foreground">{img.slot}</span>
                 </p>

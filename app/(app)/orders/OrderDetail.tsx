@@ -444,7 +444,7 @@ export function OrderDetail({
                 ] as [string, string][]
               ).map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">{label}</dt>
+                  <dt className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">{label}</dt>
                   <dd className="tabular font-mono">{value}</dd>
                 </div>
               ))}
@@ -654,7 +654,7 @@ export function OrderDetail({
                   // the work exists and what it is; the sentence above says what
                   // unlocks it. The API returns 404 for this row either way —
                   // this is presentation, not enforcement.
-                  <span className="shrink-0 text-[length:var(--fs-2)] leading-[var(--lh-2)] uppercase tracking-wide text-muted-foreground">
+                  <span className="shrink-0 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
                     Held
                   </span>
                 )}

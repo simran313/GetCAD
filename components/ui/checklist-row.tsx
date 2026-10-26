@@ -51,7 +51,7 @@ export function ChecklistRow({
       <span className="tabular font-mono text-[length:var(--fs-1)] text-muted-foreground">{String(index).padStart(2, "0")}</span>
       <span className="text-[length:var(--fs-2)] leading-[var(--lh-2)]">
         {label}
-        {flag && <span className="ml-2 font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">{flag}</span>}
+        {flag && <span className="ml-2 font-mono text-[length:var(--fs-2)] text-muted-foreground">{flag}</span>}
       </span>
       {designer}
       {qc}

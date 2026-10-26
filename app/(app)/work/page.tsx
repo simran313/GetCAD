@@ -103,7 +103,7 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
           {/* Desk: the table. */}
           <Card className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-[length:var(--fs-2)]">
-              <thead className="border-b border-border font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+              <thead className="border-b border-border text-[length:var(--fs-2)] text-muted-foreground">
                 <tr>
                   {["Job", "Category", "Pay", "Your time", "Due to QC", "Status", ""].map((h) => (
                     <th key={h} className="px-[var(--s-4)] py-[var(--s-3)] font-normal">
@@ -122,7 +122,7 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
                         <Link href={`/work/${j.order_id}`} className="block text-[length:var(--fs-3)] font-medium hover:underline">
                           {jobTitle(j)}
                         </Link>
-                        <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                        <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
                           {j.job_code}
                         </span>
                       </td>

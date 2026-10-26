@@ -98,7 +98,7 @@ export default async function PodsPage() {
           <Card as="section" key={p.pod_id}>
             <CardHeader>
               <CardTitle>{p.name}</CardTitle>
-              <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
                 {p.designers} designer{p.designers === 1 ? "" : "s"} · {p.open_orders} open order{p.open_orders === 1 ? "" : "s"}
               </span>
             </CardHeader>
@@ -137,7 +137,7 @@ export default async function PodsPage() {
                   <li key={d.designer_id} className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
                     <span className="min-w-0">
                       <span className="block text-[length:var(--fs-3)] font-medium">{d.name ?? d.designer_ref ?? d.designer_id}</span>
-                      <span className="tabular font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                      <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
                         {d.designer_ref ?? "No profile"} · {loadWord(d.open_minutes, d.shift_minutes)}
                       </span>
                     </span>

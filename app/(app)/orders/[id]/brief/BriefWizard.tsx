@@ -351,7 +351,7 @@ export function BriefWizard({
             className="mt-3 rounded-[var(--r-md)] border border-border p-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
+              <span className="text-[length:var(--fs-2)] text-muted-foreground">
                 Row {i + 1}
               </span>
               <Button
@@ -635,7 +635,7 @@ function stepForField(field: string): number {
 function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]; onPick: (n: number) => void }) {
   return (
     <div className="mb-5 md:hidden">
-      <p className="text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
+      <p className="text-[length:var(--fs-2)] text-muted-foreground">
         Step {step + 1} of {STEPS.length}
       </p>
       <h2 className="mt-0.5 text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)] tracking-[var(--ls-5)]">
@@ -871,7 +871,7 @@ function QualityPanel({
 
       {quality.gaps.length > 0 ? (
         <>
-          <h4 className="mt-4 text-[length:var(--fs-2)] uppercase tracking-[var(--ls-1)] text-muted-foreground">
+          <h4 className="mt-4 text-[length:var(--fs-2)] text-muted-foreground">
             What a designer still cannot determine
           </h4>
           <ul className="mt-2 space-y-3">

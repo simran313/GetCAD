@@ -109,7 +109,7 @@ export default async function BillingPage() {
               <CardBody className="text-[length:var(--fs-3)] text-muted-foreground">No payments yet.</CardBody>
             ) : (
               <table className="w-full text-left text-[length:var(--fs-2)]">
-                <thead className="border-b border-border font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <thead className="border-b border-border text-[length:var(--fs-2)] text-muted-foreground">
                   <tr>
                     {["Date", "Client", "Order", "Movement", "Amount"].map((h) => (
                       <th key={h} className="px-[var(--s-4)] py-[var(--s-3)] font-normal">

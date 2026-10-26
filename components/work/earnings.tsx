@@ -78,7 +78,7 @@ export function EarningsView({
                     <span className="text-[length:var(--fs-2)] text-muted-foreground">{when(r.created_at)}</span>
                     <span className="min-w-0 sm:order-none">
                       <span className="block truncate text-[length:var(--fs-3)]">{productWord(r.product)}</span>
-                      <span className="tabular block font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                      <span className="tabular block font-mono text-[length:var(--fs-2)] text-muted-foreground">
                         {r.display_ref}
                       </span>
                     </span>
@@ -119,7 +119,7 @@ export function EarningsView({
                   <p className="text-[length:var(--fs-3)] font-medium">
                     {bank.beneficiary_name} ····{bank.account_last4}
                   </p>
-                  <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                  <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                     {bank.account_type} · IFSC {bank.ifsc}
                   </p>
                   <StatusTag kind={bank.status === "VERIFIED" ? "done" : bank.status === "REJECTED" ? "needs" : "muted"}>

@@ -152,7 +152,7 @@ export default async function QcReviewPage({
                             alt={`${f.slot} view`}
                             className="aspect-square w-full rounded-[var(--r-sm)] border border-border bg-subtle object-cover"
                           />
-                          <span className="block font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em]">{f.slot}</span>
+                          <span className="block font-mono text-[length:var(--fs-2)]">{f.slot}</span>
                         </a>
                       </li>
                     ))}
@@ -162,7 +162,7 @@ export default async function QcReviewPage({
                       {others.map((f) => (
                         <li key={f.slot} className="flex items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
                           <span className="min-w-0">
-                            <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em]">{f.slot}</span>{" "}
+                            <span className="font-mono text-[length:var(--fs-2)]">{f.slot}</span>{" "}
                             <span className="truncate font-mono text-[length:var(--fs-2)] text-muted-foreground">{f.file_name}</span>
                           </span>
                           <a href={`/api/files/${f.file_version_id}`} className="text-[length:var(--fs-2)] underline underline-offset-4">
@@ -181,7 +181,7 @@ export default async function QcReviewPage({
             <Card as="section">
               <CardHeader>
                 <CardTitle>Decision</CardTitle>
-                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   Pass unlocks at 19 / 19{isCad ? " + measurements" : ""}
                   {job.qc_payout_paise ? ` · your QC payout ${rupeesWord(job.qc_payout_paise)}` : ""}
                   {job.price_total ? ` (${formatMoney(job.price_total, job.currency ?? "USD")} order)` : ""}
@@ -214,7 +214,7 @@ export default async function QcReviewPage({
             <Card as="section">
               <CardHeader>
                 <CardTitle>Measured specification</CardTitle>
-                <span className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   {m ? `Recorded · v${vs?.version}` : "Needed to pass"} · goes on the certificate
                 </span>
               </CardHeader>

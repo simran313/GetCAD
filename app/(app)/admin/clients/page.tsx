@@ -131,7 +131,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
               ] as [string, (readonly [string, number])[]][]
             ).map(([title, rows]) => (
               <div key={title}>
-                <p className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">{title}</p>
+                <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">{title}</p>
                 {rows.length === 0 ? (
                   <p className="mt-2 text-muted-foreground">Nothing yet.</p>
                 ) : (
@@ -160,7 +160,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       ) : (
         <Card className="overflow-x-auto">
           <table className="w-full text-left text-[length:var(--fs-2)]">
-            <thead className="border-b border-border font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
+            <thead className="border-b border-border text-[length:var(--fs-2)] text-muted-foreground">
               <tr>
                 {["Client", "Orders", "Paid", "Last order", "Account manager"].map((h) => (
                   <th key={h} className="px-[var(--s-4)] py-[var(--s-3)] font-normal">

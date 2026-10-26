@@ -66,7 +66,7 @@ export default async function NewOrderPage() {
 
       {(drafts.length > 0 || again.length > 0) && (
         <section className="space-y-3">
-          <h2 className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.12em] text-muted-foreground">
+          <h2 className="eyebrow">
             Faster ways to start
           </h2>
           <Card>

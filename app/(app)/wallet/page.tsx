@@ -52,7 +52,7 @@ export default async function WalletPage() {
           screen, or <Link href="/messages" className="underline underline-offset-4">message the team</Link>.
         </CardBody>
       </Card>
-      <h2 className="font-mono text-[length:var(--fs-1)] uppercase tracking-[0.12em] text-muted-foreground">Activity</h2>
+      <h2 className="eyebrow">Activity</h2>
       <Lines lines={w.lines.slice(0, 5)} />
     </main>
   );
