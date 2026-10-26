@@ -24,20 +24,20 @@ export default async function WalletPage() {
 
   return (
     <Page>
-      <PageHeader title="Wallet" />
+      <PageHeader title="Wallet" description="Your credit, what is held in open orders, and every payment." />
       <WalletNav active="/wallet" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardBody>
             <p className="text-[length:var(--fs-2)] text-muted-foreground">Credit</p>
-            <p className="tabular font-display text-[length:var(--fs-display)] leading-[var(--lh-display)]">{formatMoney(w.creditCents, "USD")}</p>
+            <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">{formatMoney(w.creditCents, "USD")}</p>
             <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">Taken off your next order&apos;s price by the team.</p>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
             <p className="text-[length:var(--fs-2)] text-muted-foreground">Held in orders · released after you approve</p>
-            <p className="tabular font-display text-[length:var(--fs-display)] leading-[var(--lh-display)]">{formatMoney(w.heldCents, "USD")}</p>
+            <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">{formatMoney(w.heldCents, "USD")}</p>
             <p className="mt-1 truncate text-[length:var(--fs-2)] text-muted-foreground">
               {w.heldOrders.map((o) => o.title).join(" · ") || "Nothing held"}
             </p>
@@ -53,7 +53,7 @@ export default async function WalletPage() {
           screen, or <Link href="/messages" className="underline underline-offset-4">message the team</Link>.
         </CardBody>
       </Card>
-      <h2 className="eyebrow">Activity</h2>
+      <h2 className="text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">Recent activity</h2>
       <Lines lines={w.lines.slice(0, 5)} />
     </Page>
   );
