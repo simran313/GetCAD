@@ -15,6 +15,7 @@ export async function signedIn(browser: Browser, persona: Persona): Promise<Page
   await page.goto("/sign-in");
   await clerk.signIn({ page, emailAddress: PERSONAS[persona].email });
   await page.goto("/home");
+  await clerk.loaded({ page });
   return page;
 }
 
