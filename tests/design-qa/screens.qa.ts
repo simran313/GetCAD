@@ -18,6 +18,9 @@ import { E2E_DIR, PERSONAS, readState, type Persona } from "../e2e/state";
  * widths. Serious and critical findings go to design-qa/<stage>/<who>/axe.md
  * beside the screenshots; DESIGN_QA_AXE_STRICT=1 fails the run on any.
  * Clerk's own sign-in widget is left out (not ours to change).
+ *
+ * The visible words in <main> at phone width are counted per route into
+ * design-qa/<stage>/<who>/words.md, so a copy cut is measured, not guessed.
  */
 const STAGE = process.env.DESIGN_QA_STAGE || "local";
 const OUT = join(process.cwd(), "design-qa", STAGE);
@@ -44,6 +47,21 @@ interface Finding {
   targets: string[];
 }
 const findings = new Map<string, Finding[]>();
+const words = new Map<string, [string, number][]>();
+
+async function countWords(page: Page, who: string, path: string) {
+  const n = await page
+    .evaluate(() => ((document.querySelector("main") ?? document.body).innerText.match(/[\p{L}\p{N}][\p{L}\p{N}'’.,$₹%-]*/gu) ?? []).length)
+    .catch(() => -1);
+  words.set(who, [...(words.get(who) ?? []), [path, n]]);
+}
+
+function writeWordsReport(who: string) {
+  const file = join(OUT, who, "words.md");
+  mkdirSync(dirname(file), { recursive: true });
+  const rows = (words.get(who) ?? []).map(([path, n]) => `| \`${path}\` | ${n} |`);
+  writeFileSync(file, [`# words: ${who} (visible in <main> at 390)`, "", "| Route | Words |", "| --- | ---: |", ...rows, ""].join("\n"));
+}
 
 async function audit(page: Page, who: string, path: string, width: number) {
   const result = await new AxeBuilder({ page })
@@ -88,6 +106,7 @@ async function shoot(page: Page, who: string, path: string) {
     mkdirSync(dirname(file), { recursive: true });
     await page.screenshot({ path: file, fullPage: true, animations: "disabled" }).catch((e) => console.log(`! ${who} ${path}: ${e}`));
     console.log(`${who} ${path} @${width}: ${res?.status() ?? "no response"} → ${page.url().replace(/^https?:\/\/[^/]+/, "")}`);
+    if (width === 390) await countWords(page, who, path);
     if (width !== 768) await audit(page, who, path, width);
   }
 }
@@ -149,7 +168,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
       });
       return [
         "/home", "/orders", ...orderPages(quoted), ...(quoted ? [`/orders/${quoted}/pay`] : []), "/wallet",
-        ...(draft ? [`/orders/${draft}/brief`] : []),
+        ...(draft ? [`/orders/${draft}/brief`, `/orders/${draft}/brief/review`] : []),
       ];
     },
   },
@@ -184,6 +203,7 @@ for (const [who, { persona, paths }] of Object.entries(ROUTES).filter(([w]) => O
     const page = await as(browser, persona);
     for (const path of await paths()) await shoot(page, who, path);
     await page.context().close();
+    writeWordsReport(who);
     const serious = writeAxeReport(who);
     console.log(`axe ${who}: ${serious} serious or critical`);
     if (process.env.DESIGN_QA_AXE_STRICT === "1") expect(serious, `axe findings for ${who}: see design-qa/${STAGE}/${who}/axe.md`).toBe(0);

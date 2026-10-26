@@ -228,13 +228,13 @@ Messages and Home, every action still obvious.
   order → brief → photos → review → send → quote → pay → chat → version
   review → delivered, plus reorder. Screenshots to the `design-qa` branch.
 
-## Decisions needed
+## Decisions (owner, 26 Oct 2026: "go with your recommendations")
 
-1. **"Your team" vs "Team · first name".** DECISIONS §11 says admin and pod
-   lead appear to clients as "Team · first name". The brief says "Your
-   team". Designers already never appear in client threads. Change
-   DECISIONS to "Your team", or keep first names?
-2. Schema change **9 A** (notification types): yes / no.
-3. Schema change **9 B** (reply-to): yes / no.
-4. Timezone: **cookie per device (recommended)** or **9 C** profile column.
-5. Phasing as in §10, and before Phase 9?
+1. Clients see **"Your team"**, not "Team · first name" (the brief). DECISIONS
+   §11 is updated with the chat PR (10c).
+2. **9 A** (notification types) and 3. **9 B** (reply-to): not decided yet;
+   asked again, with a recommendation, before 10d and 10c. 10a and 10b do
+   not depend on them.
+4. Timezone: **cookie per device**, defaulting to the device's zone. No
+   schema change (9 C not built).
+5. Phasing as in §10, before Phase 9.
