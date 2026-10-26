@@ -6,9 +6,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusTag } from "@/components/ui/status-tag";
 import { Textarea } from "@/components/ui/textarea";
-import { Timer } from "@/components/ui/timer";
+import { SlaCountdown } from "@/components/ui/sla-countdown";
+import { StatusPill } from "@/components/ui/status-pill";
 import { serviceWord, shortDate } from "@/lib/client/orders";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -104,7 +104,7 @@ export function ClientOrderView({
             <span className={cn("h-1 rounded-[var(--r-full)]", i < done ? "bg-primary" : "bg-muted")} aria-hidden />
             <span
               className={cn(
-                "hidden font-mono text-[length:var(--fs-2)] sm:block",
+                "hidden text-[length:var(--fs-2)] leading-[var(--lh-2)] sm:block",
                 i < done ? "text-foreground" : "text-muted-foreground",
               )}
             >
@@ -159,11 +159,11 @@ export function ClientOrderView({
             </CardHeader>
             <CardBody className="space-y-2 text-[length:var(--fs-2)]">
               {o.sla_status === "running" && o.sla_due_at ? (
-                <Timer dueAt={o.sla_due_at} label="Due in" />
+                <SlaCountdown dueAt={o.sla_due_at} />
               ) : o.sla_status === "met" ? (
-                <StatusTag kind="done">Met</StatusTag>
+                <StatusPill tone="success">Done on time</StatusPill>
               ) : o.sla_status === "breached" || o.sla_status === "breached_credited" ? (
-                <StatusTag kind="needs">Late — credit due</StatusTag>
+                <p className="flex flex-wrap items-center gap-2"><StatusPill tone="danger">Missed</StatusPill> The full amount comes back as credit.</p>
               ) : (
                 <p className="text-muted-foreground">
                   The clock starts once you have paid and we have confirmed the brief.
