@@ -1,7 +1,9 @@
+import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/status-badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
@@ -75,9 +77,7 @@ export function MessagesView({
       <div className="grid gap-6 md:grid-cols-[320px_1fr]">
         <Card className={cn("self-start overflow-hidden", open && "hidden md:block")}>
           {conversations.length === 0 ? (
-            <p className="p-[var(--s-5)] text-[length:var(--fs-3)] text-muted-foreground">
-              No conversations yet. Each order has one; start it from the order.
-            </p>
+            <EmptyState icon={<MessageSquare />} title="No conversations yet" description="Each order has one. Start it from the order." className="py-8" />
           ) : (
             <ul>
               {conversations.map((c) => {
@@ -137,8 +137,8 @@ export function MessagesView({
               <AutoRefresh orderId={open.orderId} stamp={open.stamp} />
             </>
           ) : (
-            <Card className="p-[var(--s-8)] text-center text-[length:var(--fs-3)] text-muted-foreground">
-              Choose a conversation.
+            <Card className="hidden md:block">
+              <EmptyState icon={<MessageSquare />} title="Choose a conversation" description="Pick an order on the left to read and reply." />
             </Card>
           )}
         </div>
