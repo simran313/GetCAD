@@ -1,5 +1,7 @@
 # The CAD Pillar — design screens
 
+> **Superseded in part by the redesign (October 2026).** The current design system is in `app/globals.css`, `components/ui` and `components/shell`, with live examples at `/design-preview` and every route captured on the `design-qa` branch (`after/`). See `docs/redesign/BEFORE-AFTER.md`. In particular, Instrument Serif and the uppercase mono labels below are gone: Geist throughout, sentence case, uppercase only for small eyebrow labels. Use these mockups only for layout ideas on screens the redesign did not touch.
+
 92 static mockups from the signed-off canvas. Desktop artboards are 1440 × 900; mobile artboards are 390 × 844. Open any file in a browser.
 
 ## Rules for whoever builds from these

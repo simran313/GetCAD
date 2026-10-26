@@ -63,6 +63,7 @@ test("a new jeweler signs up from a campaign and must say how they heard about u
   await page.goto(`/pricing?${utm}`);
   await page.goto("/how-it-works");
   await page.goto("/");
+  await page.goto("/sign-in");
   await clerk.signIn({ page, emailAddress: email });
 
   // Home sends a new client to Welcome until their business is on file.

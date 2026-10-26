@@ -1,14 +1,16 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 /**
  * "Every file is made to be cast" (redesign step 4e): the two sign-offs as a
  * diagram, horizontal at desk and vertical on a phone. The checklist rows tick
- * as the section scrolls into view (static under reduced motion).
+ * as the section scrolls into view (static under reduced motion). Plain CSS
+ * transitions rather than an animation library: this is on the home page,
+ * where every kilobyte of script delays the first paint on a phone.
  */
 const STAGE_1 = [
   "Brief, references and special requirements read",
@@ -26,37 +28,62 @@ const STAGE_2 = [
   "Spec sheet signed",
 ];
 
+/** True once the element is 80px inside the viewport; stays true. */
+function useSeen<T extends Element>() {
+  const ref = useRef<T>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || seen) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setSeen(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "-80px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [seen]);
+  return [ref, seen] as const;
+}
+
 function Stage({ n, title, who, rows, delay }: { n: string; title: string; who: string; rows: string[]; delay: number }) {
-  const reduce = useReducedMotion();
+  const [ref, seen] = useSeen<HTMLUListElement>();
   return (
     <div className="rounded-[var(--r-xl)] border border-border bg-card p-6 shadow-[var(--e-1)]">
       <p className="text-[14px] font-medium text-muted-foreground tabular">Stage {n}</p>
       <h3 className="mt-1 text-[22px] tracking-[-0.02em]">{title}</h3>
       <p className="mt-1 text-[15px] text-muted-foreground">{who}</p>
-      <ul className="mt-5 space-y-3">
-        {rows.map((row, i) => (
-          <motion.li
-            key={row}
-            className="flex items-start gap-3 text-[16px] leading-[1.45]"
-            initial={reduce ? false : { opacity: 0.6 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.25, ease: "easeOut", delay: reduce ? 0 : delay + i * 0.18 }}
-          >
-            <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[color:var(--border-strong)]">
-              <motion.span
-                className="absolute inset-[-1px] flex items-center justify-center rounded-full bg-foreground text-background"
-                initial={reduce ? false : { scale: 0 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.2, ease: "easeOut", delay: reduce ? 0 : delay + i * 0.18 }}
-              >
-                <Check className="h-3 w-3" strokeWidth={3} />
-              </motion.span>
-            </span>
-            {row}
-          </motion.li>
-        ))}
+      <ul ref={ref} className="mt-5 space-y-3">
+        {rows.map((row, i) => {
+          const wait = { transitionDelay: `${delay + i * 0.18}s` };
+          return (
+            <li
+              key={row}
+              style={wait}
+              className={cn(
+                "flex items-start gap-3 text-[16px] leading-[1.45] transition-opacity duration-[250ms] ease-out motion-reduce:![transition-delay:0s]",
+                seen ? "opacity-100" : "opacity-60",
+              )}
+            >
+              <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[color:var(--border-strong)]">
+                <span
+                  style={wait}
+                  className={cn(
+                    "absolute inset-[-1px] flex items-center justify-center rounded-full bg-foreground text-background transition-transform duration-200 ease-out motion-reduce:![transition-delay:0s]",
+                    seen ? "scale-100" : "scale-0",
+                  )}
+                >
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </span>
+              </span>
+              {row}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

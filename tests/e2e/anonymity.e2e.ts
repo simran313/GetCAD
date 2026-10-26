@@ -63,17 +63,19 @@ async function capture(page: Page, path: string): Promise<string> {
 //
 // Nor is React's own wire format. A page's server data arrives as numbered
 // rows ("2e:I[…]", escaped as "\n29:" inside the HTML) that point at each
-// other ("$L2e"). The numbers are a counter per page: two jobs in the same
-// state are built the same way and get the same numbers, whoever the client.
-// They are stripped (ids of at most 4 hex digits, so no client code, order
-// ref or id can match) before the pages are compared.
+// other ("$L2e", or a prop inside one: "$18:props:children:0:props:icon").
+// The numbers are a counter per page: two jobs in the same state are built
+// the same way and get the same numbers, whoever the client. They are
+// stripped (ids of at most 4 hex digits, and a path of lowercase prop names
+// and indexes, so no client code, order ref or id can match) before the
+// pages are compared.
 const tokens = (text: string) =>
   new Set(
     text
       .replace(/class(Name)?=\\?"[^"\\]*\\?"/g, " ")
       .replace(/\\?"className\\?":\\?"[^"\\]*\\?"/g, " ")
       .replace(/(^|\n|\\n|\[1,\\?")[0-9a-f]{1,4}:/g, "$1 ")
-      .replace(/\$[A-Za-z@]?[0-9a-f]{1,4}(?=\\?")/g, " ")
+      .replace(/\$[A-Za-z@]?[0-9a-f]{1,4}(?::(?:[a-z][A-Za-z]*|\d+))*(?=\\?")/g, " ")
       .match(/[A-Za-z0-9][A-Za-z0-9_+@.:-]{3,}/g) ?? [],
   );
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { StatusPill } from "@/components/ui/status-pill";
@@ -10,25 +9,28 @@ import { cn } from "@/lib/utils";
 /**
  * The hero's visual: a real-looking order card from the client portal, with
  * the first-look clock running and the designer's checklist ticking. Sample
- * data only. Static under prefers-reduced-motion.
+ * data only. Static under prefers-reduced-motion. CSS transitions, not an
+ * animation library: it is the hero, and script delays the first paint.
  */
 const ROWS = ["Brief and dimensions", "Stone seats to spec", "Wall and prong minimums", "Watertight STL export"];
 const START = 5 * 3600 + 42 * 60;
 
 export function LiveOrderCard() {
-  const reduce = useReducedMotion();
   const [left, setLeft] = useState(START);
-  const [ticked, setTicked] = useState(reduce ? 3 : 0);
+  const [ticked, setTicked] = useState(0);
 
   useEffect(() => {
-    if (reduce) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTicked(3);
+      return;
+    }
     const clock = setInterval(() => setLeft((s) => (s > START - 3600 ? s - 1 : START)), 1000);
     const ticks = setInterval(() => setTicked((t) => (t >= ROWS.length ? 0 : t + 1)), 1400);
     return () => {
       clearInterval(clock);
       clearInterval(ticks);
     };
-  }, [reduce]);
+  }, []);
 
   const h = Math.floor(left / 3600);
   const m = Math.floor((left % 3600) / 60);
@@ -57,14 +59,14 @@ export function LiveOrderCard() {
             const done = i < ticked;
             return (
               <li key={row} className="flex items-center gap-2.5 text-[15px]">
-                <motion.span
-                  initial={false}
-                  animate={{ scale: done ? 1 : 0.9, backgroundColor: done ? "#0a0a0a" : "#ffffff" }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full border", done ? "border-foreground" : "border-border")}
+                <span
+                  className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-[transform,background-color] duration-200 ease-out",
+                    done ? "scale-100 border-foreground bg-foreground" : "scale-90 border-border bg-background",
+                  )}
                 >
                   {done && <Check className="h-3 w-3 text-background" strokeWidth={3} />}
-                </motion.span>
+                </span>
                 <span className={done ? "text-foreground" : "text-muted-foreground"}>{row}</span>
               </li>
             );

@@ -79,13 +79,14 @@ describe("the marketing header", () => {
   // Landing back here after signing in was half the bug; a header that still
   // says "Sign in" was the other half, and on its own it is enough to convince
   // someone the sign-in did not work.
+  // The website does not load Clerk in the browser (Lighthouse), so the
+  // header reads the session on the server.
   it("offers a way into the app once you are signed in", () => {
-    expect(header).toContain("SignedIn");
+    expect(header).toContain("await auth()");
     expect(header).toContain("POST_AUTH_PATH");
   });
 
   it("still offers sign-in to visitors who are not", () => {
-    expect(header).toContain("SignedOut");
     expect(header).toContain("/sign-in");
     expect(header).toContain("/sign-up");
   });
@@ -119,17 +120,26 @@ describe("authentication stays on this origin", () => {
     expect(signIn, "must be a path on this origin, not an absolute URL").toMatch(IN_ORIGIN);
   });
 
+  // Clerk is loaded by the app and the sign-in screens, not by the website.
+  const PROVIDER = "components/auth/auth-provider.tsx";
+
   it("points Clerk's own components at our routes too", () => {
-    const layout = read("app/layout.tsx");
-    expect(layout).toMatch(/signInUrl="(\/[^"]+)"/);
-    expect(layout).toMatch(/signUpUrl="(\/[^"]+)"/);
+    const provider = read(PROVIDER);
+    expect(provider).toMatch(/signInUrl="(\/[^"]+)"/);
+    expect(provider).toMatch(/signUpUrl="(\/[^"]+)"/);
   });
 
   // Sign-out defaults to the portal as well, which ejects someone out of the
   // installed app at the exact moment they have no session to get back in with.
   it("returns to this origin after signing out", () => {
-    const layout = read("app/layout.tsx");
-    expect(layout).toMatch(/afterSignOutUrl="(\/[^"]*)"/);
+    expect(read(PROVIDER)).toMatch(/afterSignOutUrl="(\/[^"]*)"/);
+  });
+
+  it("wraps every page that renders Clerk's components, and only those", () => {
+    for (const layout of ["app/(app)/layout.tsx", "app/(auth)/layout.tsx"]) {
+      expect(read(layout), `${layout} does not load Clerk`).toContain("<AuthProvider>");
+    }
+    expect(read("app/layout.tsx"), "the root layout loads Clerk on the website").not.toContain("ClerkProvider");
   });
 
   it("names sign-in routes that actually exist", () => {

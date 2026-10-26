@@ -94,8 +94,12 @@ async function shoot(page: Page, who: string, path: string) {
 
 async function as(browser: Browser, persona: Persona | null): Promise<Page> {
   const page = await (await browser.newContext()).newPage();
-  await page.goto("/");
-  if (persona) await clerk.signIn({ page, emailAddress: PERSONAS[persona].email });
+  // The website does not load Clerk; the sign-in screen does.
+  await page.goto(persona ? "/sign-in" : "/");
+  if (persona) {
+    await clerk.signIn({ page, emailAddress: PERSONAS[persona].email });
+    await page.goto("/home");
+  }
   return page;
 }
 
