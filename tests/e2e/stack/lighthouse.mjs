@@ -1,7 +1,7 @@
-// Lighthouse on the marketing pages (redesign targets: mobile performance
-// >= 90, LCP < 2.5 s, no layout shift). Runs against the same production
-// build the journeys use, after them, on its own port. The thresholds live in
-// lighthouserc.json; a miss fails the job.
+// Lighthouse on the marketing pages. Runs against the same production build
+// the journeys use, after them, on its own port. lighthouserc.json fails the
+// job on a regression (and on any layout shift or accessibility below 90);
+// the redesign's goal (below) is printed with the results.
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -9,6 +9,10 @@ import { join } from "node:path";
 import { appEnv } from "./env.mjs";
 
 const PORT = 3200;
+// The redesign's targets. lighthouserc.json fails the job only on a
+// regression from the level measured on 26 Oct 2026 (owner decision); the
+// goal is reported on every run until it is met.
+const GOAL = { performance: 90, lcpMs: 2500 };
 const env = appEnv();
 if (!env) throw new Error("run `npm run e2e:prepare` and `npm run e2e:build` first");
 
@@ -58,11 +62,6 @@ process.exit(status);
  * the LCP element and its phases, render-blocking files, third parties, the
  * heaviest scripts and downloads. Printed every time, so a miss says why.
  */
-// The redesign's targets. lighthouserc.json fails the job only on a
-// regression from the last measured level (owner decision); the goal is
-// reported on every run until it is met.
-const GOAL = { performance: 90, lcpMs: 2500 };
-
 function explain() {
   const dir = "lighthouse-report";
   const manifest = join(dir, "manifest.json");
