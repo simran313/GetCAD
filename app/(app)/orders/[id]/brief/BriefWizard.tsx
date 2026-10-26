@@ -852,8 +852,10 @@ function Toggle({
  * review would refuse the brief.
  */
 function QualityChip({ quality, onJump }: { quality: ReturnType<typeof gradeBrief>; onJump: (field: string) => void }) {
-  const blocking = quality.gaps.filter((g) => g.severity === "blocking");
-  const first: BriefGap | undefined = blocking[0] ?? quality.gaps[0];
+  // Earliest step first: on step 1 the chip asks for the photo, not the size.
+  const byStep = (a: BriefGap, b: BriefGap) => stepForField(a.field) - stepForField(b.field);
+  const blocking = quality.gaps.filter((g) => g.severity === "blocking").sort(byStep);
+  const first: BriefGap | undefined = blocking[0] ?? [...quality.gaps].sort(byStep)[0];
   const count = blocking.length || quality.gaps.length;
   return (
     <div className="mb-4 flex items-center gap-3">
