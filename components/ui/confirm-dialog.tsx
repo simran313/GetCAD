@@ -79,9 +79,13 @@ export function ConfirmDialog({
             <Button
               variant={destructive ? "destructive" : "default"}
               disabled={!ready}
-              type={formId ? "submit" : "button"}
-              form={formId}
+              type="button"
               onClick={() => {
+                // Submitted here rather than by type="submit" form={formId}:
+                // closing the dialog removes this button from the page before
+                // the browser's default action runs, and a detached submit
+                // button submits nothing (the confirm silently did nothing).
+                if (formId) (document.getElementById(formId) as HTMLFormElement | null)?.requestSubmit();
                 onConfirm?.();
                 setOpen(false);
               }}
