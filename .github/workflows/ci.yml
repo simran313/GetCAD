@@ -137,6 +137,20 @@ jobs:
       - name: Run the journeys
         run: npm run e2e:test
 
+      # Redesign targets on the marketing pages: mobile performance >= 90,
+      # LCP < 2.5 s, no layout shift (lighthouserc.json). Same build, own port.
+      - name: Lighthouse (home and pricing, mobile)
+        run: node tests/e2e/stack/lighthouse.mjs
+
+      - name: Keep the Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report/
+          retention-days: 14
+          if-no-files-found: ignore
+
       - name: PostgREST log
         if: failure()
         run: docker logs getcad-e2e-postgrest 2>&1 | tail -100

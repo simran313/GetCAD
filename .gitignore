@@ -45,3 +45,5 @@ npm-debug.log*
 /test-results/
 /playwright-report/
 /design-qa/
+/lighthouse-report/
+/.lighthouseci/
