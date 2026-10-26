@@ -2,6 +2,7 @@ import type { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { generateId } from "../../core/ids/generateId";
+import { briefMinimumMissing } from "../../core/orders/briefQuality";
 import { connectFreshDb } from "../helpers/db";
 
 /**
@@ -214,6 +215,40 @@ describe("the brief (owner answer Q6, DECISIONS §11–12)", () => {
     const after = await q(clientMeera, "SELECT public.brief_missing($1) AS m", [id]);
     expect(after.rows[0].m).toEqual([]);
     await expect(q(clientMaya, "SELECT public.brief_missing($1)", [id])).rejects.toThrow(/order not found/i);
+  });
+
+  // The wizard's quality meter grades with briefMinimumMissing; review and
+  // submit use brief_missing. One table of briefs, both answers equal.
+  it("the wizard's minimum (briefMinimumMissing) is the database's brief_missing", async () => {
+    const cases: { product: string; ring?: string; circ?: number; diam?: number; len?: number; image: boolean }[] = [
+      { product: "RING", image: false },
+      { product: "RING", ring: "US 7", image: true },
+      { product: "BAND", circ: 53_100, image: false },
+      { product: "RING", diam: 16_900, image: true },
+      { product: "BANGLE", image: true },
+      { product: "BANGLE", ring: "US 7", image: true },
+      { product: "BRACELET", len: 180_000, image: false },
+      { product: "NECKLACE", image: true },
+      { product: "PENDANT", image: false },
+    ];
+    for (const c of cases) {
+      const order = generateId();
+      await q(clientMeera, "SELECT public.create_order($1,'x','USD')", [order]);
+      await q(
+        clientMeera,
+        `SELECT public.upsert_order_spec(p_order_id => $1, p_reference_name => 'r', p_product => $2, p_metal => 'WHITE',
+           p_ring_size => $3, p_inner_circumference_um => $4, p_inner_diameter_um => $5, p_length_um => $6)`,
+        [order, c.product, c.ring ?? null, c.circ ?? null, c.diam ?? null, c.len ?? null],
+      );
+      if (c.image) await q(clientMeera, "SELECT public.add_reference_image($1,$2,'image/png',10)", [order, `refs/${generateId()}.png`]);
+      const db_ = (await q(clientMeera, "SELECT public.brief_missing($1) AS m", [order])).rows[0].m as string[];
+      const core = briefMinimumMissing(c.product, {
+        referenceImageCount: c.image ? 1 : 0,
+        service: "cad",
+        size: { ringSize: c.ring, innerCircumferenceUm: c.circ, innerDiameterUm: c.diam, lengthUm: c.len },
+      });
+      expect(core, JSON.stringify(c)).toEqual(db_);
+    }
   });
 
   it("refuses rush or express while the rush flag is off", async () => {

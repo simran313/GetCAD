@@ -67,7 +67,7 @@ export default async function ReviewBriefPage({ params }: { params: Promise<{ id
 
   return (
     <Page form>
-      <PageHeader eyebrow="Step 5 of 5" title="Review your order" description="Check it, then send it for a price. Nothing is charged yet." />
+      <PageHeader title="Review" description="Check it, then send it for a price. Nothing is charged yet." />
 
       {missing.length > 0 && (
         <Card className="border-foreground">

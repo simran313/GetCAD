@@ -175,8 +175,15 @@ export function BriefWizard({
       accentRowCount: accents.length,
       referenceImageCount,
       pinnedImageCount,
+      service,
+      size: {
+        ringSize: form.ring_size,
+        innerCircumferenceUm: micronsFrom(form, "inner_circumference_mm"),
+        innerDiameterUm: micronsFrom(form, "inner_diameter_mm"),
+        lengthUm: micronsFrom(form, "length_mm"),
+      },
     });
-  }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount]);
+  }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount, service]);
 
   // "Answer whichever you have, we work out the other" — shown, never stored,
   // so it can never overwrite a certified stone's real weight.
@@ -629,6 +636,7 @@ function updateAccent(
 function stepForField(field: string): number {
   if (field === "referenceName" || field === "product" || field === "references") return 0;
   if (field.startsWith("centre")) return 1;
+  if (field === "size") return 2;
   return 3;
 }
 

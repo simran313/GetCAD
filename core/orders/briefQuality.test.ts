@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gradeBrief, qualitySummary, type BriefContext } from "./briefQuality";
+import { briefMinimumMissing, gradeBrief, qualitySummary, type BriefContext } from "./briefQuality";
 import { mmToMicrons, type OrderSpecInput } from "./spec";
 
 /** A brief with every required answer given and nothing left to guess. */
@@ -21,7 +21,7 @@ const PERFECT: OrderSpecInput = {
   centreDepthUm: mmToMicrons(4.0),
 };
 
-const CTX: BriefContext = { accentRowCount: 0, referenceImageCount: 2, pinnedImageCount: 1 };
+const CTX: BriefContext = { accentRowCount: 0, referenceImageCount: 2, pinnedImageCount: 1, service: "cad", size: { ringSize: "US 6.5" } };
 
 const whats = (spec: OrderSpecInput, ctx: BriefContext = CTX) =>
   gradeBrief(spec, ctx).gaps.map((g) => g.what);
@@ -116,26 +116,25 @@ describe("gradeBrief", () => {
 });
 
 describe("references", () => {
-  it("asks for a picture when there is none", () => {
-    expect(
-      whats(PERFECT, { accentRowCount: 0, referenceImageCount: 0, pinnedImageCount: 0 }),
-    ).toContain("What you want it to look like");
+  // The bug this rule fixes: the meter said "Excellent" with no photo while
+  // review refused to send. A photo is required (DECISIONS §11), not optional.
+  it("requires a photo, and never calls a brief without one good", () => {
+    const q = gradeBrief(PERFECT, { ...CTX, referenceImageCount: 0, pinnedImageCount: 0 });
+    expect(q.gaps.map((g) => g.what)).toContain("A reference photo");
+    expect(q.blockingCount).toBe(1);
+    expect(q.grade).toBe("Incomplete");
   });
 
   // The design's own observation, and the reason pinning gets its own step.
   it("asks for a pin when there are pictures but nothing marked", () => {
-    const q = gradeBrief(PERFECT, {
-      accentRowCount: 0,
-      referenceImageCount: 3,
-      pinnedImageCount: 0,
-    });
+    const q = gradeBrief(PERFECT, { ...CTX, referenceImageCount: 3, pinnedImageCount: 0 });
     expect(q.gaps.map((g) => g.what)).toContain("Which part of the picture you mean");
     expect(q.gaps[0]!.why).toMatch(/copies the wrong element/i);
   });
 
   it("is satisfied by one pinned picture", () => {
     expect(
-      whats(PERFECT, { accentRowCount: 0, referenceImageCount: 1, pinnedImageCount: 1 }),
+      whats(PERFECT, { ...CTX, referenceImageCount: 1, pinnedImageCount: 1 }),
     ).toEqual([]);
   });
 });
@@ -174,7 +173,7 @@ describe("grading", () => {
         centreQuantity: 4,
         basedOnOrderId: "ord_1",
       },
-      { accentRowCount: 0, referenceImageCount: 0, pinnedImageCount: 0 },
+      { ...CTX, referenceImageCount: 0, pinnedImageCount: 0 },
     );
     expect(q.score).toBe(0);
     expect(q.grade).toBe("Incomplete");
@@ -183,5 +182,33 @@ describe("grading", () => {
   it("counts the gaps in its summary", () => {
     const q = gradeBrief({ ...PERFECT, metal: "TWO_TONE" }, CTX);
     expect(qualitySummary(q)).toMatch(/1 thing a designer would have to guess/);
+  });
+});
+
+describe("the minimum to send matches review (brief_missing)", () => {
+  const size = (v: BriefContext["size"]) => ({ ...CTX, size: v });
+
+  it("needs a size for rings and bands: a ring size or an inside measurement", () => {
+    expect(briefMinimumMissing("RING", size({}))).toEqual(["size"]);
+    expect(briefMinimumMissing("BAND", size({ ringSize: "  " }))).toEqual(["size"]);
+    expect(briefMinimumMissing("RING", size({ innerCircumferenceUm: 53_100 }))).toEqual([]);
+    expect(briefMinimumMissing("RING", size({ innerDiameterUm: 16_900 }))).toEqual([]);
+  });
+
+  it("needs a size for bangles and bracelets: diameter, circumference or length", () => {
+    expect(briefMinimumMissing("BANGLE", size({ ringSize: "US 7" }))).toEqual(["size"]);
+    expect(briefMinimumMissing("BRACELET", size({ lengthUm: 180_000 }))).toEqual([]);
+  });
+
+  it("asks no size for other pieces, or for renders", () => {
+    expect(briefMinimumMissing("PENDANT", size({}))).toEqual([]);
+    expect(briefMinimumMissing("NECKLACE", size({}))).toEqual([]);
+    expect(briefMinimumMissing("RING", { ...size({}), service: "render" })).toEqual([]);
+  });
+
+  it("makes a missing size block the brief in the meter too", () => {
+    const q = gradeBrief(PERFECT, size({}));
+    expect(q.gaps.map((g) => g.field)).toContain("size");
+    expect(q.grade).toBe("Incomplete");
   });
 });
