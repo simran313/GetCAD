@@ -34,21 +34,20 @@ test("a client sends a CAD brief", async ({ browser }) => {
   orderId = orderIdFrom(page.url());
   writeFileSync(join(E2E_DIR, "journey.json"), JSON.stringify({ orderId }));
 
-  // A reference picture first: it reloads the page.
-  await page.getByLabel("Add a picture").setInputFiles({ name: "ref.png", mimeType: "image/png", buffer: png([200, 180, 120], 32) });
-  await act(page, page.getByRole("button", { name: "Add picture" }));
-  await expect(page.getByRole("img").first()).toBeVisible();
+  // A reference photo, inside the first step: it uploads as soon as it is chosen.
+  await page.getByLabel("Add photos").setInputFiles({ name: "ref.png", mimeType: "image/png", buffer: png([200, 180, 120], 32) });
+  await expect(page.getByRole("img", { name: /reference photo/i }).first()).toBeVisible({ timeout: 20_000 });
 
   await page.getByLabel("Name this job").fill("E2E halo ring");
   await choose(page, "What are we modelling?", "Ring");
-  await choose(page, "Who supplies the stones?", "No stones");
+  await choose(page, "Stones supplied by", "No stones");
   await page.getByLabel("Ring size", { exact: true }).fill("US 7");
-  await choose(page, "Metal colour", "Yellow");
-  await page.getByLabel("Karatage / alloy").fill("18K");
-  await page.getByRole("group", { name: "What is the CAD for?" }).getByText(/^Cast in metal/).click();
-  await choose(page, "Output format", "Both");
+  await choose(page, "Metal", "Yellow");
+  await page.getByLabel("Karat", { exact: true }).fill("18K");
+  await choose(page, "Made for", "Casting");
+  await choose(page, "Files", "Both");
   await choose(page, "Finish", "High polish");
-  await page.getByRole("button", { name: "Review and send" }).click();
+  await page.getByRole("button", { name: "Review", exact: true }).click();
 
   await page.waitForURL(`**/orders/${orderId}/brief/review`);
   await expect(page.getByText("Still needed before we can price it")).toHaveCount(0);

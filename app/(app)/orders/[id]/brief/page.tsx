@@ -154,9 +154,24 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
     });
   }
 
-  const pinnedImageCount = images.filter((i) => i.pins.length > 0).length;
-
   const spec = specRes.data as SpecRow | null;
+
+  // A brand-new brief starts from the client's own last answers (metal,
+  // karat, finish, files, purpose) and their ring size as a hint. Only their
+  // own orders: RLS limits what a client reads, and staff never get this.
+  let last: Partial<SpecRow> | null = null;
+  let lastRingSize: string | null = null;
+  if (order.relation === "CLIENT" && !spec) {
+    const { data: recent } = await supabase
+      .from("order_specs")
+      .select("metal, karatage, finish, format, purpose, ring_size, product")
+      .neq("order_id", id)
+      .order("updated_at", { ascending: false })
+      .limit(10);
+    const rows = (recent ?? []) as Partial<SpecRow>[];
+    last = rows[0] ?? null;
+    lastRingSize = rows.find((r) => r.ring_size)?.ring_size ?? null;
+  }
   const accents: AccentRow[] = ((accentsRes.data ?? []) as AccentDbRow[]).map((a) => ({
     shape: a.shape,
     setting: a.setting,
@@ -170,9 +185,8 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
 
       <PageHeader
         className="mt-4"
-        eyebrow={`${order.display_ref ?? "New order"} · ${order.service === "render" ? "Renders" : "CAD design"}`}
-        title={order.service === "render" ? "New render order" : "New CAD order"}
-        description="What we are making. The more of this that is answered, the less a designer has to guess. Add reference pictures below."
+        eyebrow={order.display_ref ?? undefined}
+        title={order.service === "render" ? "Render brief" : "CAD brief"}
       />
 
       <div className="mt-6">
@@ -181,16 +195,16 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
             orderId={id}
             service={order.service ?? "cad"}
             readOnly={frozen}
-            referenceImageCount={images.length}
-            pinnedImageCount={pinnedImageCount}
+            images={images}
+            lastRingSize={lastRingSize}
             defaults={{
               referenceName: spec?.reference_name,
               product: spec?.product,
-              metal: spec?.metal,
-              karatage: spec?.karatage ?? undefined,
-              purpose: spec?.purpose ?? undefined,
-              format: spec?.format ?? undefined,
-              finish: spec?.finish ?? undefined,
+              metal: spec?.metal ?? last?.metal ?? undefined,
+              karatage: spec?.karatage ?? last?.karatage ?? undefined,
+              purpose: spec?.purpose ?? last?.purpose ?? undefined,
+              format: spec?.format ?? last?.format ?? undefined,
+              finish: spec?.finish ?? last?.finish ?? undefined,
               hasCentreStone: spec?.has_centre_stone,
               centreShape: spec?.centre_shape,
               centreSetting: spec?.centre_setting,
@@ -215,7 +229,9 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
         )}
       </div>
 
-      <ReferenceSection orderId={id} images={images} readOnly={frozen || !isOwner} />
+      {/* The owner edits photos inside the brief's first step; a frozen brief
+          or someone else's shows them read-only here. */}
+      {(frozen || !isOwner) && <ReferenceSection orderId={id} images={images} readOnly />}
     </Page>
   );
 }
@@ -226,7 +242,7 @@ function BackLink({ id }: { id: string }) {
       href={`/orders/${id}`}
       className="inline-flex min-h-[var(--ctl)] items-center gap-1 text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground transition-colors hover:text-foreground"
     >
-      ← Back to the order
+      ← Order
     </Link>
   );
 }
