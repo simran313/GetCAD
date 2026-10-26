@@ -4,6 +4,7 @@ import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  briefName,
   estimateMct,
   formatCarat,
   gradeBrief,
@@ -110,6 +111,7 @@ export function BriefWizard({
   readOnly = false,
   images = [],
   lastRingSize = null,
+  initialStep = 0,
 }: {
   orderId: string;
   defaults: BriefDefaults;
@@ -121,12 +123,14 @@ export function BriefWizard({
   images?: ReferenceImage[];
   /** The client's last ring size, as a hint for the size system they use. */
   lastRingSize?: string | null;
+  /** Opened from a row on Review: start on that row's step. */
+  initialStep?: number;
 }) {
   const referenceImageCount = images.length;
   const pinnedImageCount = images.filter((i) => i.pins.length > 0).length;
   const isRender = service === "render";
   const STEPS = isRender ? RENDER_STEPS : CAD_STEPS;
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => Math.min(Math.max(0, initialStep), (service === "render" ? RENDER_STEPS : CAD_STEPS).length - 1));
   const [form, setForm] = useState<Record<string, string>>({
     reference_name: defaults.referenceName ?? "",
     product: defaults.product ?? "RING",
@@ -156,9 +160,7 @@ export function BriefWizard({
   const [accents, setAccents] = useState<AccentRow[]>(defaults.accents ?? []);
   // Named for the client until they name it: "Ring · 18K yellow".
   const [named, setNamed] = useState(!!defaults.referenceName);
-  const autoName = [label(form.product ?? ""), [form.karatage?.trim(), form.metal ? label(form.metal).toLowerCase() : ""].filter(Boolean).join(" ")]
-    .filter(Boolean)
-    .join(" · ");
+  const autoName = briefName({ product: form.product, karatage: form.karatage, metal: form.metal });
   const name = named ? (form.reference_name ?? "") : autoName;
 
   // Saved as you go: no "Save draft". The whole form posts, as it always did.
@@ -372,7 +374,7 @@ export function BriefWizard({
           </>
         ) : null}
 
-        <h3 className="mt-8 text-[length:var(--fs-4)] font-medium">Accent stones</h3>
+        <h3 id="accent_shape" className="mt-8 scroll-mt-24 text-[length:var(--fs-4)] font-medium">Accent stones</h3>
 
         {accents.map((row, i) => (
           <div
@@ -747,7 +749,7 @@ function Choice({
   onChange: (v: string) => void;
 }) {
   return (
-    <fieldset className="mt-5">
+    <fieldset id={name} className="mt-5 scroll-mt-24">
       <legend className="text-[length:var(--fs-4)] font-medium">{legend}</legend>
       {hint ? (
         <p className="mt-0.5 text-[length:var(--fs-2)] text-muted-foreground">{hint}</p>
@@ -823,7 +825,7 @@ function Toggle({
   hint?: string;
 }) {
   return (
-    <label className="mt-5 flex min-h-[var(--ctl)] cursor-pointer items-start gap-3">
+    <label id={name} className="mt-5 flex min-h-[var(--ctl)] scroll-mt-24 cursor-pointer items-start gap-3">
       <Checkbox
         name={name}
         checked={checked}

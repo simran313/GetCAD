@@ -5,6 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { png } from "./files";
 import { act, doDesignerVersion, expectGone, settled, orderIdFrom, signedIn, tickAll } from "./helpers";
+import { withDb } from "./db";
 import { pdfText } from "./pdf";
 import { E2E_DIR } from "./state";
 
@@ -50,9 +51,16 @@ test("a client sends a CAD brief", async ({ browser }) => {
   await page.getByRole("button", { name: "Review", exact: true }).click();
 
   await page.waitForURL(`**/orders/${orderId}/brief/review`);
-  await expect(page.getByText("Still needed before we can price it")).toHaveCount(0);
+  // Nothing is missing (no inline "Add"), and the metal is what was chosen.
+  await expect(page.getByRole("link", { name: /Metal\s+Yellow · 18K/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /\bAdd\b/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Send for a price" }).click();
   await page.waitForURL(`**/orders/${orderId}/sent`);
+
+  // Owner bug report: review said Yellow · 18K and the order page said Rose.
+  // The order page reads the same saved brief, so it must say Yellow too.
+  await page.goto(`/orders/${orderId}`);
+  await expect(page.getByText("Yellow · 18K").first()).toBeVisible();
   await page.context().close();
 });
 
@@ -141,5 +149,28 @@ test("the client approves and downloads the STL and the certificate", async ({ b
   expect(text).toMatch(/Minimum wall 0\.90 mm/);
   expect(text).toMatch(/Minimum prong 0\.85 mm/);
   expect(text).toMatch(/Ring size US 7/);
+  await page.context().close();
+});
+
+// A repeat client starts from a past order: the brief, its photo and the
+// metal come across, it opens on Review ready to send, and a draft can be
+// deleted from New order.
+test("a past order starts a new brief, ready to send", async ({ browser }) => {
+  const page = await signedIn(browser, "client");
+  await page.goto("/orders/new");
+  await page.getByRole("button", { name: /E2E halo ring/ }).first().click();
+  await page.waitForURL(/\/orders\/[^/]+\/brief\/review$/);
+  const copy = orderIdFrom(page.url().replace(/\/brief\/review$/, "/brief"));
+  expect(copy).not.toBe(orderId);
+  await expect(page.getByRole("link", { name: /Photos\s+1/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Metal\s+Yellow · 18K/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Send for a price" })).toBeEnabled();
+
+  // Not sent: deleted again from the drafts list.
+  await page.goto("/orders/new");
+  await page.getByRole("button", { name: /^More for E2E halo ring/ }).first().click();
+  await page.getByRole("menuitem", { name: "Delete draft" }).click();
+  await act(page, page.getByRole("dialog").getByRole("button", { name: "Delete draft" }));
+  expect(await withDb(async (db) => (await db.query("SELECT status FROM orders WHERE id = $1", [copy])).rows[0]?.status)).toBe("CANCELLED");
   await page.context().close();
 });

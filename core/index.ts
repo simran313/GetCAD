@@ -46,6 +46,8 @@ export type { Pin } from "./orders/pins";
 export { pushMessageFor, isNotificationKind, NOTIFICATION_KINDS } from "./notifications/push";
 export type { PushMessage, NotificationKind } from "./notifications/push";
 export { briefMinimumMissing, gradeBrief, qualitySummary } from "./orders/briefQuality";
+export { briefName, briefRows, productWord } from "./orders/briefRows";
+export type { BriefRow } from "./orders/briefRows";
 export type { BriefQuality, BriefGap, BriefGrade, BriefContext, BriefSize, GapSeverity, MinimumGap } from "./orders/briefQuality";
 export { ORDER_STATUS_META, statusMeta, statusKind } from "./orders/status";
 export type { StatusTone, StatusMeta, StatusKind } from "./orders/status";
