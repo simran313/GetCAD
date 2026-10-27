@@ -5,7 +5,7 @@ import * as Menu from "@radix-ui/react-dropdown-menu";
 import { Building2, LogOut, MoreHorizontal, Package, Search, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LiveCallButton } from "@/components/ui/live-call-button";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { CommandPalette, type PaletteItem } from "./command-palette";
 import { MobileBottomNav } from "./mobile-bottom-nav";
+import { NavProgress } from "./nav-progress";
 import { paletteDataAction } from "./palette-actions";
 import { bottomBar, navIcon, ROLE_LABEL, sidebarGroups, type ShellKind } from "./nav-config";
 import { Sidebar } from "./sidebar";
@@ -236,6 +237,10 @@ export function AppShell({
         />
       )}
 
+      {/* useSearchParams needs a boundary of its own; nothing else waits on it. */}
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
       <CommandPalette open={palette} onOpenChange={setPalette} groups={paletteGroups} />
       <Toaster />
     </div>

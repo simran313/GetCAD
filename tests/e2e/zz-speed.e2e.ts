@@ -14,6 +14,7 @@ import { E2E_DIR } from "./state";
  *
  *   server  — the HTML response for a full load (layout + page, all queries)
  *   first   — after a click in the app, until the screen first changes
+ *             (the progress bar appearing counts)
  *   ready   — after the click, until the new page's heading is there
  *
  * Report only: the numbers are printed (and kept in the job log) to compare
@@ -42,11 +43,12 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]>, heading: R
   await page.evaluate(() => {
     const w = window as unknown as { __t0: number; __first: number | null };
     w.__first = null;
-    const target = document.getElementById("content") ?? document.body;
+    // Anything the person can see change: the progress bar, a pending
+    // button or the new page itself.
     new MutationObserver((_, obs) => {
       if (w.__first === null) w.__first = performance.now();
       obs.disconnect();
-    }).observe(target, { childList: true, subtree: true, characterData: true });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
   });
   // What the click asked the server for, and how long each took: the log
   // under the table says where the time goes.
