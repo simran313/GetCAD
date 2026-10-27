@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { InstallHint } from "@/components/pwa/install-hint";
 import { PushOptIn } from "@/components/pwa/push-opt-in";
+import { TimeZoneSetting } from "@/components/time-zone";
 import { Button } from "@/components/ui/button";
 import { CopyableID } from "@/components/ui/copyable-id";
 import { FilePicker } from "@/components/ui/file-picker";
@@ -111,7 +112,7 @@ export default async function AccountPage() {
 
   return (
     <Page form>
-      <PageHeader title="Account" description="Who you are signed in as, and the settings that are yours." />
+      <PageHeader title="Account" />
 
       <section aria-label="Your identity" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
         <div className="flex items-start gap-4">
@@ -148,7 +149,7 @@ export default async function AccountPage() {
             <dt className="text-[length:var(--fs-2)] text-muted-foreground">Account reference</dt>
             <dd>
               <CopyableID value={userId} label="account reference" className="-ml-1.5 text-[length:var(--fs-3)]" />
-              <p className="text-[length:var(--fs-2)] text-muted-foreground">Quote it if you contact us. It identifies you without naming you.</p>
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">Quote it if you contact us.</p>
             </dd>
           </div>
         </dl>
@@ -170,7 +171,7 @@ export default async function AccountPage() {
           <h2 id="acc-logo" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
             Your logo
           </h2>
-          <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">Shown on the 3D preview links you send your customers. PNG or JPEG, up to 2 MB.</p>
+          <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">On your 3D preview links. PNG or JPEG, up to 2 MB.</p>
           {logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element -- a short-lived signed URL
             <img src={logoUrl} alt="Your logo" className="mt-4 h-12 w-auto rounded-[var(--r-sm)] border border-border bg-background p-1" />
@@ -205,11 +206,18 @@ export default async function AccountPage() {
         )}
       </section>
 
-      {pushOffered ? (
-        <section aria-label="Notifications" className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
-          <PushOptIn publicKey={vapidPublicKey} />
-        </section>
-      ) : null}
+      {/* Settings (Phase 10d): both are per device, so both live here together. */}
+      <section aria-labelledby="acc-settings" className="space-y-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+        <h2 id="acc-settings" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
+          On this device
+        </h2>
+        <TimeZoneSetting />
+        {pushOffered && (
+          <div className="border-t border-border pt-4">
+            <PushOptIn publicKey={vapidPublicKey} />
+          </div>
+        )}
+      </section>
 
       <InstallHint />
 

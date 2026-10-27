@@ -29,3 +29,22 @@ test("a signed-in client sees their home, and the database answers", async ({ br
   await expect(page.getByText(/Client code MJ\d+/)).toBeVisible();
   await page.context().close();
 });
+
+test("a chosen time zone stays on this device until 'This device' is picked again", async ({ browser }) => {
+  const page = await signedIn(browser, "client");
+  await page.goto("/account");
+  const zone = page.getByLabel("Time zone");
+  await zone.selectOption("America/Los_Angeles");
+  await page.reload();
+  // The device's own zone (the CI browser's) must not undo the choice.
+  await expect(page.getByLabel("Time zone")).toHaveValue("America/Los_Angeles");
+  const cookies = Object.fromEntries((await page.context().cookies()).map((c) => [c.name, c.value]));
+  expect(cookies.tcp_tz).toBe("America%2FLos_Angeles");
+  expect(cookies.tcp_tz_manual).toBe("1");
+
+  await page.getByLabel("Time zone").selectOption("device");
+  await page.reload();
+  await expect(page.getByLabel("Time zone")).toHaveValue("device");
+  expect((await page.context().cookies()).some((c) => c.name === "tcp_tz_manual" && c.value === "1")).toBe(false);
+  await page.context().close();
+});

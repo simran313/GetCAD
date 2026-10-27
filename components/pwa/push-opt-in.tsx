@@ -177,16 +177,19 @@ export function PushOptIn({ publicKey }: { publicKey: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-medium">
-            Notifications on this device
+            Notifications
           </p>
+          {/* One line each. "on" also says what is never shown, once, here
+              rather than in the notification itself, where it would be the
+              disclosure it warns about. */}
           <p className="mt-0.5 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
             {state === "needs-install"
-              ? "On iPhone and iPad, add the app to your home screen first — Safari only allows notifications for installed apps."
+              ? "On iPhone, add the app to your home screen first."
               : state === "blocked"
-                ? "Blocked in your browser settings. Allow notifications for this site there, then come back."
+                ? "Blocked in your browser settings."
                 : state === "on"
-                  ? "You'll be told when work is assigned, a message arrives, or an order is ready for you."
-                  : "Get told when work is assigned, a message arrives, or an order is ready for you."}
+                  ? "On. Never shows names or amounts."
+                  : "Messages, quotes and files ready."}
           </p>
         </div>
 
@@ -206,15 +209,6 @@ export function PushOptIn({ publicKey }: { publicKey: string }) {
           </Button>
         ) : null}
       </div>
-
-      {/* Said once, here, rather than in the notification itself — where it
-          would be the disclosure it is warning about. */}
-      {state === "on" ? (
-        <p className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-          Notifications never name the other party or show amounts — they say
-          only what happened, so nothing sensitive appears on a locked screen.
-        </p>
-      ) : null}
 
       {error ? (
         <p className="text-[length:var(--fs-2)] leading-[var(--lh-2)] text-destructive">
