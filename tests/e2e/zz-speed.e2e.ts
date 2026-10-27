@@ -26,6 +26,7 @@ const journey = existsSync(join(E2E_DIR, "journey.json"))
   : null;
 
 const rows: string[] = [];
+const details: string[] = [];
 const latency = (ms: number) => fetch(`${GATEWAY}/__latency?ms=${ms}`);
 
 async function serverTime(page: Page, path: string): Promise<number> {
@@ -47,9 +48,21 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]>, heading: R
       obs.disconnect();
     }).observe(target, { childList: true, subtree: true, characterData: true });
   });
+  // What the click asked the server for, and how long each took: the log
+  // under the table says where the time goes.
+  const started = Date.now();
+  const calls: string[] = [];
+  const onDone = (r: import("@playwright/test").Request) => {
+    const t = r.timing();
+    const u = new URL(r.url());
+    if (u.origin === new URL(page.url()).origin) calls.push(`${r.method()} ${u.pathname}${u.search.includes("_rsc") ? " (rsc)" : ""} ${Math.round(t.responseEnd)} ms`);
+  };
+  page.on("requestfinished", onDone);
   await page.evaluate(() => ((window as unknown as { __t0: number }).__t0 = performance.now()));
   await link.click();
   await page.getByRole("heading", { level: 1, name: heading }).first().waitFor({ timeout: 30_000 });
+  page.off("requestfinished", onDone);
+  details.push(`${await link.getAttribute("href").catch(() => "?")} (${Date.now() - started} ms): ${calls.join("; ") || "no requests"}`);
   return page.evaluate(() => {
     const w = window as unknown as { __t0: number; __first: number | null };
     const now = performance.now();
@@ -59,7 +72,7 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]>, heading: R
 
 test.afterAll(async () => {
   await latency(0);
-  console.log([`\n## Portal speed (database latency ${LATENCY} ms per call)`, "", "| Who | What | server ms | first ms | ready ms |", "| --- | --- | ---: | ---: | ---: |", ...rows, ""].join("\n"));
+  console.log([`\n## Portal speed (database latency ${LATENCY} ms per call)`, "", "| Who | What | server ms | first ms | ready ms |", "| --- | --- | ---: | ---: | ---: |", ...rows, "", "Requests per click:", ...details.map((d) => `- ${d}`), ""].join("\n"));
 });
 
 test("portal speed: client", async ({ browser }) => {
