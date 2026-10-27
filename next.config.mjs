@@ -49,6 +49,24 @@ const nextConfig = {
       { source: "/quality-control", destination: "/quality", statusCode: 301 },
     ];
   },
+  // Pre-launch (Phase 11b): no other site may frame these pages (clickjacking
+  // on approve, pay or release), browsers must not guess file types, and
+  // addresses with order ids are not sent to other sites. The design preview
+  // frames its own samples, hence SAMEORIGIN rather than DENY.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: `${UPLOAD_BODY_LIMIT_MB}mb`,

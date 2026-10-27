@@ -18,13 +18,7 @@ import type { Persona } from "./state";
  * skips downloads and anything under /api.
  */
 const MAX_PAGES = 70;
-const SKIP = [
-  /^\/api\//,
-  /^\/sign-(in|up)/,
-  /^\/design-preview/,
-  /\.(pdf|stl|3dm|zip|csv)$/i,
-  /\/export(\?|$)/,
-];
+const SKIP = [/^\/api\//, /^\/sign-(in|up)/, /^\/design-preview/, /\.(pdf|stl|3dm|zip|csv)$/i, /\/export(\?|$)/];
 
 interface Finding {
   who: Persona;
@@ -42,11 +36,7 @@ async function walk(page: Page, who: Persona, start: string) {
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
   page.on("console", (m) => {
     // Next logs a failed prefetch of a protected route as a network error; those are not page bugs.
-    if (
-      m.type() === "error" &&
-      !/Failed to load resource|net::ERR_ABORTED|_rsc=/.test(m.text())
-    )
-      errors.push(`console: ${m.text().slice(0, 200)}`);
+    if (m.type() === "error" && !/Failed to load resource|net::ERR_ABORTED|_rsc=/.test(m.text())) errors.push(`console: ${m.text().slice(0, 200)}`);
   });
 
   while (queue.length > 0 && seen.size < MAX_PAGES) {
@@ -55,71 +45,30 @@ async function walk(page: Page, who: Persona, start: string) {
     seen.add(path);
     errors.length = 0;
 
-    const res = await page
-      .goto(path, { waitUntil: "load" })
-      .catch((e: Error) => {
-        findings.push({
-          who,
-          path,
-          kind: "load failed",
-          detail: e.message.slice(0, 160),
-        });
-        return null;
-      });
+    const res = await page.goto(path, { waitUntil: "load" }).catch((e: Error) => {
+      findings.push({ who, path, kind: "load failed", detail: e.message.slice(0, 160) });
+      return null;
+    });
     if (!res) continue;
-    if (res.status() >= 500)
-      findings.push({
-        who,
-        path,
-        kind: `HTTP ${res.status()}`,
-        detail: "server error",
-      });
-    await page
-      .waitForLoadState("networkidle", { timeout: 5_000 })
-      .catch(() => {});
+    if (res.status() >= 500) findings.push({ who, path, kind: `HTTP ${res.status()}`, detail: "server error" });
+    await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
 
     const check = await page.evaluate(() => {
       const wide = document.documentElement.scrollWidth > window.innerWidth + 1;
       const offenders = wide
         ? [...document.querySelectorAll<HTMLElement>("body *")]
-            .filter(
-              (el) =>
-                el.getBoundingClientRect().right > window.innerWidth + 1 &&
-                getComputedStyle(el).position !== "fixed",
-            )
+            .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1 && getComputedStyle(el).position !== "fixed")
             .slice(0, 3)
-            .map(
-              (el) =>
-                `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${[...el.classList].slice(0, 3).join(".")}`,
-            )
+            .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${[...el.classList].slice(0, 3).join(".")}`)
         : [];
-      const broken = [...document.images]
-        .filter(
-          (i) =>
-            i.complete &&
-            i.naturalWidth === 0 &&
-            i.src &&
-            !i.src.startsWith("data:"),
-        )
-        .map((i) => i.src.slice(-60));
-      const unnamed = [
-        ...document.querySelectorAll<HTMLElement>(
-          "button, a[href], [role=button]",
-        ),
-      ]
+      const broken = [...document.images].filter((i) => i.complete && i.naturalWidth === 0 && i.src && !i.src.startsWith("data:")).map((i) => i.src.slice(-60));
+      const unnamed = [...document.querySelectorAll<HTMLElement>("button, a[href], [role=button]")]
         .filter((el) => {
           const r = el.getBoundingClientRect();
           if (r.width === 0 || r.height === 0) return false;
-          const name = (
-            el.getAttribute("aria-label") ??
-            el.getAttribute("title") ??
-            el.textContent ??
-            ""
-          ).trim();
+          const name = (el.getAttribute("aria-label") ?? el.getAttribute("title") ?? el.textContent ?? "").trim();
           const labelledBy = el.getAttribute("aria-labelledby");
-          return (
-            !name && !labelledBy && !el.querySelector("img[alt]:not([alt=''])")
-          );
+          return !name && !labelledBy && !el.querySelector("img[alt]:not([alt=''])");
         })
         .slice(0, 3)
         .map((el) => el.outerHTML.slice(0, 120));
@@ -130,30 +79,15 @@ async function walk(page: Page, who: Persona, start: string) {
       return { wide, offenders, broken, unnamed, links };
     });
 
-    if (check.wide)
-      findings.push({
-        who,
-        path,
-        kind: "wider than the screen",
-        detail: check.offenders.join(", "),
-      });
-    for (const b of check.broken)
-      findings.push({ who, path, kind: "picture did not load", detail: b });
-    for (const u of check.unnamed)
-      findings.push({ who, path, kind: "control with no name", detail: u });
-    for (const e of new Set(errors))
-      findings.push({ who, path, kind: "browser error", detail: e });
+    if (check.wide) findings.push({ who, path, kind: "wider than the screen", detail: check.offenders.join(", ") });
+    for (const b of check.broken) findings.push({ who, path, kind: "picture did not load", detail: b });
+    for (const u of check.unnamed) findings.push({ who, path, kind: "control with no name", detail: u });
+    for (const e of new Set(errors)) findings.push({ who, path, kind: "browser error", detail: e });
 
     for (const l of check.links) {
-      if (seen.has(l) || queue.includes(l) || SKIP.some((r) => r.test(l)))
-        continue;
+      if (seen.has(l) || queue.includes(l) || SKIP.some((r) => r.test(l))) continue;
       // Marketing pages are crawled by website.e2e.ts; stay in the portal.
-      if (
-        !/^\/(home|orders|messages|files|wallet|account|work|qc|pod|admin|settings|welcome|onboarding)(\/|\?|$)/.test(
-          l,
-        )
-      )
-        continue;
+      if (!/^\/(home|orders|messages|files|wallet|account|work|qc|pod|admin|settings|welcome|onboarding)(\/|\?|$)/.test(l)) continue;
       queue.push(l);
     }
   }
@@ -182,31 +116,16 @@ test.afterAll(() => {
     "",
     "## Pre-launch pass (390 x 844)",
     "",
-    `Pages walked: ${Object.entries(visited)
-      .map(([w, n]) => `${w} ${n}`)
-      .join(", ")}`,
+    `Pages walked: ${Object.entries(visited).map(([w, n]) => `${w} ${n}`).join(", ")}`,
     "",
-    findings.length === 0
-      ? "No findings."
-      : "| Who | Page | Finding | Detail |\n| --- | --- | --- | --- |",
-    ...findings.map(
-      (f) =>
-        `| ${f.who} | \`${f.path}\` | ${f.kind} | ${f.detail.replace(/\|/g, "\\|").replace(/\n/g, " ")} |`,
-    ),
+    findings.length === 0 ? "No findings." : "| Who | Page | Finding | Detail |\n| --- | --- | --- | --- |",
+    ...findings.map((f) => `| ${f.who} | \`${f.path}\` | ${f.kind} | ${f.detail.replace(/\|/g, "\\|").replace(/\n/g, " ")} |`),
     "",
   ];
   console.log(lines.join("\n"));
 });
 
 test("pre-launch pass: no server errors and no browser errors", () => {
-  const blocking = findings.filter(
-    (f) =>
-      f.kind.startsWith("HTTP") ||
-      f.kind === "load failed" ||
-      f.kind === "browser error",
-  );
-  expect(
-    blocking,
-    blocking.map((f) => `${f.who} ${f.path}: ${f.kind} ${f.detail}`).join("\n"),
-  ).toEqual([]);
+  const blocking = findings.filter((f) => f.kind.startsWith("HTTP") || f.kind === "load failed" || f.kind === "browser error");
+  expect(blocking, blocking.map((f) => `${f.who} ${f.path}: ${f.kind} ${f.detail}`).join("\n")).toEqual([]);
 });
