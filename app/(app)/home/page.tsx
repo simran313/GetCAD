@@ -41,19 +41,20 @@ export default async function DashboardPage() {
   const tz = await viewerZone();
 
   // The user row and, for a client, their profile, read together (Phase 11a).
-  const readMe = () =>
-    Promise.all([
-      supabase.from("users").select("id, role, status").maybeSingle(),
-      supabase.from("client_profiles").select("business_name, legal_name").eq("user_id", userId).maybeSingle(),
-    ]);
-  let [{ data: me, error: meError }, { data: profile }] = await readMe();
+  const [{ data: me, error: meError }, { data: profile }] = await Promise.all([
+    supabase.from("users").select("id, role, status").maybeSingle(),
+    supabase.from("client_profiles").select("business_name, legal_name").eq("user_id", userId).maybeSingle(),
+  ]);
   // Audited self-onboarding: creates this user's row (and a USER_CREATED audit
-  // entry) on the first visit, then reads again. Identity comes from the
-  // verified token inside the function — nothing is trusted from the client.
+  // entry) on the first visit. Identity comes from the verified token inside
+  // the function — nothing is trusted from the client. The row it creates is
+  // a client with no business on file, so the next stop is Welcome. (Not a
+  // second read: Next memoises identical reads within a render, so it would
+  // return the empty answer again.)
   let onboardError: { message: string } | null = null;
   if (!me) {
     ({ error: onboardError } = await supabase.rpc("ensure_self"));
-    [{ data: me, error: meError }, { data: profile }] = await readMe();
+    if (!onboardError) redirect("/welcome");
   }
   // Clients get the redesigned home (C1, Phase 5b); designers and the team
   // keep this one until 5d. A client who has never said who they are is

@@ -40,16 +40,29 @@ async function serverTime(page: Page, path: string): Promise<number> {
 
 /** Click a link inside the app and time the first change and the new heading. */
 async function softNav(page: Page, link: ReturnType<Page["locator"]>, heading: RegExp): Promise<{ first: number; ready: number }> {
-  await page.evaluate(() => {
-    const w = window as unknown as { __t0: number; __first: number | null };
-    w.__first = null;
-    // Anything the person can see change: the progress bar, a pending
-    // button or the new page itself.
-    new MutationObserver((_, obs) => {
-      if (w.__first === null) w.__first = performance.now();
-      obs.disconnect();
-    }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
-  });
+  // Timed in the page itself: Playwright's own waiting polls at 100, 250
+  // and 500 ms, which would round every "ready" up to those steps.
+  await page.evaluate(
+    ({ source, flags }) => {
+      const w = window as unknown as { __t0: number; __first: number | null; __ready: number | null };
+      w.__first = null;
+      w.__ready = null;
+      const from = location.pathname;
+      const want = new RegExp(source, flags);
+      // First: anything the person can see change (the progress bar, a
+      // pending button or the new page). Ready: the new page's heading.
+      new MutationObserver((_, obs) => {
+        const now = performance.now();
+        if (w.__first === null) w.__first = now;
+        const h1 = [...document.querySelectorAll("h1")].find((h) => want.test(h.textContent?.trim() ?? ""));
+        if (w.__ready === null && h1 && location.pathname !== from) {
+          w.__ready = now;
+          obs.disconnect();
+        }
+      }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
+    },
+    { source: heading.source, flags: heading.flags },
+  );
   // What the click asked the server for, and how long each took: the log
   // under the table says where the time goes.
   const started = Date.now();
@@ -66,9 +79,9 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]>, heading: R
   page.off("requestfinished", onDone);
   details.push(`${await link.getAttribute("href").catch(() => "?")} (${Date.now() - started} ms): ${calls.join("; ") || "no requests"}`);
   return page.evaluate(() => {
-    const w = window as unknown as { __t0: number; __first: number | null };
+    const w = window as unknown as { __t0: number; __first: number | null; __ready: number | null };
     const now = performance.now();
-    return { first: Math.round((w.__first ?? now) - w.__t0), ready: Math.round(now - w.__t0) };
+    return { first: Math.round((w.__first ?? now) - w.__t0), ready: Math.round((w.__ready ?? now) - w.__t0) };
   });
 }
 
