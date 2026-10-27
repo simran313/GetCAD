@@ -4,8 +4,11 @@ import { Card } from "@/components/ui/card";
 import { formatMoney } from "@/lib/money";
 
 import type { WalletLine } from "./load";
+import { viewerZone } from "@/lib/time/zone";
+import { formatDate } from "@/core";
 
-export function Lines({ lines }: { lines: WalletLine[] }) {
+export async function Lines({ lines }: { lines: WalletLine[] }) {
+  const tz = await viewerZone();
   if (lines.length === 0) {
     return <Card className="p-[var(--s-8)] text-center text-[length:var(--fs-3)] text-muted-foreground">No activity yet.</Card>;
   }
@@ -18,7 +21,7 @@ export function Lines({ lines }: { lines: WalletLine[] }) {
               <span className="block text-[length:var(--fs-3)]">{l.label}</span>
               <span className="block truncate text-[length:var(--fs-2)] text-muted-foreground">
                 {l.orderId ? <Link href={`/orders/${l.orderId}`} className="hover:underline">{l.detail}</Link> : l.detail} ·{" "}
-                {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(l.at))}
+                {formatDate(l.at, tz)}
               </span>
             </span>
             <span className="tabular shrink-0 font-mono text-[length:var(--fs-3)]">

@@ -1,32 +1,25 @@
 import { auth } from "@clerk/nextjs/server";
+import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
-import { productWord } from "@/lib/client/orders";
+import { briefRows } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 import { sendBriefAction } from "../actions";
-import { Page } from "@/components/ui/page";
 
 /**
- * N5 — Review your order (docs/design). What was asked for, what is still
- * missing for a price (brief_missing, the DECISIONS §11 minimum), and the
- * button that sends it. submit_brief() checks the same minimum again.
+ * N5 — Review. The brief as compact rows; tap any row to change it (the
+ * wizard opens on that step). What the DECISIONS §11 minimum still needs
+ * (brief_missing, the same rule submit_brief applies) shows as an inline
+ * "Add" on its row, so nothing is a surprise here: the wizard's chip already
+ * asked for it. Send is the one primary action.
  */
 export const dynamic = "force-dynamic";
-
-const MISSING_WORDS: Record<string, string> = {
-  product: "What the piece is",
-  reference: "At least one reference picture",
-  size: "The size (ring size, inner diameter or length)",
-  metal: "The metal",
-};
-
-const pretty = (v: string | null | undefined) =>
-  v ? v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : "—";
 
 export default async function ReviewBriefPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
@@ -42,78 +35,66 @@ export default async function ReviewBriefPage({ params }: { params: Promise<{ id
   const o = order as { id: string; status: string; service: string };
   if (o.status !== "DRAFT") redirect(`/orders/${id}`);
 
-  const [specRes, missingRes, imagesRes] = await Promise.all([
+  const [specRes, missingRes, imagesRes, accentsRes] = await Promise.all([
     supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
     supabase.rpc("brief_missing", { p_order_id: id }),
     supabase.from("order_reference_images").select("id").eq("order_id", id),
+    supabase.from("order_spec_accents").select("quantity").eq("order_id", id),
   ]);
-  const spec = specRes.data as Record<string, string | number | boolean | null> | null;
-  const missing = ((missingRes.data ?? []) as string[]).filter((m) => !(o.service === "render" && m === "size"));
-  const images = (imagesRes.data ?? []).length;
-
-  const rows: [string, string][] = spec
-    ? [
-        ["Your name for it", String(spec.reference_name ?? "—")],
-        ["Product", productWord(spec.product as string)],
-        ["Service", o.service === "render" ? "Renders" : "CAD design"],
-        ["Size", String(spec.ring_size ?? (spec.inner_diameter_um ? `${Number(spec.inner_diameter_um) / 1000} mm inside` : spec.length_um ? `${Number(spec.length_um) / 1000} mm long` : "—"))],
-        ["Metal", [pretty(spec.metal as string), spec.karatage].filter(Boolean).join(" · ")],
-        ["Centre stone", spec.has_centre_stone ? `${pretty(spec.centre_shape as string)} · ${pretty(spec.centre_setting as string)}` : "None"],
-        ["Finish", pretty(spec.finish as string)],
-        ["Reference pictures", String(images)],
-        ["Notes", String(spec.notes ?? "—")],
-      ]
-    : [];
+  const spec = specRes.data as Record<string, unknown> | null;
+  const missing = new Set(((missingRes.data ?? []) as string[]).filter((m) => !(o.service === "render" && m === "size")));
+  // brief_missing names "reference"; the row is "photos". "product" means no brief at all.
+  const needs = (key: string) => (key === "photos" ? missing.has("reference") : missing.has(key));
+  const rows = briefRows(spec, {
+    service: o.service,
+    photos: (imagesRes.data ?? []).length,
+    accents: (accentsRes.data ?? []) as { quantity: number }[],
+  });
 
   return (
     <Page form>
-      <PageHeader eyebrow="Step 5 of 5" title="Review your order" description="Check it, then send it for a price. Nothing is charged yet." />
+      <PageHeader title="Review" />
 
-      {missing.length > 0 && (
-        <Card className="border-foreground">
-          <CardBody>
-            <p className="text-[length:var(--fs-4)] font-medium">Still needed before we can price it</p>
-            <ul className="mt-2 list-disc pl-5 text-[length:var(--fs-3)]">
-              {missing.map((m) => (
-                <li key={m}>{MISSING_WORDS[m] ?? m}</li>
-              ))}
-            </ul>
-          </CardBody>
-        </Card>
-      )}
+      <ul className="divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
+        {rows.map((r) => {
+          const add = needs(r.key);
+          return (
+            <li key={r.key}>
+              <Link
+                href={`/orders/${id}/brief?step=${r.step}#${r.field}`}
+                className="flex min-h-[var(--ctl-lg)] items-center gap-3 px-[var(--s-4)] py-[var(--s-3)] transition-colors hover:bg-subtle"
+              >
+                <span className="w-28 shrink-0 text-[length:var(--fs-2)] text-muted-foreground">{r.label}</span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate text-[length:var(--fs-3)]",
+                    add && "inline-flex items-center gap-1 font-medium text-[color:var(--tone-danger-fg)]",
+                  )}
+                >
+                  {add ? (
+                    <>
+                      <Plus className="h-4 w-4" aria-hidden /> Add
+                    </>
+                  ) : (
+                    (r.value ?? "—")
+                  )}
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
 
-      <Card as="section">
-        <CardHeader>
-          <CardTitle>Your brief</CardTitle>
-          <Link href={`/orders/${id}/brief`} className="text-[length:var(--fs-2)] underline underline-offset-4">
-            Edit
-          </Link>
-        </CardHeader>
-        <dl className="divide-y divide-border">
-          {rows.map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4 px-[var(--s-5)] py-[var(--s-3)]">
-              <dt className="text-[length:var(--fs-2)] text-muted-foreground">{k}</dt>
-              <dd className="whitespace-pre-wrap text-[length:var(--fs-3)]">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </Card>
-
-      <div className="flex flex-wrap gap-2">
-        <form action={sendBriefAction}>
-          <input type="hidden" name="order_id" value={id} />
-          <Button type="submit" size="lg" disabled={missing.length > 0}>
-            Send for a price
-          </Button>
-        </form>
-        <Link href={`/orders/${id}/brief`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
-          Back to edit
-        </Link>
-      </div>
-      <p className="text-[length:var(--fs-2)] text-muted-foreground">
-        You&apos;ll get a price within the hour. The clock for your first look starts once you have paid and
-        we have confirmed the brief.
-      </p>
+      <form
+        action={sendBriefAction}
+        className="sticky bottom-[calc(57px+env(safe-area-inset-bottom))] z-10 -mx-[var(--s-4)] border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0"
+      >
+        <input type="hidden" name="order_id" value={id} />
+        <Button type="submit" size="lg" disabled={missing.size > 0} className="w-full md:w-auto">
+          Send for a price
+        </Button>
+      </form>
     </Page>
   );
 }

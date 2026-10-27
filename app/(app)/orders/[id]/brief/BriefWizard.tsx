@@ -1,14 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Check, ChevronLeft, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  briefName,
   estimateMct,
   formatCarat,
   gradeBrief,
   micronsToMm,
   mmToMicrons,
-  qualitySummary,
   type BriefGap,
   type OrderSpecInput,
 } from "@/core";
@@ -21,6 +22,8 @@ import { TONE_TEXT } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 import { saveBriefAction } from "./actions";
+import { Photos } from "./Photos";
+import type { ReferenceImage } from "./ReferenceSection";
 
 /**
  * The brief, as a form.
@@ -46,9 +49,9 @@ const SHAPES = [
 const SETTINGS = ["PRONG_4", "PRONG_6", "BEZEL", "HALO", "PAVE", "CHANNEL", "TENSION", "FLUSH", "OTHER"];
 const METALS = ["YELLOW", "WHITE", "ROSE", "TWO_TONE", "TRI_COLOUR", "PLATINUM", "SILVER"];
 const PURPOSES: Array<[string, string]> = [
-  ["CASTING", "Cast in metal — the thickest walls, and the usual answer"],
-  ["DIRECT_PRINT", "Printed directly — tolerates thinner walls"],
-  ["RENDER_ONLY", "Images only — never physically made"],
+  ["CASTING", "Casting"],
+  ["DIRECT_PRINT", "Direct print"],
+  ["RENDER_ONLY", "Images only"],
 ];
 const FORMATS = ["THREE_DM", "STL", "BOTH", "STEP"];
 const FINISHES = ["HIGH_POLISH", "MATTE", "BRUSHED", "HAMMERED", "MIXED"];
@@ -106,8 +109,9 @@ export function BriefWizard({
   defaults,
   service = "cad",
   readOnly = false,
-  referenceImageCount = 0,
-  pinnedImageCount = 0,
+  images = [],
+  lastRingSize = null,
+  initialStep = 0,
 }: {
   orderId: string;
   defaults: BriefDefaults;
@@ -115,12 +119,18 @@ export function BriefWizard({
   service?: string;
   /** True once the order has been quoted — the brief is frozen from then on. */
   readOnly?: boolean;
-  referenceImageCount?: number;
-  pinnedImageCount?: number;
+  /** The reference photos, shown inside the first step. */
+  images?: ReferenceImage[];
+  /** The client's last ring size, as a hint for the size system they use. */
+  lastRingSize?: string | null;
+  /** Opened from a row on Review: start on that row's step. */
+  initialStep?: number;
 }) {
+  const referenceImageCount = images.length;
+  const pinnedImageCount = images.filter((i) => i.pins.length > 0).length;
   const isRender = service === "render";
   const STEPS = isRender ? RENDER_STEPS : CAD_STEPS;
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => Math.min(Math.max(0, initialStep), (service === "render" ? RENDER_STEPS : CAD_STEPS).length - 1));
   const [form, setForm] = useState<Record<string, string>>({
     reference_name: defaults.referenceName ?? "",
     product: defaults.product ?? "RING",
@@ -148,6 +158,35 @@ export function BriefWizard({
   const [hasCentre, setHasCentre] = useState(defaults.hasCentreStone ?? false);
   const [certified, setCertified] = useState(false);
   const [accents, setAccents] = useState<AccentRow[]>(defaults.accents ?? []);
+  // Named for the client until they name it: "Ring · 18K yellow".
+  const [named, setNamed] = useState(!!defaults.referenceName);
+  const autoName = briefName({ product: form.product, karatage: form.karatage, metal: form.metal });
+  const name = named ? (form.reference_name ?? "") : autoName;
+
+  // Saved as you go: no "Save draft". The whole form posts, as it always did.
+  const formRef = useRef<HTMLFormElement>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (readOnly) return;
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    setSaveState("saving");
+    const timer = window.setTimeout(async () => {
+      if (!formRef.current) return;
+      const data = new FormData(formRef.current);
+      data.delete("intent");
+      try {
+        await saveBriefAction(data);
+        setSaveState("saved");
+      } catch {
+        setSaveState("error");
+      }
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [form, hasCentre, certified, accents, named, readOnly]);
 
   const set = (key: string) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
   const mm = (key: string) => micronsFrom(form, key);
@@ -175,8 +214,15 @@ export function BriefWizard({
       accentRowCount: accents.length,
       referenceImageCount,
       pinnedImageCount,
+      service,
+      size: {
+        ringSize: form.ring_size,
+        innerCircumferenceUm: micronsFrom(form, "inner_circumference_mm"),
+        innerDiameterUm: micronsFrom(form, "inner_diameter_mm"),
+        lengthUm: micronsFrom(form, "length_mm"),
+      },
     });
-  }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount]);
+  }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount, service]);
 
   // "Answer whichever you have, we work out the other" — shown, never stored,
   // so it can never overwrite a certified stone's real weight.
@@ -191,19 +237,23 @@ export function BriefWizard({
     return mct === null ? null : formatCarat(mct);
   }, [form, hasCentre]);
 
+  // A gap's chip takes you to it: its step, then the field (photos by id).
+  const jump = (field: string) => {
+    setStep(Math.min(stepForField(field), STEPS.length - 1));
+    const target = field === "references" ? "photos" : field === "size" ? "ring_size" : field;
+    window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+  };
+
   if (readOnly) {
     return (
       <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
-        <p className="text-[length:var(--fs-3)] text-muted-foreground">
-          This brief is fixed — the order has been quoted against it. To change the work, start a
-          new order based on this one.
-        </p>
+        <p className="text-[length:var(--fs-3)] text-muted-foreground">Fixed once priced.</p>
       </div>
     );
   }
 
   return (
-    <form action={saveBriefAction} className="pb-4">
+    <form ref={formRef} action={saveBriefAction}>
       <input type="hidden" name="order_id" value={orderId} />
       {/* Millimetres are what people type; microns are what the database
           stores. Converted once, here, at the boundary. */}
@@ -215,30 +265,29 @@ export function BriefWizard({
       <input type="hidden" name="length_um" value={mm("length_mm") ?? ""} />
 
       <StepBar step={step} steps={STEPS} onPick={setStep} />
+      <QualityChip quality={quality} onJump={jump} />
 
       <Pane show={step === 0} title={STEPS[0]!}>
-        <Field
-          id="reference_name"
-          label="Name this job"
-          hint="Only you see this name. It is how the order shows in your list."
-        >
+        <Field id="reference_name" label="Name this job">
           <Input
             id="reference_name"
             name="reference_name"
-            value={form.reference_name}
-            onChange={(e) => set("reference_name")(e.target.value)}
-            placeholder="Anniversary band"
+            value={name}
+            onChange={(e) => {
+              setNamed(true);
+              set("reference_name")(e.target.value);
+            }}
             className="min-h-[var(--ctl)]"
           />
         </Field>
         <Choice
           name="product"
           legend="What are we modelling?"
-          hint="This decides which measurements you are asked for."
           options={PRODUCTS.map((v) => [v, label(v)])}
           value={form.product ?? ""}
           onChange={set("product")}
         />
+        <Photos orderId={orderId} images={images} />
       </Pane>
 
       {isRender ? (
@@ -246,8 +295,7 @@ export function BriefWizard({
           <input type="hidden" name="has_centre_stone" value="" />
           <Choice
             name="render_views"
-            legend="How many views?"
-            hint="Top, perspective, side, front and back are the usual five."
+            legend="Views"
             options={[
               ["3", "3 views"],
               ["5", "5 views"],
@@ -256,10 +304,6 @@ export function BriefWizard({
             value={form.render_views ?? "5"}
             onChange={set("render_views")}
           />
-          <p className="mt-3 text-[length:var(--fs-2)] text-muted-foreground">
-            Attach your 3DM or STL on the order page after sending, or ask in Messages. Reference pictures go
-            below.
-          </p>
         </Pane>
       ) : null}
 
@@ -268,8 +312,7 @@ export function BriefWizard({
           name="has_centre_stone"
           checked={hasCentre}
           onChange={setHasCentre}
-          label="Is there a stone at the centre?"
-          hint="Everything about the head follows from this answer."
+          label="Centre stone"
         />
 
         {hasCentre ? (
@@ -277,7 +320,6 @@ export function BriefWizard({
             <Choice
               name="centre_shape"
               legend="Shape"
-              hint="The seat is cut to this outline."
               options={SHAPES.map((v) => [v, label(v)])}
               value={form.centre_shape ?? ""}
               onChange={set("centre_shape")}
@@ -300,8 +342,7 @@ export function BriefWizard({
 
             {estimatedCarat ? (
               <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">
-                Roughly <span className="tabular font-medium">{estimatedCarat}</span> — an estimate
-                from the dimensions, not stored. A certificate is the authority.
+                ≈ <span className="tabular font-medium">{estimatedCarat}</span>
               </p>
             ) : null}
 
@@ -309,11 +350,10 @@ export function BriefWizard({
               name="centre_certified"
               checked={certified}
               onChange={setCertified}
-              label="This stone is certified"
-              hint="Its dimensions are fixed, so the seat is cut with no tolerance either way."
+              label="Certified stone"
             />
 
-            <Field id="centre_quantity" label="How many of this stone">
+            <Field id="centre_quantity" label="Quantity">
               <Input
                 id="centre_quantity"
                 name="centre_quantity"
@@ -326,24 +366,15 @@ export function BriefWizard({
 
             <Choice
               name="centre_setting"
-              legend="How is it held?"
-              hint="A four-prong and a six-prong head are two different builds."
+              legend="Setting"
               options={SETTINGS.map((v) => [v, label(v)])}
               value={form.centre_setting ?? ""}
               onChange={set("centre_setting")}
             />
           </>
-        ) : (
-          <p className="mt-3 text-[length:var(--fs-3)] text-muted-foreground">
-            No centre stone. The head questions are gone — go straight to accents.
-          </p>
-        )}
+        ) : null}
 
-        <h3 className="mt-8 text-[length:var(--fs-4)] font-medium">Accent stones</h3>
-        <p className="text-[length:var(--fs-3)] text-muted-foreground">
-          One row per group of stones sharing a size and a setting — eighteen 1.30&nbsp;mm rounds
-          pavé set is one row, not eighteen.
-        </p>
+        <h3 id="accent_shape" className="mt-8 scroll-mt-24 text-[length:var(--fs-4)] font-medium">Accent stones</h3>
 
         {accents.map((row, i) => (
           <div
@@ -420,13 +451,12 @@ export function BriefWizard({
             ])
           }
         >
-          {accents.length === 0 ? "Add the first row" : "Another row"}
+          {accents.length === 0 ? "Add accent stones" : "Another size"}
         </Button>
 
         <Choice
           name="stones_supplied_by"
-          legend="Who supplies the stones?"
-          hint="Stones never move through this platform. This sets how much tolerance the designer leaves."
+          legend="Stones supplied by"
           options={SUPPLY.map((v) => [v, v === "NONE" ? "No stones" : label(v)])}
           value={form.stones_supplied_by ?? ""}
           onChange={set("stones_supplied_by")}
@@ -436,13 +466,13 @@ export function BriefWizard({
       <Pane show={!isRender && step === 2} title="Size" hidden={isRender}>
         {sizeKind(form.product ?? "") === "ring" && (
           <>
-            <Field id="ring_size" label="Ring size" hint="As you would order it, e.g. US 6.5 or UK M.">
+            <Field id="ring_size" label="Ring size">
               <Input
                 id="ring_size"
                 name="ring_size"
                 value={form.ring_size}
                 onChange={(e) => set("ring_size")(e.target.value)}
-                placeholder="US 6.5"
+                placeholder={lastRingSize || "US 6.5"}
                 className="min-h-[var(--ctl)]"
               />
             </Field>
@@ -495,22 +525,20 @@ export function BriefWizard({
           </Field>
         )}
         {sizeKind(form.product ?? "") === "none" && (
-          <p className="mt-3 text-[length:var(--fs-3)] text-muted-foreground">
-            No size needed for this piece. Give any measurements that matter in the notes.
-          </p>
+          <p className="mt-3 text-[length:var(--fs-3)] text-muted-foreground">No size needed.</p>
         )}
       </Pane>
 
       <Pane show={step === STEPS.length - 1} title="Metal & finish">
         <Choice
           name="metal"
-          legend="Metal colour"
+          legend="Metal"
           options={METALS.map((v) => [v, label(v)])}
           value={form.metal ?? ""}
           onChange={set("metal")}
         />
 
-        <Field id="karatage" label="Karatage / alloy">
+        <Field id="karatage" label="Karat">
           <Input
             id="karatage"
             name="karatage"
@@ -530,8 +558,7 @@ export function BriefWizard({
         <>
         <Choice
           name="purpose"
-          legend="What is the CAD for?"
-          hint="This sets the minimum wall thickness the designer must hold. It is the most expensive thing in the brief to get wrong."
+          legend="Made for"
           options={PURPOSES}
           value={form.purpose ?? ""}
           onChange={set("purpose")}
@@ -539,7 +566,7 @@ export function BriefWizard({
 
         <Choice
           name="format"
-          legend="Output format"
+          legend="Files"
           options={FORMATS.map((v) => [v, v === "THREE_DM" ? "3DM" : label(v)])}
           value={form.format ?? ""}
           onChange={set("format")}
@@ -558,15 +585,12 @@ export function BriefWizard({
         {/* No priority choice: rush is off until it is defined (DECISIONS §12),
             and upsert_order_spec refuses anything but STANDARD while it is. */}
 
-        <Field
-          id="notes"
-          label="Anything else"
-          hint="The place for what the fields above cannot hold — which parts are which metal, how stones are arranged, where a mixed finish falls."
-        >
+        <Field id="notes" label="Notes">
           <Textarea
             id="notes"
             name="notes"
-            rows={4}
+            rows={3}
+            placeholder="Two-tone parts, stone layout, anything else"
             value={form.notes}
             onChange={(e) => set("notes")(e.target.value)}
           />
@@ -576,39 +600,29 @@ export function BriefWizard({
         {!isRender && <input type="hidden" name="render_views" value={form.render_views} />}
       </Pane>
 
-      <QualityPanel quality={quality} onJump={(field) => setStep(Math.min(stepForField(field), STEPS.length - 1))} />
-
-      <div className="sticky bottom-0 mt-4 flex flex-wrap gap-2 border-t border-border bg-background/95 py-3 backdrop-blur">
-        <Button
+      <div className="sticky bottom-[calc(57px+env(safe-area-inset-bottom))] z-10 -mx-[var(--s-4)] mt-6 flex items-center gap-2 border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:bottom-0 md:mx-0 md:px-0">
+        <button
           type="button"
-          variant="ghost"
-          className="min-h-[var(--ctl)] md:hidden"
+          aria-label="Back"
           disabled={step === 0}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
+          className="inline-flex h-[var(--ctl)] w-[var(--ctl)] shrink-0 items-center justify-center rounded-[var(--r-sm)] border border-[color:var(--border-strong)] disabled:opacity-40 md:hidden"
         >
-          Back
-        </Button>
+          <ChevronLeft className="h-5 w-5" aria-hidden />
+        </button>
+        <SaveState state={saveState} />
         {step < STEPS.length - 1 ? (
-          <Button
-            type="button"
-            className="min-h-[var(--ctl)] flex-1 md:hidden"
-            onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-          >
+          <Button type="button" className="min-h-[var(--ctl)] flex-1 md:hidden" onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}>
             Next
           </Button>
         ) : null}
-        {/* Saving is always available, from any step: a partly-finished brief is
-            worth keeping. Review shows what is still missing before sending. */}
-        <Button type="submit" name="intent" value="save" variant="secondary" className="min-h-[var(--ctl)] flex-1 md:flex-none">
-          Save draft
-        </Button>
         <Button
           type="submit"
           name="intent"
           value="review"
-          className={cn("min-h-[var(--ctl)] flex-1 md:flex-none", step !== STEPS.length - 1 && "hidden md:inline-flex")}
+          className={cn("min-h-[var(--ctl)] flex-1 md:ml-auto md:flex-none", step !== STEPS.length - 1 && "hidden md:inline-flex")}
         >
-          Review and send
+          Review
         </Button>
       </div>
     </form>
@@ -629,6 +643,7 @@ function updateAccent(
 function stepForField(field: string): number {
   if (field === "referenceName" || field === "product" || field === "references") return 0;
   if (field.startsWith("centre")) return 1;
+  if (field === "size") return 2;
   return 3;
 }
 
@@ -734,7 +749,7 @@ function Choice({
   onChange: (v: string) => void;
 }) {
   return (
-    <fieldset className="mt-5">
+    <fieldset id={name} className="mt-5 scroll-mt-24">
       <legend className="text-[length:var(--fs-4)] font-medium">{legend}</legend>
       {hint ? (
         <p className="mt-0.5 text-[length:var(--fs-2)] text-muted-foreground">{hint}</p>
@@ -810,7 +825,7 @@ function Toggle({
   hint?: string;
 }) {
   return (
-    <label className="mt-5 flex min-h-[var(--ctl)] cursor-pointer items-start gap-3">
+    <label id={name} className="mt-5 flex min-h-[var(--ctl)] scroll-mt-24 cursor-pointer items-start gap-3">
       <Checkbox
         name={name}
         checked={checked}
@@ -830,74 +845,58 @@ function Toggle({
 }
 
 /**
- * The grade, and what a designer still could not work out.
- *
- * Deliberately not a progress bar over filled fields. A brief can have every
- * field answered and still not say how wide the stone is, and telling somebody
- * they are at 100% in that state is worse than saying nothing.
+ * The brief's quality, compressed (redesign): a thin meter and one chip. The
+ * chip names the first thing still needed (required first, then anything a
+ * designer would have to guess) and takes you to it. Same grading as before;
+ * since 10a it applies review's minimum, so it never reads "Ready" while
+ * review would refuse the brief.
  */
-function QualityPanel({
-  quality,
-  onJump,
-}: {
-  quality: ReturnType<typeof gradeBrief>;
-  onJump: (field: string) => void;
-}) {
-  const tone =
-    quality.grade === "Incomplete"
-      ? TONE_TEXT.danger
-      : quality.grade === "Excellent"
-        ? TONE_TEXT.success
-        : "text-foreground";
-
+function QualityChip({ quality, onJump }: { quality: ReturnType<typeof gradeBrief>; onJump: (field: string) => void }) {
+  // Earliest step first: on step 1 the chip asks for the photo, not the size.
+  const byStep = (a: BriefGap, b: BriefGap) => stepForField(a.field) - stepForField(b.field);
+  const blocking = quality.gaps.filter((g) => g.severity === "blocking").sort(byStep);
+  const first: BriefGap | undefined = blocking[0] ?? [...quality.gaps].sort(byStep)[0];
+  const count = blocking.length || quality.gaps.length;
   return (
-    <section className="mt-8 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-[length:var(--fs-4)] font-medium">Brief quality</h3>
-        <span className={cn("tabular text-[length:var(--fs-5)] font-semibold", tone)}>
-          {quality.grade}
-        </span>
-      </div>
-
-      <div className="mt-2 h-1.5 overflow-hidden rounded-[var(--r-full)] bg-muted">
+    <div className="mb-4 flex items-center gap-3">
+      <div className="h-1 flex-1 overflow-hidden rounded-[var(--r-full)] bg-muted" role="meter" aria-label="Brief quality" aria-valuemin={0} aria-valuemax={100} aria-valuenow={quality.score}>
         <div
-          className="h-full bg-primary transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out)]"
+          className={cn("h-full transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out)]", blocking.length ? "bg-[color:var(--tone-danger-fg)]" : "bg-primary")}
           style={{ width: `${quality.score}%` }}
         />
       </div>
+      {first ? (
+        <button
+          type="button"
+          onClick={() => onJump(first.field)}
+          className={cn(
+            "inline-flex min-h-[var(--ctl-sm)] max-w-[70%] items-center gap-1 truncate rounded-[var(--r-full)] border px-3 text-[length:var(--fs-2)] font-medium",
+            blocking.length ? "border-[color:var(--tone-danger-fg)] text-[color:var(--tone-danger-fg)]" : "border-border text-muted-foreground",
+          )}
+        >
+          <span className="truncate">
+            {count} {blocking.length ? "missing" : "to check"}: {first.what.charAt(0).toLowerCase() + first.what.slice(1)}
+          </span>
+        </button>
+      ) : (
+        <span className={cn("inline-flex items-center gap-1 text-[length:var(--fs-2)] font-medium", TONE_TEXT.success)}>
+          <Check className="h-4 w-4" aria-hidden /> Ready
+        </span>
+      )}
+    </div>
+  );
+}
 
-      <p className="mt-2 text-[length:var(--fs-3)] text-muted-foreground">
-        {qualitySummary(quality)}
-      </p>
-
-      {quality.gaps.length > 0 ? (
-        <>
-          <h4 className="mt-4 text-[length:var(--fs-2)] text-muted-foreground">
-            What a designer still cannot determine
-          </h4>
-          <ul className="mt-2 space-y-3">
-            {quality.gaps.map((g: BriefGap, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  onClick={() => onJump(g.field)}
-                  className="block w-full text-left"
-                >
-                  <span className="text-[length:var(--fs-3)] font-medium">
-                    {g.what}
-                    {g.severity === "blocking" ? (
-                      <span className="ml-2 text-destructive">required</span>
-                    ) : null}
-                  </span>
-                  <span className="mt-0.5 block text-[length:var(--fs-2)] text-muted-foreground">
-                    {g.why}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
+function SaveState({ state }: { state: "idle" | "saving" | "saved" | "error" }) {
+  return (
+    <span className="min-w-0 shrink text-[length:var(--fs-2)] text-muted-foreground" aria-live="polite">
+      {state === "saving" ? (
+        <Loader2 className="inline h-4 w-4 animate-spin motion-reduce:animate-none" aria-label="Saving" />
+      ) : state === "saved" ? (
+        "Saved"
+      ) : state === "error" ? (
+        <span className="text-[color:var(--tone-danger-fg)]">Not saved</span>
       ) : null}
-    </section>
+    </span>
   );
 }

@@ -1,16 +1,26 @@
 name: Design QA
 
-# Redesign only: screenshots of every route per role at 390 / 768 / 1440,
-# committed to the `design-qa` branch (the build container cannot sign in to
-# Clerk, so it reads them from there). Runs on a push to design/redesign whose
-# commit message carries a tag like [design-qa:before] or [design-qa:after].
+# Screenshots of every route per role at 390 / 768 / 1440, with axe and the
+# visible word count per screen, committed to the `design-qa` branch (the
+# build container cannot sign in to Clerk, so it reads them from there).
+# Runs on a push to a design branch whose commit message carries a tag like
+# [design-qa:before] or [design-qa:after], or by hand for any commit (a
+# "before" of code that is already superseded on the branch).
 on:
   push:
-    branches: [design/redesign]
+    branches: [design/redesign, claude/gracious-hopper-amum18]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Folder on the design-qa branch, e.g. orders-before"
+        required: true
+      ref:
+        description: "Commit to capture (default: the chosen branch)"
+        required: false
 
 jobs:
   screens:
-    if: contains(github.event.head_commit.message, '[design-qa')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[design-qa')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -36,10 +46,12 @@ jobs:
       CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
       NEXT_TELEMETRY_DISABLED: "1"
-      COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+      COMMIT_MESSAGE: ${{ github.event_name == 'workflow_dispatch' && format('[design-qa:{0}]', inputs.stage) || github.event.head_commit.message }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Stage name
         run: |
@@ -52,8 +64,9 @@ jobs:
             preview|marketing) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV"; echo "DESIGN_QA_SKIP_JOURNEYS=1" >> "$GITHUB_ENV" ;;
             admin|client|client2|designer|podLead) echo "DESIGN_QA_ONLY=$stage" >> "$GITHUB_ENV" ;;
           esac
-          # The final capture fails on any serious or critical axe finding.
-          if [ "$stage" = "after" ]; then echo "DESIGN_QA_AXE_STRICT=1" >> "$GITHUB_ENV"; fi
+          # A final capture ("after", "orders-after") fails on any serious or
+          # critical axe finding.
+          case "$stage" in after|*-after) echo "DESIGN_QA_AXE_STRICT=1" >> "$GITHUB_ENV" ;; esac
 
       - uses: actions/setup-node@v4
         with:

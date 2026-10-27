@@ -14,6 +14,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { openClaimAction } from "../../previewActions";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * A6 — raise a spec claim. The file they cast from is matched against the
@@ -34,6 +35,7 @@ const SPECS: [string, string][] = [
 
 export default async function ClaimPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
   const { id } = await params;
   const supabase = await createUserSupabaseClient();
@@ -89,7 +91,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ id: stri
                 <FilePicker id="photos" name="photos" label="Photos of the piece" accept="image/png,image/jpeg" multiple required buttonLabel="Choose photos" />
               </Field>
               <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                Open until {w.closes_at ? shortDate(w.closes_at) : "—"}. Not covered: an edited file, a spec you asked us to change
+                Open until {w.closes_at ? shortDate(w.closes_at, tz) : "—"}. Not covered: an edited file, a spec you asked us to change
                 (it is on the certificate as a waiver), or casting and finishing loss.
               </p>
               <Button type="submit">Send the claim</Button>

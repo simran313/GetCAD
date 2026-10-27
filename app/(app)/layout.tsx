@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { TimeZoneProvider } from "@/components/time-zone";
 import { ConnectionStatus } from "@/components/pwa/connection-status";
 import { AppShell, type ShellOrder } from "@/components/shell/app-shell";
 import { ROLE_LABEL, shellKind } from "@/components/shell/nav-config";
@@ -13,6 +14,7 @@ import { POST_AUTH_PATH } from "@/config/auth-redirects";
 import { c, showClaim } from "@/content/claims";
 import { tabsForRole } from "@/core";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * Chrome for the authenticated product (client / designer / staff). Kept
@@ -47,10 +49,12 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
  * visible_orders() — the same per-role, reference-only read the order lists
  * use — so it never shows anyone more than their own pages do.
  */
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <AppChrome>{children}</AppChrome>
+      <TimeZoneProvider zone={await viewerZone()}>
+        <AppChrome>{children}</AppChrome>
+      </TimeZoneProvider>
     </AuthProvider>
   );
 }

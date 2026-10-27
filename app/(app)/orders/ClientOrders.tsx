@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { serviceWord, shortDate, type ClientOrder } from "@/lib/client/orders";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * C3 — the client's orders (docs/design): tabs by what each order needs, a
@@ -28,12 +29,13 @@ const TABS: { key: ClientTab | "all"; label: string }[] = [
 
 const VIA: Record<string, string> = { whatsapp: "via WhatsApp", email: "via email", phone: "by phone" };
 
-function when(o: ClientOrder): string {
-  if (o.sla_status === "running" && o.sla_due_at) return `First look ${shortDate(o.sla_due_at)}`;
-  return shortDate(o.created_at);
+function when(o: ClientOrder, tz: string): string {
+  if (o.sla_status === "running" && o.sla_due_at) return `First look ${shortDate(o.sla_due_at, tz)}`;
+  return shortDate(o.created_at, tz);
 }
 
-export function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab: string }) {
+export async function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab: string }) {
+  const tz = await viewerZone();
   const active = (TABS.find((t) => t.key === tab)?.key ?? "all") as ClientTab | "all";
   const count = (k: ClientTab | "all") => (k === "all" ? orders.length : orders.filter((o) => clientTab(o.status) === k).length);
   const shown = active === "all" ? orders : orders.filter((o) => clientTab(o.status) === active);
@@ -57,7 +59,7 @@ export function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab: stri
     { key: "status", header: "Status", card: "badge", className: "whitespace-nowrap", cell: (o) => <StatusBadge status={o.status} /> },
     { key: "service", header: "Service", className: "text-[length:var(--fs-2)]", cell: (o) => serviceWord(o.service) },
     { key: "po", header: "Your PO", className: "font-mono text-[length:var(--fs-2)]", cell: (o) => o.client_po ?? "—" },
-    { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)]", cell: when },
+    { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)]", cell: (o) => when(o, tz) },
     {
       key: "price",
       header: "Price",

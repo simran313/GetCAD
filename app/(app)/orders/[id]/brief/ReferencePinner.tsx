@@ -32,6 +32,7 @@ export function ReferencePinner({
   initialPins,
   isPrimary,
   readOnly = false,
+  onSaved,
 }: {
   orderId: string;
   imageId: string;
@@ -39,6 +40,8 @@ export function ReferencePinner({
   initialPins: Pin[];
   isPrimary: boolean;
   readOnly?: boolean;
+  /** Called once the marks are stored (the brief's photo sheet closes). */
+  onSaved?: () => void;
 }) {
   const [pins, setPins] = useState<Pin[]>(initialPins);
   const [active, setActive] = useState<number | null>(null);
@@ -57,7 +60,12 @@ export function ReferencePinner({
   }
 
   return (
-    <form action={setPinsAction} className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)]">
+    <form
+      action={async (data) => {
+        await setPinsAction(data);
+        onSaved?.();
+      }}
+      className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)]">
       <input type="hidden" name="order_id" value={orderId} />
       <input type="hidden" name="image_id" value={imageId} />
 
@@ -107,7 +115,7 @@ export function ReferencePinner({
 
       {!readOnly ? (
         <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">
-          Tap the picture to drop a pin, then say what it points at.
+          Tap the picture, then say what you mean.
         </p>
       ) : null}
 
@@ -168,7 +176,7 @@ export function ReferencePinner({
           className="mt-3 min-h-[var(--ctl)] w-full"
           disabled={problems.length > 0}
         >
-          Save pins
+          Save marks
         </Button>
       ) : null}
     </form>

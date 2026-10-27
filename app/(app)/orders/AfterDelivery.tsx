@@ -8,6 +8,7 @@ import { CopyField } from "@/components/preview/copy-field";
 import { shortDate } from "@/lib/client/orders";
 
 import { createPreviewLinkAction, updatePreviewLinkAction } from "./previewActions";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * Phase 7b on the client's order page: share a branded 3D preview with
@@ -40,7 +41,7 @@ const CLAIM_STATE: Record<ClaimRow["status"], { word: string; kind: "needs" | "a
   not_covered: { word: "Not covered", kind: "muted" },
 };
 
-export function ShareCard({
+export async function ShareCard({
   orderId,
   links,
   newLink,
@@ -51,6 +52,7 @@ export function ShareCard({
   newLink: string | null;
   siteUrl: string;
 }) {
+  const tz = await viewerZone();
   const now = Date.now();
   return (
     <Card as="section" id="share">
@@ -88,8 +90,8 @@ export function ShareCard({
               return (
                 <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)] text-[length:var(--fs-2)]">
                   <span>
-                    Made {shortDate(l.created_at)} · {l.view_count} view{l.view_count === 1 ? "" : "s"} ·{" "}
-                    {l.revoked_at ? "turned off" : live ? `open until ${shortDate(l.expires_at)}` : "expired"}
+                    Made {shortDate(l.created_at, tz)} · {l.view_count} view{l.view_count === 1 ? "" : "s"} ·{" "}
+                    {l.revoked_at ? "turned off" : live ? `open until ${shortDate(l.expires_at, tz)}` : "expired"}
                   </span>
                   {!l.revoked_at && (
                     <span className="flex gap-2">
@@ -121,7 +123,7 @@ export function ShareCard({
   );
 }
 
-export function ClaimsCard({
+export async function ClaimsCard({
   orderId,
   claims,
   claimWindow: window,
@@ -130,13 +132,14 @@ export function ClaimsCard({
   claims: ClaimRow[];
   claimWindow: { open: boolean; closes_at: string | null } | null;
 }) {
+  const tz = await viewerZone();
   if (claims.length === 0 && !window?.open) return null;
   return (
     <Card as="section" id="claims">
       <CardHeader>
         <CardTitle>Spec guarantee</CardTitle>
         {window?.open && window.closes_at && (
-          <span className="text-[length:var(--fs-2)] text-muted-foreground">Claims open until {shortDate(window.closes_at)}</span>
+          <span className="text-[length:var(--fs-2)] text-muted-foreground">Claims open until {shortDate(window.closes_at, tz)}</span>
         )}
       </CardHeader>
       <CardBody className="space-y-3">
@@ -145,7 +148,7 @@ export function ClaimsCard({
             <p className="flex flex-wrap items-center gap-2">
               <StatusTag kind={CLAIM_STATE[c.status].kind}>{CLAIM_STATE[c.status].word}</StatusTag>
               <span className="font-medium">{c.spec.replace("_", " ")}</span>
-              <span className="text-muted-foreground">· {shortDate(c.created_at)}</span>
+              <span className="text-muted-foreground">· {shortDate(c.created_at, tz)}</span>
             </p>
             {c.not_covered_reason && <p>{c.not_covered_reason}</p>}
             {c.decision_note && (

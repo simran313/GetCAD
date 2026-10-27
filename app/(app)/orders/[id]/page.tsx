@@ -18,7 +18,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { SITE_URL } from "@/lib/seo";
 
-import { productWord } from "@/lib/client/orders";
+import { briefRows, productWord } from "@/lib/client/orders";
 
 import { ClaimsCard, ShareCard, type ClaimRow, type PreviewLinkRow } from "../AfterDelivery";
 import { ClientOrderView } from "../ClientOrderView";
@@ -236,27 +236,21 @@ export default async function OrderPage({
   // The client's own view (C4, Phase 5b). The team keeps the working view
   // below until 5d.
   if (order.relation === "CLIENT" && role === "CLIENT") {
-    const [specRes, poRes] = await Promise.all([
+    const [specRes, poRes, photosRes, accentsRes] = await Promise.all([
       supabase.from("order_specs").select("*").eq("order_id", order.id).maybeSingle(),
       supabase.from("orders").select("client_po").eq("id", order.id).maybeSingle(),
+      supabase.from("order_reference_images").select("id").eq("order_id", order.id),
+      supabase.from("order_spec_accents").select("quantity").eq("order_id", order.id),
     ]);
     const spec = specRes.data as Record<string, string | number | boolean | null> | null;
-    const pretty = (v: unknown) =>
-      typeof v === "string" && v ? v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : null;
     const briefLines = spec
-      ? (
-          [
-            ["Product", productWord(spec.product as string)],
-            ["Metal", [pretty(spec.metal), spec.karatage].filter(Boolean).join(" · ") || null],
-            ["Ring size", (spec.ring_size as string) || null],
-            ["Inner diameter", spec.inner_diameter_um ? `${Number(spec.inner_diameter_um) / 1000} mm` : null],
-            ["Length", spec.length_um ? `${Number(spec.length_um) / 1000} mm` : null],
-            ["Centre stone", spec.has_centre_stone ? [pretty(spec.centre_shape), pretty(spec.centre_setting)].filter(Boolean).join(" · ") : "None"],
-            ["Finish", pretty(spec.finish)],
-          ] as [string, string | null][]
-        )
-          .filter((l): l is [string, string] => !!l[1])
-          .map(([label, value]) => ({ label, value }))
+      ? briefRows(spec, {
+          service: order.service ?? "cad",
+          photos: (photosRes.data ?? []).length,
+          accents: (accentsRes.data ?? []) as { quantity: number }[],
+        })
+          .filter((r) => r.key !== "name" && r.value)
+          .map((r) => ({ label: r.label, value: r.value! }))
       : [];
     // Phase 7b (0051): share a preview once approved; spec claims once delivered.
     const shareable = ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"].includes(order.status) && order.service !== "render";

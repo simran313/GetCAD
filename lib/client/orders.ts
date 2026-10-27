@@ -1,5 +1,6 @@
 import "server-only";
 
+import { formatDay, productWord } from "@/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -28,23 +29,8 @@ export interface ClientOrder {
   client_po: string | null;
 }
 
-const PRODUCT_WORDS: Record<string, string> = {
-  RING: "Ring",
-  BAND: "Band",
-  PENDANT: "Pendant",
-  EARRING: "Earrings",
-  BRACELET: "Bracelet",
-  BANGLE: "Bangle",
-  NECKLACE: "Necklace",
-  BROOCH: "Brooch",
-  OTHER: "Piece",
-  CAD_MODEL: "New piece",
-};
-
-export function productWord(product: string | null | undefined): string {
-  if (!product) return "New piece";
-  return PRODUCT_WORDS[product.toUpperCase()] ?? product;
-}
+export { briefName, briefRows, productWord } from "@/core";
+export type { BriefRow } from "@/core";
 
 export async function loadClientOrders(supabase: SupabaseClient, orderId?: string): Promise<ClientOrder[]> {
   const { data, error } = await supabase
@@ -80,7 +66,7 @@ export function serviceWord(service: string): string {
   return service === "render" ? "Renders" : service === "cad_render" ? "CAD + renders" : "CAD";
 }
 
-export function shortDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso));
+/** A day in a list, in the viewer's zone ("Mon, Oct 12"); "—" when unknown. */
+export function shortDate(iso: string | null, zone: string): string {
+  return iso ? formatDay(iso, zone) : "—";
 }

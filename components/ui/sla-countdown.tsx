@@ -3,6 +3,8 @@
 import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { formatDateTime } from "@/core";
+import { useTimeZone } from "@/components/time-zone";
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,6 +32,7 @@ const TONE = {
 };
 
 export function SlaCountdown({ dueAt, className, label = "First look" }: { dueAt: string | null; className?: string; label?: string }) {
+  const zone = useTimeZone();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!dueAt) return;
@@ -44,7 +47,7 @@ export function SlaCountdown({ dueAt, className, label = "First look" }: { dueAt
         TONE[s.tone],
         className,
       )}
-      title={dueAt ? `${label} due ${new Date(dueAt).toLocaleString()}` : undefined}
+      title={dueAt ? `${label} due ${formatDateTime(dueAt, zone)}` : undefined}
     >
       <Clock className="h-3.5 w-3.5" aria-hidden />
       <span>

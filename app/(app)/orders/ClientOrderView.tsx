@@ -20,6 +20,7 @@ import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { ThreadsPanel } from "./ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "./types";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * C4 — one order, for its client (docs/design). The next step first, the
@@ -32,7 +33,7 @@ export interface BriefLine {
   value: string;
 }
 
-export function ClientOrderView({
+export async function ClientOrderView({
   order: o,
   title,
   clientPo,
@@ -60,6 +61,7 @@ export function ClientOrderView({
   /** Phase 7b: the share-a-preview card and spec claims, once approved. */
   afterDelivery?: React.ReactNode;
 }) {
+  const tz = await viewerZone();
   const step = clientNextStep(o.id, o.status);
   const done = clientStepsDone(o.status);
   const currency = o.currency ?? "USD";
@@ -69,7 +71,7 @@ export function ClientOrderView({
   return (
     <Page>
       <PageHeader
-        eyebrow={[`Order · ${o.display_ref ?? "draft"}`, o.created_at ? `Ordered ${shortDate(o.created_at)}` : null]
+        eyebrow={[`Order · ${o.display_ref ?? "draft"}`, o.created_at ? `Ordered ${shortDate(o.created_at, tz)}` : null]
           .filter(Boolean)
           .join(" · ")}
         title={title}

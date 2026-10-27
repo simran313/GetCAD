@@ -7,6 +7,7 @@ import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { ErrorPanel } from "@/components/error-panel";
 import { PageHeader } from "@/components/ui/page-header";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { briefRows } from "@/lib/client/orders";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { BriefWizard, type AccentRow } from "./BriefWizard";
@@ -68,7 +69,13 @@ interface AccentDbRow {
   setting: string;
 }
 
-export default async function BriefPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BriefPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ step?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -154,9 +161,24 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
     });
   }
 
-  const pinnedImageCount = images.filter((i) => i.pins.length > 0).length;
-
   const spec = specRes.data as SpecRow | null;
+
+  // A brand-new brief starts from the client's own last answers (metal,
+  // karat, finish, files, purpose) and their ring size as a hint. Only their
+  // own orders: RLS limits what a client reads, and staff never get this.
+  let last: Partial<SpecRow> | null = null;
+  let lastRingSize: string | null = null;
+  if (order.relation === "CLIENT" && !spec) {
+    const { data: recent } = await supabase
+      .from("order_specs")
+      .select("metal, karatage, finish, format, purpose, ring_size, product")
+      .neq("order_id", id)
+      .order("updated_at", { ascending: false })
+      .limit(10);
+    const rows = (recent ?? []) as Partial<SpecRow>[];
+    last = rows[0] ?? null;
+    lastRingSize = rows.find((r) => r.ring_size)?.ring_size ?? null;
+  }
   const accents: AccentRow[] = ((accentsRes.data ?? []) as AccentDbRow[]).map((a) => ({
     shape: a.shape,
     setting: a.setting,
@@ -170,9 +192,8 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
 
       <PageHeader
         className="mt-4"
-        eyebrow={`${order.display_ref ?? "New order"} · ${order.service === "render" ? "Renders" : "CAD design"}`}
-        title={order.service === "render" ? "New render order" : "New CAD order"}
-        description="What we are making. The more of this that is answered, the less a designer has to guess. Add reference pictures below."
+        eyebrow={order.display_ref ?? undefined}
+        title={order.service === "render" ? "Render brief" : "CAD brief"}
       />
 
       <div className="mt-6">
@@ -181,16 +202,17 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
             orderId={id}
             service={order.service ?? "cad"}
             readOnly={frozen}
-            referenceImageCount={images.length}
-            pinnedImageCount={pinnedImageCount}
+            images={images}
+            lastRingSize={lastRingSize}
+            initialStep={Number((await searchParams).step) || 0}
             defaults={{
               referenceName: spec?.reference_name,
               product: spec?.product,
-              metal: spec?.metal,
-              karatage: spec?.karatage ?? undefined,
-              purpose: spec?.purpose ?? undefined,
-              format: spec?.format ?? undefined,
-              finish: spec?.finish ?? undefined,
+              metal: spec?.metal ?? last?.metal ?? undefined,
+              karatage: spec?.karatage ?? last?.karatage ?? undefined,
+              purpose: spec?.purpose ?? last?.purpose ?? undefined,
+              format: spec?.format ?? last?.format ?? undefined,
+              finish: spec?.finish ?? last?.finish ?? undefined,
               hasCentreStone: spec?.has_centre_stone,
               centreShape: spec?.centre_shape,
               centreSetting: spec?.centre_setting,
@@ -211,11 +233,13 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
           // A designer or staff member reading someone else's brief. Read-only
           // by construction: the write function refuses anyone but the client
           // (and, on team-placed orders, the team).
-          <ReadOnlyBrief spec={spec} accents={accents} />
+          <ReadOnlyBrief spec={spec} accents={accents} photos={images.length} />
         )}
       </div>
 
-      <ReferenceSection orderId={id} images={images} readOnly={frozen || !isOwner} />
+      {/* The owner edits photos inside the brief's first step; a frozen brief
+          or someone else's shows them read-only here. */}
+      {(frozen || !isOwner) && <ReferenceSection orderId={id} images={images} readOnly />}
     </Page>
   );
 }
@@ -226,15 +250,12 @@ function BackLink({ id }: { id: string }) {
       href={`/orders/${id}`}
       className="inline-flex min-h-[var(--ctl)] items-center gap-1 text-[length:var(--fs-3)] leading-[var(--lh-3)] text-muted-foreground transition-colors hover:text-foreground"
     >
-      ← Back to the order
+      ← Order
     </Link>
   );
 }
 
-const pretty = (v: string | null | undefined) =>
-  v ? v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : "—";
-
-function ReadOnlyBrief({ spec, accents }: { spec: SpecRow | null; accents: AccentRow[] }) {
+function ReadOnlyBrief({ spec, accents, photos }: { spec: SpecRow | null; accents: AccentRow[]; photos: number }) {
   if (!spec) {
     return (
       <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-10)] text-center">
@@ -246,32 +267,19 @@ function ReadOnlyBrief({ spec, accents }: { spec: SpecRow | null; accents: Accen
     );
   }
 
-  const rows: Array<[string, string]> = [
-    ["Piece", pretty(spec.product)],
-    ["Metal", [pretty(spec.metal), spec.karatage].filter(Boolean).join(" · ")],
-    ["Purpose", pretty(spec.purpose)],
-    ["Output", spec.format === "THREE_DM" ? "3DM" : pretty(spec.format)],
-    ["Finish", pretty(spec.finish)],
-  ];
-
-  if (spec.has_centre_stone) {
-    const dims =
-      spec.centre_length_um && spec.centre_width_um
-        ? `${spec.centre_length_um / 1000} × ${spec.centre_width_um / 1000} mm`
-        : spec.centre_carat_mct
-          ? `${spec.centre_carat_mct / 1000} ct`
-          : "size not given";
-    rows.push([
-      "Centre stone",
-      `${spec.centre_quantity} × ${pretty(spec.centre_shape)}, ${dims}, ${pretty(spec.centre_setting)}${
-        spec.centre_certified ? " · certified" : ""
-      }`,
-    ]);
-  }
-
-  for (const [i, a] of accents.entries()) {
-    rows.push([`Accents ${i + 1}`, `${a.quantity} × ${pretty(a.shape)} ${a.widthMm} mm, ${pretty(a.setting)}`]);
-  }
+  const rows = briefRows(spec as unknown as Record<string, unknown>, {
+    service: spec.render_views ? "render" : "cad",
+    photos: photos,
+    accents: accents.map((a) => ({
+      quantity: Number(a.quantity) || 0,
+      shape: a.shape,
+      width_um: Math.round(Number(a.widthMm) * 1000) || 0,
+      setting: a.setting,
+    })),
+    detail: true,
+  })
+    .filter((r) => r.key !== "name" && r.key !== "photos")
+    .map((r): [string, string] => [r.label, r.value ?? "—"]);
 
   return (
     <dl className="divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">

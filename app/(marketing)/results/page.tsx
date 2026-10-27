@@ -1,3 +1,4 @@
+import { formatDate } from "@/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -55,7 +56,7 @@ export default async function ResultsPage() {
           ))}
         </dl>
         <p className="mt-4 font-mono text-[length:var(--fs-1)] uppercase tracking-[0.08em] text-muted-foreground">
-          Updated {new Date(s.computed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          Updated {formatDate(s.computed_at, "UTC")}
         </p>
       </Section>
       <FinalCta />

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { HEARD_ABOUT } from "@/core";
+import { HEARD_ABOUT, formatDate, formatDay } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +9,12 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
-import { when } from "@/lib/work/load";
 
 import { computeStatsAction } from "../actions";
 
 import { ManagerSelect } from "./ManagerSelect";
 import { Page } from "@/components/ui/page";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * A9 — clients and their account managers (owner answer, Phase 5d): every
@@ -46,6 +46,7 @@ interface ClientRow {
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { userId } = await auth();
+  const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
   const { q: rawQ } = await searchParams;
   const q = (rawQ ?? "").trim().toUpperCase();
@@ -106,7 +107,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             <p className="tabular">
               On time {stats.first_look_on_time_pct ?? "—"}% · approved first time {stats.first_pass_approval_pct ?? "—"}% · late credits{" "}
               {stats.late_credits_issued} · claims upheld {stats.claims_upheld} · {stats.designs_delivered} delivered · computed{" "}
-              {when(stats.computed_at)}
+              {formatDay(stats.computed_at, tz)}
             </p>
           ) : (
             <p className="text-muted-foreground">Not computed yet. It runs every Monday, or press Recompute.</p>
@@ -176,14 +177,14 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
                 <tr key={r.client_id} className="border-b border-border last:border-b-0">
                   <td className="px-[var(--s-4)] py-[var(--s-3)]">
                     <span className="tabular block font-mono text-[length:var(--fs-3)] font-medium">{r.client_code ?? "No code yet"}</span>
-                    <span className="text-muted-foreground">joined {when(r.joined_at, { day: "numeric", month: "short", year: "numeric" })}</span>
+                    <span className="text-muted-foreground">joined {formatDate(r.joined_at, tz)}</span>
                   </td>
                   <td className="tabular px-[var(--s-4)] py-[var(--s-3)]">
                     {r.orders}
                     {r.open_orders > 0 && <span className="text-muted-foreground"> · {r.open_orders} open</span>}
                   </td>
                   <td className="tabular px-[var(--s-4)] py-[var(--s-3)] font-mono">{formatMoney(Number(r.paid_cents), "USD")}</td>
-                  <td className="px-[var(--s-4)] py-[var(--s-3)] text-muted-foreground">{r.last_order_at ? when(r.last_order_at) : "—"}</td>
+                  <td className="px-[var(--s-4)] py-[var(--s-3)] text-muted-foreground">{r.last_order_at ? formatDay(r.last_order_at, tz) : "—"}</td>
                   <td className="px-[var(--s-4)] py-[var(--s-3)]">
                     <ManagerSelect clientId={r.client_id} clientCode={r.client_code} managerId={r.manager_id} managers={managers} />
                   </td>

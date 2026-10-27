@@ -50,6 +50,44 @@ export interface BriefContext {
   referenceImageCount: number;
   /** How many of those images carry at least one labelled pin. */
   pinnedImageCount: number;
+  /** cad, render or cad_render. A render brief is not made to a size. */
+  service: string;
+  /** The size the piece is made to (DECISIONS §11 minimum), as stored. */
+  size: BriefSize;
+}
+
+export interface BriefSize {
+  ringSize?: string | null;
+  innerCircumferenceUm?: number | null;
+  innerDiameterUm?: number | null;
+  lengthUm?: number | null;
+}
+
+/** What the DECISIONS §11 minimum still needs, besides product and metal. */
+export type MinimumGap = "reference" | "size";
+
+/**
+ * The DECISIONS §11 minimum to send a brief for a price, exactly as the
+ * database applies it (brief_missing, 0035; the review screen leaves out the
+ * size on a render order). The quality meter and the review screen both use
+ * this, so the meter can never call a brief good that review will refuse.
+ * tests/db/order_model pins it to brief_missing.
+ */
+export function briefMinimumMissing(
+  product: string,
+  ctx: Pick<BriefContext, "referenceImageCount" | "service" | "size">,
+): MinimumGap[] {
+  const missing: MinimumGap[] = [];
+  if (ctx.referenceImageCount === 0) missing.push("reference");
+  const s = ctx.size;
+  const sizeless =
+    product === "RING" || product === "BAND"
+      ? !s.ringSize?.trim() && !s.innerCircumferenceUm && !s.innerDiameterUm
+      : product === "BANGLE" || product === "BRACELET"
+        ? !s.innerDiameterUm && !s.innerCircumferenceUm && !s.lengthUm
+        : false;
+  if (sizeless && ctx.service !== "render") missing.push("size");
+  return missing;
 }
 
 /**
@@ -163,18 +201,22 @@ export function gradeBrief(spec: OrderSpecInput, ctx: BriefContext): BriefQualit
     );
   }
 
+  /* --- the minimum to send (DECISIONS §11) ------------------------------ */
+  //
+  // Required, not merely ambiguous: review refuses to send without them, so
+  // the meter must not call such a brief good (briefMinimumMissing).
+
+  const minimum = briefMinimumMissing(spec.product, ctx);
+  if (minimum.includes("size")) {
+    gap("blocking", "size", "The size", "The piece is made to it: ring size, or the inside measurement.");
+  }
+
   /* --- references ------------------------------------------------------- */
   //
-  // The strongest single predictor of a first version coming back right, and
-  // the reason the design puts pinning on its own step.
+  // The strongest single predictor of a first version coming back right.
 
-  if (ctx.referenceImageCount === 0) {
-    gap(
-      "ambiguity",
-      "references",
-      "What you want it to look like",
-      "Words describe proportions badly. One photo of a sketch or a piece you like is usually enough.",
-    );
+  if (minimum.includes("reference")) {
+    gap("blocking", "references", "A reference photo", "One photo of a sketch or a piece you like is enough.");
   } else if (ctx.pinnedImageCount === 0) {
     gap(
       "ambiguity",

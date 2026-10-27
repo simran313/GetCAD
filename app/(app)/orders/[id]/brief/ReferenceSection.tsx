@@ -35,21 +35,11 @@ export function ReferenceSection({
 }) {
   return (
     <section className="mt-10">
-      <h2 className="text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)] tracking-[var(--ls-5)]">
-        Show us, then point at what you mean
-      </h2>
-      <p className="mt-1 text-[length:var(--fs-3)] text-muted-foreground">
-        Two pictures with nothing marked is the most common reason a first version comes back wrong
-        — the designer copies the element you did not mean. A phone photo of a sketch, or a piece
-        you like, is enough to start.
-      </p>
+      <h2 className="text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)] tracking-[var(--ls-5)]">Photos</h2>
 
       {images.length === 0 ? (
         <div className="mt-4 rounded-[var(--r-lg)] border border-dashed border-border p-8 text-center">
-          <p className="text-[length:var(--fs-4)] font-medium">No pictures yet</p>
-          <p className="mt-1 text-[length:var(--fs-3)] text-muted-foreground">
-            One is enough to start.
-          </p>
+          <p className="text-[length:var(--fs-4)] font-medium">No photos yet</p>
         </div>
       ) : (
         <div className="mt-4 space-y-4">

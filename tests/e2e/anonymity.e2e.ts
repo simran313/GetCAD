@@ -59,7 +59,9 @@ async function capture(page: Page, path: string): Promise<string> {
 }
 
 // Styling class names are not data: a loading placeholder caught on one page
-// and not another would otherwise read as a link between jobs.
+// and not another would otherwise read as a link between jobs. Nor is the
+// placeholder's fixed label (aria-label "Loading", components/ui/skeleton):
+// a prefetched page's loading state lands in some captures and not others.
 //
 // Nor is React's own wire format. A page's server data arrives as numbered
 // rows ("2e:I[…]", escaped as "\n29:" inside the HTML) that point at each
@@ -74,6 +76,7 @@ const tokens = (text: string) =>
     text
       .replace(/class(Name)?=\\?"[^"\\]*\\?"/g, " ")
       .replace(/\\?"className\\?":\\?"[^"\\]*\\?"/g, " ")
+      .replace(/\\?"?aria-label\\?"?\s*[=:]\s*\\?"Loading\\?"/g, " ")
       .replace(/(^|\n|\\n|\[1,\\?")[0-9a-f]{1,4}:/g, "$1 ")
       .replace(/\$[A-Za-z@]?[0-9a-f]{1,4}(?::(?:[a-z][A-Za-z]*|\d+))*(?=\\?")/g, " ")
       .match(/[A-Za-z0-9][A-Za-z0-9_+@.:-]{3,}/g) ?? [],

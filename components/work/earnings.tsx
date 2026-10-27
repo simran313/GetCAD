@@ -1,7 +1,7 @@
 import { Banknote } from "lucide-react";
 import Link from "next/link";
 
-import { rupeesWord } from "@/core";
+import { rupeesWord, formatDay } from "@/core";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -11,8 +11,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { productWord } from "@/lib/client/orders";
-import { when, type Earning } from "@/lib/work/load";
+import { type Earning } from "@/lib/work/load";
 import { minutesLabel } from "@/lib/work/minutes";
+import { viewerZone } from "@/lib/time/zone";
 
 /**
  * D6 / P4 — earnings (docs/design). What the caller is owed and was paid,
@@ -34,7 +35,7 @@ export interface Bank {
   status: string;
 }
 
-export function EarningsView({
+export async function EarningsView({
   eyebrow,
   rows,
   rates,
@@ -51,6 +52,7 @@ export function EarningsView({
   bank: Bank | null;
   countLabel?: string;
 }) {
+  const tz = await viewerZone();
   const month = new Date().toISOString().slice(0, 7);
   const thisMonth = rows.filter((r) => r.created_at.startsWith(month));
   const sum = (rs: Earning[]) => rs.reduce((s, r) => s + r.amount_paise, 0);
@@ -77,7 +79,7 @@ export function EarningsView({
                     key={r.obligation_id}
                     className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 border-b border-border px-[var(--s-4)] py-[var(--s-3)] last:border-b-0 sm:grid-cols-[7rem_1fr_auto_auto_auto]"
                   >
-                    <span className="text-[length:var(--fs-2)] text-muted-foreground">{when(r.created_at)}</span>
+                    <span className="text-[length:var(--fs-2)] text-muted-foreground">{formatDay(r.created_at, tz)}</span>
                     <span className="min-w-0 sm:order-none">
                       <span className="block truncate text-[length:var(--fs-3)]">{productWord(r.product)}</span>
                       <span className="tabular block font-mono text-[length:var(--fs-2)] text-muted-foreground">
