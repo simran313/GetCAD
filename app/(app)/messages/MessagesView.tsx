@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
 import { AutoRefresh } from "../orders/AutoRefresh";
+import { InboxRow } from "./InboxRow";
 import { ThreadsPanel } from "../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
@@ -30,6 +31,10 @@ export interface Conversation {
   last_mine: boolean | null;
   last_at: string | null;
   messages: number;
+  /** The client's name for the piece (clients only); null otherwise. */
+  title: string | null;
+  /** Unread message notifications on the order. */
+  unread: number;
 }
 
 export interface OpenConversation {
@@ -42,7 +47,7 @@ export interface OpenConversation {
 }
 
 // What the list is, for whoever is reading it (C7, D5; Phase 5c for the team).
-function describe(role: string): { eyebrow?: string; description: string; team: boolean } {
+function describe(role: string): { eyebrow?: string; description?: string; team: boolean } {
   if (role === "DESIGNER") {
     return {
       eyebrow: "Your pod lead and admin",
@@ -50,7 +55,7 @@ function describe(role: string): { eyebrow?: string; description: string; team: 
       team: false,
     };
   }
-  if (role === "CLIENT") return { description: "Your conversations with the team, one per order.", team: false };
+  if (role === "CLIENT") return { description: undefined, team: false };
   return { description: "Each order has a client conversation and a designer conversation.", team: true };
 }
 
@@ -71,38 +76,27 @@ export async function MessagesView({
       <div className="grid gap-6 md:grid-cols-[320px_1fr]">
         <Card className={cn("self-start overflow-hidden", open && "hidden md:block")}>
           {conversations.length === 0 ? (
-            <EmptyState icon={<MessageSquare />} title="No conversations yet" description="Each order has one. Start it from the order." className="py-8" />
+            <EmptyState icon={<MessageSquare />} title="No conversations yet" className="py-8" />
           ) : (
             <ul>
-              {conversations.map((c) => {
-                const on = open?.orderId === c.order_id;
-                return (
-                  <li key={c.thread_id}>
-                    <Link
-                      href={`/messages/${c.order_id}`}
-                      aria-current={on ? "page" : undefined}
-                      className={cn(
-                        "block border-b border-border px-[var(--s-4)] py-[var(--s-3)] last:border-b-0",
-                        on ? "bg-muted" : "hover:bg-subtle",
-                      )}
-                    >
-                      <span className="flex items-center justify-between gap-2">
-                        <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
-                          {c.display_ref}
-                          {copy.team && ` · ${c.kind === "internal" ? "Designer" : "Client"}`}
+              {conversations.map((c) => (
+                <li key={c.thread_id}>
+                  <InboxRow
+                    c={c}
+                    client={role === "CLIENT"}
+                    at={c.last_at ? formatRelative(c.last_at, tz) : ""}
+                    active={open?.orderId === c.order_id}
+                    meta={
+                      role === "CLIENT" ? undefined : (
+                        <span className="inline-flex flex-wrap items-center gap-2">
+                          {copy.team && (c.kind === "internal" ? "Designer" : "Client")}
+                          <StatusBadge status={c.status} />
                         </span>
-                        <span className="text-[length:var(--fs-1)] text-muted-foreground">{c.last_at ? formatRelative(c.last_at, tz) : ""}</span>
-                      </span>
-                      <span className="mt-1 block truncate text-[length:var(--fs-2)]">
-                        {c.last_body ? `${c.last_mine ? "You" : c.last_alias}: ${c.last_body}` : "No messages yet"}
-                      </span>
-                      <span className="mt-1.5 block">
-                        <StatusBadge status={c.status} />
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
+                      )
+                    }
+                  />
+                </li>
+              ))}
             </ul>
           )}
         </Card>

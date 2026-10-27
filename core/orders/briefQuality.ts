@@ -274,3 +274,16 @@ export function qualitySummary(q: BriefQuality): string {
   }
   return `Buildable, but ${q.gaps.length} thing${q.gaps.length === 1 ? "" : "s"} a designer would have to guess.`;
 }
+
+/** Where a draft stands, for lists: "Step 1 of 4", "Step 3 of 4" or "Ready to send" (3 steps for renders). */
+export function draftProgress(
+  product: string | null | undefined,
+  ctx: Pick<BriefContext, "referenceImageCount" | "service" | "size">,
+): string {
+  const total = ctx.service === "render" ? 3 : 4;
+  if (!product) return `Step 1 of ${total}`;
+  const missing = briefMinimumMissing(product, ctx);
+  if (missing.includes("reference")) return `Step 1 of ${total}`;
+  if (missing.includes("size")) return `Step 3 of ${total}`;
+  return "Ready to send";
+}

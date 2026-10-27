@@ -12,6 +12,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { loadClientOrders } from "@/lib/client/orders";
 
+import { loadUnreadByOrder } from "../../messages/load";
 import { ClientOrders } from "../ClientOrders";
 import { createOrderAction } from "../actions";
 import type { LedgerRow, OrderRow } from "../types";
@@ -50,7 +51,8 @@ export default async function OrdersPage({
   if (me?.role === "QC") redirect("/qc/orders");
   if ((me?.role ?? "CLIENT") === "CLIENT") {
     try {
-      return <ClientOrders orders={await loadClientOrders(supabase)} tab={tab ?? "all"} />;
+      const [orders, unread] = await Promise.all([loadClientOrders(supabase), loadUnreadByOrder(supabase)]);
+      return <ClientOrders orders={orders} unread={unread} tab={tab ?? "all"} />;
     } catch (e) {
       return (
         <Page>

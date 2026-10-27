@@ -16,7 +16,8 @@ import { viewerZone } from "@/lib/time/zone";
 /**
  * C3 — the client's orders (docs/design): tabs by what each order needs, a
  * table at desk width and a list on a phone. "Pay to start" stands in for
- * the price while an order waits on payment.
+ * the price while an order waits on payment. Each row carries its one next
+ * action inline (Pay, Review, Continue, or Reply to an unread message).
  */
 const TABS: { key: ClientTab | "all"; label: string }[] = [
   { key: "all", label: "All" },
@@ -34,7 +35,16 @@ function when(o: ClientOrder, tz: string): string {
   return shortDate(o.created_at, tz);
 }
 
-export async function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab: string }) {
+/** A row's one inline action: what waits on the client, else a reply to an unread message. */
+function rowAction(o: ClientOrder, unread: number): { label: string; href: string } | null {
+  if (o.status === "QUOTED" && o.price_total) return { label: `Pay ${formatMoney(o.price_total, o.currency ?? "USD")}`, href: `/orders/${o.id}/pay` };
+  if (o.status === "CLIENT_PREVIEW") return { label: "Review", href: `/orders/${o.id}/review` };
+  if (o.status === "DRAFT") return { label: "Continue", href: `/orders/${o.id}/brief` };
+  if (unread > 0) return { label: "Reply", href: `/messages/${o.id}` };
+  return null;
+}
+
+export async function ClientOrders({ orders, unread, tab }: { orders: ClientOrder[]; unread: Map<string, number>; tab: string }) {
   const tz = await viewerZone();
   const active = (TABS.find((t) => t.key === tab)?.key ?? "all") as ClientTab | "all";
   const count = (k: ClientTab | "all") => (k === "all" ? orders.length : orders.filter((o) => clientTab(o.status) === k).length);
@@ -50,7 +60,7 @@ export async function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab
       cell: (o) => (
         <span className="block min-w-0">
           <span className="block truncate font-medium">{o.title}</span>
-          <span className="tabular block font-mono text-[length:var(--fs-2)] font-normal text-muted-foreground">
+          <span className="tabular block text-[length:var(--fs-2)] font-normal text-muted-foreground">
             {[o.display_ref ?? "Draft", o.source && VIA[o.source]].filter(Boolean).join(" · ")}
           </span>
         </span>
@@ -58,7 +68,7 @@ export async function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab
     },
     { key: "status", header: "Status", card: "badge", className: "whitespace-nowrap", cell: (o) => <StatusBadge status={o.status} /> },
     { key: "service", header: "Service", className: "text-[length:var(--fs-2)]", cell: (o) => serviceWord(o.service) },
-    { key: "po", header: "Your PO", className: "font-mono text-[length:var(--fs-2)]", cell: (o) => o.client_po ?? "—" },
+    { key: "po", header: "Your PO", className: "text-[length:var(--fs-2)]", cell: (o) => o.client_po ?? "—" },
     { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)]", cell: (o) => when(o, tz) },
     {
       key: "price",
@@ -68,17 +78,19 @@ export async function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab
       cell: (o) => (o.price_total ? formatMoney(o.price_total, o.currency ?? "USD") : "—"),
     },
     {
-      key: "pay",
-      header: <span className="sr-only">Pay</span>,
+      key: "next",
+      header: <span className="sr-only">Next</span>,
       card: "action",
       align: "right",
       className: "w-[1%] whitespace-nowrap",
-      cell: (o) =>
-        o.status === "QUOTED" && o.price_total ? (
-          <Link href={`/orders/${o.id}/pay`} className={buttonVariants({ size: "sm" })}>
-            Pay {formatMoney(o.price_total, o.currency ?? "USD")}
+      cell: (o) => {
+        const next = rowAction(o, unread.get(o.id) ?? 0);
+        return next ? (
+          <Link href={next.href} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            {next.label}
           </Link>
-        ) : null,
+        ) : null;
+      },
     },
   ];
 
@@ -86,7 +98,6 @@ export async function ClientOrders({ orders, tab }: { orders: ClientOrder[]; tab
     <Page>
       <PageHeader
         title="Orders"
-        description="Every design you have sent us, newest first."
         actions={
           <Link href="/orders/new" className={buttonVariants()}>
             <Plus /> New order

@@ -22,6 +22,7 @@ import { briefRows, productWord } from "@/lib/client/orders";
 
 import { ClaimsCard, ShareCard, type ClaimRow, type PreviewLinkRow } from "../AfterDelivery";
 import { ClientOrderView } from "../ClientOrderView";
+import { POST_QC, type FileVersionRow } from "../../files/OrderFiles";
 import { TeamClaims, type TeamClaimRow } from "../TeamClaims";
 import { OrderDetail } from "../OrderDetail";
 import type { PayoutStateSummary } from "../PayoutPanel";
@@ -236,11 +237,20 @@ export default async function OrderPage({
   // The client's own view (C4, Phase 5b). The team keeps the working view
   // below until 5d.
   if (order.relation === "CLIENT" && role === "CLIENT") {
-    const [specRes, poRes, photosRes, accentsRes] = await Promise.all([
+    const [specRes, poRes, photosRes, accentsRes, namesRes, fingerprintsRes, unreadRes] = await Promise.all([
       supabase.from("order_specs").select("*").eq("order_id", order.id).maybeSingle(),
       supabase.from("orders").select("client_po").eq("id", order.id).maybeSingle(),
       supabase.from("order_reference_images").select("id").eq("order_id", order.id),
       supabase.from("order_spec_accents").select("quantity").eq("order_id", order.id),
+      // The Files sheet: delivered names and, past QC, fingerprints (as on /files).
+      supabase.from("deliverables").select("file_version_id, file_name").eq("order_id", order.id),
+      POST_QC.includes(order.status) ? supabase.rpc("order_fingerprints", { p_order_id: order.id }) : Promise.resolve({ data: null }),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("kind", "MESSAGE")
+        .eq("order_id", order.id)
+        .is("read_at", null),
     ]);
     const spec = specRes.data as Record<string, string | number | boolean | null> | null;
     const briefLines = spec
@@ -250,7 +260,7 @@ export default async function OrderPage({
           accents: (accentsRes.data ?? []) as { quantity: number }[],
         })
           .filter((r) => r.key !== "name" && r.value)
-          .map((r) => ({ label: r.label, value: r.value! }))
+          .map((r) => ({ key: r.key, label: r.label, value: r.value! }))
       : [];
     // Phase 7b (0051): share a preview once approved; spec claims once delivered.
     const shareable = ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"].includes(order.status) && order.service !== "render";
@@ -291,9 +301,12 @@ export default async function OrderPage({
             rounds: (roundsRes.data as RevisionRow[] | null) ?? [],
             lineage: (lineageRes.data as LineageRow[] | null) ?? [],
           }}
-          threads={(threadsRes.data as ThreadRow[] | null) ?? []}
           messages={messages}
           attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
+          files={versions as unknown as FileVersionRow[]}
+          fileNames={new Map(((namesRes.data ?? []) as { file_version_id: string; file_name: string }[]).map((n) => [n.file_version_id, n.file_name]))}
+          fileShas={new Map(((fingerprintsRes.data ?? []) as { file_version_id: string; sha256: string }[]).map((r) => [r.file_version_id, r.sha256]))}
+          unread={unreadRes.count ?? 0}
           intake={intake}
           timelineRows={timelineRes.data ?? []}
         />

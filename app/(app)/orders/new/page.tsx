@@ -3,7 +3,7 @@ import { Box, ChevronRight, Copy, ImageIcon, MessageSquare } from "lucide-react"
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { briefMinimumMissing, formatDay, formatRelative } from "@/core";
+import { draftProgress, formatDay, formatRelative } from "@/core";
 import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
 import { briefName, loadClientOrders } from "@/lib/client/orders";
@@ -11,7 +11,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { viewerZone } from "@/lib/time/zone";
 
 import { duplicateBriefAction, startBriefAction } from "../[id]/brief/actions";
-import { DraftMenu } from "./DraftMenu";
+import { OrderMenu } from "../OrderMenu";
 
 /**
  * N0 — New order. Two equal choices (CAD design, Renders); then the fastest
@@ -71,21 +71,16 @@ export default async function NewOrderPage() {
 
   const progress = (o: (typeof orders)[number]): string => {
     const spec = specs.get(o.id);
-    const total = o.service === "render" ? 3 : 4;
-    if (!spec?.product) return `Step 1 of ${total}`;
-    const missing = briefMinimumMissing(spec.product, {
+    return draftProgress(spec?.product, {
       referenceImageCount: pictures.get(o.id) ?? 0,
       service: o.service,
       size: {
-        ringSize: spec.ring_size,
-        innerCircumferenceUm: spec.inner_circumference_um,
-        innerDiameterUm: spec.inner_diameter_um,
-        lengthUm: spec.length_um,
+        ringSize: spec?.ring_size,
+        innerCircumferenceUm: spec?.inner_circumference_um,
+        innerDiameterUm: spec?.inner_diameter_um,
+        lengthUm: spec?.length_um,
       },
     });
-    if (missing.includes("reference")) return `Step 1 of ${total}`;
-    if (missing.includes("size")) return `Step 3 of ${total}`;
-    return "Ready to send";
   };
 
   return (
@@ -163,7 +158,7 @@ export default async function NewOrderPage() {
                     </span>
                     <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                   </Link>
-                  <DraftMenu orderId={o.id} name={name} />
+                  <OrderMenu orderId={o.id} name={name} cancel="Delete draft" />
                 </li>
               );
             })}

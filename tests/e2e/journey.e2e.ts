@@ -61,6 +61,9 @@ test("a client sends a CAD brief", async ({ browser }) => {
   // The order page reads the same saved brief, so it must say Yellow too.
   await page.goto(`/orders/${orderId}`);
   await expect(page.getByText("Yellow · 18K").first()).toBeVisible();
+  // The order hub: five stages, at Quote, and nothing to press while we price it.
+  await expect(page.getByRole("list", { name: "Progress" }).locator('[aria-current="step"]')).toHaveText("2");
+  await expect(page.getByRole("heading", { name: "We're pricing your brief" })).toBeVisible();
   await page.context().close();
 });
 
@@ -69,6 +72,11 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   await page.goto(`/orders/${orderId}`);
   await act(page, page.getByRole("button", { name: "Set quote" }));
   await settled(page, "quoted", (timeout) => expect(page.getByRole("button", { name: "Mark paid" })).toBeVisible({ timeout }));
+  // The client's one action is now the quote: Pay & start, with the price on it.
+  const client = await signedIn(browser, "client");
+  await client.goto(`/orders/${orderId}`);
+  await expect(client.getByRole("link", { name: /^Pay .+ & start$/ })).toBeVisible();
+  await client.context().close();
   await act(page, page.getByRole("button", { name: "Mark paid" }));
   await expectGone(page, page.getByRole("button", { name: "Mark paid" }));
   await act(page, page.getByRole("button", { name: "Confirm order" }));

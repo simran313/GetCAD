@@ -238,3 +238,9 @@ Messages and Home, every action still obvious.
 4. Timezone: **cookie per device**, defaulting to the device's zone. No
    schema change (9 C not built).
 5. Phasing as in §10, before Phase 9.
+
+## 10b as built
+
+- Counts sit on the hub tiles (Chat unread, Files, Revisions used, latest event) rather than as separate header chips: one place, fewer words.
+- Next step: `clientNextStep(id, status, ctx)` takes the price, tier, revision rounds and the first-look time; no extra query.
+- Near-duplicates consolidated: `DraftMenu` → `OrderMenu` (draft delete, order cancel, raise a problem); the files list → `files/OrderFiles` (Files page and the order's Files sheet); conversation rows → `messages/InboxRow` (Home and Messages); draft step labels → `draftProgress`; pay-page "what you get" → `whatYouGet`; the home page's own `timeAgo` → `formatRelative`.

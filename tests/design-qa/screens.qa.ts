@@ -95,19 +95,25 @@ function writeAxeReport(who: string) {
   return list.length;
 }
 
-async function shoot(page: Page, who: string, path: string) {
+/** "path::Name" opens the button called Name (a sheet on the order page) before the shot. */
+async function shoot(page: Page, who: string, entry: string) {
+  const [path, open] = entry.split("::") as [string, string | undefined];
   for (const [width, height] of WIDTHS) {
     await page.setViewportSize({ width, height });
     const res = await page.goto(path, { waitUntil: "load" }).catch(() => null);
     await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
+    if (open) {
+      await page.getByRole("button", { name: new RegExp(`^${open}`) }).first().click().catch((e) => console.log(`! ${who} ${entry}: ${e}`));
+      await page.getByRole("dialog").waitFor({ timeout: 5_000 }).catch(() => {});
+    }
     // Let fonts and late layout settle; animations are frozen by the screenshot.
     await page.evaluate(() => document.fonts.ready).catch(() => {});
-    const file = join(OUT, who, `${slug(path)}@${width}.png`);
+    const file = join(OUT, who, `${slug(path)}${open ? `-${open.toLowerCase()}` : ""}@${width}.png`);
     mkdirSync(dirname(file), { recursive: true });
     await page.screenshot({ path: file, fullPage: true, animations: "disabled" }).catch((e) => console.log(`! ${who} ${path}: ${e}`));
     console.log(`${who} ${path} @${width}: ${res?.status() ?? "no response"} → ${page.url().replace(/^https?:\/\/[^/]+/, "")}`);
-    if (width === 390) await countWords(page, who, path);
-    if (width !== 768) await audit(page, who, path, width);
+    if (width === 390 && !open) await countWords(page, who, path);
+    if (width !== 768) await audit(page, who, entry, width);
   }
 }
 
@@ -145,7 +151,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
     persona: "client",
     paths: async () => [
       "/home", "/orders", "/orders?tab=action", "/orders/new", ...orderPages(journey), ...orderPages(crawl),
-      ...(journey ? [`/orders/${journey}/claim`, `/messages/${journey}`] : []),
+      ...(journey ? [`/orders/${journey}::Files`, `/orders/${journey}::Timeline`, `/orders/${journey}/claim`, `/messages/${journey}`] : []),
       "/files", "/messages", "/wallet", "/wallet/invoices", "/wallet/transactions",
       "/account", "/account/kit", "/account/security",
     ],
