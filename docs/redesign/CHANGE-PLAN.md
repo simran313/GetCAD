@@ -251,3 +251,9 @@ Messages and Home, every action still obvious.
 - Phone: `/messages/<order>` is full screen (the shell hides its bars on that route) and sized to the visual viewport, so the composer stays above the keyboard.
 - Reply-to (§9 B) not built: no schema change was approved. "Mark changes" on a received picture is not built either: it would need composing an image in the browser; the existing marking stays on the brief photos.
 - To a client every staff message is "Your team"; the alias is replaced before the data reaches their browser (DECISIONS §11 updated).
+
+## 10d as built
+
+- Settings live on `/account` under "On this device": the time zone and notifications, both per device. No new route, no schema change (9 A per-type toggles not built: not approved).
+- Time zone: "This device" (the default, set from the browser) or India and the US zones. A choice sets `tcp_tz` plus `tcp_tz_manual`, so the device's own zone no longer overrides it; "This device" clears the flag.
+- Notifications: the existing per-device subscribe and unsubscribe, with one line of copy per state.

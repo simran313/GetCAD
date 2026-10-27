@@ -22,6 +22,21 @@ export const DEFAULT_TIME_ZONE = "UTC";
  */
 export const TIME_ZONE_COOKIE = "tcp_tz";
 
+/** Set when the person picked a zone in Settings, so the device's own zone no longer overrides it. */
+export const TIME_ZONE_MANUAL_COOKIE = "tcp_tz_manual";
+
+/** The zones Settings offers (Phase 10d): where the clients and the team are. */
+export const TIME_ZONE_CHOICES: { zone: string; label: string }[] = [
+  { zone: "Asia/Kolkata", label: "India" },
+  { zone: "America/New_York", label: "US Eastern" },
+  { zone: "America/Chicago", label: "US Central" },
+  { zone: "America/Denver", label: "US Mountain" },
+  { zone: "America/Phoenix", label: "US Arizona" },
+  { zone: "America/Los_Angeles", label: "US Pacific" },
+  { zone: "America/Anchorage", label: "Alaska" },
+  { zone: "Pacific/Honolulu", label: "Hawaii" },
+];
+
 /** True if the runtime knows this IANA zone name. */
 export function isTimeZone(zone: string | null | undefined): zone is string {
   if (!zone || zone.length > 64) return false;

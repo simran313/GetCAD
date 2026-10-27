@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { dayKey, formatDateTime, formatDay, formatDayLabel, formatRelative, formatTime, isTimeZone } from "./format";
+import { dayKey, formatDateTime, formatDay, formatDayLabel, formatRelative, formatTime, isTimeZone, TIME_ZONE_CHOICES } from "./format";
 
 // 2026-10-25T21:26:00Z is 02:56 on 26 Oct in India, 5:26 PM on 25 Oct in New York.
 const placed = "2026-10-25T21:26:00Z";
@@ -56,3 +56,11 @@ describe("relative times in lists", () => {
     expect(formatDayLabel("2026-10-22T01:00:00Z", "UTC", now)).toBe("Thursday");
   });
 });
+
+describe("TIME_ZONE_CHOICES (Settings)", () => {
+  it("offers only zones the runtime knows, once each", () => {
+    for (const c of TIME_ZONE_CHOICES) expect(isTimeZone(c.zone), c.zone).toBe(true);
+    expect(new Set(TIME_ZONE_CHOICES.map((c) => c.zone)).size).toBe(TIME_ZONE_CHOICES.length);
+  });
+});
+
