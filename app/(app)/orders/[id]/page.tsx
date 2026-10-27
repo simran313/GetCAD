@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { escrowSign, staffNext, type TransitionRow } from "@/core";
+import { escrowSign, staffNext, type TimelineRawRow, type TransitionRow } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { TrustLine } from "@/components/trust-line";
@@ -65,9 +65,33 @@ export default async function OrderPage({
   const { id } = await params;
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
-  const [meRes, orderRes, transitionsRes, versionsRes, ledgerRes, messagesRes, disputesRes] =
+  // Phase 11a: one parallel wave for everything that needs only the order id
+  // (each round trip to the database is a network hop in production), then
+  // one for what depends on the order's relation and status.
+  const [
+    meRes,
+    orderRes,
+    transitionsRes,
+    versionsRes,
+    ledgerRes,
+    messagesRes,
+    disputesRes,
+    timelineRes,
+    allowanceRes,
+    roundsRes,
+    lineageRes,
+    threadsRes,
+    filesRes,
+    stampRes,
+    settingsRes,
+    specRes,
+    poRes,
+    photosRes,
+    accentsRes,
+    namesRes,
+    unreadRes,
+  ] =
     await Promise.all([
       supabase.from("users").select("role").maybeSingle(),
       // visible_orders() decides whether this order is visible at all, and in
@@ -94,6 +118,33 @@ export default async function OrderPage({
         .select("id, order_id, reason, status, resolution, resolution_notes")
         .eq("order_id", id)
         .order("created_at", { ascending: false }),
+      supabase.rpc("order_timeline", { p_order_id: id }),
+      // Phase 3b: rounds and their notes for everyone on the order; the links
+      // between orders never for a designer (order_lineage returns none).
+      supabase.rpc("revision_allowance", { p_order_id: id }),
+      supabase.rpc("order_revisions", { p_order_id: id }),
+      supabase.rpc("order_lineage", { p_order_id: id }),
+      // Phase 4a/4b: the threads this viewer may read, the files in them, and
+      // the stamp the live refresh compares against.
+      supabase.rpc("order_threads", { p_order_id: id }),
+      supabase.rpc("thread_attachments", { p_order_id: id }),
+      supabase.rpc("order_activity_stamp", { p_order_id: id }),
+      // Staff only (policies/0028): the rate for showing payouts as a share of
+      // the price. A client or designer gets no row, and no margin line.
+      supabase.from("app_settings").select("key, value").in("key", ["usd_inr_paise_per_usd", "payout_warning_pct"]),
+      // The client's view (each read is the database's to allow; unused for the team).
+      supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
+      supabase.from("orders").select("client_po").eq("id", id).maybeSingle(),
+      supabase.from("order_reference_images").select("id").eq("order_id", id),
+      supabase.from("order_spec_accents").select("quantity").eq("order_id", id),
+      // The Files sheet: delivered names (as on /files).
+      supabase.from("deliverables").select("file_version_id, file_name").eq("order_id", id),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("kind", "MESSAGE")
+        .eq("order_id", id)
+        .is("read_at", null),
     ]);
 
   const queryError =
@@ -147,49 +198,40 @@ export default async function OrderPage({
 
   const held = ledger.reduce((net, l) => net + escrowSign(l.kind) * l.amount, 0);
 
-  const timelineRes = await supabase.rpc("order_timeline", { p_order_id: order.id });
-
-  // Phase 3a surfaces, each only for the people the database lets see it.
+  // Wave 2: what depends on the order. Phase 3a surfaces, each only for the
+  // people the database lets see it; a team-placed order's screenshots
+  // (client and team only, policies/0034) and, for the team, the client's
+  // contact for the WhatsApp / email buttons; past QC, fingerprints; after
+  // approval, the preview links and spec claims (Phase 7b).
   const staffing = order.relation === "ADMIN" || order.relation === "POD_LEAD";
   const working = staffing || order.relation === "DESIGNER";
-  const [designersRes, checklistRes, slotsRes, allowanceRes, roundsRes, lineageRes] = await Promise.all([
-    staffing && ["PAYMENT_HELD", "ASSIGNED"].includes(order.status)
-      ? supabase.rpc("pod_designers", { p_order_id: order.id })
-      : Promise.resolve({ data: null }),
-    working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status)
-      ? supabase.rpc("job_checklist", { p_order_id: order.id })
-      : Promise.resolve({ data: null }),
-    working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status)
-      ? supabase.rpc("job_slots", { p_order_id: order.id })
-      : Promise.resolve({ data: null }),
-    // Phase 3b: rounds and their notes for everyone on the order; the links
-    // between orders never for a designer (order_lineage returns none).
-    supabase.rpc("revision_allowance", { p_order_id: order.id }),
-    supabase.rpc("order_revisions", { p_order_id: order.id }),
-    supabase.rpc("order_lineage", { p_order_id: order.id }),
-  ]);
-
-  // Phase 4a: the threads this viewer may read, and for a team-placed order
-  // its screenshots (client and team only — policies/0034) and, for the team,
-  // the client's contact for the WhatsApp / email buttons.
-  const team = order.relation === "ADMIN" || order.relation === "POD_LEAD";
+  const team = staffing;
   const placedByTeam = !!order.source && order.source !== "portal";
-  const [threadsRes, shotsRes, contactRes, filesRes, stampRes] = await Promise.all([
-    supabase.rpc("order_threads", { p_order_id: order.id }),
+  const asClient = order.relation === "CLIENT" && role === "CLIENT";
+  const shareable = asClient && ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"].includes(order.status) && order.service !== "render";
+  const none = Promise.resolve({ data: null });
+  const teamView = order.relation !== "CLIENT";
+  const [designersRes, checklistRes, slotsRes, shotsRes, contactRes, fingerprintsRes, linksRes, windowRes, claimsRes, payoutRes, jobRes, podsRes, vsRes, teamClaimsRes] = await Promise.all([
+    staffing && ["PAYMENT_HELD", "ASSIGNED"].includes(order.status) ? supabase.rpc("pod_designers", { p_order_id: order.id }) : none,
+    working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status) ? supabase.rpc("job_checklist", { p_order_id: order.id }) : none,
+    working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status) ? supabase.rpc("job_slots", { p_order_id: order.id }) : none,
     placedByTeam && order.relation !== "DESIGNER"
-      ? supabase
-          .from("order_screenshots")
-          .select("id, object_key, position")
-          .eq("order_id", order.id)
-          .order("position")
-      : Promise.resolve({ data: null }),
-    placedByTeam && team
-      ? supabase.rpc("order_client_contact", { p_order_id: order.id }).maybeSingle()
-      : Promise.resolve({ data: null }),
-    // Phase 4b: files in the threads this viewer may read, and the stamp the
-    // live refresh compares against.
-    supabase.rpc("thread_attachments", { p_order_id: order.id }),
-    supabase.rpc("order_activity_stamp", { p_order_id: order.id }),
+      ? supabase.from("order_screenshots").select("id, object_key, position").eq("order_id", order.id).order("position")
+      : none,
+    placedByTeam && team ? supabase.rpc("order_client_contact", { p_order_id: order.id }).maybeSingle() : none,
+    asClient && POST_QC.includes(order.status) ? supabase.rpc("order_fingerprints", { p_order_id: order.id }) : none,
+    shareable ? supabase.rpc("my_preview_links", { p_order_id: order.id }) : none,
+    shareable ? supabase.rpc("claim_window", { p_order_id: order.id }) : none,
+    shareable ? supabase.rpc("order_claims", { p_order_id: order.id }) : none,
+    // Payout execution state is service-role only (0024): the rows carry
+    // processor references no browser session may read. FINANCE is the only
+    // role that acts on them, so it is the only role we fetch them for.
+    role === "FINANCE" ? createAdminSupabaseClient().rpc("payout_state", { p_order_id: order.id }) : none,
+    // A3, the team's page (Phase 5d): the job, the pods, the version spec and claims.
+    teamView ? supabase.rpc("pod_jobs", { p_order_id: order.id }).maybeSingle() : none,
+    order.relation === "ADMIN" ? supabase.rpc("pods_overview") : none,
+    teamView ? supabase.rpc("version_spec", { p_order_id: order.id }) : none,
+    teamView ? supabase.rpc("order_claims", { p_order_id: order.id }) : none,
   ]);
   const screenshots: Screenshot[] = [];
   const shotRows = (shotsRes.data ?? []) as { id: string; object_key: string; position: number }[];
@@ -197,10 +239,11 @@ export default async function OrderPage({
     // Rows already filtered by RLS; the service role only signs what this
     // viewer may see (same pattern as the brief's reference pictures).
     const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
-    for (const row of shotRows) {
-      const { data: signed } = await storage.createSignedUrl(row.object_key, 60 * 30);
-      if (signed?.signedUrl) screenshots.push({ id: row.id, position: row.position, url: signed.signedUrl });
-    }
+    const signed = await Promise.all(shotRows.map((row) => storage.createSignedUrl(row.object_key, 60 * 30)));
+    shotRows.forEach((row, i) => {
+      const url = signed[i]?.data?.signedUrl;
+      if (url) screenshots.push({ id: row.id, position: row.position, url });
+    });
   }
   const intake = placedByTeam
     ? {
@@ -210,12 +253,7 @@ export default async function OrderPage({
       }
     : null;
 
-  // Staff only (policies/0028): the rate for showing payouts as a share of
-  // the price. A client or designer gets no row, and no margin line.
-  const { data: settingRows } = await supabase
-    .from("app_settings")
-    .select("key, value")
-    .in("key", ["usd_inr_paise_per_usd", "payout_warning_pct"]);
+  const settingRows = settingsRes.data;
   const setting = (key: string) =>
     (settingRows as { key: string; value: number | null }[] | null)?.find((r) => r.key === key)?.value ?? null;
   const payoutShare =
@@ -223,35 +261,11 @@ export default async function OrderPage({
       ? { paisePerUsd: setting("usd_inr_paise_per_usd")!, warnPct: setting("payout_warning_pct")! }
       : null;
 
-  // Payout execution state is service-role only (0024): the rows carry
-  // processor references no browser session may read. FINANCE is the only role
-  // that acts on them, so it is the only role we fetch them for.
-  let payoutState: PayoutStateSummary | null = null;
-  if (role === "FINANCE") {
-    const { data } = await createAdminSupabaseClient().rpc("payout_state", {
-      p_order_id: order.id,
-    });
-    payoutState = (data as PayoutStateSummary | null) ?? null;
-  }
+  const payoutState = (payoutRes.data as PayoutStateSummary | null) ?? null;
 
   // The client's own view (C4, Phase 5b). The team keeps the working view
   // below until 5d.
-  if (order.relation === "CLIENT" && role === "CLIENT") {
-    const [specRes, poRes, photosRes, accentsRes, namesRes, fingerprintsRes, unreadRes] = await Promise.all([
-      supabase.from("order_specs").select("*").eq("order_id", order.id).maybeSingle(),
-      supabase.from("orders").select("client_po").eq("id", order.id).maybeSingle(),
-      supabase.from("order_reference_images").select("id").eq("order_id", order.id),
-      supabase.from("order_spec_accents").select("quantity").eq("order_id", order.id),
-      // The Files sheet: delivered names and, past QC, fingerprints (as on /files).
-      supabase.from("deliverables").select("file_version_id, file_name").eq("order_id", order.id),
-      POST_QC.includes(order.status) ? supabase.rpc("order_fingerprints", { p_order_id: order.id }) : Promise.resolve({ data: null }),
-      supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("kind", "MESSAGE")
-        .eq("order_id", order.id)
-        .is("read_at", null),
-    ]);
+  if (asClient) {
     const spec = specRes.data as Record<string, string | number | boolean | null> | null;
     const briefLines = spec
       ? briefRows(spec, {
@@ -263,14 +277,6 @@ export default async function OrderPage({
           .map((r) => ({ key: r.key, label: r.label, value: r.value! }))
       : [];
     // Phase 7b (0051): share a preview once approved; spec claims once delivered.
-    const shareable = ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"].includes(order.status) && order.service !== "render";
-    const [linksRes, windowRes, claimsRes] = shareable
-      ? await Promise.all([
-          supabase.rpc("my_preview_links", { p_order_id: order.id }),
-          supabase.rpc("claim_window", { p_order_id: order.id }),
-          supabase.rpc("order_claims", { p_order_id: order.id }),
-        ])
-      : [{ data: null }, { data: null }, { data: null }];
     const newLink = (await searchParams).link;
     const afterDelivery = shareable ? (
       <>
@@ -308,7 +314,7 @@ export default async function OrderPage({
           fileShas={new Map(((fingerprintsRes.data ?? []) as { file_version_id: string; sha256: string }[]).map((r) => [r.file_version_id, r.sha256]))}
           unread={unreadRes.count ?? 0}
           intake={intake}
-          timelineRows={timelineRes.data ?? []}
+          timelineRows={(timelineRes.data ?? []) as TimelineRawRow[]}
         />
         <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
       </>
@@ -318,12 +324,6 @@ export default async function OrderPage({
   // A3 — the team's order page (Phase 5d): references in the header, the
   // next move first, then the work and conversation beside the controls.
   if (order.relation !== "CLIENT") {
-    const [jobRes, podsRes, vsRes, teamClaimsRes] = await Promise.all([
-      supabase.rpc("pod_jobs", { p_order_id: order.id }).maybeSingle(),
-      order.relation === "ADMIN" ? supabase.rpc("pods_overview") : Promise.resolve({ data: null }),
-      supabase.rpc("version_spec", { p_order_id: order.id }),
-      supabase.rpc("order_claims", { p_order_id: order.id }),
-    ]);
     const teamClaims = (teamClaimsRes.data as TeamClaimRow[] | null) ?? [];
     // Phase 7a (0050): the certificate and weight sheet once QC has passed.
     const vs = (vsRes.data ?? null) as VersionSpec | null;
@@ -440,7 +440,7 @@ export default async function OrderPage({
           openDispute={disputes.find((d) => d.status === "OPEN")}
           held={held}
           payoutState={payoutState}
-          timelineRows={timelineRes.data ?? []}
+          timelineRows={(timelineRes.data ?? []) as TimelineRawRow[]}
           timelineError={timelineRes.error?.message ?? null}
         />
         <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
@@ -496,7 +496,7 @@ export default async function OrderPage({
           openDispute={disputes.find((d) => d.status === "OPEN")}
           held={held}
           payoutState={payoutState}
-          timelineRows={timelineRes.data ?? []}
+          timelineRows={(timelineRes.data ?? []) as TimelineRawRow[]}
           timelineError={timelineRes.error?.message ?? null}
         />
       </div>

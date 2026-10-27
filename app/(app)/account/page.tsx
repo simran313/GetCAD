@@ -65,11 +65,18 @@ export default async function AccountPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  // One parallel batch (Phase 11a): the role, extra grants and every
+  // profile table this person might have (each readable only by its owner,
+  // so the others come back empty), with the sign-in email from Clerk.
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
-  const [{ data }, { data: grants }] = await Promise.all([
+  const [{ data }, { data: grants }, { data: clientProfile }, { data: account }, { data: designer }, { data: staff }, clerkUser] = await Promise.all([
     supabase.from("users").select("role, status").maybeSingle(),
     supabase.from("user_roles").select("role"),
+    supabase.from("client_profiles").select("business_name, legal_name, email, phone, logo_object_key").eq("user_id", userId).maybeSingle(),
+    supabase.from("client_accounts").select("client_code").eq("user_id", userId).maybeSingle(),
+    supabase.from("designer_profiles").select("legal_name").eq("user_id", userId).maybeSingle(),
+    supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle(),
+    currentUser(),
   ]);
 
   const role: string = data?.role ?? "CLIENT";
@@ -82,13 +89,8 @@ export default async function AccountPage() {
 
   // C9: a client edits their business details here (Phase 5b).
   const isClient = role === "CLIENT";
-  const { data: profile } = isClient
-    ? await supabase.from("client_profiles").select("business_name, legal_name, email, phone, logo_object_key").maybeSingle()
-    : { data: null };
-  const { data: account } = isClient
-    ? await supabase.from("client_accounts").select("client_code").maybeSingle()
-    : { data: null };
-  const email = isClient ? (await currentUser())?.primaryEmailAddress?.emailAddress ?? null : null;
+  const profile = isClient ? clientProfile : null;
+  const email = isClient ? clerkUser?.primaryEmailAddress?.emailAddress ?? null : null;
   const pushOffered = pushIsConfiguredForBrowser(vapidPublicKey);
   // Phase 7b: the logo shown on the client's 3D preview links.
   const logoKey = (profile as { logo_object_key?: string | null } | null)?.logo_object_key ?? null;
@@ -102,11 +104,9 @@ export default async function AccountPage() {
     const p = profile as { business_name?: string | null; legal_name?: string | null } | null;
     name = p?.business_name || p?.legal_name || null;
   } else if (role === "DESIGNER") {
-    const { data: d } = await supabase.from("designer_profiles").select("legal_name").eq("user_id", userId).maybeSingle();
-    name = (d as { legal_name?: string | null } | null)?.legal_name ?? null;
+    name = (designer as { legal_name?: string | null } | null)?.legal_name ?? null;
   } else {
-    const { data: st } = await supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle();
-    name = (st as { first_name?: string | null } | null)?.first_name ?? null;
+    name = (staff as { first_name?: string | null } | null)?.first_name ?? null;
   }
   const clientCode = (account as { client_code?: string } | null)?.client_code ?? null;
 

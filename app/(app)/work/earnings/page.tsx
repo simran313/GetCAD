@@ -17,7 +17,6 @@ export default async function DesignerEarningsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   try {
     const [rows, cats, bank] = await Promise.all([
       loadEarnings(supabase),

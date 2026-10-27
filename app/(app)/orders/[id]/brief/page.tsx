@@ -81,7 +81,6 @@ export default async function BriefPage({
 
   const { id } = await params;
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   // A designer cannot read order_specs (it holds the client's own label and
   // the link to their earlier orders); job_brief() is their copy without

@@ -66,7 +66,6 @@ export default async function AdminUsersPage({
   const { q, role: roleFilter } = await searchParams;
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   // An empty lookup records nothing but still runs the admin check, so this
   // is how the page learns whether it may show identities at all.

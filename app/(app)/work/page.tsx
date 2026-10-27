@@ -40,7 +40,6 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
   const active: JobTab = tab === "qc" || tab === "done" ? tab : "open";
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const { data: me } = await supabase.from("users").select("role").maybeSingle();
   if (me?.role !== "DESIGNER") redirect("/orders");
 

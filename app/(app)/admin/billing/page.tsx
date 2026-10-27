@@ -81,7 +81,6 @@ export default async function BillingPage() {
   const tz = await viewerZone();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   const ledgerRes = await supabase.rpc("money_ledger", { p_limit: 1000 });
   if (ledgerRes.error) {

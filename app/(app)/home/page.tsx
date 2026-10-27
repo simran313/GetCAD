@@ -40,28 +40,30 @@ export default async function DashboardPage() {
   const supabase = await createUserSupabaseClient();
   const tz = await viewerZone();
 
+  // The user row and, for a client, their profile, read together (Phase 11a).
+  const readMe = () =>
+    Promise.all([
+      supabase.from("users").select("id, role, status").maybeSingle(),
+      supabase.from("client_profiles").select("business_name, legal_name").eq("user_id", userId).maybeSingle(),
+    ]);
+  let [{ data: me, error: meError }, { data: profile }] = await readMe();
   // Audited self-onboarding: creates this user's row (and a USER_CREATED audit
-  // entry) on first visit; idempotent thereafter. Identity comes from the
+  // entry) on the first visit, then reads again. Identity comes from the
   // verified token inside the function — nothing is trusted from the client.
-  const { error: onboardError } = await supabase.rpc("ensure_self");
-
-  const { data: me, error: meError } = await supabase
-    .from("users")
-    .select("id, role, status")
-    .maybeSingle();
+  let onboardError: { message: string } | null = null;
+  if (!me) {
+    ({ error: onboardError } = await supabase.rpc("ensure_self"));
+    [{ data: me, error: meError }, { data: profile }] = await readMe();
+  }
   // Clients get the redesigned home (C1, Phase 5b); designers and the team
   // keep this one until 5d. A client who has never said who they are is
   // asked once (S3).
   if (me?.role === "CLIENT") {
-    const { data: profile } = await supabase
-      .from("client_profiles")
-      .select("business_name, legal_name")
-      .maybeSingle();
     if (!profile) redirect("/welcome");
     const [orders, credits, conversations] = await Promise.all([
       loadClientOrders(supabase),
       supabase.from("client_credits").select("status, amount_cents, decided_amount_cents"),
-      loadConversations(supabase, "CLIENT"),
+      loadConversations(supabase),
     ]);
     const creditCents = ((credits.data ?? []) as { status: string; amount_cents: number; decided_amount_cents: number | null }[])
       .filter((c) => c.status === "apply_next" || c.status === "partial")

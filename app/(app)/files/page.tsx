@@ -23,7 +23,6 @@ export default async function FilesPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const { data: me } = await supabase.from("users").select("role").maybeSingle();
   const role = me?.role ?? "CLIENT";
 

@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { cache } from "react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { readSupabaseConfig } from "@/config/supabase";
@@ -14,8 +15,11 @@ import { readSupabaseConfig } from "@/config/supabase";
  * We attach the token via an explicit Authorization header (fetched eagerly),
  * the most reliable way to bind a Clerk session to Supabase from a Server
  * Component across supabase-js versions.
+ *
+ * One client per request (React cache, Phase 11a): the layout and the page
+ * render together and share it instead of each reading the session again.
  */
-export async function createUserSupabaseClient(): Promise<SupabaseClient> {
+export const createUserSupabaseClient = cache(async function createUserSupabaseClient(): Promise<SupabaseClient> {
   const { url, anonKey } = readSupabaseConfig();
   const { getToken } = await auth();
   const token = await getToken();
@@ -26,4 +30,4 @@ export async function createUserSupabaseClient(): Promise<SupabaseClient> {
     },
     auth: { persistSession: false, autoRefreshToken: false },
   });
-}
+});

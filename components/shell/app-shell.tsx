@@ -5,7 +5,7 @@ import * as Menu from "@radix-ui/react-dropdown-menu";
 import { Building2, LogOut, MoreHorizontal, Package, Search, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LiveCallButton } from "@/components/ui/live-call-button";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import { CommandPalette, type PaletteItem } from "./command-palette";
 import { MobileBottomNav } from "./mobile-bottom-nav";
+import { paletteDataAction } from "./palette-actions";
 import { bottomBar, navIcon, ROLE_LABEL, sidebarGroups, type ShellKind } from "./nav-config";
 import { Sidebar } from "./sidebar";
 
@@ -37,8 +38,6 @@ export function AppShell({
   kind,
   tabs,
   user,
-  orders,
-  clients,
   call,
   initialCollapsed,
   children,
@@ -46,8 +45,6 @@ export function AppShell({
   kind: ShellKind;
   tabs: Tab[];
   user: { name: string; initials: string; detail: string };
-  orders: ShellOrder[];
-  clients: string[];
   call: { phone: string | null; hours: string };
   initialCollapsed: boolean;
   children: React.ReactNode;
@@ -56,6 +53,16 @@ export function AppShell({
   const { signOut } = useClerk();
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [palette, setPalette] = useState(false);
+  // Orders and client codes for Cmd+K, loaded the first time it opens.
+  const [{ orders, clients }, setPaletteData] = useState<{ orders: ShellOrder[]; clients: string[] }>({ orders: [], clients: [] });
+  const [paletteLoaded, setPaletteLoaded] = useState(false);
+  useEffect(() => {
+    if (!palette || paletteLoaded) return;
+    setPaletteLoaded(true);
+    paletteDataAction()
+      .then(setPaletteData)
+      .catch(() => setPaletteLoaded(false));
+  }, [palette, paletteLoaded]);
   const active = activeTabKey(pathname, tabs);
   // An open conversation is a full screen on a phone (Phase 10c): no bars.
   const immersive = /^\/messages\/[^/]+$/.test(pathname);

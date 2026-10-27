@@ -19,7 +19,6 @@ export default async function WalletPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const w = await loadWallet(supabase);
 
   return (

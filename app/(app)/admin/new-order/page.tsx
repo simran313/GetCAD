@@ -54,7 +54,6 @@ export default async function NewOrderForClientPage({
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const { data: isTeam } = await supabase.rpc("i_am_team");
   if (isTeam !== true) {
     return (

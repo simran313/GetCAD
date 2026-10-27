@@ -43,7 +43,6 @@ export default async function NewOrderPage() {
   const tz = await viewerZone();
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const orders = await loadClientOrders(supabase).catch(() => []);
   const ids = orders.map((o) => o.id);
   const [specsRes, imagesRes] = ids.length

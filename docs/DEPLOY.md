@@ -114,6 +114,24 @@ at `localhost`.
 `DATABASE_URL` is **not** needed by the app — it is only used by
 `npm run db:apply` and the tests. Do not add it to Vercel.
 
+### 2b. Run the app next to the database (speed)
+
+Every portal page reads Supabase several times. Each read is a network round
+trip between the Vercel function and the database, so the distance between the
+two is paid on every page, several times. Vercel runs functions in Washington,
+D.C. (`iad1`) unless told otherwise; with a Supabase project in Mumbai each
+round trip is about 200 ms instead of about 2 ms.
+
+1. Supabase → Project Settings → General → **Region** (for example
+   `ap-south-1`, Mumbai).
+2. Vercel → Project → Settings → Functions → **Function Region**: pick the
+   matching one (Mumbai `bom1`, N. Virginia `iad1`, Oregon `pdx1`,
+   Frankfurt `fra1`, London `lhr1`, Singapore `sin1`, Sydney `syd1`).
+3. Redeploy. The portal pages need no other change.
+
+The speed test (`tests/e2e/zz-speed.e2e.ts`) shows what each extra round
+trip costs: it runs the portal with 60 ms added to every database call.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.

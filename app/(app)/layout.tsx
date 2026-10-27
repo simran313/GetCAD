@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { TimeZoneProvider } from "@/components/time-zone";
 import { ConnectionStatus } from "@/components/pwa/connection-status";
-import { AppShell, type ShellOrder } from "@/components/shell/app-shell";
+import { AppShell } from "@/components/shell/app-shell";
 import { ROLE_LABEL, shellKind } from "@/components/shell/nav-config";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
@@ -93,33 +93,29 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // One parallel batch (Phase 11a): the role, the user-row safety net and
+  // the name from each profile table (each readable only by its owner, so
+  // the two that are not this person's come back empty). Orders and client
+  // codes for Cmd+K are fetched when the palette opens, not on every load.
   const supabase = await createUserSupabaseClient();
-  const [{ data: me }, ordersRes, jar] = await Promise.all([
+  const [{ data: me }, , clientRes, designerRes, staffRes, jar] = await Promise.all([
     supabase.from("users").select("role").maybeSingle(),
-    supabase.rpc("visible_orders").select("id, display_ref, product_type, status").limit(200),
+    // The safety net for a first visit that does not start at /home or
+    // /welcome (which create the user row themselves, before reading).
+    supabase.rpc("ensure_self").then(() => undefined),
+    supabase.from("client_profiles").select("business_name, legal_name").eq("user_id", userId).maybeSingle(),
+    supabase.from("designer_profiles").select("legal_name").eq("user_id", userId).maybeSingle(),
+    supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     cookies(),
   ]);
   const role = me?.role ?? "CLIENT";
   const kind = shellKind(role);
   const tabs = tabsForRole(role);
 
-  // The name in the user block, from the person's own profile row (each
-  // readable only by its owner), not from Clerk, so no page load waits on
-  // Clerk's API.
-  const profile =
-    kind === "client"
-      ? await supabase.from("client_profiles").select("business_name, legal_name").maybeSingle()
-      : kind === "designer"
-        ? await supabase.from("designer_profiles").select("legal_name").maybeSingle()
-        : await supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle();
+  // The name in the user block, from the person's own profile row, not from
+  // Clerk, so no page load waits on Clerk's API.
+  const profile = kind === "client" ? clientRes : kind === "designer" ? designerRes : staffRes;
   const p = (profile.data ?? {}) as { business_name?: string | null; legal_name?: string | null; first_name?: string | null };
-
-  // Client codes for Cmd+K: admins only (admin_clients refuses anyone else).
-  let clients: string[] = [];
-  if (kind === "staff") {
-    const res = await supabase.rpc("admin_clients").select("client_code");
-    clients = ((res.data ?? []) as { client_code: string | null }[]).flatMap((r) => (r.client_code ? [r.client_code] : []));
-  }
 
   const name = p.first_name || p.business_name || p.legal_name || "Your account";
   const initials = name
@@ -128,20 +124,12 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  const orders: ShellOrder[] = ((ordersRes.data ?? []) as { id: string; display_ref: string | null; product_type: string | null; status: string }[]).map((o) => ({
-    id: o.id,
-    ref: o.display_ref ?? o.id,
-    product: o.product_type,
-    status: o.status,
-  }));
 
   return (
     <AppShell
       kind={kind}
       tabs={tabs}
       user={{ name, initials, detail: ROLE_LABEL[kind] }}
-      orders={orders}
-      clients={clients}
       call={{ phone: c("LIVE_CALL_PHONE"), hours: showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours" }}
       initialCollapsed={jar.get("tcp_sidebar")?.value === "collapsed"}
     >
