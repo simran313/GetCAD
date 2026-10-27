@@ -62,7 +62,6 @@ export default async function ApplicationsPage({
   const status = (await searchParams).status ?? "PENDING_REVIEW";
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   // Authorization is enforced inside the function (OPS/SALES only); a refusal
   // comes back as an error we render as "not authorized", not a crash.

@@ -41,7 +41,6 @@ export default async function OrdersPage({
   if (focus) redirect(`/orders/${encodeURIComponent(focus)}`);
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   // Clients get the redesigned list (C3, Phase 5b); designers and the team
   // keep this one until 5d.

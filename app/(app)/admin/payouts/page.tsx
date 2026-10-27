@@ -58,7 +58,6 @@ export default async function PayoutsPage() {
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const { data, error } = await supabase.rpc("payout_list");
 
   if (error) {

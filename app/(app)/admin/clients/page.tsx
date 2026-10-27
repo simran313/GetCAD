@@ -51,7 +51,6 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const { q: rawQ } = await searchParams;
   const q = (rawQ ?? "").trim().toUpperCase();
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   const res = await supabase.rpc("admin_clients");
   if (res.error) {

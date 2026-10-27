@@ -47,7 +47,6 @@ export default async function CreditsPage() {
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const { data, error } = await supabase.rpc("pending_sla_credits");
 
   if (error) {

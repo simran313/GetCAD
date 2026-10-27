@@ -22,7 +22,6 @@ export default async function AdminOrdersPage({
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   const { tab, q, stage: rawStage } = await searchParams;
   const stage = STAGE_LABELS.some(([s]) => s === rawStage) ? (rawStage as StaffStage) : null;
 

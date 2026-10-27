@@ -45,7 +45,6 @@ export default async function PodsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   const podsRes = await supabase.rpc("pods_overview");
   if (podsRes.error) {

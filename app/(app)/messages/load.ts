@@ -20,15 +20,16 @@ export async function loadUnreadByOrder(supabase: SupabaseClient): Promise<Map<s
 
 /**
  * The viewer's conversations, newest first (my_conversations, 0046), each
- * with its unread count (unread MESSAGE notifications on the order). A client
- * also gets the name they gave each piece; other roles keep the reference.
+ * with its unread count (unread MESSAGE notifications on the order) and the
+ * piece's name where the database lets this viewer read it (shown to clients).
  */
-export async function loadConversations(supabase: SupabaseClient, role = "CLIENT"): Promise<Conversation[]> {
+export async function loadConversations(supabase: SupabaseClient): Promise<Conversation[]> {
   const [{ data, error }, unread] = await Promise.all([supabase.rpc("my_conversations"), loadUnreadByOrder(supabase)]);
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as Omit<Conversation, "title" | "unread">[];
   const titles = new Map<string, string>();
-  if (role === "CLIENT" && rows.length > 0) {
+  // Names are shown to clients only (InboxRow); staff keep the reference.
+  if (rows.length > 0) {
     const { data: specs } = await supabase
       .from("order_specs")
       .select("order_id, reference_name, product")

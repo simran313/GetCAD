@@ -42,7 +42,6 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   if (!userId) redirect("/sign-in");
   const { id } = await params;
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   const [job] = await loadMyWork(supabase, id).catch(() => []);
   if (!job) {

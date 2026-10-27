@@ -46,7 +46,6 @@ export default async function LeadsPage({
   const status = (await searchParams).status ?? "NEW";
 
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
 
   const { data, error } = await supabase.rpc("list_marketing_leads", {
     p_status: status === "" ? null : status,

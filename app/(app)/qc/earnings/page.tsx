@@ -18,7 +18,6 @@ export default async function QcEarningsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  await supabase.rpc("ensure_self");
   try {
     const [rows, bank] = await Promise.all([loadEarnings(supabase), supabase.rpc("my_payout_account")]);
     return (
