@@ -13,6 +13,10 @@
 //
 // Env: GATEWAY_PORT (54321), POSTGREST_URL (http://127.0.0.1:3000),
 //      SUPABASE_SERVICE_ROLE_KEY, E2E_STORAGE_DIR (.e2e/storage)
+//
+// Latency: GET /__latency?ms=N delays every REST and storage call by N ms,
+// so the speed test (zz-speed.e2e.ts) sees what a real database a network
+// hop away costs a page: each sequential round trip adds N. 0 turns it off.
 
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createReadStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -24,6 +28,8 @@ const POSTGREST = new URL(process.env.POSTGREST_URL ?? "http://127.0.0.1:3000");
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const ROOT = process.env.E2E_STORAGE_DIR ?? join(process.cwd(), ".e2e", "storage");
 const SIGNING = randomBytes(32);
+let latencyMs = 0;
+const delay = () => (latencyMs > 0 ? new Promise((r) => setTimeout(r, latencyMs)) : Promise.resolve());
 
 if (!SERVICE_KEY) throw new Error("gateway: SUPABASE_SERVICE_ROLE_KEY is not set");
 mkdirSync(ROOT, { recursive: true });
@@ -145,9 +151,15 @@ function proxyRest(req, res, path) {
 createServer((req, res) => {
   const path = new URL(req.url, "http://gateway").pathname;
   if (path === "/health") return json(res, 200, { ok: true });
-  if (path.startsWith("/rest/v1")) return proxyRest(req, res, path.slice("/rest/v1".length) || "/");
+  if (path === "/__latency") {
+    latencyMs = Math.max(0, Math.min(2000, Number(new URL(req.url, "http://gateway").searchParams.get("ms")) || 0));
+    return json(res, 200, { latencyMs });
+  }
+  if (path.startsWith("/rest/v1")) return void delay().then(() => proxyRest(req, res, path.slice("/rest/v1".length) || "/"));
   if (path.startsWith("/storage/v1")) {
-    return storage(req, res, path.slice("/storage/v1".length)).catch((e) => json(res, 500, { message: String(e) }));
+    return void delay()
+      .then(() => storage(req, res, path.slice("/storage/v1".length)))
+      .catch((e) => json(res, 500, { message: String(e) }));
   }
   json(res, 404, { message: "not found" });
 }).listen(PORT, "127.0.0.1", () => console.log(`e2e gateway on http://127.0.0.1:${PORT}`));
