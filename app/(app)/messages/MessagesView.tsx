@@ -8,12 +8,14 @@ import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
 import { AutoRefresh } from "../orders/AutoRefresh";
+import { c as claim, showClaim } from "@/content/claims";
+
+import { ChatScreen } from "./ChatScreen";
 import { InboxRow } from "./InboxRow";
-import { ThreadsPanel } from "../orders/ThreadsPanel";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
 import { viewerZone } from "@/lib/time/zone";
-import { formatRelative } from "@/core";
+import { formatRelative, type ClientStep } from "@/core";
 
 /**
  * C7 / C7b — Messages (docs/design). Every conversation the viewer may read,
@@ -40,10 +42,21 @@ export interface Conversation {
 export interface OpenConversation {
   orderId: string;
   relation: OrderRow["relation"];
+  ref: string | null;
+  status: string;
+  title: string;
   threads: ThreadRow[];
   messages: MessageRow[];
   attachments: AttachmentRow[];
   stamp: string | null;
+  /** Oldest unread message notification on the order (the "New" line). */
+  unreadSince: string | null;
+  /** Order events shown inline (client and team only). */
+  events: { id: string; label: string; at: string }[];
+  /** Brief rows for the details panel (client and team only). */
+  brief: { label: string; value: string }[];
+  /** The client's one next step, for the banner and the panel. */
+  next: ClientStep | null;
 }
 
 // What the list is, for whoever is reading it (C7, D5; Phase 5c for the team).
@@ -68,11 +81,15 @@ export async function MessagesView({
   open: OpenConversation | null;
   role: string;
 }) {
+  const call = { phone: claim("LIVE_CALL_PHONE"), hours: showClaim("LIVE_CALL_HOURS") ? claim("LIVE_CALL_HOURS") : "US business hours" };
   const tz = await viewerZone();
   const copy = describe(role);
   return (
     <Page>
-      <PageHeader eyebrow={copy.eyebrow} title="Messages" description={copy.description} />
+      {/* On a phone an open conversation is its own full screen. */}
+      <div className={cn(open && "hidden md:block")}>
+        <PageHeader eyebrow={copy.eyebrow} title="Messages" description={copy.description} />
+      </div>
       <div className="grid gap-6 md:grid-cols-[320px_1fr]">
         <Card className={cn("self-start overflow-hidden", open && "hidden md:block")}>
           {conversations.length === 0 ? (
@@ -104,24 +121,7 @@ export async function MessagesView({
         <div className={cn("space-y-4", !open && "hidden md:block")}>
           {open ? (
             <>
-              <div className="flex items-center justify-between gap-2">
-                <Link href="/messages" className="text-[length:var(--fs-2)] underline underline-offset-4 md:hidden">
-                  ← All conversations
-                </Link>
-                <Link
-                  href={role === "DESIGNER" ? `/work/${open.orderId}` : `/orders/${open.orderId}`}
-                  className="text-[length:var(--fs-2)] underline underline-offset-4"
-                >
-                  {role === "DESIGNER" ? "Open the job" : "Open the order"}
-                </Link>
-              </div>
-              <ThreadsPanel
-                orderId={open.orderId}
-                relation={open.relation}
-                threads={open.threads}
-                messages={open.messages}
-                attachments={open.attachments}
-              />
+              <ChatScreen open={open} call={call} />
               <AutoRefresh orderId={open.orderId} stamp={open.stamp} />
             </>
           ) : (

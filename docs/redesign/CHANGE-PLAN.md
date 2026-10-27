@@ -244,3 +244,10 @@ Messages and Home, every action still obvious.
 - Counts sit on the hub tiles (Chat unread, Files, Revisions used, latest event) rather than as separate header chips: one place, fewer words.
 - Next step: `clientNextStep(id, status, ctx)` takes the price, tier, revision rounds and the first-look time; no extra query.
 - Near-duplicates consolidated: `DraftMenu` → `OrderMenu` (draft delete, order cancel, raise a problem); the files list → `files/OrderFiles` (Files page and the order's Files sheet); conversation rows → `messages/InboxRow` (Home and Messages); draft step labels → `draftProgress`; pay-page "what you get" → `whatYouGet`; the home page's own `timeAgo` → `formatRelative`.
+
+## 10c as built
+
+- One chat component (`orders/chat/ChatThread`) for every conversation: the Messages screen, the team's order page and the designer's job page (ThreadsPanel now renders it). Old bubbles, the file-type line and the per-thread attach field are gone.
+- Phone: `/messages/<order>` is full screen (the shell hides its bars on that route) and sized to the visual viewport, so the composer stays above the keyboard.
+- Reply-to (§9 B) not built: no schema change was approved. "Mark changes" on a received picture is not built either: it would need composing an image in the browser; the existing marking stays on the brief photos.
+- To a client every staff message is "Your team"; the alias is replaced before the data reaches their browser (DECISIONS §11 updated).
