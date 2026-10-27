@@ -53,11 +53,14 @@ export async function RevisionsPanel({
   status,
   isActingAsClient,
   data,
+  bare = false,
 }: {
   orderId: string;
   status: string;
   isActingAsClient: boolean;
   data: RevisionsData;
+  /** Inside a sheet that already says "Revisions": no card, no heading. */
+  bare?: boolean;
 }) {
   const tz = await viewerZone();
   const when = (iso: string) => formatDateTime(iso, tz);
@@ -68,19 +71,12 @@ export async function RevisionsPanel({
   const canChange = isActingAsClient && CHANGE_FROM.has(status) && !allowance?.open;
   const showRounds = allowance && (allowance.used > 0 || status === "CLIENT_PREVIEW");
 
-  if (!showRounds && rounds.length === 0 && lineage.length === 0 && !canChange) return null;
+  if (!showRounds && rounds.length === 0 && lineage.length === 0 && !canChange) {
+    return bare ? <p className={small}>Two rounds of changes are included within 14 days of your first look.</p> : null;
+  }
 
-  return (
-    <Card as="section">
-      <CardHeader>
-        <CardTitle>Revisions</CardTitle>
-        {allowance && (
-          <span className={small}>
-            {allowance.used} of {allowance.included} rounds used
-          </span>
-        )}
-      </CardHeader>
-      <CardBody>
+  const body = (
+    <>
         {parent && (
           <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)]">
             A change to{" "}
@@ -161,7 +157,32 @@ export async function RevisionsPanel({
             )}
           </form>
         )}
-      </CardBody>
+    </>
+  );
+
+  if (bare) {
+    return (
+      <div className="space-y-2">
+        {allowance && (
+          <p className={small}>
+            {allowance.used} of {allowance.included} rounds used
+          </p>
+        )}
+        {body}
+      </div>
+    );
+  }
+  return (
+    <Card as="section">
+      <CardHeader>
+        <CardTitle>Revisions</CardTitle>
+        {allowance && (
+          <span className={small}>
+            {allowance.used} of {allowance.included} rounds used
+          </span>
+        )}
+      </CardHeader>
+      <CardBody>{body}</CardBody>
     </Card>
   );
 }

@@ -45,7 +45,7 @@ export { pinFromTap, pinStyle, pinProblems, crowdedPairs, BP_MAX } from "./order
 export type { Pin } from "./orders/pins";
 export { pushMessageFor, isNotificationKind, NOTIFICATION_KINDS } from "./notifications/push";
 export type { PushMessage, NotificationKind } from "./notifications/push";
-export { briefMinimumMissing, gradeBrief, qualitySummary } from "./orders/briefQuality";
+export { briefMinimumMissing, draftProgress, gradeBrief, qualitySummary } from "./orders/briefQuality";
 export { briefName, briefRows, productWord } from "./orders/briefRows";
 export type { BriefRow } from "./orders/briefRows";
 export type { BriefQuality, BriefGap, BriefGrade, BriefContext, BriefSize, GapSeverity, MinimumGap } from "./orders/briefQuality";
@@ -127,7 +127,8 @@ export {
   isTimeZone,
 } from "./time/format";
 export type { Remaining } from "./time/remaining";
-export { clientTab, clientNextStep, clientStepsDone, CLIENT_STEPS } from "./orders/clientView";
+export { clientTab, clientNextStep, clientStepsDone, firstLookHours, whatYouGet, CLIENT_STEPS } from "./orders/clientView";
+export type { ClientStepContext } from "./orders/clientView";
 export type { ClientTab, ClientStep } from "./orders/clientView";
 export { jobTab, isOpenJob, jobState, minutesWord, jobClockDue, qcPayoutPaise, rupeesWord, loadWord } from "./work/view";
 export type { JobTab } from "./work/view";

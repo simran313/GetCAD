@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { briefMinimumMissing, gradeBrief, qualitySummary, type BriefContext } from "./briefQuality";
+import { briefMinimumMissing, draftProgress, gradeBrief, qualitySummary, type BriefContext } from "./briefQuality";
 import { mmToMicrons, type OrderSpecInput } from "./spec";
 
 /** A brief with every required answer given and nothing left to guess. */
@@ -210,5 +210,19 @@ describe("the minimum to send matches review (brief_missing)", () => {
     const q = gradeBrief(PERFECT, size({}));
     expect(q.gaps.map((g) => g.field)).toContain("size");
     expect(q.grade).toBe("Incomplete");
+  });
+});
+
+describe("draftProgress (draft rows)", () => {
+  const size = { ringSize: null };
+  it("counts the step a draft is stuck on", () => {
+    expect(draftProgress(null, { referenceImageCount: 0, service: "cad", size })).toBe("Step 1 of 4");
+    expect(draftProgress("RING", { referenceImageCount: 0, service: "cad", size })).toBe("Step 1 of 4");
+    expect(draftProgress("RING", { referenceImageCount: 1, service: "cad", size })).toBe("Step 3 of 4");
+    expect(draftProgress("RING", { referenceImageCount: 1, service: "cad", size: { ringSize: "US 7" } })).toBe("Ready to send");
+  });
+  it("gives renders three steps and no size", () => {
+    expect(draftProgress(null, { referenceImageCount: 0, service: "render", size })).toBe("Step 1 of 3");
+    expect(draftProgress("RING", { referenceImageCount: 1, service: "render", size })).toBe("Ready to send");
   });
 });

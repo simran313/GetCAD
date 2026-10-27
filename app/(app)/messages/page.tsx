@@ -14,9 +14,8 @@ export default async function MessagesPage() {
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
   await supabase.rpc("ensure_self");
-  const [conversations, { data: me }] = await Promise.all([
-    loadConversations(supabase),
-    supabase.from("users").select("role").maybeSingle(),
-  ]);
-  return <MessagesView conversations={conversations} open={null} role={(me as { role: string } | null)?.role ?? "CLIENT"} />;
+  const { data: me } = await supabase.from("users").select("role").maybeSingle();
+  const role = (me as { role: string } | null)?.role ?? "CLIENT";
+  const conversations = await loadConversations(supabase, role);
+  return <MessagesView conversations={conversations} open={null} role={role} />;
 }

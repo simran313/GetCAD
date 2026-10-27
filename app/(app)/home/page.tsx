@@ -8,7 +8,11 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrustLine } from "@/components/trust-line";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
+import { draftProgress, formatRelative } from "@/core";
+import { viewerZone } from "@/lib/time/zone";
 import { loadClientOrders } from "@/lib/client/orders";
+
+import { loadConversations } from "../messages/load";
 
 import { markNotificationsReadAction } from "./actions";
 import { ClientHome } from "./ClientHome";
@@ -29,19 +33,12 @@ interface NotificationRow {
   created_at: string;
 }
 
-function timeAgo(iso: string): string {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
-}
-
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
   const supabase = await createUserSupabaseClient();
+  const tz = await viewerZone();
 
   // Audited self-onboarding: creates this user's row (and a USER_CREATED audit
   // entry) on first visit; idempotent thereafter. Identity comes from the
@@ -61,26 +58,49 @@ export default async function DashboardPage() {
       .select("business_name, legal_name")
       .maybeSingle();
     if (!profile) redirect("/welcome");
-    const [orders, credits, unread] = await Promise.all([
+    const [orders, credits, conversations] = await Promise.all([
       loadClientOrders(supabase),
       supabase.from("client_credits").select("status, amount_cents, decided_amount_cents"),
-      supabase
-        .from("notifications")
-        .select("order_id, created_at")
-        .eq("kind", "MESSAGE")
-        .is("read_at", null)
-        .order("created_at", { ascending: false })
-        .limit(5),
+      loadConversations(supabase, "CLIENT"),
     ]);
     const creditCents = ((credits.data ?? []) as { status: string; amount_cents: number; decided_amount_cents: number | null }[])
       .filter((c) => c.status === "apply_next" || c.status === "partial")
       .reduce((s, c) => s + (c.decided_amount_cents ?? c.amount_cents), 0);
+    // The newest draft, as one row: its name and the step it is on.
+    const draftOrder = orders.find((o) => o.status === "DRAFT");
+    let draft: { id: string; name: string; progress: string } | null = null;
+    if (draftOrder) {
+      const [{ data: spec }, { count }] = await Promise.all([
+        supabase
+          .from("order_specs")
+          .select("product, ring_size, inner_circumference_um, inner_diameter_um, length_um")
+          .eq("order_id", draftOrder.id)
+          .maybeSingle(),
+        supabase.from("order_reference_images").select("id", { count: "exact", head: true }).eq("order_id", draftOrder.id),
+      ]);
+      const sp = spec as { product: string | null; ring_size: string | null; inner_circumference_um: number | null; inner_diameter_um: number | null; length_um: number | null } | null;
+      draft = {
+        id: draftOrder.id,
+        name: draftOrder.title,
+        progress: draftProgress(sp?.product, {
+          referenceImageCount: count ?? 0,
+          service: draftOrder.service,
+          size: {
+            ringSize: sp?.ring_size,
+            innerCircumferenceUm: sp?.inner_circumference_um,
+            innerDiameterUm: sp?.inner_diameter_um,
+            lengthUm: sp?.length_um,
+          },
+        }),
+      };
+    }
     return (
       <ClientHome
         name={(profile as { business_name: string | null; legal_name: string }).business_name ?? (profile as { legal_name: string }).legal_name}
         orders={orders}
         creditCents={creditCents}
-        unreadMessages={(unread.data ?? []) as { order_id: string | null; created_at: string }[]}
+        conversations={conversations}
+        draft={draft}
       />
     );
   }
@@ -243,7 +263,7 @@ export default async function DashboardPage() {
                   </span>
                 )}
                 <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">
-                  {timeAgo(n.created_at)}
+                  {formatRelative(n.created_at, tz)}
                 </span>
               </span>
             </li>

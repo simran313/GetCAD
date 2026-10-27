@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { whatYouGet } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -68,10 +69,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
           </CardHeader>
           <CardBody className="space-y-3 text-[length:var(--fs-3)]">
             <p>{serviceWord(o.service)} · {productWord((spec as { product?: string } | null)?.product ?? o.product_type)}</p>
-            <p className="text-muted-foreground">
-              {o.service === "render" ? "Rendered views to approve." : "Renders to approve, then STL, 3DM and a summary sheet."} Two
-              rounds of changes are included within 14 days of your first look.
-            </p>
+            <p className="text-muted-foreground">{whatYouGet(o.service)}</p>
             <p className="text-muted-foreground">{promise}</p>
             <p className="text-muted-foreground">Once you pay, we start as soon as your brief is confirmed. If we can&apos;t deliver, the money comes back to you.</p>
           </CardBody>
