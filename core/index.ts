@@ -51,7 +51,7 @@ export type { BriefRow } from "./orders/briefRows";
 export type { BriefQuality, BriefGap, BriefGrade, BriefContext, BriefSize, GapSeverity, MinimumGap } from "./orders/briefQuality";
 export { ORDER_STATUS_META, statusMeta, statusKind } from "./orders/status";
 export type { StatusTone, StatusMeta, StatusKind } from "./orders/status";
-export { buildTimeline } from "./orders/timeline";
+export { buildTimeline, chatMilestones } from "./orders/timeline";
 export type { TimelineRawRow, TimelineStep, QcOutcome } from "./orders/timeline";
 export {
   sanitizeUpload,

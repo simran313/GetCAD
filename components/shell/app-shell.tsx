@@ -57,6 +57,8 @@ export function AppShell({
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [palette, setPalette] = useState(false);
   const active = activeTabKey(pathname, tabs);
+  // An open conversation is a full screen on a phone (Phase 10c): no bars.
+  const immersive = /^\/messages\/[^/]+$/.test(pathname);
   const groups = sidebarGroups(kind, tabs);
   const bar = bottomBar(kind, tabs);
   const home = tabs[0]?.href ?? "/home";
@@ -127,6 +129,7 @@ export function AppShell({
           className={cn(
             "sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur",
             kind !== "client" && "md:hidden",
+            immersive && "max-md:hidden",
           )}
         >
           <div className="flex h-14 items-center gap-2 px-4 md:px-8">
@@ -178,51 +181,53 @@ export function AppShell({
           </div>
         </header>
 
-        <div id="content" tabIndex={-1} className="pb-[calc(88px+env(safe-area-inset-bottom))] outline-none md:pb-0">
+        <div id="content" tabIndex={-1} className={cn("outline-none md:pb-0", !immersive && "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
           {children}
         </div>
       </div>
 
-      <MobileBottomNav
-        activeKey={bar.visible.some((v) => v.key === active) ? active : bar.more.some((m) => m.key === active) ? "more" : active}
-        create={bar.create}
-        items={[
-          ...bar.visible,
-          {
-            key: "more",
-            label: "More",
-            href: "#more",
-            icon: <MoreHorizontal />,
-            render: (cls: string) => (
-              <Sheet>
-                <SheetTrigger className={cls} aria-current={bar.more.some((m) => m.key === active) ? "page" : undefined}>
-                  <MoreHorizontal />
-                  <span>More</span>
-                </SheetTrigger>
-                <SheetContent title="More" side="bottom">
-                  <nav aria-label="More" className="-mx-2">
-                    {[...bar.more, ...(bar.more.some((m) => m.key === "account") ? [] : [{ key: "account", label: "Account", href: "/account", icon: navIcon("account") }])].map((m) => (
-                      <SheetClose asChild key={m.key}>
-                        <Link
-                          href={m.href}
-                          aria-current={m.key === active ? "page" : undefined}
-                          className="flex min-h-12 items-center gap-3 rounded-[var(--r-sm)] px-2 text-[17px] hover:bg-accent [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-muted-foreground"
-                        >
-                          {m.icon}
-                          {m.label}
-                        </Link>
-                      </SheetClose>
-                    ))}
-                    <button type="button" onClick={onSignOut} className="flex min-h-12 w-full items-center gap-3 rounded-[var(--r-sm)] px-2 text-[17px] hover:bg-accent">
-                      <LogOut className="h-5 w-5 text-muted-foreground" /> Sign out
-                    </button>
-                  </nav>
-                </SheetContent>
-              </Sheet>
-            ),
-          },
-        ]}
-      />
+      {!immersive && (
+        <MobileBottomNav
+          activeKey={bar.visible.some((v) => v.key === active) ? active : bar.more.some((m) => m.key === active) ? "more" : active}
+          create={bar.create}
+          items={[
+            ...bar.visible,
+            {
+              key: "more",
+              label: "More",
+              href: "#more",
+              icon: <MoreHorizontal />,
+              render: (cls: string) => (
+                <Sheet>
+                  <SheetTrigger className={cls} aria-current={bar.more.some((m) => m.key === active) ? "page" : undefined}>
+                    <MoreHorizontal />
+                    <span>More</span>
+                  </SheetTrigger>
+                  <SheetContent title="More" side="bottom">
+                    <nav aria-label="More" className="-mx-2">
+                      {[...bar.more, ...(bar.more.some((m) => m.key === "account") ? [] : [{ key: "account", label: "Account", href: "/account", icon: navIcon("account") }])].map((m) => (
+                        <SheetClose asChild key={m.key}>
+                          <Link
+                            href={m.href}
+                            aria-current={m.key === active ? "page" : undefined}
+                            className="flex min-h-12 items-center gap-3 rounded-[var(--r-sm)] px-2 text-[17px] hover:bg-accent [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-muted-foreground"
+                          >
+                            {m.icon}
+                            {m.label}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                      <button type="button" onClick={onSignOut} className="flex min-h-12 w-full items-center gap-3 rounded-[var(--r-sm)] px-2 text-[17px] hover:bg-accent">
+                        <LogOut className="h-5 w-5 text-muted-foreground" /> Sign out
+                      </button>
+                    </nav>
+                  </SheetContent>
+                </Sheet>
+              ),
+            },
+          ]}
+        />
+      )}
 
       <CommandPalette open={palette} onOpenChange={setPalette} groups={paletteGroups} />
       <Toaster />

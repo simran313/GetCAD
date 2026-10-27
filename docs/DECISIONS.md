@@ -148,7 +148,7 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 - **Pod routing:** when an order is paid or confirmed and has no pod, it joins the pod automatically if exactly one pod has a pod lead. With several pods, admin chooses the pod from the queue.
 - **Account managers:** admin can name one team member as each client's account manager. There is no business check before pricing: a new client is never held back from a quote.
 - **Messaging:**
-  - Client ↔ team thread: admin and pod lead appear as "Team · first name".
+  - Client ↔ team thread: to the client, everyone on the team is "Your team" (owner decision, October 2026; the client screens never show a staff name). Staff reading the thread still see "Team · first name" for each other.
   - Designer ↔ pod lead/admin internal thread.
   - Designers can never post in client threads (enforced by RLS).
 

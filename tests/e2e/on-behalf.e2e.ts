@@ -81,6 +81,18 @@ test("an on-behalf order without a screenshot is refused; with one, the client s
   await expect(client.locator(`a[href^="/orders/${orderId}"]`).filter({ visible: true }).first()).toBeVisible();
   await client.goto(`/orders/${orderId}`);
   await expect(client.getByText("Halo ring like the photo", { exact: false }).first()).toBeVisible();
+
+  // Phase 10c: the chat. The team speaks as "Your team"; a reply shows at once and is kept.
+  await client.goto(`/messages/${orderId}`);
+  const log = client.getByRole("log", { name: "Messages" });
+  await expect(log.getByText("Halo ring like the photo", { exact: false })).toBeVisible();
+  await expect(log.getByText("Your team", { exact: true })).toBeVisible();
+  await client.getByLabel("Message", { exact: true }).fill("Thanks, that is the one.");
+  await client.getByRole("button", { name: "Send" }).click();
+  await expect(log.getByText("Thanks, that is the one.")).toBeVisible();
+  await client.reload();
+  await expect(client.getByRole("log", { name: "Messages" }).getByText("Thanks, that is the one.")).toBeVisible();
+  await expect(client.getByRole("log", { name: "Messages" }).getByText(/Team ·/)).toHaveCount(0);
   await client.context().close();
 });
 

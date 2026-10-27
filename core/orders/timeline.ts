@@ -110,3 +110,27 @@ export function buildTimeline(rows: TimelineRawRow[]): TimelineStep[] {
     };
   });
 }
+
+/**
+ * The events worth a line in a conversation (Phase 10c): what the client
+ * waits for or acts on. The working steps in between (assigned, submitted
+ * for QC, QC started, a QC send-back) stay on the full Timeline.
+ */
+const CHAT_MILESTONES = new Set([
+  "Submitted for quote",
+  "Quote issued",
+  "Payment received",
+  "Independent QC review: passed",
+  "Approved by client",
+  "Delivered",
+  "Cancelled",
+  "Refund issued to client",
+  "Dispute raised",
+  "Dispute resolved",
+  "Dispute resolved — returned for rework",
+  "Dispute resolved — refunded",
+]);
+
+export function chatMilestones(steps: TimelineStep[]): TimelineStep[] {
+  return steps.filter((s) => CHAT_MILESTONES.has(s.label));
+}
