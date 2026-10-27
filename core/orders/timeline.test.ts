@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTimeline, type TimelineRawRow } from "./timeline";
+import { buildTimeline, chatMilestones, type TimelineRawRow } from "./timeline";
 
 function row(overrides: Partial<TimelineRawRow>): TimelineRawRow {
   return {
@@ -88,5 +88,34 @@ describe("buildTimeline", () => {
     const steps = buildTimeline(rows);
     expect(steps.map((s) => s.id)).toEqual(["1", "2"]);
     for (const s of steps) expect(s).not.toHaveProperty("actorId");
+  });
+});
+
+describe("chatMilestones (events in a conversation)", () => {
+  const row = (seq: number, from: string | null, to: string): TimelineRawRow => ({
+    seq,
+    created_at: `2026-10-27T10:0${seq}:00Z`,
+    action: "ORDER_STATUS_CHANGED",
+    actor_role: "ADMIN",
+    from_status: from,
+    to_status: to,
+    amount: null,
+    detail: null,
+  });
+  it("keeps what the client waits for and drops the working steps", () => {
+    const steps = buildTimeline([
+      row(1, "DRAFT", "SUBMITTED"),
+      row(2, "PAYMENT_HELD", "ASSIGNED"),
+      row(3, "IN_PROGRESS", "DESIGNER_SUBMITTED"),
+      row(4, "DESIGNER_SUBMITTED", "QC_REVIEW"),
+      row(5, "QC_REVIEW", "REVISION_REQUESTED"),
+      row(6, "QC_REVIEW", "CLIENT_PREVIEW"),
+      row(7, "CLIENT_PREVIEW", "APPROVED"),
+    ]);
+    expect(chatMilestones(steps).map((s) => s.label)).toEqual([
+      "Submitted for quote",
+      "Independent QC review: passed",
+      "Approved by client",
+    ]);
   });
 });

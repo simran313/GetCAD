@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { briefRows, buildTimeline, clientNextStep, productWord, type TimelineRawRow } from "@/core";
+import { briefRows, buildTimeline, chatMilestones, clientNextStep, productWord, type TimelineRawRow } from "@/core";
 import { formatMoney } from "@/lib/money";
 
 import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
@@ -96,7 +96,7 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
     attachments: (files.data ?? []) as AttachmentRow[],
     stamp: stamp.data == null ? null : String(stamp.data),
     unreadSince: ((unread.data ?? []) as { created_at: string }[])[0]?.created_at ?? null,
-    events: buildTimeline((timeline.data ?? []) as TimelineRawRow[]).map((e) => ({ id: e.id, label: e.label, at: e.createdAt })),
+    events: chatMilestones(buildTimeline((timeline.data ?? []) as TimelineRawRow[])).map((e) => ({ id: e.id, label: e.label, at: e.createdAt })),
     brief: s
       ? briefRows(s, { service, photos: 0, accents: (accents.data ?? []) as { quantity: number }[] })
           .filter((r) => r.key !== "photos" && r.value)
