@@ -39,7 +39,8 @@ export async function ClientHome({
 }) {
   const tz = await viewerZone();
   const needs = orders.filter((o) => clientTab(o.status) === "needs" && o.status !== "DRAFT");
-  const recent = orders.filter((o) => o.status !== "DRAFT").slice(0, 5);
+  // Recent orders: what is not already above.
+  const recent = orders.filter((o) => o.status !== "DRAFT" && !needs.includes(o)).slice(0, 5);
   const inProgress = orders.filter((o) => clientTab(o.status) === "progress" || clientTab(o.status) === "reopened");
   const approved = orders.filter((o) => clientTab(o.status) === "completed");
   const year = new Date().getFullYear();
@@ -47,7 +48,10 @@ export async function ClientHome({
     .filter((o) => o.paid_at && new Date(o.paid_at).getFullYear() === year)
     .reduce((s, o) => s + (o.price_total ?? 0), 0);
   // Unread first, then newest; three at most.
-  const inbox = [...conversations].sort((a, b) => Number(b.unread > 0) - Number(a.unread > 0)).slice(0, 3);
+  const inbox = conversations
+    .filter((c) => c.last_body)
+    .sort((a, b) => Number(b.unread > 0) - Number(a.unread > 0))
+    .slice(0, 3);
 
   const summary: [string, string, string][] = [
     [String(inProgress.length), inProgress.length === 1 ? "order in progress" : "orders in progress", "/orders"],
@@ -86,9 +90,7 @@ export async function ClientHome({
                     <li key={o.id} className={`${CARD} flex flex-col gap-4 p-[var(--s-5)] sm:flex-row sm:items-center`}>
                       <div className="min-w-0 flex-1">
                         <p className="text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">{step.headline}</p>
-                        <p className="mt-0.5 truncate text-[length:var(--fs-3)] text-muted-foreground">
-                          {[o.title, o.status === "QUOTED" ? price : null].filter(Boolean).join(" · ")}
-                        </p>
+                        <p className="mt-0.5 truncate text-[length:var(--fs-3)] text-muted-foreground">{o.title}</p>
                       </div>
                       {step.action && (
                         <Link

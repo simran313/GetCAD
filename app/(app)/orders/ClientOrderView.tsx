@@ -194,8 +194,6 @@ export async function ClientOrderView({
         )}
       </section>
 
-      {afterDelivery}
-
       {intake && <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -284,6 +282,8 @@ export async function ClientOrderView({
           </Link>
         </Fold>
       </div>
+
+      {afterDelivery}
 
       {step.action && <div className="h-20 md:hidden" aria-hidden />}
     </Page>
