@@ -122,8 +122,8 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-6">
           {note && (
             <Card as="section">
               <CardHeader>
@@ -211,7 +211,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           />
         </div>
 
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <Card as="section">
             <CardHeader>
               <CardTitle>Specification</CardTitle>

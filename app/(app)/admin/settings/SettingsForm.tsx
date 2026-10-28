@@ -181,14 +181,14 @@ export function SettingsForm({
               const err = errors[k];
               const id = `set-${k}`;
               return (
-                <li key={k} className="grid gap-2 py-4 sm:grid-cols-[1fr_15rem] sm:items-center sm:gap-6">
+                <li key={k} className="grid grid-cols-1 gap-2 py-4 sm:grid-cols-[minmax(0,1fr)_15rem] sm:items-center sm:gap-6">
                   <div className="min-w-0">
                     <label htmlFor={id} className="text-[length:var(--fs-3)] font-medium leading-[var(--lh-3)]">
                       {f.label}
                     </label>
                     {f.help && <p className="text-[length:var(--fs-2)] text-muted-foreground">{f.help}</p>}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <InputWithUnit
                       id={id}
                       name={k}

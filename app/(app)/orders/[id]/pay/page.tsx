@@ -61,7 +61,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
     <Page>
       <PageHeader eyebrow={`Order · ${o.display_ref ?? ""}`} title={`Pay ${price}`} description={title} />
 
-      <div className="grid gap-6 md:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
             <CardTitle>What you get</CardTitle>
