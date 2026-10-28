@@ -71,7 +71,7 @@ export async function ClientHome({
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-8">
           <section aria-labelledby="needs-title" className="space-y-3">
             <h2 id="needs-title" className="text-[length:var(--fs-5)] leading-[var(--lh-5)]">

@@ -116,7 +116,7 @@ export default async function QcReviewPage({
         {job.sla_due_at && job.status === "QC_REVIEW" && <Timer dueAt={job.sla_due_at} label="First look due" />}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
           <Card as="section">
             <CardHeader>
@@ -189,7 +189,7 @@ export default async function QcReviewPage({
                   {job.price_total ? ` (${formatMoney(job.price_total, job.currency ?? "USD")} order)` : ""}
                 </span>
               </CardHeader>
-              <CardBody className="grid gap-4 md:grid-cols-[1fr_auto]">
+              <CardBody className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
                 <form action={qcDecisionAction} className="space-y-2">
                   <input type="hidden" name="order_id" value={id} />
                   <input type="hidden" name="outcome" value="REVISION" />

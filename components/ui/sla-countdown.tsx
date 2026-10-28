@@ -50,7 +50,9 @@ export function SlaCountdown({ dueAt, className, label = "First look" }: { dueAt
       title={dueAt ? `${label} due ${formatDateTime(dueAt, zone)}` : undefined}
     >
       <Clock className="h-3.5 w-3.5" aria-hidden />
-      <span>
+      {/* The server and the browser read the clock moments apart: across a
+          minute the words differ, which is expected, not a fault. */}
+      <span suppressHydrationWarning>
         <span className="sr-only">{label}: </span>
         {s.text}
       </span>

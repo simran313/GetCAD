@@ -713,7 +713,7 @@ export async function OrderDetail({
   // design groups them by the role that acts (Ops, Sales, Finance).
   if (layout === "team") {
     return (
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0 space-y-4">
           {intakeEl}
           {revisionsEl}
@@ -721,7 +721,7 @@ export async function OrderDetail({
           {filesEl}
           {timelineEl}
         </div>
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           {teamTop}
           {disputeEl}
           {slaEl}

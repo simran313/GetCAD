@@ -136,7 +136,7 @@ export default async function BillingPage() {
         ]}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="space-y-3">
           <SectionLabel>Money movements · newest first</SectionLabel>
           <ResponsiveDataList

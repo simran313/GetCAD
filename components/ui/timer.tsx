@@ -20,7 +20,8 @@ export function Timer({ dueAt, label }: { dueAt: string; label?: string }) {
   if (!r) return null;
   return (
     <StatusTag kind={r.overdue || r.soon ? "needs" : "active"}>
-      <time dateTime={dueAt}>
+      {/* Server and browser read the clock moments apart; across a minute the words differ. */}
+      <time dateTime={dueAt} suppressHydrationWarning>
         {label ? `${label} · ` : ""}
         {r.text}
       </time>
