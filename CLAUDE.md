@@ -7,6 +7,7 @@ Read docs/DECISIONS.md first. If two docs disagree, DECISIONS.md wins; if still 
 - Source of truth: `docs/DECISIONS.md`, then `docs/TCP-BUILD-SPEC.md` + `docs/SPEC-ADDENDUM.md`.
 - Build plan and known conflicts: `docs/IMPLEMENTATION-PLAN.md`.
 - Design: the redesign (October 2026) is current — tokens in `app/globals.css`, components in `components/ui` and `components/shell`, live examples at `/design-preview`, page-by-page record in `docs/redesign/BEFORE-AFTER.md`, screenshots of every route on the `design-qa` branch (`after/`). The older mockups in `docs/design/screens/` are superseded where they differ; use them only for screens the redesign did not touch.
+- Speed: `docs/PERFORMANCE.md` (budgets, how it is measured, before/after, what is left); measured by `tests/e2e/zz-speed.e2e.ts`.
 - Website copy: `docs/marketing/LANDING-COPY.md` (home: `docs/redesign/HOMEPAGE-COPY.md`); claims in `content/claims.ts`.
 
 ## Commands

@@ -1,16 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 
-import { buttonVariants } from "@/components/ui/button";
-import { POST_AUTH_PATH } from "@/config/auth-redirects";
 import { c, showClaim } from "@/content/claims";
-import { cn } from "@/lib/utils";
 
+import { HeaderAccount } from "./header-account";
 import { MobileMenu } from "./mobile-menu";
 
-// The website's pages (redesign step 4a). Signed in or not is read on the
-// server: the website does not load Clerk's browser script (see
-// components/auth/auth-provider), so the account menu lives in the app only. Guarantee, Contact and Become a
+// The website's pages (redesign step 4a). Signed in or not is read in the
+// browser (HeaderAccount) so the pages stay static (Phase 12); the website
+// does not load Clerk's browser script (see components/auth/auth-provider),
+// so the account menu lives in the app only. Guarantee, Contact and Become a
 // designer stay one tap away in the footer and the phone menu.
 const NAV = [
   { href: "/how-it-works", label: "How it works" },
@@ -19,8 +17,7 @@ const NAV = [
   { href: "/faq", label: "FAQ" },
 ];
 
-export async function MarketingHeader() {
-  const { userId } = await auth();
+export function MarketingHeader() {
   const phone = c("LIVE_CALL_PHONE");
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
@@ -36,27 +33,7 @@ export async function MarketingHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
-          {userId ? (
-            <Link href={POST_AUTH_PATH} className={buttonVariants({ size: "sm" })}>
-              Open the app
-            </Link>
-          ) : (
-            <>
-              <Link href="/sign-in" className="hidden px-3 text-[15px] text-muted-foreground hover:text-foreground lg:inline">
-                Sign in
-              </Link>
-              <a
-                href={phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : "/contact"}
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "hidden lg:inline-flex")}
-              >
-                Talk to us live
-              </a>
-              <Link href="/sign-up" className={cn(buttonVariants({ size: "sm" }), "whitespace-nowrap")}>
-                <span className="sm:hidden">Start a design</span>
-                <span className="hidden sm:inline">Start your first design</span>
-              </Link>
-            </>
-          )}
+          <HeaderAccount phone={phone} />
           <MobileMenu nav={NAV} phone={phone} hours={showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours"} />
         </div>
       </div>

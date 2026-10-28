@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { escrowSign } from "@/core";
@@ -8,6 +7,7 @@ import { ErrorPanel } from "@/components/error-panel";
 import { TrustLine } from "@/components/trust-line";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IntentLink } from "@/components/ui/intent-link";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { loadClientOrders } from "@/lib/client/orders";
@@ -132,7 +132,7 @@ export default async function OrdersPage({
               const held = heldFor(o.id);
               return (
                 <li key={o.id}>
-                  <Link
+                  <IntentLink
                     href={`/orders/${o.id}`}
                     className="flex min-h-[var(--ctl)] items-center gap-4 px-4 py-3 transition-colors duration-[var(--dur-fast)] hover:bg-accent"
                   >
@@ -162,7 +162,7 @@ export default async function OrdersPage({
                     <span className="shrink-0 text-muted-foreground" aria-hidden>
                       →
                     </span>
-                  </Link>
+                  </IntentLink>
                 </li>
               );
             })}

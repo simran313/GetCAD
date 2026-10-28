@@ -68,6 +68,14 @@ const nextConfig = {
     ];
   },
   experimental: {
+    // Phase 12: a portal page seen (or prefetched) in the last 30 seconds
+    // opens from the browser's memory instead of asking the server again,
+    // so moving between tabs and going Back is instant. Bounded on purpose:
+    // anything saved through a server action clears this memory at once
+    // (revalidatePath), the order and chat pages keep checking for news
+    // (AutoRefresh), and signing out reloads the page so nothing is kept
+    // for the next person on the device (components/auth/sign-out).
+    staleTimes: { dynamic: 30, static: 60 },
     serverActions: {
       bodySizeLimit: `${UPLOAD_BODY_LIMIT_MB}mb`,
       allowedOrigins: [...devOrigins, ...extraOrigins],

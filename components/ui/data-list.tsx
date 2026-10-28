@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
+import { IntentLink } from "./intent-link";
+
 /**
  * One list, two shapes (redesign): a table at desk width, stacked cards on a
  * phone. Columns say where they go on a card (title, meta, badge, action, or
@@ -24,6 +26,7 @@ export function ResponsiveDataList<T>({
   rowHref,
   linkKey,
   onRowClick,
+  prefetchOnTouch,
   empty,
   caption,
 }: {
@@ -35,11 +38,19 @@ export function ResponsiveDataList<T>({
   linkKey?: string;
   /** Open the row in place (a detail drawer) instead of following a link. */
   onRowClick?: (row: T) => void;
+  /**
+   * Load the row's page the moment a finger or the pointer lands on it
+   * (Phase 12), so it opens at once. Only for rows whose pages read and
+   * never write while rendering (orders, jobs); not for lookups that are
+   * recorded (Access).
+   */
+  prefetchOnTouch?: boolean;
   empty?: React.ReactNode;
   caption?: string;
 }) {
   if (rows.length === 0 && empty) return <>{empty}</>;
   const linkCol = linkKey ?? columns[0]?.key;
+  const RowLink = prefetchOnTouch ? IntentLink : Link;
   const by = (place: Column<T>["card"]) => columns.filter((c) => (c.card ?? "meta") === place);
   return (
     <>
@@ -78,9 +89,9 @@ export function ResponsiveDataList<T>({
                       )}
                     >
                       {c.key === linkCol && href ? (
-                        <Link href={href} className="after:absolute after:inset-0 focus-visible:shadow-none focus-visible:after:rounded-[var(--r-xs)] focus-visible:after:shadow-[inset_0_0_0_2px_hsl(var(--foreground))]">
+                        <RowLink href={href} className="after:absolute after:inset-0 focus-visible:shadow-none focus-visible:after:rounded-[var(--r-xs)] focus-visible:after:shadow-[inset_0_0_0_2px_hsl(var(--foreground))]">
                           {c.cell(row)}
-                        </Link>
+                        </RowLink>
                       ) : c.key === linkCol && onRowClick ? (
                         <button type="button" onClick={() => onRowClick(row)} className="w-full text-left after:absolute after:inset-0 focus-visible:shadow-none focus-visible:after:rounded-[var(--r-xs)] focus-visible:after:shadow-[inset_0_0_0_2px_hsl(var(--foreground))]">
                           {c.cell(row)}
@@ -136,9 +147,9 @@ export function ResponsiveDataList<T>({
           return (
             <li key={rowKey(row)} className="relative rounded-[var(--r-lg)] border border-border bg-card p-[var(--s-4)] shadow-[var(--e-1)]">
               {href ? (
-                <Link href={href} className="block">
+                <RowLink href={href} className="block">
                   {body}
-                </Link>
+                </RowLink>
               ) : (
                 body
               )}

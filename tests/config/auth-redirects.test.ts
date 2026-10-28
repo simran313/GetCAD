@@ -74,21 +74,26 @@ describe("every place sign-in can begin", () => {
 });
 
 describe("the marketing header", () => {
-  const header = read("components/marketing/marketing-header.tsx");
+  const header = read("components/marketing/marketing-header.tsx") + read("components/marketing/header-account.tsx");
 
   // Landing back here after signing in was half the bug; a header that still
   // says "Sign in" was the other half, and on its own it is enough to convince
   // someone the sign-in did not work.
-  // The website does not load Clerk in the browser (Lighthouse), so the
-  // header reads the session on the server.
+  // The website does not load Clerk in the browser (Lighthouse), and its
+  // pages are static (Phase 12), so the header reads Clerk's signed-in
+  // cookie in the browser. tests/e2e/session.e2e.ts checks it in a browser.
   it("offers a way into the app once you are signed in", () => {
-    expect(header).toContain("await auth()");
+    expect(header).toContain("__client_uat");
     expect(header).toContain("POST_AUTH_PATH");
   });
 
   it("still offers sign-in to visitors who are not", () => {
     expect(header).toContain("/sign-in");
     expect(header).toContain("/sign-up");
+  });
+
+  it("does not make the website's pages render on every visit", () => {
+    expect(read("components/marketing/marketing-header.tsx")).not.toContain("auth()");
   });
 });
 

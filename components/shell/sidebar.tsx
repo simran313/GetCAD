@@ -6,6 +6,8 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
+import { prefetchTab } from "./nav-config";
+
 /**
  * The portal sidebar (redesign): 240px, grouped, one unique icon per
  * destination, exactly one active row, collapsible to icons (the parent keeps
@@ -105,6 +107,7 @@ export function Sidebar({
                   <li key={item.key}>
                     <Link
                       href={item.href}
+                      prefetch={prefetchTab(item.href)}
                       aria-current={active ? "page" : undefined}
                       title={collapsed ? item.label : undefined}
                       className={cn(

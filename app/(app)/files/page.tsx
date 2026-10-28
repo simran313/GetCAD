@@ -23,27 +23,29 @@ export default async function FilesPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = await createUserSupabaseClient();
-  const { data: me } = await supabase.from("users").select("role").maybeSingle();
+  // Three rounds to the database, not five (Phase 12): the role does not wait
+  // for the orders, and the fingerprints do not wait for the file list.
+  const [{ data: me }, allOrders] = await Promise.all([supabase.from("users").select("role").maybeSingle(), loadClientOrders(supabase)]);
   const role = me?.role ?? "CLIENT";
 
-  const orders = (await loadClientOrders(supabase)).filter((o) => o.status !== "DRAFT");
+  const orders = allOrders.filter((o) => o.status !== "DRAFT");
   const ids = orders.map((o) => o.id);
-  const [{ data: versions }, { data: names }] = ids.length
-    ? await Promise.all([
-        supabase
+  const [{ data: versions }, { data: names }, fpRows] = await Promise.all([
+    ids.length
+      ? supabase
           .from("file_versions")
           .select("id, order_id, kind, content_type, size_bytes, uploader_party, version_no")
           .in("order_id", ids)
-          .order("version_no", { ascending: false }),
-        supabase.from("deliverables").select("file_version_id, file_name").in("order_id", ids),
-      ])
-    : [{ data: [] }, { data: [] }];
-  // Fingerprints (A3, 0050) for orders past QC, and their documents.
-  const fpRows = await Promise.all(
-    orders
-      .filter((o) => POST_QC.includes(o.status))
-      .map(async (o) => ((await supabase.rpc("order_fingerprints", { p_order_id: o.id })).data ?? []) as { file_version_id: string; sha256: string }[]),
-  );
+          .order("version_no", { ascending: false })
+      : { data: [] },
+    ids.length ? supabase.from("deliverables").select("file_version_id, file_name").in("order_id", ids) : { data: [] },
+    // Fingerprints (A3, 0050) for orders past QC, and their documents.
+    Promise.all(
+      orders
+        .filter((o) => POST_QC.includes(o.status))
+        .map(async (o) => ((await supabase.rpc("order_fingerprints", { p_order_id: o.id })).data ?? []) as { file_version_id: string; sha256: string }[]),
+    ),
+  ]);
   const shaOf = new Map(fpRows.flat().map((r) => [r.file_version_id, r.sha256]));
   const nameOf = new Map(((names ?? []) as { file_version_id: string; file_name: string }[]).map((n) => [n.file_version_id, n.file_name]));
   const byOrder = new Map<string, FileVersionRow[]>();

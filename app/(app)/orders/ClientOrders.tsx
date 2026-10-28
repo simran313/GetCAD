@@ -141,6 +141,7 @@ export async function ClientOrders({ orders, unread, tab }: { orders: ClientOrde
         columns={columns}
         rows={shown}
         rowKey={(o) => o.id}
+        prefetchOnTouch
         rowHref={(o) => `/orders/${o.id}`}
         empty={
           <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">

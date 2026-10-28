@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { draftProgress, formatDay, formatRelative } from "@/core";
+import { SubmitPlain } from "@/components/ui/button";
 import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
 import { briefName, loadClientOrders } from "@/lib/client/orders";
@@ -93,7 +94,7 @@ export default async function NewOrderPage() {
         ].map(({ service, title, sub, Icon }) => (
           <form key={service} action={startBriefAction}>
             <input type="hidden" name="service" value={service} />
-            <button type="submit" className={`${TILE} flex w-full items-center gap-4 text-left transition-colors hover:border-foreground`}>
+            <SubmitPlain className={`${TILE} flex w-full items-center gap-4 text-left transition-colors hover:border-foreground`}>
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--r-md)] bg-subtle" aria-hidden>
                 <Icon className="h-6 w-6" />
               </span>
@@ -102,7 +103,7 @@ export default async function NewOrderPage() {
                 <span className="block text-[length:var(--fs-3)] text-muted-foreground">{sub}</span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-            </button>
+            </SubmitPlain>
           </form>
         ))}
       </div>
@@ -119,7 +120,7 @@ export default async function NewOrderPage() {
                 <li key={o.id}>
                   <form action={duplicateBriefAction}>
                     <input type="hidden" name="from_order_id" value={o.id} />
-                    <button type="submit" className={ROW}>
+                    <SubmitPlain className={ROW}>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{o.title}</span>
                         <span className="block truncate text-[length:var(--fs-2)] text-muted-foreground">
@@ -127,7 +128,7 @@ export default async function NewOrderPage() {
                         </span>
                       </span>
                       <Copy className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                    </button>
+                    </SubmitPlain>
                   </form>
                 </li>
               );

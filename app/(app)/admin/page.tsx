@@ -244,6 +244,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
           columns={columns}
           rows={ranked}
           rowKey={(r) => r.job.order_id}
+          prefetchOnTouch
           rowHref={(r) => `/orders/${r.job.order_id}`}
           linkKey="order"
           empty={

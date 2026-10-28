@@ -149,6 +149,7 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
         columns={columns}
         rows={shown}
         rowKey={(j) => j.order_id}
+        prefetchOnTouch
         rowHref={(j) => `/work/${j.order_id}`}
         linkKey="job"
         empty={

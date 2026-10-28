@@ -1,6 +1,7 @@
-import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+
+import { IntentLink } from "./intent-link";
 
 /**
  * One row of a list or table (docs/design: orders, jobs, queues). A mono
@@ -45,10 +46,12 @@ export function ListRow({
     href && "transition-colors hover:bg-subtle",
     className,
   );
+  // Every row opens an order or a job, which only read while rendering:
+  // loaded as soon as a finger or the pointer lands on it (Phase 12).
   return href ? (
-    <Link href={href} className={cls}>
+    <IntentLink href={href} className={cls}>
       {body}
-    </Link>
+    </IntentLink>
   ) : (
     <div className={cls}>{body}</div>
   );
