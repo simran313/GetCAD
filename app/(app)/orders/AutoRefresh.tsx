@@ -8,8 +8,9 @@ import { useEffect, useRef } from "react";
  * is visible, it asks the server one cheap question — has anything on this
  * order changed? (/api/orders/[id]/stamp) — and re-reads the page only when
  * the answer is yes. A new message or status change shows up within about
- * five seconds; an idle page costs one tiny request each time. Server data
- * only: anything typed into a form survives a refresh.
+ * five seconds (two on an open conversation, Phase 12); an idle page costs
+ * one tiny request each time. Server data only: anything typed into a form
+ * survives a refresh.
  */
 export function AutoRefresh({ orderId, stamp, seconds = 5 }: { orderId: string; stamp: string | null; seconds?: number }) {
   const router = useRouter();
@@ -41,10 +42,13 @@ export function AutoRefresh({ orderId, stamp, seconds = 5 }: { orderId: string; 
       }
     };
     const timer = window.setInterval(check, seconds * 1000);
+    // Back to the tab or the window: ask at once rather than at the next tick.
     document.addEventListener("visibilitychange", check);
+    window.addEventListener("focus", check);
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("focus", check);
     };
   }, [orderId, router, seconds]);
 
