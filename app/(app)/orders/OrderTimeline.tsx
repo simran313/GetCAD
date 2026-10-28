@@ -65,7 +65,7 @@ export async function OrderTimeline({
               aria-hidden
             />
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)]">
+              <p className="min-w-0 break-words text-[length:var(--fs-3)] leading-[var(--lh-3)]">
                 {step.label}
                 {step.amount != null && (
                   <span className="tabular ml-1.5 font-mono text-muted-foreground">

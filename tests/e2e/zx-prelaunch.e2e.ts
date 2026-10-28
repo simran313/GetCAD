@@ -55,11 +55,22 @@ async function walk(page: Page, who: Persona, start: string) {
 
     const check = await page.evaluate(() => {
       const wide = document.documentElement.scrollWidth > window.innerWidth + 1;
+      // The element that is too wide, not its containers: the innermost one
+      // past the edge, unless a parent clips or scrolls it (that is by design).
+      const past = (el: Element) => el.getBoundingClientRect().right > window.innerWidth + 1;
+      const clipped = (el: Element) => {
+        for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+          const s = getComputedStyle(p);
+          if (s.position === "fixed" || s.overflowX !== "visible") return true;
+        }
+        return false;
+      };
+      const bad = (el: Element) => past(el) && getComputedStyle(el).position !== "fixed" && !clipped(el);
       const offenders = wide
         ? [...document.querySelectorAll<HTMLElement>("body *")]
-            .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1 && getComputedStyle(el).position !== "fixed")
+            .filter((el) => bad(el) && ![...el.children].some(bad))
             .slice(0, 3)
-            .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${[...el.classList].slice(0, 3).join(".")}`)
+            .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 4).join(".")} "${(el.textContent ?? "").trim().slice(0, 40)}" (${Math.round(el.getBoundingClientRect().right)} px)`)
         : [];
       const broken = [...document.images].filter((i) => i.complete && i.naturalWidth === 0 && i.src && !i.src.startsWith("data:")).map((i) => i.src.slice(-60));
       const unnamed = [...document.querySelectorAll<HTMLElement>("button, a[href], [role=button]")]
@@ -68,7 +79,8 @@ async function walk(page: Page, who: Persona, start: string) {
           if (r.width === 0 || r.height === 0) return false;
           const name = (el.getAttribute("aria-label") ?? el.getAttribute("title") ?? el.textContent ?? "").trim();
           const labelledBy = el.getAttribute("aria-labelledby");
-          return !name && !labelledBy && !el.querySelector("img[alt]:not([alt=''])");
+          // A labelled picture inside (an icon with aria-label, an img with alt) names the control.
+          return !name && !labelledBy && !el.querySelector("img[alt]:not([alt='']), [aria-label]:not([aria-label=''])");
         })
         .slice(0, 3)
         .map((el) => el.outerHTML.slice(0, 120));
@@ -79,7 +91,7 @@ async function walk(page: Page, who: Persona, start: string) {
       return { wide, offenders, broken, unnamed, links };
     });
 
-    if (check.wide) findings.push({ who, path, kind: "wider than the screen", detail: check.offenders.join(", ") });
+    if (check.wide && check.offenders.length > 0) findings.push({ who, path, kind: "wider than the screen", detail: check.offenders.join(", ") });
     for (const b of check.broken) findings.push({ who, path, kind: "picture did not load", detail: b });
     for (const u of check.unnamed) findings.push({ who, path, kind: "control with no name", detail: u });
     for (const e of new Set(errors)) findings.push({ who, path, kind: "browser error", detail: e });
