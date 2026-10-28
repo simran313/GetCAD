@@ -69,9 +69,9 @@ export function AssignPanel({ orderId, designers }: { orderId: string; designers
     <Panel title="Assign a designer">
       <form action={assignDesignerAction} className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="order_id" value={orderId} />
-        <label className={small}>
+        <label className={`${small} min-w-0 max-w-full`}>
           Designer
-          <Select name="designer_id" className="mt-0.5 w-auto" required>
+          <Select name="designer_id" className="mt-0.5 w-auto max-w-full" required>
             {designers.map((d) => (
               <option key={d.designer_id} value={d.designer_id} disabled={!d.assignable}>
                 {[d.designer_ref, d.name].filter(Boolean).join(" · ") || d.designer_id} — {d.open_minutes}/

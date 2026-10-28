@@ -43,8 +43,8 @@ export async function OrderTimeline({
               <div
                 className={`rounded-[var(--r-md)] border p-3 ${TONE_SURFACE[QC_TONE[step.qcOutcome]]}`}
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-[length:var(--fs-3)] leading-[var(--lh-3)] font-semibold">Independent QC review</p>
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                  <p className="min-w-0 text-[length:var(--fs-3)] leading-[var(--lh-3)] font-semibold">Independent QC review</p>
                   <time className="tabular shrink-0 font-mono text-[length:var(--fs-2)] leading-[var(--lh-2)]">
                     {formatDateTimeTz(step.createdAt)}
                   </time>
@@ -64,7 +64,7 @@ export async function OrderTimeline({
               className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-muted-foreground/40 ring-4 ring-background"
               aria-hidden
             />
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
               <p className="min-w-0 break-words text-[length:var(--fs-3)] leading-[var(--lh-3)]">
                 {step.label}
                 {step.amount != null && (
