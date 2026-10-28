@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { IntentLink } from "@/components/ui/intent-link";
 import { cn } from "@/lib/utils";
 
 import type { Conversation } from "./MessagesView";
@@ -25,7 +24,7 @@ export function InboxRow({
 }) {
   const who = c.last_mine ? "You" : client ? "Your team" : c.last_alias;
   return (
-    <Link
+    <IntentLink
       href={`/messages/${c.order_id}`}
       aria-current={active ? "page" : undefined}
       className={cn(
@@ -49,6 +48,6 @@ export function InboxRow({
         )}
       </span>
       {meta && <span className="mt-1 block text-[length:var(--fs-1)] text-muted-foreground">{meta}</span>}
-    </Link>
+    </IntentLink>
   );
 }
