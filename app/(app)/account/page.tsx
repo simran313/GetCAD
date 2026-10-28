@@ -1,9 +1,9 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { SignOutButton } from "@clerk/nextjs";
-import { ChevronRight, KeyRound, LogOut, Wallet } from "lucide-react";
+import { ChevronRight, KeyRound, Wallet } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { SignOutButton } from "@/components/auth/sign-out";
 import { InstallHint } from "@/components/pwa/install-hint";
 import { PushOptIn } from "@/components/pwa/push-opt-in";
 import { TimeZoneSetting } from "@/components/time-zone";
@@ -222,11 +222,7 @@ export default async function AccountPage() {
       <InstallHint />
 
       <div className="border-t border-border pt-6">
-        <SignOutButton>
-          <Button variant="secondary">
-            <LogOut /> Sign out
-          </Button>
-        </SignOutButton>
+        <SignOutButton />
       </div>
     </Page>
   );

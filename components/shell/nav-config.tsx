@@ -70,6 +70,16 @@ const GROUPS: Record<string, [string | undefined, string[]][]> = {
   designer: [[undefined, ["home", "work", "messages", "earnings"]]],
 };
 
+/**
+ * The main lists each role moves between (Phase 12). Their links are
+ * prefetched in full while on screen, so a tab opens from memory. Only pages
+ * that read and never write while rendering belong here: a prefetch renders
+ * the page on the server without anyone looking at it (so not the review
+ * page, which records a first look, nor Access, which records lookups).
+ */
+const PREFETCH = new Set(["/home", "/orders", "/messages", "/files", "/work", "/work/earnings", "/qc", "/qc/orders", "/qc/earnings", "/pod/board", "/admin", "/admin/orders"]);
+export const prefetchTab = (href: string): true | undefined => (PREFETCH.has(href) ? true : undefined);
+
 export type ShellKind = "staff" | "podLead" | "client" | "designer";
 
 export function shellKind(role: string): ShellKind {

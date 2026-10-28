@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
+import { prefetchTab } from "./nav-config";
 import type { NavItem } from "./sidebar";
 
 /**
@@ -33,6 +34,7 @@ export function MobileBottomNav({
       <li key={item.key} className="flex-1">
         <Link
           href={item.href}
+          prefetch={prefetchTab(item.href)}
           aria-current={active ? "page" : undefined}
           className={cls}
         >

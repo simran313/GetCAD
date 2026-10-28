@@ -1,12 +1,12 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { Building2, LogOut, MoreHorizontal, Package, Search, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { useSignOut } from "@/components/auth/sign-out";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LiveCallButton } from "@/components/ui/live-call-button";
 import { Toaster } from "@/components/ui/toast";
@@ -51,7 +51,6 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "";
-  const { signOut } = useClerk();
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [palette, setPalette] = useState(false);
   // Orders and client codes for Cmd+K, loaded the first time it opens.
@@ -71,7 +70,7 @@ export function AppShell({
   const bar = bottomBar(kind, tabs);
   const home = tabs[0]?.href ?? "/home";
   const title = tabs.find((t) => t.key === active)?.label ?? "The CAD Pillar";
-  const onSignOut = () => signOut({ redirectUrl: "/" });
+  const onSignOut = useSignOut();
 
   const toggle = () => {
     setCollapsed((c) => {
