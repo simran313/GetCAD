@@ -34,3 +34,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, va
 Button.displayName = "Button";
 
 export { Button };
+
+/**
+ * A submit button that keeps its own look (a tile, a list row) but has the
+ * same guard as Button: while its form's action runs it is disabled and
+ * marked busy, so a second tap cannot send it again (Phase 12).
+ */
+function SubmitPlain({ className, disabled, children, ...props }: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type">) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" className={cn(className, "aria-busy:cursor-progress aria-busy:opacity-60")} disabled={disabled || pending} aria-busy={pending || undefined} {...props}>
+      {children}
+    </button>
+  );
+}
+
+export { SubmitPlain };
