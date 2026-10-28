@@ -151,6 +151,7 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
   - Client ↔ team thread: to the client, everyone on the team is "Your team" (owner decision, October 2026; the client screens never show a staff name). Staff reading the thread still see "Team · first name" for each other.
   - Designer ↔ pod lead/admin internal thread.
   - Designers can never post in client threads (enforced by RLS).
+  - Live chat (Phase 13): a new message or file sends an empty "this thread changed" signal on the thread's private Realtime channel; only people who may read the thread may join it (a designer never joins the client thread), and nobody sends from the browser. The chat then reads itself through the usual functions; the signal carries no text, sender or order data.
 
 ## 12. Feature flags (v1 launch)
 

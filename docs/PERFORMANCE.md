@@ -99,7 +99,7 @@ Ranked by measured impact.
 | 1 | **Functions far from the database** | Every page makes 2–4 sequential rounds of calls; Vercel defaults to iad1 (US East) | Set the Vercel function region to the Supabase region (`docs/DEPLOY.md` §2b) | None in code | **Owner** (needs the Supabase region) |
 | 2 | **No page is kept in memory** | Every tab press asked the server again: ready 196–637 ms at 60 ms/call | Prefetch the main lists in full while their links are on screen; keep pages 30 s (`staleTimes`); rows load on touch (`IntentLink`) | Stale data for up to 30 s on a page someone else changed. Mitigated: any server action clears the memory, the order and chat pages keep polling, and sign-out reloads the page | Done |
 | 3 | **Sign-out moved in-app** | The new e2e test failed on the code before this change: the page set before sign-out survived it | Sign-out ends with a full page load (`components/auth/sign-out.tsx`) | None | Done |
-| 4 | **Chat is polled every 5 s** | Team → client: 4.4 s, 0.3 s, 4.3 s | An open conversation asks every 2 s, and at once on focus | 2.5× more of one small request per open chat | Done. Under 1 s needs Realtime (below) |
+| 4 | **Chat is polled every 5 s** | Team → client: 4.4 s, 0.3 s, 4.3 s | An open conversation asks every 2 s, and at once on focus | 2.5× more of one small request per open chat | Done. Realtime signals built (Phase 13, `0052_chat_live.sql`); on once set up (`docs/DEPLOY.md` §2c) |
 | 5 | **The website rendered on every visit** | Header called `auth()`; every page was ƒ (dynamic); TTFB 460 ms in Lighthouse | Signed-in or not read in the browser from Clerk's `__client_uat` cookie; pages are static (○) | A signed-in visitor sees the signed-out buttons for one frame | Done |
 | 6 | **Files: 5 sequential rounds plus one call per order** | Code: role → orders → specs → versions → fingerprints | 3 rounds (role and orders together; fingerprints with versions) | None | Done. The per-order calls need a batched function (below) |
 | 7 | **Double tap could create two drafts** | Tiles on New order were plain submit buttons | `SubmitPlain`: disabled and busy while the action runs | None | Done |
@@ -114,7 +114,7 @@ Checked and fine: bundle sizes (102 kB shared; three.js loads only on the previe
 ## What needs an owner decision
 
 1. **Vercel region = Supabase region.** The single biggest lever; no code.
-2. **Live chat through Supabase Realtime** (broadcast "order X changed", no row data, so anonymity holds). Delivery under 0.5 s instead of up to 2 s; less polling. Needs a migration for private channel policies.
+2. **Live chat through Supabase Realtime**: built in Phase 13 (an empty "thread changed" signal on each thread's private channel; only people who may read the thread can join). Off until the migration is applied and `NEXT_PUBLIC_CHAT_REALTIME=1` is set (`docs/DEPLOY.md` §2c). Expected delivery under 0.5 s; CI has no Realtime server, so it is measured after it is switched on.
 3. **Safe Retry in chat.** A message the server saved but whose reply was lost is sent twice on Retry. Needs a client message id with a unique constraint (migration).
 4. **Batched fingerprints for Files** (one database function instead of one call per order; migration).
 5. **Paging for order lists** before any client passes a few hundred orders.

@@ -122,7 +122,7 @@ export async function MessagesView({
           {open ? (
             <>
               <ChatScreen open={open} call={call} />
-              <AutoRefresh orderId={open.orderId} stamp={open.stamp} seconds={2} />
+              <AutoRefresh orderId={open.orderId} stamp={open.stamp} seconds={2} threads={open.threads.map((t) => t.id)} />
             </>
           ) : (
             <Card className="hidden md:block">
