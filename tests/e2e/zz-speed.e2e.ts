@@ -88,6 +88,9 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]> | "back", h
       const w = window as unknown as { __t0: number; __first: number | null; __ready: number | null };
       w.__first = null;
       w.__ready = null;
+      // Nothing counts until the press: a prefetch landing or a clock
+      // ticking just before it is not the answer to it.
+      w.__t0 = Infinity;
       const want = new RegExp(source, flags);
       // React puts the new page in before it changes the address, so
       // "ready" is a matching heading that was not there before the click.
@@ -97,6 +100,7 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]> | "back", h
       // pending button or the new page). Ready: the new page's heading.
       new MutationObserver((_, obs) => {
         const now = performance.now();
+        if (now < w.__t0) return;
         if (w.__first === null) w.__first = now;
         const h1 = [...document.querySelectorAll("h1")].find((h) => before.get(h) !== h.textContent && want.test(h.textContent?.trim() ?? ""));
         if (w.__ready === null && h1) {
