@@ -10,7 +10,8 @@ import { readState } from "./state";
  * come with that, checked here:
  *
  *   - signing out reloads the page, so nothing shown to one person is kept
- *     in memory for the next one on the same device;
+ *     in memory for the next one on the same device (and the static
+ *     website's header follows who is signed in);
  *   - a second tap on "Start a design" cannot make a second draft.
  */
 const state = readState();
@@ -20,6 +21,10 @@ const drafts = () =>
 
 test("signing out reloads the page: no page is kept for the next person", async ({ browser }) => {
   const page = await signedIn(browser, "client2");
+  // The website is static; its header still knows who is signed in.
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Open the app" })).toBeVisible();
+  await page.goto("/home");
   await page.getByRole("navigation", { name: "Main" }).filter({ visible: true }).first().getByRole("link", { name: "Orders", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Orders" })).toBeVisible();
   await page.goto("/account");
@@ -29,6 +34,7 @@ test("signing out reloads the page: no page is kept for the next person", async 
   await page.waitForURL((u) => u.pathname === "/");
   await page.waitForLoadState("load");
   expect(await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept ?? false), "signing out moved in-app; pages may still be in memory").toBe(false);
+  await expect(page.getByRole("link", { name: "Open the app" })).toHaveCount(0);
   await page.goto("/orders");
   await expect(page).toHaveURL(/\/sign-in/);
   await page.context().close();
