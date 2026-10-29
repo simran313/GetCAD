@@ -106,6 +106,7 @@ you skip this, every signed-in database read returns nothing, because
 | `RAZORPAY_WEBHOOK_SECRET` | The signing secret you set on the Razorpay webhook. A DIFFERENT value from the key secret, and NOT the webhook URL. Generate with `openssl rand -hex 32` |
 | `NEXT_PUBLIC_SITE_URL` | `https://yourdomain.com` (no trailing slash) |
 | `RATE_LIMIT_SALT` | Any long random string |
+| `NEXT_PUBLIC_CHAT_REALTIME` | `1` once live chat is set up (§2c); leave unset until then |
 
 `NEXT_PUBLIC_SITE_URL` is not cosmetic: it builds canonical URLs, Open Graph
 tags and `sitemap.xml`. Leaving it unset silently publishes a sitemap pointing
@@ -125,12 +126,36 @@ round trip is about 200 ms instead of about 2 ms.
 1. Supabase → Project Settings → General → **Region** (for example
    `ap-south-1`, Mumbai).
 2. Vercel → Project → Settings → Functions → **Function Region**: pick the
-   matching one (Mumbai `bom1`, N. Virginia `iad1`, Oregon `pdx1`,
-   Frankfurt `fra1`, London `lhr1`, Singapore `sin1`, Sydney `syd1`).
+   matching one (Mumbai `bom1`, N. Virginia `iad1`, Ohio `cle1`, Oregon
+   `pdx1`, Frankfurt `fra1`, London `lhr1`, Singapore `sin1`, Sydney `syd1`).
+   This project's Supabase is in Ohio (`us-east-2`): pick Cleveland, `cle1`.
 3. Redeploy. The portal pages need no other change.
 
 The speed test (`tests/e2e/zz-speed.e2e.ts`) shows what each extra round
 trip costs: it runs the portal with 60 ms added to every database call.
+
+### 2c. Live chat (Supabase Realtime)
+
+Messages reach an open chat as they are sent instead of on the next check
+(every 2 s). Off until all three steps are done; until then the chat checks
+on its own, exactly as before.
+
+1. Apply `db/migrations/0052_chat_live.sql` to production yourself, like
+   every migration (never from this repo's tooling). It adds the signal
+   triggers and the policy that lets each person join only the threads they
+   may read.
+2. Supabase → Realtime → Settings: turn **off** "Allow public access", so
+   only private channels (checked by that policy) can be joined. Clerk is
+   already Supabase's third-party auth provider for the database; Realtime
+   uses the same tokens.
+3. Vercel → Environment variables: `NEXT_PUBLIC_CHAT_REALTIME=1`
+   (Production and Preview). Redeploy.
+
+Check: open the same conversation as the client in one window and as the
+team in another, send from the team side, and the client side shows it
+within about half a second. In the browser's developer tools, Network → WS
+shows a `realtime` connection joining `thread:…` channels. If it does not
+join, nothing breaks: the chat falls back to checking every 2 s.
 
 ## 3. Domain
 
