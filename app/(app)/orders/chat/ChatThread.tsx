@@ -1,8 +1,9 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Camera, Download, FileBox, ImageIcon, Loader2, Paperclip, RotateCw, SendHorizontal, X } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Camera, Check, CheckCheck, Clock3, Download, FileBox, ImageIcon, Paperclip, RotateCw, SendHorizontal, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { dayKey, formatDayLabel, formatTime, MAX_UPLOAD_BYTES, THREAD_ACCEPT } from "@/core";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -11,6 +12,7 @@ import { useTimeZone } from "@/components/time-zone";
 import { cn } from "@/lib/utils";
 
 import { postThreadAction } from "../fileActions";
+import { sendChatMessageAction } from "./actions";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
 
 /**
@@ -21,9 +23,14 @@ import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
  * attaches from the camera, the gallery or files (checked on choice), and
  * shows a sent message at once, with Retry if it fails.
  *
- * Every send is the existing postThreadAction (post_thread_message /
- * post_thread_file); who may read or post is still decided by the database.
- * To a client the other side is always "Your team".
+ * Like a messenger (Phase 14): your message is in the conversation the moment
+ * you press Send, with a clock while it is on its way, one tick once it is
+ * saved and two once the other side has read it (thread_read_state: a time,
+ * never who). A text is saved under the browser's own name for it
+ * (send_chat_message), so Retry after a lost answer never posts it twice.
+ * Files go through postThreadAction (post_thread_file); who may read or post
+ * is still decided by the database. To a client the other side is always
+ * "Your team".
  */
 export interface ChatEvent {
   id: string;
@@ -32,12 +39,26 @@ export interface ChatEvent {
 }
 
 interface Pending {
+  /** The browser's name for this send (client_ref): the saved message carries it back. */
   id: string;
   body: string;
   fileName: string | null;
   at: string;
-  failed: boolean;
+  state: "sending" | "sent" | "failed";
   form: FormData;
+}
+
+/** A name for a send, unique enough to tell repeats of it apart from new messages. */
+const newRef = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+
+const tick = "inline-flex items-center gap-0.5 text-[length:var(--fs-1)] text-muted-foreground";
+
+/** The status of your own message, beside its time: on its way, saved, read. */
+function Ticks({ state }: { state: "sending" | "sent" | "read" }) {
+  if (state === "sending") return <Clock3 className="h-3.5 w-3.5" role="img" aria-label="Sending" />;
+  if (state === "read") return <CheckCheck className="h-4 w-4 text-[color:var(--tone-info-fg)]" role="img" aria-label="Read" />;
+  return <Check className="h-4 w-4" role="img" aria-label="Sent" />;
 }
 
 type Item =
@@ -56,6 +77,7 @@ export function ChatThread({
   events = [],
   client,
   unreadSince = null,
+  othersReadAt = null,
   fill = false,
   label = "Message",
 }: {
@@ -68,13 +90,20 @@ export function ChatThread({
   client: boolean;
   /** The oldest unread message notification on this order; the "New" line goes before the first message after it. */
   unreadSince?: string | null;
+  /** How far the other side has read this thread (thread_read_state); your messages up to it get two ticks. */
+  othersReadAt?: string | null;
   /** Fill the parent's height (the chat screen); otherwise a bounded panel. */
   fill?: boolean;
   label?: string;
 }) {
   const tz = useTimeZone();
+  const router = useRouter();
   const log = useRef<HTMLDivElement>(null);
   const [pending, setPending] = useState<Pending[]>([]);
+  // A sent text leaves the list of pending ones once the saved copy has arrived.
+  const saved = useMemo(() => new Set(messages.map((m) => m.client_ref).filter(Boolean)), [messages]);
+  const readUpTo = othersReadAt ? Date.parse(othersReadAt) : -Infinity;
+  const shown = useMemo(() => pending.filter((p) => !saved.has(p.id)), [pending, saved]);
   const [viewing, setViewing] = useState<AttachmentRow | null>(null);
 
   const items = useMemo<Item[]>(
@@ -82,9 +111,9 @@ export function ChatThread({
       [
         ...messages.map((m) => ({ kind: "msg" as const, at: m.created_at, m })),
         ...events.map((e) => ({ kind: "event" as const, at: e.at, e })),
-        ...pending.map((p) => ({ kind: "pending" as const, at: p.at, p })),
+        ...shown.map((p) => ({ kind: "pending" as const, at: p.at, p })),
       ].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0)),
-    [messages, events, pending],
+    [messages, events, shown],
   );
   const filesOf = useMemo(() => {
     const map = new Map<string, AttachmentRow[]>();
@@ -99,13 +128,42 @@ export function ChatThread({
     if (el) el.scrollTop = el.scrollHeight;
   }, [items.length]);
 
+  // Read while it is on screen: the other side's newest message is marked
+  // read when this chat is visible (and again when it comes back into view).
+  const latestOther = useMemo(() => [...messages].reverse().find((m) => !m.is_mine)?.created_at ?? null, [messages]);
+  useEffect(() => {
+    const el = log.current;
+    if (!latestOther || !el) return;
+    let inView = false;
+    const mark = () => {
+      if (inView && document.visibilityState === "visible") void fetch(`/api/threads/${thread.id}/read`, { method: "POST", keepalive: true }).catch(() => {});
+    };
+    const io = new IntersectionObserver(([e]) => {
+      inView = !!e?.isIntersecting;
+      mark();
+    });
+    io.observe(el);
+    document.addEventListener("visibilitychange", mark);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", mark);
+    };
+  }, [latestOther, thread.id]);
+
   const send = async (p: Pending) => {
-    setPending((list) => [...list.filter((x) => x.id !== p.id), { ...p, failed: false }]);
+    setPending((list) => [...list.filter((x) => x.id !== p.id), { ...p, state: "sending" }]);
     try {
-      await postThreadAction(p.form);
-      setPending((list) => list.filter((x) => x.id !== p.id));
+      if (p.fileName) {
+        await postThreadAction(p.form);
+        setPending((list) => list.filter((x) => x.id !== p.id));
+        return;
+      }
+      await sendChatMessageAction(thread.id, p.body, p.id);
+      setPending((list) => list.map((x) => (x.id === p.id ? { ...x, state: "sent" } : x)));
+      // The saved copy (and anything else new) arrives without holding the bubble up.
+      startTransition(() => router.refresh());
     } catch {
-      setPending((list) => list.map((x) => (x.id === p.id ? { ...x, failed: true } : x)));
+      setPending((list) => list.map((x) => (x.id === p.id ? { ...x, state: "failed" } : x)));
       toast("Not sent. Tap Retry.", "danger");
     }
   };
@@ -150,21 +208,22 @@ export function ChatThread({
             return (
               <div key={p.id} className="flex flex-col items-end">
                 {sep}
-                <div className="max-w-[80%] rounded-[var(--r-lg)] rounded-br-[var(--r-xs)] bg-primary px-3 py-2 text-[length:var(--fs-3)] text-primary-foreground opacity-70">
+                <div className="max-w-[80%] rounded-[var(--r-lg)] rounded-br-[var(--r-xs)] bg-primary px-3 py-2 text-[length:var(--fs-3)] text-primary-foreground">
                   {p.body && <p className="whitespace-pre-wrap break-words">{p.body}</p>}
                   {p.fileName && <p className="truncate text-[length:var(--fs-2)]">{p.fileName}</p>}
                 </div>
-                {p.failed ? (
+                {p.state === "failed" ? (
                   <button
                     type="button"
                     onClick={() => void send(p)}
                     className="mt-0.5 inline-flex min-h-[var(--ctl-sm)] items-center gap-1 text-[length:var(--fs-1)] font-medium text-[color:var(--tone-danger-fg)]"
                   >
-                    <RotateCw className="h-3 w-3" aria-hidden /> Not sent · Retry
+                    <RotateCw className="h-3 w-3" aria-hidden /> Not sent · Tap to retry
                   </button>
                 ) : (
-                  <span className="mt-0.5 inline-flex items-center gap-1 text-[length:var(--fs-1)] text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" aria-hidden /> Sending
+                  <span className={cn(tick, "mt-0.5 px-1")}>
+                    <time dateTime={p.at}>{formatTime(p.at, tz)}</time>
+                    <Ticks state={p.state} />
                   </span>
                 )}
               </div>
@@ -223,9 +282,10 @@ export function ChatThread({
                   )}
                   {body && <p className="whitespace-pre-wrap break-words">{body}</p>}
                 </div>
-                <time dateTime={m.created_at} className="mt-0.5 px-1 text-[length:var(--fs-1)] text-muted-foreground">
-                  {formatTime(m.created_at, tz)}
-                </time>
+                <span className={cn(tick, "mt-0.5 px-1")}>
+                  <time dateTime={m.created_at}>{formatTime(m.created_at, tz)}</time>
+                  {m.is_mine && <Ticks state={readUpTo >= Date.parse(m.created_at) ? "read" : "sent"} />}
+                </span>
               </div>
             </div>
           );
@@ -323,7 +383,7 @@ function Composer({
     form.set("thread_id", thread.id);
     form.set("body", trimmed);
     if (file) form.set("file", file);
-    onSend({ id: `p-${Date.now()}`, body: trimmed, fileName: file?.name ?? null, at: new Date().toISOString(), failed: false, form });
+    onSend({ id: newRef(), body: trimmed, fileName: file?.name ?? null, at: new Date().toISOString(), state: "sending", form });
     setBody("");
     setFile(null);
   };

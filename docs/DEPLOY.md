@@ -157,6 +157,16 @@ within about half a second. In the browser's developer tools, Network → WS
 shows a `realtime` connection joining `thread:…` channels. If it does not
 join, nothing breaks: the chat falls back to checking every 2 s.
 
+### 2d. Chat ticks (clock → ✓ → ✓✓)
+
+Apply `db/migrations/0053_chat_receipts.sql` to production yourself. Until
+then the chat still sends (the plain way: a Retry after a lost answer could
+post twice) and shows one tick, never two. Nothing else to set.
+
+Check: send as the client; the clock turns to ✓ at once. Open the
+conversation as the team; the client's ✓ turns to ✓✓ (blue) within a second
+with Realtime on (§2c), about 2 s without.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.

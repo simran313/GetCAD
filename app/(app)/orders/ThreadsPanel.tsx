@@ -1,7 +1,9 @@
+"use client";
+
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ChatThread } from "./chat/ChatThread";
-import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "./types";
+import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
 
 /**
  * The order's conversations (DECISIONS §11, Phase 4a).
@@ -13,6 +15,10 @@ import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "./types";
  * Files sent with a message (Phase 4b) are named by the server and download
  * through /api/thread-files, which applies the same thread rule. Each thread
  * is the same chat as the Messages screen (Phase 10c), in a bounded panel.
+ *
+ * A client component, so the chat is only ever imported from the browser
+ * side (here and on the Messages screen): rendered straight from the server
+ * pages as well, the production server lost track of it (Phase 14 e2e).
  */
 
 const small = "text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground";
@@ -37,12 +43,15 @@ export function ThreadsPanel({
   threads,
   messages,
   attachments,
+  reads = {},
 }: {
   orderId: string;
   relation: OrderRow["relation"];
   threads: ThreadRow[];
   messages: MessageRow[];
   attachments: AttachmentRow[];
+  /** How far the other side has read each thread (the ticks). */
+  reads?: ThreadReads;
 }) {
   const sorted = [...threads].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
   return (
@@ -63,6 +72,7 @@ export function ThreadsPanel({
               messages={rows}
               attachments={attachments.filter((a) => a.thread_id === t.id)}
               client={relation === "CLIENT"}
+              othersReadAt={reads[t.id] ?? null}
               label={`Message in ${title}`}
             />
           </Card>

@@ -30,7 +30,7 @@ import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPan
 import type { ClientContact, Screenshot } from "../IntakePanel";
 import { AutoRefresh } from "../AutoRefresh";
 import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
-import type { AttachmentRow, DisputeRow, LedgerRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "../types";
+import { toThreadReads, type AttachmentRow, type DisputeRow, type LedgerRow, type MessageRow, type OrderRow, type ThreadRow, type VersionRow } from "../types";
 import { Page } from "@/components/ui/page";
 
 /**
@@ -91,6 +91,7 @@ export default async function OrderPage({
     accentsRes,
     namesRes,
     unreadRes,
+    readsRes,
   ] =
     await Promise.all([
       supabase.from("users").select("role").maybeSingle(),
@@ -145,6 +146,8 @@ export default async function OrderPage({
         .eq("kind", "MESSAGE")
         .eq("order_id", id)
         .is("read_at", null),
+      // Phase 14: how far the other side has read each thread (the ticks).
+      supabase.rpc("thread_read_state", { p_order_id: id }),
     ]);
 
   const queryError =
@@ -433,6 +436,7 @@ export default async function OrderPage({
           }}
           intake={intake}
           threads={(threadsRes.data as ThreadRow[] | null) ?? []}
+          reads={toThreadReads(readsRes.data)}
           attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
           transitions={transitions}
           versions={versions}
@@ -489,6 +493,7 @@ export default async function OrderPage({
           }}
           intake={intake}
           threads={(threadsRes.data as ThreadRow[] | null) ?? []}
+          reads={toThreadReads(readsRes.data)}
           attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
           transitions={transitions}
           versions={versions}

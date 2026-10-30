@@ -23,7 +23,7 @@ import { AutoRefresh } from "../../orders/AutoRefresh";
 import { setVolumeAction, transitionAction } from "../../orders/actions";
 import { uploadSlotAction } from "../../orders/fileActions";
 import { ThreadsPanel } from "../../orders/ThreadsPanel";
-import type { AttachmentRow, MessageRow, ThreadRow } from "../../orders/types";
+import { toThreadReads, type AttachmentRow, type MessageRow, type ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
 import { StartWorkButton } from "../StartWorkButton";
 import { Page } from "@/components/ui/page";
@@ -58,7 +58,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes] = await Promise.all([
+  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes] = await Promise.all([
     supabase.rpc("job_brief", { p_order_id: id }),
     supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", id).order("position"),
     supabase.rpc("job_slots", { p_order_id: id }),
@@ -70,6 +70,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     loadReferences(supabase, id),
     versionNote(supabase, id, job.work_version),
     supabase.rpc("version_spec", { p_order_id: id }),
+    supabase.rpc("thread_read_state", { p_order_id: id }),
   ]);
   const volume = (specRes.data as { volume_mm3: number | null } | null)?.volume_mm3 ?? null;
   const needsVolume = job.service !== "render";
@@ -208,6 +209,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             threads={(threadsRes.data ?? []) as ThreadRow[]}
             messages={(messagesRes.data ?? []) as MessageRow[]}
             attachments={(filesRes.data ?? []) as AttachmentRow[]}
+            reads={toThreadReads(readsRes.data)}
           />
         </div>
 

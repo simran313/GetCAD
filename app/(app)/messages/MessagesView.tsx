@@ -12,7 +12,7 @@ import { c as claim, showClaim } from "@/content/claims";
 
 import { ChatScreen } from "./ChatScreen";
 import { InboxRow } from "./InboxRow";
-import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
+import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
 import { viewerZone } from "@/lib/time/zone";
 import { formatRelative, type ClientStep } from "@/core";
@@ -49,6 +49,8 @@ export interface OpenConversation {
   messages: MessageRow[];
   attachments: AttachmentRow[];
   stamp: string | null;
+  /** How far the other side has read each thread (the ticks). */
+  reads: ThreadReads;
   /** Oldest unread message notification on the order (the "New" line). */
   unreadSince: string | null;
   /** Order events shown inline (client and team only). */
