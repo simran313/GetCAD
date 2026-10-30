@@ -180,3 +180,19 @@ test("a refused action says why, in the production build (Phase 11c)", async ({ 
   await expect(admin.getByText(/^Reference:/)).toHaveCount(0);
   await admin.context().close();
 });
+
+test("a sent message is on screen once, before and after the saved copy arrives (Phase 14)", async ({ browser }) => {
+  const client = await signedIn(browser, "client2");
+  await client.goto(`/messages/${orderId}`);
+  const log = client.getByRole("log", { name: "Messages" });
+  const text = `Once only ${Date.now()}`;
+  await client.getByLabel("Message", { exact: true }).fill(text);
+  await client.getByRole("button", { name: "Send" }).click();
+  await expect(log.getByText(text, { exact: true })).toHaveCount(1);
+  // Saved (the clock is gone), then the conversation reads itself again.
+  await expect(log.locator('[aria-label="Sending"]')).toHaveCount(0);
+  await client.waitForLoadState("networkidle");
+  await client.waitForTimeout(2_500);
+  await expect(log.getByText(text, { exact: true })).toHaveCount(1);
+  await client.context().close();
+});
