@@ -1,7 +1,5 @@
 import { MessageSquare } from "lucide-react";
-import Link from "next/link";
 
-import { StatusBadge } from "@/components/status-badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,11 +9,11 @@ import { AutoRefresh } from "../orders/AutoRefresh";
 import { c as claim, showClaim } from "@/content/claims";
 
 import { ChatScreen } from "./ChatScreen";
-import { InboxRow } from "./InboxRow";
+import { ConversationList, type ConversationItem } from "./ConversationList";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
 import { viewerZone } from "@/lib/time/zone";
-import { formatRelative, type ClientStep } from "@/core";
+import { formatDayLabel, formatRelative, type ClientStep } from "@/core";
 
 /**
  * C7 / C7b — Messages (docs/design). Every conversation the viewer may read,
@@ -33,8 +31,10 @@ export interface Conversation {
   last_mine: boolean | null;
   last_at: string | null;
   messages: number;
-  /** The client's name for the piece (clients only); null otherwise. */
+  /** What the piece is: the client's name for it (clients), the product (team); null for a designer. */
   title: string | null;
+  /** When the order was placed; null for a designer. */
+  placed_at: string | null;
   /** Unread message notifications on the order. */
   unread: number;
 }
@@ -74,14 +74,55 @@ function describe(role: string): { eyebrow?: string; description?: string; team:
   return { description: "Each order has a client conversation and a designer conversation.", team: true };
 }
 
+const KIND_LABEL: Record<string, string> = { client_team: "Client", internal: "Designer" };
+
+function placedLabel(iso: string, tz: string): string {
+  const day = formatDayLabel(iso, tz);
+  return `Placed ${day === "Today" || day === "Yesterday" ? day.toLowerCase() : day}`;
+}
+
+/** One card per order (its threads as lines), in the order of the newest activity. */
+function toItems(conversations: Conversation[], role: string, tz: string): ConversationItem[] {
+  const client = role === "CLIENT";
+  const team = role !== "CLIENT" && role !== "DESIGNER";
+  const byOrder = new Map<string, Conversation[]>();
+  for (const c of conversations) byOrder.set(c.order_id, [...(byOrder.get(c.order_id) ?? []), c]);
+  return [...byOrder.values()].map((cs) => {
+    cs.sort((a, b) => (a.kind === "client_team" ? -1 : b.kind === "client_team" ? 1 : 0));
+    const first = cs[0]!;
+    const latest = cs.reduce<Conversation | null>((l, c) => (c.last_at && (!l?.last_at || c.last_at > l.last_at) ? c : l), null);
+    const who = (c: Conversation) => (c.last_mine ? "You" : client ? "Your team" : (c.last_alias ?? "Team"));
+    return {
+      orderId: first.order_id,
+      // The team opens the thread that moved last.
+      href: `/messages/${first.order_id}${team && latest?.kind === "internal" ? "?t=designer" : ""}`,
+      ref: first.display_ref ?? "Order",
+      title: first.title,
+      placed: first.placed_at ? placedLabel(first.placed_at, tz) : null,
+      status: first.status,
+      at: latest?.last_at ? formatRelative(latest.last_at, tz) : "",
+      unread: first.unread,
+      lines: cs.map((c) => ({
+        label: team ? (KIND_LABEL[c.kind] ?? null) : null,
+        text: c.last_body ? `${who(c)}: ${c.last_body}` : "No messages yet",
+        empty: !c.last_body,
+      })),
+      waiting: cs.some((c) => !!c.last_body && !c.last_mine),
+      quiet: cs.every((c) => !c.last_body),
+    };
+  });
+}
+
 export async function MessagesView({
   conversations,
   open,
   role,
+  startOn,
 }: {
   conversations: Conversation[];
   open: OpenConversation | null;
   role: string;
+  startOn?: ThreadRow["kind"];
 }) {
   const call = { phone: claim("LIVE_CALL_PHONE"), hours: showClaim("LIVE_CALL_HOURS") ? claim("LIVE_CALL_HOURS") : "US business hours" };
   const tz = await viewerZone();
@@ -92,38 +133,15 @@ export async function MessagesView({
       <div className={cn(open && "hidden md:block")}>
         <PageHeader eyebrow={copy.eyebrow} title="Messages" description={copy.description} />
       </div>
-      <div className="grid gap-6 md:grid-cols-[320px_1fr]">
-        <Card className={cn("self-start overflow-hidden", open && "hidden md:block")}>
-          {conversations.length === 0 ? (
-            <EmptyState icon={<MessageSquare />} title="No conversations yet" className="py-8" />
-          ) : (
-            <ul>
-              {conversations.map((c) => (
-                <li key={c.thread_id}>
-                  <InboxRow
-                    c={c}
-                    client={role === "CLIENT"}
-                    at={c.last_at ? formatRelative(c.last_at, tz) : ""}
-                    active={open?.orderId === c.order_id}
-                    meta={
-                      role === "CLIENT" ? undefined : (
-                        <span className="inline-flex flex-wrap items-center gap-2">
-                          {copy.team && (c.kind === "internal" ? "Designer" : "Client")}
-                          <StatusBadge status={c.status} />
-                        </span>
-                      )
-                    }
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <div className="grid gap-6 md:grid-cols-[340px_1fr]">
+        <div className={cn("min-w-0 self-start md:sticky md:top-4 md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto md:pr-1", open && "hidden md:block")}>
+          <ConversationList items={toItems(conversations, role, tz)} activeId={open?.orderId ?? null} team={copy.team} />
+        </div>
 
         <div className={cn("space-y-4", !open && "hidden md:block")}>
           {open ? (
             <>
-              <ChatScreen open={open} call={call} />
+              <ChatScreen key={open.orderId} open={open} call={call} startOn={startOn} />
               <AutoRefresh orderId={open.orderId} stamp={open.stamp} seconds={2} threads={open.threads.map((t) => t.id)} />
             </>
           ) : (
