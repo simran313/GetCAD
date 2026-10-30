@@ -106,10 +106,13 @@ describe("Test W — threaded, pseudonymous messaging (DECISIONS §11)", () => {
        WHERE table_schema='public' AND table_name='messages'`,
     );
     expect(cols.rows.map((r) => r.column_name).sort()).toEqual(
-      ["body", "created_at", "id", "order_id", "sender_alias", "sender_id", "sender_party", "thread_id"].sort(),
+      // client_ref (0053): the sender's own name for a send, so a repeat is not saved twice.
+      ["body", "client_ref", "created_at", "id", "order_id", "sender_alias", "sender_id", "sender_party", "thread_id"].sort(),
     );
     await asUser(client, async () => {
       await expect(db.query("SELECT sender_id FROM messages")).rejects.toThrow(/permission denied/i);
+      // Only ever returned to its own sender, through order_messages.
+      await expect(db.query("SELECT client_ref FROM messages")).rejects.toThrow(/permission denied/i);
     });
   });
 
