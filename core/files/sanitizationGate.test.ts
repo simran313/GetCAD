@@ -6,6 +6,7 @@ import {
   DELIVERABLE_ALLOWLIST,
   MAX_UPLOAD_BYTES,
   sanitizeUpload,
+  VOICE_ALLOWLIST,
   type IncomingFile,
 } from "./sanitizationGate";
 
@@ -198,5 +199,28 @@ describe("Test AR5 — delivery path requires strippable formats", () => {
       "model/stl",
       "model/x-3dm",
     ]);
+  });
+});
+
+describe("voice messages (Phase 15)", () => {
+  const voice = { ...VOICE_ALLOWLIST };
+  const audio = (declaredMimeType: string, bytes: number[]) =>
+    sanitizeUpload(file({ filename: "voice.bin", declaredMimeType, bytes: new Uint8Array([...bytes, ...new Array(16).fill(0)]) }), "id", { allowlist: voice });
+
+  it("ACCEPTS what browsers record: WebM, MP4 and Ogg, by their signature", () => {
+    const webm = audio("audio/webm", [0x1a, 0x45, 0xdf, 0xa3]);
+    const mp4 = audio("audio/mp4", [0, 0, 0, 0x1c, 0x66, 0x74, 0x79, 0x70, 0x4d, 0x34, 0x41, 0x20]);
+    const ogg = audio("audio/ogg", [0x4f, 0x67, 0x67, 0x53]);
+    expect([webm.ok, mp4.ok, ogg.ok]).toEqual([true, true, true]);
+    if (webm.ok && mp4.ok && ogg.ok) expect([webm.file.extension, mp4.file.extension, ogg.file.extension]).toEqual(["webm", "m4a", "ogg"]);
+  });
+
+  it("REFUSES a file that only claims to be audio", () => {
+    expect(audio("audio/webm", [0x4d, 0x5a, 0x90, 0x00]).ok).toBe(false);
+    expect(audio("audio/mp4", [0x25, 0x50, 0x44, 0x46]).ok).toBe(false);
+  });
+
+  it("is never part of the designer thread's list", () => {
+    for (const type of Object.keys(VOICE_ALLOWLIST)) expect(DELIVERABLE_ALLOWLIST[type]).toBeUndefined();
   });
 });

@@ -104,6 +104,20 @@ export const DELIVERABLE_ALLOWLIST: Record<string, TypeRule> = {
   "model/x-3dm": RHINO_3DM_RULE,
 };
 
+/**
+ * Voice messages (Phase 15), in the client conversation only: what a browser's
+ * recorder makes (WebM/Opus in Chrome and Android, MP4/AAC in Safari and iOS,
+ * Ogg in Firefox). Recognised by their container's signature. The designer
+ * thread never takes them (post_thread_file allows only cleanable types
+ * there): a voice is the speaker's, and the client's never reaches a designer.
+ */
+const isMp4 = (b: Uint8Array) => b.length >= 12 && b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70; // ....ftyp
+export const VOICE_ALLOWLIST: Record<string, TypeRule> = {
+  "audio/webm": { ext: "webm", magic: [[0x1a, 0x45, 0xdf, 0xa3]] }, // EBML
+  "audio/mp4": { ext: "m4a", magic: { validate: isMp4 } },
+  "audio/ogg": { ext: "ogg", magic: [[0x4f, 0x67, 0x67, 0x53]] }, // OggS
+};
+
 /** Content types whose cleaning needs an async, injected stripper. */
 export const ASYNC_STRIPPABLE_TYPES = ["model/x-3dm"] as const;
 

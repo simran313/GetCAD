@@ -59,6 +59,7 @@ export {
   MAX_UPLOAD_BYTES,
   DEFAULT_ALLOWLIST,
   DELIVERABLE_ALLOWLIST,
+  VOICE_ALLOWLIST,
   ASYNC_STRIPPABLE_TYPES,
 } from "./files/sanitizationGate";
 export { slotAccept, slotContentType, SLOT_ACCEPT, attachmentContentType, THREAD_ACCEPT } from "./files/slotTypes";

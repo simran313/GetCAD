@@ -10,6 +10,7 @@ import { c as claim, showClaim } from "@/content/claims";
 
 import { ChatScreen } from "./ChatScreen";
 import { ConversationList, type ConversationItem } from "./ConversationList";
+import { InboxLive } from "./InboxLive";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
 import { viewerZone } from "@/lib/time/zone";
@@ -136,6 +137,8 @@ export async function MessagesView({
       <div className="grid gap-6 md:grid-cols-[340px_1fr]">
         <div className={cn("min-w-0 self-start md:sticky md:top-4 md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto md:pr-1", open && "hidden md:block")}>
           <ConversationList items={toItems(conversations, role, tz)} activeId={open?.orderId ?? null} team={copy.team} />
+          {/* The open conversation refreshes itself (AutoRefresh); the list follows every thread. */}
+          <InboxLive />
         </div>
 
         <div className={cn("space-y-4", !open && "hidden md:block")}>

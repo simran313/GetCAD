@@ -6,6 +6,7 @@ import {
   attachmentContentType,
   DEFAULT_ALLOWLIST,
   DELIVERABLE_ALLOWLIST,
+  VOICE_ALLOWLIST,
   generateId,
   sanitizeUpload,
   sanitizeUploadAsync,
@@ -170,7 +171,8 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
  * never from the form. A file for the designer thread must be cleanable and
  * is cleaned (EXIF, STEP author, STL header, 3DM rebuilt); a file for the
  * client thread is checked against the wider allowlist, since only the
- * client and the team read it. post_thread_file() enforces the same split.
+ * client and the team read it, and may be a voice message (Phase 15).
+ * post_thread_file() enforces the same split.
  */
 export async function postThreadAction(formData: FormData): Promise<void> {
   const orderId = formData.get("order_id")?.toString() ?? "";
@@ -204,7 +206,7 @@ export async function postThreadAction(formData: FormData): Promise<void> {
     generateId(),
     toDesigner
       ? { requireMetadataStrip: true, strip3dm }
-      : { allowlist: { ...DEFAULT_ALLOWLIST, ...DELIVERABLE_ALLOWLIST } },
+      : { allowlist: { ...DEFAULT_ALLOWLIST, ...DELIVERABLE_ALLOWLIST, ...VOICE_ALLOWLIST } },
   );
   if (!gate.ok) throw new Refusal(`rejected by sanitization gate: ${gate.reason}`);
 

@@ -1,9 +1,9 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Camera, Check, CheckCheck, Clock3, Download, FileBox, ImageIcon, Paperclip, RotateCw, SendHorizontal, X } from "lucide-react";
+import { Camera, Check, CheckCheck, Clock3, Download, FileBox, ImageIcon, Mic, Paperclip, PenLine, RotateCw, SendHorizontal, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { dayKey, formatDayLabel, formatTime, MAX_UPLOAD_BYTES, THREAD_ACCEPT } from "@/core";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -15,6 +15,10 @@ import { postThreadAction } from "../fileActions";
 import { sendChatMessageAction } from "./actions";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
 import { refusalReason } from "@/lib/refusal";
+import { isPicture, preparePhoto } from "@/lib/client/images";
+
+import { ImageMarkup } from "./ImageMarkup";
+import { clock, useVoiceRecorder, voiceSupported } from "./useVoiceRecorder";
 
 /**
  * One order conversation as a chat (Phase 10c): bubbles (yours on the right),
@@ -120,6 +124,22 @@ export function ChatThread({
     });
   }, [saved]);
   const [viewing, setViewing] = useState<AttachmentRow | null>(null);
+  // Mark-up (Phase 15): the picture being marked up, and the result waiting in the composer.
+  const [markup, setMarkup] = useState<Blob | null>(null);
+  const [attach, setAttach] = useState<{ file: File; key: number } | null>(null);
+  const closeMarkup = useCallback(() => setMarkup(null), []);
+  const markUpViewing = async () => {
+    if (!viewing) return;
+    try {
+      const res = await fetch(`/api/thread-files/${viewing.id}`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      setViewing(null);
+      setMarkup(blob);
+    } catch {
+      toast("This picture could not be opened for marking up.", "danger");
+    }
+  };
 
   const items = useMemo<Item[]>(
     () =>
@@ -225,7 +245,7 @@ export function ChatThread({
                 {sep}
                 <div className="max-w-[80%] rounded-[var(--r-lg)] rounded-br-[var(--r-xs)] bg-primary px-3 py-2 text-[length:var(--fs-3)] text-primary-foreground">
                   {p.body && <p className="whitespace-pre-wrap break-words">{p.body}</p>}
-                  {p.fileName && <p className="truncate text-[length:var(--fs-2)]">{p.fileName}</p>}
+                  {p.fileName && <PendingFile pending={p} />}
                 </div>
                 {p.state === "failed" ? (
                   <button
@@ -270,7 +290,16 @@ export function ChatThread({
                   )}
                 >
                   {files.map((f) =>
-                    f.content_type.startsWith("image/") ? (
+                    f.content_type.startsWith("audio/") ? (
+                      <audio
+                        key={f.id}
+                        controls
+                        preload="none"
+                        src={`/api/thread-files/${f.id}`}
+                        aria-label="Voice message"
+                        className="block h-[var(--ctl-sm)] w-64 max-w-full"
+                      />
+                    ) : f.content_type.startsWith("image/") ? (
                       <button key={f.id} type="button" onClick={() => setViewing(f)} className="block overflow-hidden rounded-[var(--r-md)]" aria-label={`Open ${f.file_name}`}>
                         {/* eslint-disable-next-line @next/next/no-img-element -- served through the thread-file gate */}
                         <img src={`/api/thread-files/${f.id}`} alt="" loading="lazy" className="max-h-56 w-auto max-w-full object-cover" />
@@ -313,6 +342,8 @@ export function ChatThread({
           thread={thread}
           label={label}
           onSend={(p) => void send(p)}
+          onMarkup={(f) => setMarkup(f)}
+          attach={attach}
         />
       )}
 
@@ -324,6 +355,15 @@ export function ChatThread({
               <Dialog.Title className="min-w-0 truncate text-[length:var(--fs-3)]">{viewing?.file_name}</Dialog.Title>
               <Dialog.Description className="sr-only">Picture sent in the conversation</Dialog.Description>
               <div className="flex items-center gap-1">
+                {viewing && thread.can_post && (
+                  <button
+                    type="button"
+                    onClick={() => void markUpViewing()}
+                    className="inline-flex min-h-[var(--ctl-icon)] items-center gap-1.5 rounded-[var(--r-sm)] px-3 text-[length:var(--fs-3)] font-medium hover:bg-white/10"
+                  >
+                    <PenLine className="h-5 w-5" aria-hidden /> Mark up
+                  </button>
+                )}
                 {viewing && (
                   <a href={`/api/thread-files/${viewing.id}`} aria-label="Download" className="inline-flex h-[var(--ctl-icon)] w-[var(--ctl-icon)] items-center justify-center rounded-[var(--r-sm)] hover:bg-white/10">
                     <Download className="h-5 w-5" />
@@ -341,7 +381,35 @@ export function ChatThread({
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
+
+      <ImageMarkup
+        source={markup}
+        onCancel={closeMarkup}
+        onDone={(f) => {
+          setMarkup(null);
+          setAttach({ file: f, key: Date.now() });
+        }}
+      />
     </div>
+  );
+}
+
+/** What is on its way: the picture itself, a voice message, or the file's name. */
+function PendingFile({ pending }: { pending: Pending }) {
+  const file = pending.form.get("file");
+  const isFile = file instanceof File;
+  const url = useMemo(() => (isFile && file.type.startsWith("image/") ? URL.createObjectURL(file) : null), [file, isFile]);
+  useEffect(() => () => void (url && URL.revokeObjectURL(url)), [url]);
+  if (url) {
+    // eslint-disable-next-line @next/next/no-img-element -- the local picture while it uploads
+    return <img src={url} alt="" className="max-h-56 w-auto max-w-full rounded-[var(--r-md)] object-cover" />;
+  }
+  const voiceNote = isFile && file.type.startsWith("audio/");
+  return (
+    <p className="flex items-center gap-1.5 truncate text-[length:var(--fs-2)]">
+      {voiceNote && <Mic className="h-4 w-4 shrink-0" aria-hidden />}
+      {pending.fileName}
+    </p>
   );
 }
 
@@ -350,11 +418,17 @@ function Composer({
   thread,
   label,
   onSend,
+  onMarkup,
+  attach,
 }: {
   orderId: string;
   thread: ThreadRow;
   label: string;
   onSend: (p: Pending) => void;
+  /** Open the mark-up editor on this picture. */
+  onMarkup: (file: File) => void;
+  /** A picture handed in from outside (a marked-up copy), to send next. */
+  attach: { file: File; key: number } | null;
 }) {
   const text = useRef<HTMLTextAreaElement>(null);
   const camera = useRef<HTMLInputElement>(null);
@@ -362,9 +436,26 @@ function Composer({
   const picker = useRef<HTMLInputElement>(null);
   const [body, setBody] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const accept = thread.kind === "internal" ? THREAD_ACCEPT.internal : THREAD_ACCEPT.client_team;
   const allowed = useMemo(() => new Set(accept.split(",").map((s) => s.replace(".", ""))), [accept]);
+  const preview = useMemo(() => (file && file.type.startsWith("image/") ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
+
+  // Voice messages go to the client conversation only (the designer thread takes drawings and CAD).
+  const [canRecord, setCanRecord] = useState(false);
+  useEffect(() => setCanRecord(thread.kind === "client_team" && voiceSupported()), [thread.kind]);
+  const voice = useVoiceRecorder((recorded, secs) => {
+    const form = new FormData();
+    form.set("order_id", orderId);
+    form.set("thread_id", thread.id);
+    form.set("body", "");
+    form.set("file", recorded);
+    onSend({ id: newRef(), body: "", fileName: `Voice message · ${clock(secs)}`, at: new Date().toISOString(), state: "sending", form });
+  });
+  const record = () =>
+    void voice.start().catch(() => toast("The microphone is not available. Allow it for this site in the browser's settings.", "danger"));
 
   // Grow with the text, up to about six lines.
   useEffect(() => {
@@ -374,9 +465,28 @@ function Composer({
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [body]);
 
-  const choose = (f: File | undefined) => {
+  // A marked-up picture arrives ready to send.
+  useEffect(() => {
+    if (!attach) return;
+    setFile(attach.file);
+    text.current?.focus();
+  }, [attach]);
+
+  const choose = async (f: File | undefined) => {
     setAttaching(false);
     if (!f) return;
+    // Phone photos (HEIC, WebP, very large JPEGs) are redrawn as a JPEG the conversation accepts.
+    if (isPicture(f)) {
+      setPreparing(true);
+      try {
+        f = await preparePhoto(f);
+      } catch {
+        toast("This photo could not be read here. Take a screenshot of it, or choose it under File.", "danger");
+        return;
+      } finally {
+        setPreparing(false);
+      }
+    }
     const ext = extOf(f.name) || (f.type === "image/jpeg" ? "jpg" : f.type === "image/png" ? "png" : "");
     if (!allowed.has(ext)) {
       toast(`${f.name}: send ${accept.replace(/\./g, "").toUpperCase().split(",").join(", ")}`, "danger");
@@ -393,6 +503,8 @@ function Composer({
   const submit = () => {
     const trimmed = body.trim();
     if (!trimmed && !file) return;
+    // Keep the keyboard up: the box keeps its focus after sending, like a messenger.
+    const typing = typeof document !== "undefined" && document.activeElement === text.current;
     const form = new FormData();
     form.set("order_id", orderId);
     form.set("thread_id", thread.id);
@@ -401,6 +513,7 @@ function Composer({
     onSend({ id: newRef(), body: trimmed, fileName: file?.name ?? null, at: new Date().toISOString(), state: "sending", form });
     setBody("");
     setFile(null);
+    if (typing) text.current?.focus();
   };
 
   const input = (ref: React.RefObject<HTMLInputElement | null>, props: React.InputHTMLAttributes<HTMLInputElement>) => (
@@ -413,13 +526,17 @@ function Composer({
       onChange={(e) => {
         const f = e.target.files?.[0];
         e.target.value = "";
-        choose(f);
+        void choose(f);
       }}
       {...props}
     />
   );
 
+  // A press on these must not take the focus from the message box (that would close the phone's keyboard).
+  const keepFocus = (e: React.MouseEvent | React.PointerEvent) => e.preventDefault();
+  const round = "inline-flex h-[var(--ctl-icon)] w-[var(--ctl-icon)] shrink-0 items-center justify-center rounded-full";
   const option = "flex min-h-12 w-full items-center gap-3 rounded-[var(--r-sm)] px-2 text-[length:var(--fs-4)] hover:bg-accent [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-muted-foreground";
+  const empty = !body.trim() && !file;
   return (
     <form
       onSubmit={(e) => {
@@ -428,53 +545,78 @@ function Composer({
       }}
       className="border-t border-border bg-background px-[var(--s-3)] pb-[max(var(--s-3),env(safe-area-inset-bottom))] pt-[var(--s-3)]"
     >
-      {file && (
-        <p className="mb-2 flex items-center gap-2 rounded-[var(--r-md)] bg-subtle px-3 py-1.5 text-[length:var(--fs-2)]">
-          <Paperclip className="h-4 w-4 shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1 truncate">{file.name}</span>
-          <button type="button" onClick={() => setFile(null)} aria-label="Remove the file" className="inline-flex h-7 w-7 items-center justify-center rounded-full hover:bg-accent">
-            <X className="h-4 w-4" />
-          </button>
-        </p>
+      {(file || preparing) && (
+        <div className="mb-2 flex items-center gap-2 rounded-[var(--r-md)] bg-subtle p-1.5 text-[length:var(--fs-2)]">
+          {preview ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a local preview of the picture about to be sent
+            <img src={preview} alt="" className="h-12 w-12 shrink-0 rounded-[var(--r-sm)] object-cover" />
+          ) : (
+            <Paperclip className="mx-1.5 h-4 w-4 shrink-0" aria-hidden />
+          )}
+          <span className="min-w-0 flex-1 truncate">{preparing ? "Preparing the photo…" : file?.name}</span>
+          {file && preview && (
+            <button type="button" onClick={() => onMarkup(file)} className="inline-flex min-h-[var(--ctl-sm)] items-center gap-1.5 rounded-[var(--r-full)] px-3 font-medium hover:bg-accent">
+              <PenLine className="h-4 w-4" aria-hidden /> Mark up
+            </button>
+          )}
+          {file && (
+            <button type="button" onClick={() => setFile(null)} aria-label="Remove the file" className="inline-flex h-[var(--ctl-sm)] w-[var(--ctl-sm)] items-center justify-center rounded-full hover:bg-accent">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       )}
-      <div className="flex items-end gap-2">
-        <button
-          type="button"
-          onClick={() => setAttaching(true)}
-          aria-label="Attach"
-          className="inline-flex h-[var(--ctl-icon)] w-[var(--ctl-icon)] shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <Paperclip className="h-5 w-5" />
-        </button>
-        <textarea
-          ref={text}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            // Enter sends with a keyboard; on a phone it is a new line.
-            if (e.key === "Enter" && !e.shiftKey && window.matchMedia("(pointer: fine)").matches) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          rows={1}
-          maxLength={5000}
-          placeholder="Message"
-          aria-label={label}
-          className="min-h-[var(--ctl-icon)] flex-1 resize-none rounded-[var(--r-lg)] border border-input bg-background px-3 py-2 text-[length:var(--fs-4)] leading-[var(--lh-4)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        <button
-          type="submit"
-          aria-label="Send"
-          disabled={!body.trim() && !file}
-          className="inline-flex h-[var(--ctl-icon)] w-[var(--ctl-icon)] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
-        >
-          <SendHorizontal className="h-5 w-5" />
-        </button>
-      </div>
+
+      {voice.recording ? (
+        <div className="flex items-center gap-2" role="group" aria-label="Recording a voice message">
+          <button type="button" onClick={() => voice.stop(false)} aria-label="Delete the recording" className={cn(round, "text-muted-foreground hover:bg-accent hover:text-foreground")}>
+            <Trash2 className="h-5 w-5" />
+          </button>
+          <span className="flex min-h-[var(--ctl-icon)] flex-1 items-center gap-2 rounded-[var(--r-lg)] border border-input px-3 text-[length:var(--fs-3)]" aria-live="polite">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[color:var(--tone-danger-fg)] motion-reduce:animate-none" aria-hidden />
+            <span className="tabular font-medium">{clock(voice.seconds)}</span>
+            <span className="text-muted-foreground">Recording…</span>
+          </span>
+          <button type="button" onClick={() => voice.stop(true)} aria-label="Send the voice message" className={cn(round, "bg-primary text-primary-foreground")}>
+            <SendHorizontal className="h-5 w-5" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-end gap-2">
+          <button type="button" onClick={() => setAttaching(true)} aria-label="Attach" className={cn(round, "text-muted-foreground hover:bg-accent hover:text-foreground")}>
+            <Paperclip className="h-5 w-5" />
+          </button>
+          <textarea
+            ref={text}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter sends with a keyboard; on a phone it is a new line.
+              if (e.key === "Enter" && !e.shiftKey && window.matchMedia("(pointer: fine)").matches) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            rows={1}
+            maxLength={5000}
+            placeholder="Message"
+            aria-label={label}
+            className="min-h-[var(--ctl-icon)] flex-1 resize-none rounded-[var(--r-lg)] border border-input bg-background px-3 py-2 text-[length:var(--fs-4)] leading-[var(--lh-4)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {empty && canRecord ? (
+            <button type="button" onMouseDown={keepFocus} onClick={record} aria-label="Record a voice message" className={cn(round, "bg-primary text-primary-foreground")}>
+              <Mic className="h-5 w-5" />
+            </button>
+          ) : (
+            <button type="submit" onMouseDown={keepFocus} aria-label="Send" disabled={empty} className={cn(round, "bg-primary text-primary-foreground disabled:opacity-40")}>
+              <SendHorizontal className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {input(camera, { accept: "image/*", capture: "environment" })}
-      {input(gallery, { accept: ".png,.jpg,.jpeg" })}
+      {input(gallery, { accept: "image/*" })}
       {input(picker, { accept })}
 
       <Sheet open={attaching} onOpenChange={setAttaching}>
