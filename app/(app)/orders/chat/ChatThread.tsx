@@ -46,8 +46,13 @@ interface Pending {
   fileName: string | null;
   at: string;
   state: "sending" | "sent" | "failed";
+  /** The saved message's id, once the server has answered. */
+  savedId?: string;
   form: FormData;
 }
+
+/** The saved copy of this send is in the conversation. */
+const isSaved = (p: Pending, saved: Set<string>) => saved.has(p.id) || (!!p.savedId && saved.has(p.savedId));
 
 /** A name for a send, unique enough to tell repeats of it apart from new messages. */
 const newRef = () =>
@@ -101,10 +106,19 @@ export function ChatThread({
   const router = useRouter();
   const log = useRef<HTMLDivElement>(null);
   const [pending, setPending] = useState<Pending[]>([]);
-  // A sent text leaves the list of pending ones once the saved copy has arrived.
-  const saved = useMemo(() => new Set(messages.map((m) => m.client_ref).filter(Boolean)), [messages]);
+  // A sent text leaves the list of pending ones once the saved copy has
+  // arrived: known by the browser's reference (0053) or by the id the send
+  // answered with, so it is never on screen twice, with or without 0053.
+  const saved = useMemo(() => new Set(messages.flatMap((m) => (m.client_ref ? [m.id, m.client_ref] : [m.id]))), [messages]);
   const readUpTo = othersReadAt ? Date.parse(othersReadAt) : -Infinity;
-  const shown = useMemo(() => pending.filter((p) => !saved.has(p.id)), [pending, saved]);
+  const shown = useMemo(() => pending.filter((p) => !isSaved(p, saved)), [pending, saved]);
+  // ... and is then forgotten.
+  useEffect(() => {
+    setPending((list) => {
+      const left = list.filter((p) => !isSaved(p, saved));
+      return left.length === list.length ? list : left;
+    });
+  }, [saved]);
   const [viewing, setViewing] = useState<AttachmentRow | null>(null);
 
   const items = useMemo<Item[]>(
@@ -159,8 +173,8 @@ export function ChatThread({
         setPending((list) => list.filter((x) => x.id !== p.id));
         return;
       }
-      await sendChatMessageAction(thread.id, p.body, p.id);
-      setPending((list) => list.map((x) => (x.id === p.id ? { ...x, state: "sent" } : x)));
+      const { id } = await sendChatMessageAction(thread.id, p.body, p.id);
+      setPending((list) => list.map((x) => (x.id === p.id ? { ...x, state: "sent", savedId: id } : x)));
       // The saved copy (and anything else new) arrives without holding the bubble up.
       startTransition(() => router.refresh());
     } catch (e) {
