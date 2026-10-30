@@ -18,7 +18,7 @@
 | `/admin/settings` | 332 |
 | `/dashboard` | 109 |
 | `/orders` | 77 |
-| `/orders/3S2UQQaxP5vx8PNSc3RRs` | 500 |
-| `/orders/ywNB5ixjduRZjX82MuKEk` | 87 |
+| `/orders/GNwturFbNBGzctZ96X3jj` | 500 |
+| `/orders/TsFGXvxvQFJBVnf2mquTB` | 87 |
 | `/messages` | 216 |
 | `/account` | 52 |
