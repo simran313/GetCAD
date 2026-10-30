@@ -81,7 +81,15 @@ export interface MessageRow {
   is_mine: boolean;
   body: string;
   created_at: string;
+  /** The sender's own name for the send (0053); only ever on your own messages. */
+  client_ref?: string | null;
 }
+
+/** How far the other side has read each thread (thread_read_state, 0053): thread id -> time, or null. */
+export type ThreadReads = Record<string, string | null>;
+
+export const toThreadReads = (rows: unknown): ThreadReads =>
+  Object.fromEntries(((rows ?? []) as { thread_id: string; others_read_at: string | null }[]).map((r) => [r.thread_id, r.others_read_at]));
 
 export interface DisputeRow {
   id: string;

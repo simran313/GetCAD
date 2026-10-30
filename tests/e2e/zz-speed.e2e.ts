@@ -144,8 +144,8 @@ async function softNav(page: Page, link: ReturnType<Page["locator"]> | "back", h
 
 /**
  * Send a chat message and time, from the press: "shown" (the bubble is on
- * screen, as sending) and "saved" (the server has it: the bubble is no
- * longer marked as sending).
+ * screen, with its clock) and "saved" (the server has it: the clock has
+ * become a tick).
  */
 async function chatSend(page: Page, text: string): Promise<{ shown: number; saved: number; pressedAt: number }> {
   await page.evaluate((text) => {
@@ -165,7 +165,7 @@ async function chatSend(page: Page, text: string): Promise<{ shown: number; save
       const has = log?.textContent?.includes(text) ?? false;
       const now = performance.now();
       if (has && w.__shown === null) w.__shown = now;
-      if (has && w.__saved === null && !log!.textContent!.includes("Sending")) {
+      if (has && w.__saved === null && !log!.querySelector('[aria-label="Sending"]')) {
         w.__saved = now;
         obs.disconnect();
       }

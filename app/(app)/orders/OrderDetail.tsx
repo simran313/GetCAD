@@ -36,7 +36,7 @@ import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
 import { ThreadsPanel } from "./ThreadsPanel";
-import type { AttachmentRow, DisputeRow, MessageRow, OrderRow, ThreadRow, VersionRow } from "./types";
+import type { AttachmentRow, DisputeRow, MessageRow, OrderRow, ThreadReads, ThreadRow, VersionRow } from "./types";
 import { viewerZone } from "@/lib/time/zone";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
@@ -129,6 +129,7 @@ export async function OrderDetail({
   intake = null,
   threads = [],
   attachments = [],
+  reads,
   transitions,
   versions,
   messages,
@@ -156,6 +157,8 @@ export async function OrderDetail({
   threads?: ThreadRow[];
   /** Files sent in those threads (0045). */
   attachments?: AttachmentRow[];
+  /** How far the other side has read each thread (the ticks). */
+  reads?: ThreadReads;
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -704,6 +707,7 @@ export async function OrderDetail({
         threads={threads}
         messages={messages}
         attachments={attachments}
+        reads={reads}
       />
     </>
   );

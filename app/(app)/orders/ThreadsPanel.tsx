@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ChatThread } from "./chat/ChatThread";
-import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "./types";
+import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
 
 /**
  * The order's conversations (DECISIONS §11, Phase 4a).
@@ -37,12 +37,15 @@ export function ThreadsPanel({
   threads,
   messages,
   attachments,
+  reads = {},
 }: {
   orderId: string;
   relation: OrderRow["relation"];
   threads: ThreadRow[];
   messages: MessageRow[];
   attachments: AttachmentRow[];
+  /** How far the other side has read each thread (the ticks). */
+  reads?: ThreadReads;
 }) {
   const sorted = [...threads].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
   return (
@@ -63,6 +66,7 @@ export function ThreadsPanel({
               messages={rows}
               attachments={attachments.filter((a) => a.thread_id === t.id)}
               client={relation === "CLIENT"}
+              othersReadAt={reads[t.id] ?? null}
               label={`Message in ${title}`}
             />
           </Card>

@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { briefRows, buildTimeline, chatMilestones, clientNextStep, productWord, type TimelineRawRow } from "@/core";
 import { formatMoney } from "@/lib/money";
 
-import type { AttachmentRow, MessageRow, OrderRow, ThreadRow } from "../orders/types";
+import { toThreadReads, type AttachmentRow, type MessageRow, type OrderRow, type ThreadRow } from "../orders/types";
 import type { Conversation, OpenConversation } from "./MessagesView";
 
 /** Unread message notifications per order, for badges. */
@@ -63,7 +63,7 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
   // The client and the team see the order's own name, its events and brief
   // beside the chat; a designer keeps the job code and the messages only.
   const full = o.relation !== "DESIGNER";
-  const [threads, messages, files, stamp, unread, timeline, spec, accents] = await Promise.all([
+  const [threads, messages, files, stamp, unread, timeline, spec, accents, reads] = await Promise.all([
     supabase.rpc("order_threads", { p_order_id: orderId }),
     supabase.rpc("order_messages", { p_order_id: orderId }),
     supabase.rpc("thread_attachments", { p_order_id: orderId }),
@@ -79,6 +79,7 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
     full ? supabase.rpc("order_timeline", { p_order_id: orderId }) : Promise.resolve({ data: null }),
     full ? supabase.from("order_specs").select("*").eq("order_id", orderId).maybeSingle() : Promise.resolve({ data: null }),
     full ? supabase.from("order_spec_accents").select("quantity").eq("order_id", orderId) : Promise.resolve({ data: null }),
+    supabase.rpc("thread_read_state", { p_order_id: orderId }),
   ]);
   const s = (spec.data ?? null) as Record<string, unknown> | null;
   const service = o.service ?? "cad";
@@ -96,6 +97,7 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
     ),
     attachments: (files.data ?? []) as AttachmentRow[],
     stamp: stamp.data == null ? null : String(stamp.data),
+    reads: toThreadReads(reads.data),
     unreadSince: ((unread.data ?? []) as { created_at: string }[])[0]?.created_at ?? null,
     events: chatMilestones(buildTimeline((timeline.data ?? []) as TimelineRawRow[])).map((e) => ({ id: e.id, label: e.label, at: e.createdAt })),
     brief: s
