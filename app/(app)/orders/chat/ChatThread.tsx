@@ -12,7 +12,7 @@ import { useTimeZone } from "@/components/time-zone";
 import { cn } from "@/lib/utils";
 
 import { postThreadAction } from "../fileActions";
-import { markThreadReadAction, sendChatMessageAction } from "./actions";
+import { sendChatMessageAction } from "./actions";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
 
 /**
@@ -136,7 +136,7 @@ export function ChatThread({
     if (!latestOther || !el) return;
     let inView = false;
     const mark = () => {
-      if (inView && document.visibilityState === "visible") void markThreadReadAction(thread.id).catch(() => {});
+      if (inView && document.visibilityState === "visible") void fetch(`/api/threads/${thread.id}/read`, { method: "POST", keepalive: true }).catch(() => {});
     };
     const io = new IntersectionObserver(([e]) => {
       inView = !!e?.isIntersecting;
