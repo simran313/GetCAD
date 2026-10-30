@@ -19,27 +19,46 @@ export async function loadUnreadByOrder(supabase: SupabaseClient): Promise<Map<s
 }
 
 /**
- * The viewer's conversations, newest first (my_conversations, 0046), each
- * with its unread count (unread MESSAGE notifications on the order) and the
- * piece's name where the database lets this viewer read it (shown to clients).
+ * The viewer's conversations, newest first (my_conversations, 0046): every
+ * thread of every order they may read, with or without messages (each order
+ * gets its client and designer threads when it is made, 0036). Each comes
+ * with its unread count (unread MESSAGE notifications on the order), what
+ * the piece is (the client's own name for it, to the client; the product, to
+ * the team) and the day the order was placed. A designer gets neither: they
+ * know a job by its code (DECISIONS §2).
  */
 export async function loadConversations(supabase: SupabaseClient): Promise<Conversation[]> {
   const [{ data, error }, unread] = await Promise.all([supabase.rpc("my_conversations"), loadUnreadByOrder(supabase)]);
   if (error) throw new Error(error.message);
-  const rows = (data ?? []) as Omit<Conversation, "title" | "unread">[];
+  const rows = (data ?? []) as Omit<Conversation, "title" | "unread" | "placed_at">[];
   const titles = new Map<string, string>();
-  // Names are shown to clients only (InboxRow); staff keep the reference.
+  const placed = new Map<string, string>();
   if (rows.length > 0) {
-    const { data: specs } = await supabase
-      .from("order_specs")
-      .select("order_id, reference_name, product")
-      .in("order_id", [...new Set(rows.map((r) => r.order_id))]);
-    for (const s of (specs ?? []) as { order_id: string; reference_name: string | null; product: string | null }[]) {
+    const ids = [...new Set(rows.map((r) => r.order_id))];
+    const [specs, orders] = await Promise.all([
+      supabase.from("order_specs").select("order_id, reference_name, product").in("order_id", ids),
+      supabase.rpc("visible_orders").select("id, relation, product_type, created_at").in("id", ids),
+    ]);
+    // The client's own name for the piece goes to the client only; the team
+    // sees the product; a designer neither (nor the date).
+    const named = new Set<string>();
+    for (const o of (orders.data ?? []) as { id: string; relation: string; product_type: string | null; created_at: string }[]) {
+      if (o.relation === "DESIGNER") continue;
+      if (o.relation === "CLIENT") named.add(o.id);
+      placed.set(o.id, o.created_at);
+      if (o.product_type) titles.set(o.id, productWord(o.product_type));
+    }
+    for (const s of (specs.data ?? []) as { order_id: string; reference_name: string | null; product: string | null }[]) {
       const name = s.reference_name || (s.product ? productWord(s.product) : null);
-      if (name) titles.set(s.order_id, name);
+      if (name && named.has(s.order_id)) titles.set(s.order_id, name);
     }
   }
-  return rows.map((r) => ({ ...r, title: titles.get(r.order_id) ?? null, unread: unread.get(r.order_id) ?? 0 }));
+  return rows.map((r) => ({
+    ...r,
+    title: titles.get(r.order_id) ?? null,
+    placed_at: placed.get(r.order_id) ?? null,
+    unread: unread.get(r.order_id) ?? 0,
+  }));
 }
 
 /** One order's conversation, as the viewer may read it; null if not visible. */

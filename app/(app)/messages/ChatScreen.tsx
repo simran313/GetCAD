@@ -31,14 +31,19 @@ const KIND_LABEL: Record<ThreadRow["kind"], string> = { client_team: "Client", i
 export function ChatScreen({
   open,
   call,
+  startOn,
 }: {
   open: OpenConversation;
   call: { phone: string | null; hours: string };
+  /** The thread to open first (the team's list links to the one that moved last). */
+  startOn?: ThreadRow["kind"];
 }) {
   const shell = useRef<HTMLDivElement>(null);
   const client = open.relation === "CLIENT";
   const designer = open.relation === "DESIGNER";
-  const [kind, setKind] = useState<ThreadRow["kind"]>(open.threads[0]?.kind ?? "client_team");
+  const [kind, setKind] = useState<ThreadRow["kind"]>(
+    (startOn && open.threads.some((t) => t.kind === startOn) ? startOn : open.threads[0]?.kind) ?? "client_team",
+  );
   const [details, setDetails] = useState(false);
   // Kept from the first render: reading the chat clears the notifications.
   const [unreadSince] = useState(open.unreadSince);
