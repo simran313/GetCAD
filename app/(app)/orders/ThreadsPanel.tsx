@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ChatThread } from "./chat/ChatThread";
@@ -13,6 +15,10 @@ import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from
  * Files sent with a message (Phase 4b) are named by the server and download
  * through /api/thread-files, which applies the same thread rule. Each thread
  * is the same chat as the Messages screen (Phase 10c), in a bounded panel.
+ *
+ * A client component, so the chat is only ever imported from the browser
+ * side (here and on the Messages screen): rendered straight from the server
+ * pages as well, the production server lost track of it (Phase 14 e2e).
  */
 
 const small = "text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground";
