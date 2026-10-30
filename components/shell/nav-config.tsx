@@ -53,7 +53,7 @@ export const navIcon = (key: string) => ICON[key] ?? <Inbox />;
 
 const GROUPS: Record<string, [string | undefined, string[]][]> = {
   staff: [
-    ["Work", ["queue", "orders", "new"]],
+    ["Work", ["queue", "orders", "messages", "new"]],
     ["Money", ["billing"]],
     ["People", ["clients", "access", "applications", "leads"]],
     ["System", ["settings"]],

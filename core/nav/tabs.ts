@@ -86,6 +86,9 @@ const STAFF_TABS: Tab[] = [
   { key: "queue", label: "Queue", href: "/admin", icon: "queue" },
   { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus" },
   { key: "orders", label: "All orders", href: "/admin/orders", icon: "list" },
+  // Every order's client and designer conversations, messages or not (Phase 15).
+  // On a phone it is the bar's own Messages button.
+  { key: "messages", label: "Messages", href: "/messages", icon: "message", mobile: false },
   { key: "billing", label: "Billing", href: "/admin/billing", icon: "wallet", mobile: false },
   { key: "clients", label: "Clients", href: "/admin/clients", icon: "user", mobile: false },
   { key: "access", label: "Access", href: "/admin/access", icon: "board", mobile: false },
