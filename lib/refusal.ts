@@ -12,6 +12,8 @@
  * Anything else (a lost connection, a permission the database denied, a bug)
  * stays a plain Error: generic words and a reference.
  */
+import { friendlyReason } from "@/core/errors/friendly";
+
 const PREFIX = "refused:";
 
 export class Refusal extends Error {
@@ -39,8 +41,10 @@ export function refuseOn(error: { message: string; code?: string } | null | unde
 export function refusalReason(error: unknown): string | null {
   const digest = (error as { digest?: unknown } | null)?.digest;
   if (typeof digest !== "string" || !digest.startsWith(PREFIX)) return null;
-  const reason = digest.slice(PREFIX.length).trim();
-  if (!reason) return null;
+  const raw = digest.slice(PREFIX.length).trim();
+  if (!raw) return null;
+  // Reworded for the reader where we know the rule (core/errors/friendly).
+  const reason = friendlyReason(raw);
   const sentence = reason.charAt(0).toUpperCase() + reason.slice(1);
   return /[.!?]$/.test(sentence) ? sentence : `${sentence}.`;
 }
