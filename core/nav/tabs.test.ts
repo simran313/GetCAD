@@ -21,10 +21,11 @@ describe("tabsForRole", () => {
   });
 
   // A1–A10 (Phase 5d).
-  it("gives the admin workspace its ten tabs, four on the phone", () => {
+  it("gives the admin workspace its eleven tabs, four on the phone", () => {
     expect(tabsForRole("OPS").map((t) => t.label)).toEqual([
-      "Queue", "Create order", "All orders", "Billing", "Clients", "Access", "Applications", "Leads", "Settings", "Account",
+      "Queue", "Create order", "All orders", "Messages", "Billing", "Clients", "Access", "Applications", "Leads", "Settings", "Account",
     ]);
+    expect(activeTabKey("/messages/ord_1", tabsForRole("OPS"))).toBe("messages");
     expect(mobileTabs(tabsForRole("OPS")).map((t) => t.key)).toEqual(["queue", "new", "orders", "account"]);
     expect(activeTabKey("/admin/orders", tabsForRole("OPS"))).toBe("orders");
     expect(activeTabKey("/admin/access/pods", tabsForRole("OPS"))).toBe("access");

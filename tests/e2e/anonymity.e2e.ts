@@ -43,6 +43,11 @@ function forbidden(): string[] {
 async function capture(page: Page, path: string): Promise<string> {
   const bodies: Promise<string>[] = [];
   const onResponse = (r: import("@playwright/test").Response) => {
+    // A link prefetched in the background (the sidebar's job list) is another
+    // page: it is crawled and checked on its own. Kept here it landed in some
+    // captures and not others, by timing, and read as a link between jobs
+    // (a job code from the list, "RN-C-2", on two pages of one client).
+    if (r.request().headers()["next-router-prefetch"]) return;
     const type = r.headers()["content-type"] ?? "";
     if (r.url().startsWith("http://127.0.0.1:3100") && /text\/x-component|application\/json|text\/html/.test(type)) {
       // A body still streaming after 5 s is not waited for.
