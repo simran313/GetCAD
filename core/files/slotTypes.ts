@@ -51,6 +51,9 @@ const BY_EXTENSION: Record<string, string> = {
   png: "image/png",
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
+  webm: "audio/webm",
+  m4a: "audio/mp4",
+  ogg: "audio/ogg",
 };
 
 export function attachmentContentType(fileName: string, browserType: string): string {

@@ -196,3 +196,39 @@ test("a sent message is on screen once, before and after the saved copy arrives 
   await expect(log.getByText(text, { exact: true })).toHaveCount(1);
   await client.context().close();
 });
+
+test("a photo is marked up and sent from the chat, and the message box keeps its focus (Phase 15)", async ({ browser }) => {
+  const client = await signedIn(browser, "client2");
+  await client.goto(`/messages/${orderId}`);
+  const log = client.getByRole("log", { name: "Messages" });
+  const box = client.getByLabel("Message", { exact: true });
+
+  // After sending, the box keeps the focus (on a phone, the keyboard stays up).
+  await box.fill("Two changes, see the picture.");
+  await box.focus();
+  await client.getByRole("button", { name: "Send" }).click();
+  await expect(log.getByText("Two changes, see the picture.")).toBeVisible();
+  await expect(box).toBeFocused();
+
+  // Photos: any picture; mark it up with the pen and a numbered pin.
+  const pictures = log.locator('img[src^="/api/thread-files/"]');
+  const before = await pictures.count();
+  await client.locator('input[type="file"][accept="image/*"]:not([capture])').setInputFiles({ name: "IMG_2041.png", mimeType: "image/png", buffer: png([200, 180, 120], 64) });
+  await client.getByRole("button", { name: "Mark up" }).click();
+  const editor = client.getByRole("dialog", { name: "Mark up" });
+  const canvas = editor.locator("canvas");
+  await expect(canvas).toBeVisible();
+  const area = (await canvas.boundingBox())!;
+  await client.mouse.move(area.x + area.width * 0.2, area.y + area.height * 0.2);
+  await client.mouse.down();
+  await client.mouse.move(area.x + area.width * 0.6, area.y + area.height * 0.5, { steps: 5 });
+  await client.mouse.up();
+  await editor.getByRole("button", { name: "Pin" }).click();
+  await canvas.click({ position: { x: area.width * 0.7, y: area.height * 0.7 } });
+  await editor.getByRole("button", { name: "Done" }).click();
+  await expect(editor).toHaveCount(0);
+
+  await client.getByRole("button", { name: "Send" }).click();
+  await expect(pictures).toHaveCount(before + 1, { timeout: 20_000 });
+  await client.context().close();
+});

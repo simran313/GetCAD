@@ -13,6 +13,7 @@ import type { ClientOrder } from "@/lib/client/orders";
 import { formatMoney } from "@/lib/money";
 import { viewerZone } from "@/lib/time/zone";
 
+import { InboxLive } from "../messages/InboxLive";
 import { InboxRow } from "../messages/InboxRow";
 import type { Conversation } from "../messages/MessagesView";
 
@@ -131,6 +132,7 @@ export async function ClientHome({
                   All <ArrowRight />
                 </Link>
               </div>
+              <InboxLive />
               <ul className={`${CARD} overflow-hidden`}>
                 {inbox.map((c) => (
                   <li key={c.thread_id}>
