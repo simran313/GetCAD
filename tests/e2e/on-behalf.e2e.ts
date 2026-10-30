@@ -168,3 +168,15 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
   }
   await admin.context().close();
 });
+
+test("a refused action says why, in the production build (Phase 11c)", async ({ browser }) => {
+  // The same refusal as the first test: the reason reaches the screen
+  // instead of Next's generic words, and there is no fault reference to quote.
+  const admin = await signedIn(browser, "admin");
+  await fillOrder(admin);
+  await screenshots(admin).evaluate((el) => el.removeAttribute("required"));
+  await refused(admin, admin.getByRole("button", { name: "Place order" }));
+  await expect(admin.getByText("Add at least one screenshot of the request.", { exact: true })).toBeVisible();
+  await expect(admin.getByText(/^Reference:/)).toHaveCount(0);
+  await admin.context().close();
+});

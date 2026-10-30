@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ReferencePinner } from "./ReferencePinner";
 import { addReferenceImageAction, removeReferenceImageAction, setPrimaryReferenceAction } from "./referenceActions";
 import type { ReferenceImage } from "./ReferenceSection";
+import { actionErrorText } from "@/lib/refusal";
 
 const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
 
@@ -55,8 +56,9 @@ export function Photos({ orderId, images, readOnly = false }: { orderId: string;
     for (const [i, file] of ok.entries()) {
       try {
         await addReferenceImageAction(fd({ order_id: orderId, image: file }));
-      } catch {
-        toast(`${file.name} was not added`, "danger");
+      } catch (e) {
+        const why = actionErrorText(e);
+        toast(why ? `${file.name} was not added: ${why}` : `${file.name} was not added`, "danger");
       } finally {
         setUploading((u) => u.filter((p) => p !== previews[i]));
         URL.revokeObjectURL(previews[i]!);
@@ -70,8 +72,8 @@ export function Photos({ orderId, images, readOnly = false }: { orderId: string;
       try {
         await removeReferenceImageAction(fd({ order_id: orderId, image_id: image.id }));
         router.refresh();
-      } catch {
-        toast("Not removed", "danger");
+      } catch (e) {
+        toast(actionErrorText(e) ?? "Not removed", "danger");
       }
     });
 

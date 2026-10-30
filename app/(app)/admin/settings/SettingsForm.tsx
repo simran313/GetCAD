@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { setFlagAction, setSettingAction } from "./actions";
 import { FIELDS, FLAGS, SECTIONS, toShown, toStored, withUnit, type Field } from "./fields";
+import { actionErrorText } from "@/lib/refusal";
 
 /**
  * Settings, interactive half (redesign A11). Human labels and units; one save
@@ -70,7 +71,7 @@ function Switch({ flag, editable }: { flag: FlagRow; editable: boolean }) {
               toast(`${label}: ${next ? "on" : "off"}`);
             } catch (e) {
               setOn(!next);
-              toast(`Not changed: ${e instanceof Error && e.message ? e.message : "the database refused it"}`, "danger");
+              toast(`Not changed: ${actionErrorText(e) ?? "the database refused it"}`, "danger");
             }
           });
         }}
@@ -144,7 +145,7 @@ export function SettingsForm({
           await setSettingAction(fd({ key: k, value: r.value === null ? "" : String(r.value) }));
           done.push(k);
         } catch (e) {
-          toast(`${fieldFor(byKey.get(k)!).label} not saved: ${e instanceof Error && e.message ? e.message : "the database refused it"}`, "danger");
+          toast(`${fieldFor(byKey.get(k)!).label} not saved: ${actionErrorText(e) ?? "the database refused it"}`, "danger");
           break;
         }
       }

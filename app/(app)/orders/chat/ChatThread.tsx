@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { postThreadAction } from "../fileActions";
 import { sendChatMessageAction } from "./actions";
 import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
+import { refusalReason } from "@/lib/refusal";
 
 /**
  * One order conversation as a chat (Phase 10c): bubbles (yours on the right),
@@ -162,9 +163,9 @@ export function ChatThread({
       setPending((list) => list.map((x) => (x.id === p.id ? { ...x, state: "sent" } : x)));
       // The saved copy (and anything else new) arrives without holding the bubble up.
       startTransition(() => router.refresh());
-    } catch {
+    } catch (e) {
       setPending((list) => list.map((x) => (x.id === p.id ? { ...x, state: "failed" } : x)));
-      toast("Not sent. Tap Retry.", "danger");
+      toast(refusalReason(e) ?? "Not sent. Tap Retry.", "danger");
     }
   };
 

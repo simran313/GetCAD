@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { refuseOn } from "@/lib/refusal";
 
 /**
  * Payout batches (DECISIONS §5, Phase 3b). Each runs as the caller: the
@@ -12,7 +13,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 export async function exportPayoutsAction(): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("export_payouts");
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/payouts");
 }
 
@@ -21,6 +22,6 @@ export async function markBatchPaidAction(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("mark_payout_batch_paid", {
     p_batch: formData.get("batch")?.toString() ?? "",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/payouts");
 }

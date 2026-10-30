@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { generateId } from "@/core";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * Apply to become a designer. The DB function is the source of truth (audited
@@ -14,7 +15,7 @@ export async function applyAsDesignerAction(formData: FormData): Promise<void> {
   const legalName = formData.get("legal_name")?.toString().trim() ?? "";
   const email = formData.get("email")?.toString().trim() ?? "";
   const country = formData.get("country")?.toString().trim() || null;
-  if (!legalName || !email) throw new Error("legal name and email are required");
+  if (!legalName || !email) throw new Refusal("legal name and email are required");
 
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("apply_as_designer", {
@@ -23,7 +24,7 @@ export async function applyAsDesignerAction(formData: FormData): Promise<void> {
     p_email: email,
     p_country: country,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/onboarding/designer");
 }
 
@@ -35,13 +36,13 @@ export async function applyAsDesignerAction(formData: FormData): Promise<void> {
  */
 export async function signAgreementAction(formData: FormData): Promise<void> {
   const expectedSha256 = formData.get("expected_sha256")?.toString() ?? "";
-  if (!expectedSha256) throw new Error("missing document fingerprint");
+  if (!expectedSha256) throw new Refusal("missing document fingerprint");
 
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("accept_designer_agreement", {
     p_expected_sha256: expectedSha256,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/onboarding/designer");
   revalidatePath("/orders");
 }

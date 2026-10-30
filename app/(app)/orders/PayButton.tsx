@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/money";
 
 import { startPaymentAction } from "./paymentActions";
+import { actionErrorText } from "@/lib/refusal";
 
 /**
  * Opens Razorpay Checkout for a QUOTED order.
@@ -85,7 +86,7 @@ export function PayButton({
       });
       checkout.open();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not start payment.");
+      setError(actionErrorText(e) ?? "Could not start payment.");
     } finally {
       setBusy(false);
     }

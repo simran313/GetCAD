@@ -7,6 +7,7 @@ import { generateId } from "@/core";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * Start a new order and go straight to its brief.
@@ -28,7 +29,7 @@ export async function startBriefAction(formData?: FormData): Promise<void> {
   // action in the product. Every other authenticated screen already does this;
   // this path was the one that did not.
   const ensured = await supabase.rpc("ensure_self");
-  if (ensured.error) throw new Error(ensured.error.message);
+  refuseOn(ensured.error);
 
   // An untouched draft of the same kind is reused rather than adding another
   // empty one to the list each time "New order" is pressed.
@@ -46,10 +47,10 @@ type Supabase = Awaited<ReturnType<typeof createUserSupabaseClient>>;
 async function newDraft(supabase: Supabase, service: "cad" | "render"): Promise<string> {
   const id = generateId();
   const { error } = await supabase.rpc("create_order", { p_id: id, p_product_type: "CAD_MODEL", p_currency: "USD" });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   if (service === "render") {
     const { error: serviceError } = await supabase.rpc("set_order_service", { p_order_id: id, p_service: "render" });
-    if (serviceError) throw new Error(serviceError.message);
+    refuseOn(serviceError);
   }
   return id;
 }
@@ -90,7 +91,7 @@ export async function duplicateBriefAction(formData: FormData): Promise<void> {
     .select("id, relation, service")
     .maybeSingle();
   const source = from as { id: string; relation: string; service: string | null } | null;
-  if (!source || source.relation !== "CLIENT") throw new Error("order not found");
+  if (!source || source.relation !== "CLIENT") throw new Refusal("order not found");
 
   const [specRes, accentsRes, imagesRes] = await Promise.all([
     supabase.from("order_specs").select("*").eq("order_id", fromId).maybeSingle(),
@@ -102,7 +103,7 @@ export async function duplicateBriefAction(formData: FormData): Promise<void> {
       .order("position"),
   ]);
   const spec = specRes.data as Record<string, string | number | boolean | null> | null;
-  if (!spec) throw new Error("that order has no brief to copy");
+  if (!spec) throw new Refusal("that order has no brief to copy");
 
   const service = source.service === "render" ? "render" : "cad";
   const id = await newDraft(supabase, service);
@@ -138,7 +139,7 @@ export async function duplicateBriefAction(formData: FormData): Promise<void> {
     p_inner_diameter_um: v("inner_diameter_um"),
     p_length_um: v("length_um"),
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   const accents = (accentsRes.data ?? []) as { shape: string; width_um: number; quantity: number; setting: string }[];
   if (accents.length > 0) {
@@ -149,7 +150,7 @@ export async function duplicateBriefAction(formData: FormData): Promise<void> {
       p_quantities: accents.map((a) => a.quantity),
       p_settings: accents.map((a) => a.setting),
     });
-    if (accentError) throw new Error(accentError.message);
+    refuseOn(accentError);
   }
 
   // The rows above were read under RLS; the service role only moves those bytes.
@@ -257,7 +258,7 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
     p_inner_diameter_um: num(formData, "inner_diameter_um"),
     p_length_um: num(formData, "length_um"),
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   // Accent rows travel as four parallel arrays, which the database refuses if
   // they disagree in length.
@@ -273,7 +274,7 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
       p_quantities: quantities,
       p_settings: settings,
     });
-    if (accentError) throw new Error(accentError.message);
+    refuseOn(accentError);
   } else {
     const { error: clearError } = await supabase.rpc("set_order_accents", {
       p_order_id: orderId,
@@ -282,7 +283,7 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
       p_quantities: [],
       p_settings: [],
     });
-    if (clearError) throw new Error(clearError.message);
+    refuseOn(clearError);
   }
 
   revalidatePath(`/orders/${orderId}`);
@@ -299,7 +300,7 @@ export async function sendBriefAction(formData: FormData): Promise<void> {
   const orderId = formData.get("order_id")?.toString() ?? "";
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("submit_brief", { p_order_id: orderId });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/orders");
   redirect(`/orders/${orderId}/sent`);
 }

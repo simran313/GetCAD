@@ -1,6 +1,7 @@
 "use server";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { refuseOn } from "@/lib/refusal";
 
 /**
  * Register or remove this device's push subscription.
@@ -26,11 +27,11 @@ export async function savePushSubscriptionAction(input: PushSubscriptionInput): 
     p_p256dh: input.p256dh,
     p_auth: input.auth,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 }
 
 export async function deletePushSubscriptionAction(endpoint: string): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("delete_push_subscription", { p_endpoint: endpoint });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 }

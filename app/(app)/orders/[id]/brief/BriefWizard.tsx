@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { saveBriefAction } from "./actions";
 import { Photos } from "./Photos";
 import type { ReferenceImage } from "./ReferenceSection";
+import { refusalReason } from "@/lib/refusal";
 
 /**
  * The brief, as a form.
@@ -166,6 +167,7 @@ export function BriefWizard({
   // Saved as you go: no "Save draft". The whole form posts, as it always did.
   const formRef = useRef<HTMLFormElement>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveRefusal, setSaveRefusal] = useState<string | null>(null);
   const firstRender = useRef(true);
   useEffect(() => {
     if (readOnly) return;
@@ -181,8 +183,10 @@ export function BriefWizard({
       try {
         await saveBriefAction(data);
         setSaveState("saved");
-      } catch {
+        setSaveRefusal(null);
+      } catch (e) {
         setSaveState("error");
+        setSaveRefusal(refusalReason(e));
       }
     }, 900);
     return () => window.clearTimeout(timer);
@@ -610,7 +614,7 @@ export function BriefWizard({
         >
           <ChevronLeft className="h-5 w-5" aria-hidden />
         </button>
-        <SaveState state={saveState} />
+        <SaveState state={saveState} reason={saveRefusal} />
         {step < STEPS.length - 1 ? (
           <Button type="button" className="min-h-[var(--ctl)] flex-1 md:hidden" onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}>
             Next
@@ -887,7 +891,7 @@ function QualityChip({ quality, onJump }: { quality: ReturnType<typeof gradeBrie
   );
 }
 
-function SaveState({ state }: { state: "idle" | "saving" | "saved" | "error" }) {
+function SaveState({ state, reason }: { state: "idle" | "saving" | "saved" | "error"; reason?: string | null }) {
   return (
     <span className="min-w-0 shrink text-[length:var(--fs-2)] text-muted-foreground" aria-live="polite">
       {state === "saving" ? (
@@ -895,7 +899,7 @@ function SaveState({ state }: { state: "idle" | "saving" | "saved" | "error" }) 
       ) : state === "saved" ? (
         "Saved"
       ) : state === "error" ? (
-        <span className="text-[color:var(--tone-danger-fg)]">Not saved</span>
+        <span className="text-[color:var(--tone-danger-fg)]">{reason ? `Not saved: ${reason}` : "Not saved"}</span>
       ) : null}
     </span>
   );

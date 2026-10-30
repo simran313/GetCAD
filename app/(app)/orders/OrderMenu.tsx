@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 
 import { raiseDisputeAction, transitionAction } from "./actions";
+import { actionErrorText } from "@/lib/refusal";
 
 /**
  * An order's overflow for its client: the rare, weighty actions kept off the
@@ -86,8 +87,8 @@ export function OrderMenu({
                   await raiseDisputeAction(fd);
                   setReporting(false);
                   toast("Sent to the team");
-                } catch {
-                  toast("Not sent. Try again.", "danger");
+                } catch (e) {
+                  toast(actionErrorText(e) ?? "Not sent. Try again.", "danger");
                 }
               }}
               className="space-y-3"

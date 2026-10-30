@@ -6,6 +6,7 @@ import { generateId, sanitizeUpload } from "@/core";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * Attach a reference picture to an order.
@@ -38,7 +39,7 @@ export async function addReferenceImageAction(formData: FormData): Promise<void>
     { requireMetadataStrip: true },
   );
   if (!gate.ok) {
-    throw new Error(`rejected by sanitization gate: ${gate.reason}`);
+    throw new Refusal(`rejected by sanitization gate: ${gate.reason}`);
   }
 
   const objectKey = `${orderId}/refs/${gate.file.objectName}`;
@@ -60,7 +61,7 @@ export async function addReferenceImageAction(formData: FormData): Promise<void>
   if (error) {
     // Refused — remove the object rather than leave it orphaned in the bucket.
     await admin.storage.from(ORDER_FILES_BUCKET).remove([objectKey]);
-    throw new Error(error.message);
+    refuseOn(error);
   }
 
   revalidatePath(`/orders/${orderId}/brief`);
@@ -82,7 +83,7 @@ export async function setPinsAction(formData: FormData): Promise<void> {
     p_ys: ys,
     p_labels: labels,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   revalidatePath(`/orders/${orderId}/brief`);
 }
@@ -94,7 +95,7 @@ export async function setPrimaryReferenceAction(formData: FormData): Promise<voi
 
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("set_primary_reference", { p_image_id: imageId });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   revalidatePath(`/orders/${orderId}/brief`);
 }
@@ -119,7 +120,7 @@ export async function removeReferenceImageAction(formData: FormData): Promise<vo
     .maybeSingle();
 
   const { error } = await supabase.rpc("remove_reference_image", { p_image_id: imageId });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   if (row?.object_key) {
     await createAdminSupabaseClient()

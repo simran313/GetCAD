@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * Admin settings (Phase 8b). Both functions check the caller is an admin and
@@ -11,13 +12,13 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 export async function setSettingAction(formData: FormData): Promise<void> {
   const raw = formData.get("value")?.toString().trim() ?? "";
   // Empty means "not set" (e.g. no metal price estimate); otherwise a whole number.
-  if (raw !== "" && !/^\d+$/.test(raw)) throw new Error("settings are whole numbers");
+  if (raw !== "" && !/^\d+$/.test(raw)) throw new Refusal("settings are whole numbers");
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("set_app_setting", {
     p_key: formData.get("key")?.toString() ?? "",
     p_value: raw === "" ? null : Number(raw),
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/settings");
 }
 
@@ -27,6 +28,6 @@ export async function setFlagAction(formData: FormData): Promise<void> {
     p_key: formData.get("key")?.toString() ?? "",
     p_enabled: formData.get("enabled") === "1",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/settings");
 }
