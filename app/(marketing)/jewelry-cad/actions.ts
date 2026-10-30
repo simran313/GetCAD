@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { generateId } from "@/core";
 import { CONTACT_LIMIT, checkRateLimit } from "@/lib/rateLimit";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * /jewelry-cad's three-field brief (LANDING-COPY). The piece and email
@@ -23,11 +24,11 @@ export async function startBriefLeadAction(formData: FormData): Promise<void> {
   if (userId) redirect("/orders/new");
 
   const allowed = await checkRateLimit(CONTACT_LIMIT.scope, CONTACT_LIMIT.max, CONTACT_LIMIT.windowSeconds);
-  if (!allowed) throw new Error("Too many requests from this network. Please try again later.");
+  if (!allowed) throw new Refusal("Too many requests from this network. Please try again later.");
 
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("start_brief_lead", { p_email: email, p_product: product, p_note: note });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   await supabase.rpc("record_marketing_event", {
     p_event: "brief_started",
     p_visitor_id: generateId(),

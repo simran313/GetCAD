@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 
 import { setAccountManagerAction } from "../actions";
+import { actionErrorText } from "@/lib/refusal";
 
 /**
  * A client's account manager, saved the moment it changes (redesign: no
@@ -45,7 +46,7 @@ export function ManagerSelect({
             toast(next ? `${clientCode ?? "Client"} is now looked after by ${name(next)}` : `${clientCode ?? "Client"} has no account manager`);
           } catch (err) {
             setValue(before);
-            toast(`Not changed: ${err instanceof Error && err.message ? err.message : "the database refused it"}`, "danger");
+            toast(`Not changed: ${actionErrorText(err) ?? "the database refused it"}`, "danger");
           }
         });
       }}

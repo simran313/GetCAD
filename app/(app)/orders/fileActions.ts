@@ -19,6 +19,7 @@ import { strip3dm } from "@/lib/files/strip3dm";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { recordFingerprint } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * Upload a file to an order. EVERY byte goes through the single sanitization
@@ -48,7 +49,7 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
   const kind = readKind(formData);
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    throw new Error("no file provided");
+    throw new Refusal("no file provided");
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -67,7 +68,7 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
     { requireMetadataStrip: true },
   );
   if (!gate.ok) {
-    throw new Error(`rejected by sanitization gate: ${gate.reason}`);
+    throw new Refusal(`rejected by sanitization gate: ${gate.reason}`);
   }
 
   const objectKey = `${orderId}/${gate.file.objectName}`;
@@ -95,7 +96,7 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
   if (error) {
     // Not a participant (or other failure) — remove the orphaned object.
     await admin.storage.from(ORDER_FILES_BUCKET).remove([objectKey]);
-    throw new Error(error.message);
+    refuseOn(error);
   }
 
   revalidatePath("/", "layout");
@@ -114,11 +115,11 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
   const slot = formData.get("slot")?.toString() ?? "";
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    throw new Error("no file provided");
+    throw new Refusal("no file provided");
   }
 
   const type = slotContentType(slot, file.type);
-  if (!type.ok) throw new Error(type.reason);
+  if (!type.ok) throw new Refusal(type.reason);
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   const gate = await sanitizeUploadAsync(
@@ -127,7 +128,7 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
     { requireMetadataStrip: true, strip3dm },
   );
   if (!gate.ok) {
-    throw new Error(`rejected by sanitization gate: ${gate.reason}`);
+    throw new Refusal(`rejected by sanitization gate: ${gate.reason}`);
   }
 
   const objectKey = `${orderId}/${gate.file.objectName}`;
@@ -152,7 +153,7 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
   });
   if (error) {
     await admin.storage.from(ORDER_FILES_BUCKET).remove([objectKey]);
-    throw new Error(error.message);
+    refuseOn(error);
   }
 
   // The fingerprint of exactly the bytes stored (A3, 0050): what a spec
@@ -180,17 +181,17 @@ export async function postThreadAction(formData: FormData): Promise<void> {
 
   const supabase = await createUserSupabaseClient();
   if (!hasFile) {
-    if (!body) throw new Error("message is empty");
+    if (!body) throw new Refusal("message is empty");
     const { error } = await supabase.rpc("post_thread_message", { p_thread_id: threadId, p_body: body });
-    if (error) throw new Error(error.message);
+    refuseOn(error);
     revalidatePath("/", "layout");
     return;
   }
 
   const { data: threads, error: threadError } = await supabase.rpc("order_threads", { p_order_id: orderId });
-  if (threadError) throw new Error(threadError.message);
+  refuseOn(threadError);
   const thread = ((threads ?? []) as { id: string; kind: string }[]).find((t) => t.id === threadId);
-  if (!thread) throw new Error("thread not found");
+  if (!thread) throw new Refusal("thread not found");
   const toDesigner = thread.kind === "internal";
 
   const gate = await sanitizeUploadAsync(
@@ -205,7 +206,7 @@ export async function postThreadAction(formData: FormData): Promise<void> {
       ? { requireMetadataStrip: true, strip3dm }
       : { allowlist: { ...DEFAULT_ALLOWLIST, ...DELIVERABLE_ALLOWLIST } },
   );
-  if (!gate.ok) throw new Error(`rejected by sanitization gate: ${gate.reason}`);
+  if (!gate.ok) throw new Refusal(`rejected by sanitization gate: ${gate.reason}`);
 
   const objectKey = `${orderId}/threads/${gate.file.objectName}`;
   const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
@@ -222,7 +223,7 @@ export async function postThreadAction(formData: FormData): Promise<void> {
   });
   if (error) {
     await storage.remove([objectKey]);
-    throw new Error(error.message);
+    refuseOn(error);
   }
   revalidatePath("/", "layout");
 }

@@ -15,6 +15,7 @@ import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 import { setUserRoleAction, setUserStatusAction } from "./actions";
+import { actionErrorText } from "@/lib/refusal";
 
 /**
  * Access, interactive half (redesign A4). Tabs with counts, instant search,
@@ -58,7 +59,7 @@ const fd = (o: Record<string, string>) => {
   for (const [k, v] of Object.entries(o)) f.set(k, v);
   return f;
 };
-const failed = (e: unknown) => (e instanceof Error && e.message ? e.message : "the database refused it");
+const failed = (e: unknown) => actionErrorText(e) ?? "the database refused it";
 const label = (r: AccessRow) => r.reference ?? r.email ?? "this account";
 
 function RoleSelect({ row }: { row: AccessRow }) {

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { generateId } from "@/core";
 import { issueCertificate } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 // Create a DRAFT order for the current user. The DB function is the source of
 // truth (audited); this action just calls it as the logged-in user.
@@ -17,7 +18,7 @@ export async function createOrderAction(formData: FormData): Promise<void> {
     p_product_type: productType,
     p_currency: "USD",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -35,7 +36,7 @@ export async function transitionAction(formData: FormData): Promise<void> {
     p_new_status: toStatus,
     p_payload: payload,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -55,7 +56,7 @@ export async function qcDecisionAction(formData: FormData): Promise<void> {
     p_outcome: outcome,
     p_notes: notes,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   // The certificate goes out with the first look (A2). Best effort: the pass
   // stands either way, and the order page offers "Issue certificate" if this
   // did not finish.
@@ -77,7 +78,7 @@ export async function setVolumeAction(formData: FormData): Promise<void> {
     p_order_id: formData.get("order_id")?.toString() ?? "",
     p_volume_mm3: Number(formData.get("volume_mm3")),
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -105,7 +106,7 @@ export async function recordMeasurementsAction(formData: FormData): Promise<void
     p_mesh_tolerance_um: um(formData, "mesh_tolerance_mm") ?? 5,
     p_open_edges: Number(formData.get("open_edges") ?? 0) || 0,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -117,7 +118,7 @@ export async function addWaiverAction(formData: FormData): Promise<void> {
     p_requested: formData.get("requested")?.toString() ?? "",
     p_note: formData.get("note")?.toString() || null,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -142,13 +143,13 @@ export async function quoteAction(formData: FormData): Promise<void> {
   let priceCents: number | null = null;
   if (dollars) {
     const n = Number(dollars);
-    if (!Number.isFinite(n) || n <= 0) throw new Error("price must be a positive amount in dollars");
+    if (!Number.isFinite(n) || n <= 0) throw new Refusal("price must be a positive amount in dollars");
     priceCents = Math.round(n * 100);
   }
   let deadlineHours: number | null = null;
   if (hours) {
     const n = Number(hours);
-    if (!Number.isInteger(n) || n <= 0) throw new Error("deadline must be a whole number of hours");
+    if (!Number.isInteger(n) || n <= 0) throw new Refusal("deadline must be a whole number of hours");
     deadlineHours = n;
   }
 
@@ -159,7 +160,7 @@ export async function quoteAction(formData: FormData): Promise<void> {
     p_price_cents: priceCents,
     p_complex_deadline_hours: deadlineHours,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -169,7 +170,7 @@ export async function confirmOrderAction(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("confirm_order", {
     p_order_id: formData.get("order_id")?.toString() ?? "",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -181,14 +182,14 @@ export async function markPaidAction(formData: FormData): Promise<void> {
     p_method: formData.get("method")?.toString() ?? "",
     p_reference: formData.get("reference")?.toString().trim() || null,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
 async function escrowRpc(fn: "release_escrow" | "refund_escrow", orderId: string) {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc(fn, { p_order_id: orderId });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -204,11 +205,11 @@ export async function refundEscrowAction(formData: FormData): Promise<void> {
 export async function postMessageAction(formData: FormData): Promise<void> {
   const orderId = formData.get("order_id")?.toString() ?? "";
   const body = formData.get("body")?.toString() ?? "";
-  if (body.trim().length === 0) throw new Error("message is empty");
+  if (body.trim().length === 0) throw new Refusal("message is empty");
 
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("post_message", { p_order_id: orderId, p_body: body });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -217,11 +218,11 @@ export async function postMessageAction(formData: FormData): Promise<void> {
 export async function raiseDisputeAction(formData: FormData): Promise<void> {
   const orderId = formData.get("order_id")?.toString() ?? "";
   const reason = formData.get("reason")?.toString() ?? "";
-  if (reason.trim().length === 0) throw new Error("a dispute reason is required");
+  if (reason.trim().length === 0) throw new Refusal("a dispute reason is required");
 
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("raise_dispute", { p_order_id: orderId, p_reason: reason });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -236,7 +237,7 @@ export async function resolveDisputeAction(formData: FormData): Promise<void> {
     p_resolution: resolution,
     p_notes: notes,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -249,7 +250,7 @@ export async function assignDesignerAction(formData: FormData): Promise<void> {
     p_designer_id: formData.get("designer_id")?.toString() ?? "",
     p_override_reason: formData.get("override_reason")?.toString().trim() || null,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -263,7 +264,7 @@ export async function tickCheckAction(formData: FormData): Promise<void> {
     p_column: formData.get("column")?.toString() ?? "",
     p_ticked: formData.get("ticked") === "true",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -275,7 +276,7 @@ export async function requestRevisionAction(formData: FormData): Promise<void> {
     p_order_id: formData.get("order_id")?.toString() ?? "",
     p_note: formData.get("note")?.toString() ?? "",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
@@ -289,7 +290,7 @@ export async function changeOrderAction(formData: FormData): Promise<void> {
     p_new_id: newId,
     p_note: formData.get("note")?.toString() ?? "",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
   redirect(`/orders/${newId}`);
 }

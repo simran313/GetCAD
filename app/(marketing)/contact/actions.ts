@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { flushEmailsBestEffort } from "@/lib/email/dispatch";
 import { CONTACT_LIMIT, checkRateLimit } from "@/lib/rateLimit";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 // Works for signed-out visitors too: createUserSupabaseClient() attaches a
 // Clerk token only if one exists, and falls back to the anon role otherwise —
@@ -22,7 +23,7 @@ export async function submitLeadAction(formData: FormData): Promise<void> {
     CONTACT_LIMIT.windowSeconds,
   );
   if (!allowed) {
-    throw new Error("Too many submissions from this network. Please try again later.");
+    throw new Refusal("Too many submissions from this network. Please try again later.");
   }
 
   const supabase = await createUserSupabaseClient();
@@ -33,7 +34,7 @@ export async function submitLeadAction(formData: FormData): Promise<void> {
     p_company: company,
     p_role: role,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   // The DB enqueued a "we received your message" email in the same
   // transaction; send it now, best-effort. Must run before redirect(), which

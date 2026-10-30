@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { refuseOn } from "@/lib/refusal";
 
 /**
  * Admin moves from the queue, the order page and Access (Phase 5d). Each
@@ -17,14 +18,14 @@ export async function choosePodAction(formData: FormData): Promise<void> {
     p_order_id: formData.get("order_id")?.toString() ?? "",
     p_pod_lead_id: formData.get("lead_id")?.toString() ?? "",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/", "layout");
 }
 
 export async function createPodAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("create_pod", { p_name: formData.get("name")?.toString() ?? "" });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/access/pods");
 }
 
@@ -35,14 +36,14 @@ export async function setPodMemberAction(formData: FormData): Promise<void> {
     p_user_id: formData.get("user_id")?.toString() ?? "",
     p_member_role: formData.get("member_role")?.toString() ?? "",
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/access/pods");
 }
 
 export async function removePodMemberAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("remove_pod_member", { p_user_id: formData.get("user_id")?.toString() ?? "" });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/access/pods");
 }
 
@@ -52,7 +53,7 @@ export async function setAccountManagerAction(formData: FormData): Promise<void>
     p_client_id: formData.get("client_id")?.toString() ?? "",
     p_manager_id: formData.get("manager_id")?.toString() || null,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/clients");
 }
 
@@ -60,6 +61,6 @@ export async function setAccountManagerAction(formData: FormData): Promise<void>
 export async function computeStatsAction(): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("compute_public_stats");
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/clients");
 }

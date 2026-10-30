@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { refuseOn } from "@/lib/refusal";
 
 /**
  * Change someone's role or status.
@@ -22,7 +23,7 @@ export async function setUserRoleAction(formData: FormData): Promise<void> {
     p_user_id: userId,
     p_role: role,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   revalidatePath("/admin/access");
 }
@@ -36,7 +37,7 @@ export async function setUserStatusAction(formData: FormData): Promise<void> {
     p_user_id: userId,
     p_status: status,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
 
   revalidatePath("/admin/access");
 }

@@ -118,11 +118,11 @@ Checked and fine: bundle sizes (102 kB shared; three.js loads only on the previe
 3. **Safe Retry in chat.** A message the server saved but whose reply was lost is sent twice on Retry. Needs a client message id with a unique constraint (migration).
 4. **Batched fingerprints for Files** (one database function instead of one call per order; migration).
 5. **Paging for order lists** before any client passes a few hundred orders.
-6. **Showing why an action was refused** in production (11c: actions return the reason instead of throwing it).
+6. ~~**Showing why an action was refused** in production~~ Done in 11c: a refusal (a rule the database checked, SQLSTATE P0001, or a missing field) carries its reason in the error's digest, which Next keeps; the error screen and toasts show it (`lib/refusal.ts`). Still an error to the browser (HTTP 500), so nothing refused looks saved; other faults keep the generic words and a reference.
 
 ## Next steps, in order
 
 1. Owner: set the Vercel region (minutes; largest gain).
 2. Owner: approve Realtime for chat (item 2) and safe Retry (item 3); one PR each.
-3. 11c: refusals show their reason.
+3. ~~11c: refusals show their reason.~~ Done.
 4. Paging and the batched Files call when data volume calls for them.

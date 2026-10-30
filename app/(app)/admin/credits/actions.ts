@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { Refusal, refuseOn } from "@/lib/refusal";
 
 /**
  * Decide a late-order credit (DECISIONS §6, owner answer Q4). Runs as the
@@ -15,7 +16,7 @@ export async function decideCreditAction(formData: FormData): Promise<void> {
   let amountCents: number | null = null;
   if (decision === "partial") {
     const n = Number(dollars);
-    if (!Number.isFinite(n) || n <= 0) throw new Error("a partial credit needs an amount in dollars");
+    if (!Number.isFinite(n) || n <= 0) throw new Refusal("a partial credit needs an amount in dollars");
     amountCents = Math.round(n * 100);
   }
 
@@ -26,6 +27,6 @@ export async function decideCreditAction(formData: FormData): Promise<void> {
     p_amount_cents: amountCents,
     p_reason: formData.get("reason")?.toString().trim() || null,
   });
-  if (error) throw new Error(error.message);
+  refuseOn(error);
   revalidatePath("/admin/credits");
 }
