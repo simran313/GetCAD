@@ -16,7 +16,7 @@ describe("refusals", () => {
       caught = e;
     }
     expect(caught).toBeInstanceOf(Refusal);
-    expect(refusalReason(caught)).toBe("Can only quote a SUBMITTED order (is QUOTED).");
+    expect(refusalReason(caught)).toBe("Can only quote a submitted order (now quoted).");
   });
 
   it("other database errors stay plain errors, with nothing to show", () => {
