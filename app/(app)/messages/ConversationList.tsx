@@ -108,7 +108,7 @@ export function ConversationList({ items, activeId, team }: { items: Conversatio
               )}
             >
               {f.label}
-              <span className="tabular opacity-70">{counts[f.key]}</span>
+              <span className="tabular font-normal">{counts[f.key]}</span>
             </button>
           ))}
         </div>
