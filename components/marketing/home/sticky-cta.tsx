@@ -41,7 +41,7 @@ export function StickyMobileCta({ phone }: { phone: string | null }) {
         >
           <Phone />
         </a>
-        <WhatsAppButton variant="icon" text="Hi, I'd like a quote for a jewelry CAD design." className="border border-border" />
+        <WhatsAppButton variant="icon" tabIndex={show ? 0 : -1} text="Hi, I'd like a quote for a jewelry CAD design." className="border border-border" />
       </div>
     </div>
   );

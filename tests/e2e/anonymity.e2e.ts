@@ -47,8 +47,12 @@ async function capture(page: Page, path: string): Promise<string> {
     // page: it is crawled and checked on its own. Kept here it landed in some
     // captures and not others, by timing, and read as a link between jobs
     // (a job code from the list, "RN-C-2", on two pages of one client).
-    if (r.request().headers()["next-router-prefetch"]) return;
+    // The header is not always visible to Playwright, and Next sends other
+    // prefetch kinds too, so also drop any RSC payload for a different page.
+    const req = r.request().headers();
+    if (req["next-router-prefetch"] || req["next-router-segment-prefetch"]) return;
     const type = r.headers()["content-type"] ?? "";
+    if (type.includes("text/x-component") && new URL(r.url()).pathname !== new URL(path, "http://x").pathname) return;
     if (r.url().startsWith("http://127.0.0.1:3100") && /text\/x-component|application\/json|text\/html/.test(type)) {
       // A body still streaming after 5 s is not waited for.
       bodies.push(Promise.race([r.text().catch(() => ""), new Promise<string>((ok) => setTimeout(() => ok(""), 5_000))]));

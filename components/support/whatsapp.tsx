@@ -30,15 +30,18 @@ export function WhatsAppButton({
   variant = "pill",
   label = "WhatsApp",
   className,
+  tabIndex,
 }: {
   text?: string;
   variant?: "icon" | "pill" | "float";
   label?: string;
   className?: string;
+  /** -1 while the button sits in a hidden bar (sticky CTA), so focus skips it. */
+  tabIndex?: number;
 }) {
   const href = waLink(text);
   const external = href.startsWith("https://");
-  const common = { href, ...(external ? { target: "_blank", rel: "noopener noreferrer" } : {}) };
+  const common = { href, tabIndex, ...(external ? { target: "_blank", rel: "noopener noreferrer" } : {}) };
   if (variant === "float") {
     return (
       <a
