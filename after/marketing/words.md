@@ -2,14 +2,14 @@
 
 | Route | Words |
 | --- | ---: |
-| `/` | 944 |
+| `/` | 970 |
 | `/how-it-works` | 174 |
-| `/pricing` | 139 |
+| `/pricing` | 164 |
 | `/quality` | 240 |
 | `/guarantee` | 241 |
 | `/results` | 20 |
-| `/jewelry-cad` | 162 |
-| `/faq` | 174 |
+| `/jewelry-cad` | 175 |
+| `/faq` | 205 |
 | `/contact` | 47 |
 | `/apply-designer` | 133 |
 | `/privacy` | 504 |
