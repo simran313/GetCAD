@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { SupportStatus } from "@/components/support/support-status";
+import { WhatsAppButton } from "@/components/support/whatsapp";
 import { Wordmark } from "@/components/wordmark";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
@@ -36,8 +38,10 @@ export function MarketingFooter() {
         <div>
           <Wordmark />
           <p className="mt-3 max-w-xs text-[15px] leading-[1.5] text-muted-foreground">
-            Jewelry CAD for the trade. Studio in Mumbai, working US business hours.
+            The AI-native jewelry CAD studio. The portal is open 24/7.
           </p>
+          <WhatsAppButton label="WhatsApp us" className="mt-4" />
+          <SupportStatus className="mt-3 flex" />
         </div>
         {COLUMNS.map((col) => (
           <div key={col.title}>

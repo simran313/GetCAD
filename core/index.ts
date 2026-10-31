@@ -51,6 +51,7 @@ export type { BriefRow } from "./orders/briefRows";
 export type { BriefQuality, BriefGap, BriefGrade, BriefContext, BriefSize, GapSeverity, MinimumGap } from "./orders/briefQuality";
 export { ORDER_STATUS_META, statusMeta, statusKind } from "./orders/status";
 export { friendlyReason } from "./errors/friendly";
+export { supportHoursLabel, supportOnline, supportStatusLabel, supportWindow, SUPPORT_DISPLAY_ZONE } from "./support/hours";
 export type { StatusTone, StatusMeta, StatusKind } from "./orders/status";
 export { buildTimeline, chatMilestones } from "./orders/timeline";
 export type { TimelineRawRow, TimelineStep, QcOutcome } from "./orders/timeline";
@@ -108,6 +109,7 @@ export type {
   NormalizedBankAccount,
 } from "./payouts/bankAccountIn";
 export { renderEmail, isEmailTemplate, EMAIL_TEMPLATES } from "./email/templates";
+export { EMAIL_CATALOG } from "./email/catalog";
 export type { EmailTemplate, EmailPayloads, RenderedEmail } from "./email/templates";
 // NOT re-exported here on purpose: core/payments/razorpaySignature imports
 // node:crypto, and middleware.ts imports this barrel while running on the EDGE

@@ -1,8 +1,10 @@
-import { Check, FileBox, FileText, Image as ImageIcon, MessageSquare, Phone, Scale, Upload } from "lucide-react";
+import { Check, FileBox, FileText, Image as ImageIcon, Phone, Scale, Upload } from "lucide-react";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
+import { SupportStatus } from "@/components/support/support-status";
+import { WhatsAppButton, WhatsAppMark } from "@/components/support/whatsapp";
 import { c, showClaim } from "@/content/claims";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +12,8 @@ import { LiveOrderCard } from "./live-order-card";
 
 /**
  * The homepage sections (redesign step 4), in conversion order. All claims
- * come from content/claims.ts; prices from DECISIONS §4.
+ * come from content/claims.ts. The website shows one price, "from $35", and
+ * retainers for regular clients (owner, 31 Oct 2026).
  */
 
 export const H1 = "text-[38px] font-semibold leading-[1.08] tracking-[-0.035em] sm:text-[52px] lg:text-[56px]";
@@ -64,24 +67,23 @@ export function Hero() {
     <section id="hero" className="relative overflow-hidden">
       <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-16 lg:px-8 lg:pb-24 lg:pt-24">
         <div>
-          <p className="eyebrow">Jewelry CAD for the trade</p>
+          <p className="eyebrow">The AI-native jewelry CAD studio</p>
           <h1 className={cn(H1, "mt-4")}>
-            Factory-ready jewelry CAD. <span className="whitespace-nowrap">Checked twice.</span>
+            Factory-ready jewelry CAD, <span className="whitespace-nowrap">in hours.</span>
           </h1>
           <p className={cn(LEAD, "mt-5 max-w-[36rem]")}>
-            Senior designers build every file to cast first time, and a master craftsman signs it off before you see it.
-            We work US hours, and it&apos;s guaranteed in writing.
+            Our AI models every piece with methods we built for jewelry CAD. Senior designers who know factory requirements
+            across countries check every file. First look within {c("FIRST_LOOK_HOURS")} hours, bulk orders included.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/sign-up" className={buttonVariants({ size: "lg" })}>
               Start your first design
             </Link>
-            <Link href="#quote" className={buttonVariants({ size: "lg", variant: "secondary" })}>
-              Get a free quote
-            </Link>
+            <WhatsAppButton label="WhatsApp us" text="Hi, I'd like a quote for a jewelry CAD design." className="h-[var(--ctl-lg)] px-7" />
           </div>
+          <SupportStatus className="mt-4" />
           <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[15px] text-muted-foreground">
-            {["Guaranteed in writing", "We work your hours", showClaim("LIVE_CALL_HOURS") ? `Live call ${c("LIVE_CALL_HOURS")}` : "Live call in US business hours"].map((chip) => (
+            {[`From ${c("ENTRY_PRICE")} a design`, `${c("FIRST_LOOK_ACCURACY")} of first looks right first time`, "Guaranteed in writing"].map((chip) => (
               <li key={chip} className="flex items-center gap-1.5">
                 <Check className="h-4 w-4 text-foreground" aria-hidden />
                 {chip}
@@ -97,17 +99,11 @@ export function Hero() {
 
 /* c. Proof bar --------------------------------------------------------- */
 export function ProofBar() {
-  // D2: the team numbers show only once confirmed; until then the bar leads
-  // with the entry price, which is fixed by DECISIONS §4.
-  const team: [string, string, string] =
-    showClaim("DESIGNER_COUNT") && showClaim("MIN_EXPERIENCE_YEARS")
-      ? [c("DESIGNER_COUNT"), "senior CAD designers", `${c("MIN_EXPERIENCE_YEARS")} years each in production CAD`]
-      : [c("ENTRY_PRICE"), "a design", `Your first design ${c("FIRST_DESIGN_PRICE")}. No retainer`];
   const items: [string, string, string][] = [
-    team,
-    ["2", "experts on every file", "Designer builds, master craftsman signs off"],
+    [c("DESIGNER_COUNT"), "senior CAD designers", `${c("MIN_EXPERIENCE_YEARS")} years each, factories across countries`],
+    [c("FIRST_LOOK_ACCURACY"), "first looks right first time", "To your brief and your factory's rules"],
     [String(c("QC_CHECKPOINTS")), "point factory check", "Castable, to spec, first time"],
-    [`${c("FIRST_LOOK_HOURS")}h`, "first look", "Or the order is free"],
+    [`${c("FIRST_LOOK_HOURS")}h`, "first look", "Bulk orders too. Or it's free"],
   ];
   return (
     <section aria-label="In numbers" className="border-y border-border bg-subtle">
@@ -206,16 +202,17 @@ export function FinalCta() {
         <div>
           <h2 className={H2}>Send one design. See the difference in {c("FIRST_LOOK_HOURS")} hours.</h2>
           <p className="mt-4 max-w-xl text-[18px] leading-[1.55] text-background/75">
-            From {c("ENTRY_PRICE")} a design. Your first design {c("FIRST_DESIGN_PRICE")}. No retainer, no contract.
+            From {c("ENTRY_PRICE")} USD a design. Retainers for regular orders.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/sign-up" className={cn(buttonVariants({ size: "lg" }), "bg-background text-foreground hover:bg-background/90")}>
               Start your first design
             </Link>
-            <Link href="#quote" className={cn(buttonVariants({ size: "lg", variant: "ghost" }), "text-background hover:bg-background/10")}>
-              Get a free quote
+            <Link href="/pricing" className={cn(buttonVariants({ size: "lg", variant: "ghost" }), "text-background hover:bg-background/10")}>
+              See pricing
             </Link>
           </div>
+          <SupportStatus tone="inverse" className="mt-5" />
         </div>
         <ul className="divide-y divide-background/15 rounded-[var(--r-lg)] border border-background/15">
           <li>
@@ -223,13 +220,13 @@ export function FinalCta() {
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-background text-foreground"><Phone className="h-5 w-5" /></span>
               <span>
                 <span className="block text-[18px] font-semibold">Talk to us live</span>
-                <span className="block text-[15px] text-background/70">{showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours"} · a real person, no ticket queue</span>
+                <span className="block text-[15px] text-background/70">A real person, no ticket queue</span>
               </span>
             </a>
           </li>
           <li>
-            <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "/contact"} className="flex items-center gap-4 p-5 hover:bg-background/5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-background/25"><MessageSquare className="h-5 w-5" /></span>
+            <a href={whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : "/contact"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-5 hover:bg-background/5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#128C7E] text-white"><WhatsAppMark /></span>
               <span>
                 <span className="block text-[16px] font-medium">WhatsApp</span>
                 <span className="block text-[15px] text-background/70">Send a photo of the piece</span>

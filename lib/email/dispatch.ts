@@ -1,7 +1,9 @@
 import "server-only";
 
 import { isEmailTemplate, renderEmail, type EmailPayloads, type EmailTemplate } from "@/core";
-import { isEmailConfigured } from "@/config/email";
+import { after } from "next/server";
+
+import { addressFor, emailDelivery, isEmailConfigured } from "@/config/email";
 import { sendEmail } from "@/lib/email/client";
 import { SITE_URL } from "@/lib/seo";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -49,6 +51,8 @@ export async function dispatchEmails(limit = 20): Promise<DispatchOutcome[]> {
 
   const claimed = (data ?? []) as OutboxRow[];
   const outcomes: DispatchOutcome[] = [];
+  // Test mode until the owner approves (config/email): to the test inbox.
+  const delivery = emailDelivery();
 
   for (const [i, row] of claimed.entries()) {
     // Resend allows 2 requests a second; bursts above that come back 429.
@@ -70,8 +74,7 @@ export async function dispatchEmails(limit = 20): Promise<DispatchOutcome[]> {
       const payload = { ...row.payload, site_url: SITE_URL } as EmailPayloads[typeof template];
       const rendered = renderEmail(template, payload);
       const { id } = await sendEmail({
-        to: row.recipient_email,
-        subject: rendered.subject,
+        ...addressFor(delivery, row.recipient_email, rendered.subject),
         text: rendered.text,
         html: rendered.html,
       });
@@ -111,5 +114,18 @@ export async function flushEmailsBestEffort(): Promise<void> {
   } catch {
     // The outbox is durable; a failed flush loses nothing. Never surface this
     // to a user who just submitted a form successfully.
+  }
+}
+
+/**
+ * Send what an action just queued, after its response has gone back (Phase
+ * 17): the person never waits on the mail provider. Whatever this misses, the
+ * 5-minute sweep (/api/cron/emails) sends.
+ */
+export function flushEmailsAfterResponse(): void {
+  try {
+    after(() => flushEmailsBestEffort());
+  } catch {
+    // Outside a request (a script): the sweep will send it.
   }
 }

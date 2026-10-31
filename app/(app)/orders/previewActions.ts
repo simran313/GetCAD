@@ -11,6 +11,7 @@ import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Refusal, refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 /**
  * Phase 7b: preview links (A5), the client's logo, and spec claims (A6).
@@ -28,6 +29,7 @@ export async function createPreviewLinkAction(formData: FormData): Promise<void>
   const { error } = await supabase.rpc("create_preview_link", { p_order_id: orderId, p_token: token, p_days: days });
   refuseOn(error);
   revalidatePath(`/orders/${orderId}`);
+  flushEmailsAfterResponse();
   redirect(`/orders/${orderId}?link=${token}#share`);
 }
 
@@ -41,6 +43,7 @@ export async function updatePreviewLinkAction(formData: FormData): Promise<void>
   });
   refuseOn(error);
   revalidatePath(`/orders/${orderId}`);
+  flushEmailsAfterResponse();
 }
 
 // The jeweler's logo for their preview pages: PNG or JPEG, cleaned.
@@ -69,6 +72,7 @@ export async function uploadLogoAction(formData: FormData): Promise<void> {
     refuseOn(error);
   }
   revalidatePath("/account");
+  flushEmailsAfterResponse();
 }
 
 const CLAIM_FILE = /\.(stl|3dm)$/i;
@@ -131,6 +135,7 @@ export async function openClaimAction(formData: FormData): Promise<void> {
     throw e;
   }
   revalidatePath(`/orders/${orderId}`);
+  flushEmailsAfterResponse();
   redirect(`/orders/${orderId}#claims`);
 }
 
@@ -150,4 +155,5 @@ export async function decideClaimAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }

@@ -4,6 +4,7 @@ import { Phone } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { WhatsAppButton } from "@/components/support/whatsapp";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ export function StickyMobileCta({ phone }: { phone: string | null }) {
         >
           <Phone />
         </a>
+        <WhatsAppButton variant="icon" tabIndex={show ? 0 : -1} text="Hi, I'd like a quote for a jewelry CAD design." className="border border-border" />
       </div>
     </div>
   );

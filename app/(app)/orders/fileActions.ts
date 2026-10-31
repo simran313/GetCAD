@@ -21,6 +21,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { recordFingerprint } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Refusal, refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 /**
  * Upload a file to an order. EVERY byte goes through the single sanitization
@@ -101,6 +102,7 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 /**
@@ -162,6 +164,7 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
   await recordFingerprint(fileVersionId, gate.file.bytes);
 
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 /**
@@ -187,6 +190,7 @@ export async function postThreadAction(formData: FormData): Promise<void> {
     const { error } = await supabase.rpc("post_thread_message", { p_thread_id: threadId, p_body: body });
     refuseOn(error);
     revalidatePath("/", "layout");
+    flushEmailsAfterResponse();
     return;
   }
 
@@ -228,4 +232,5 @@ export async function postThreadAction(formData: FormData): Promise<void> {
     refuseOn(error);
   }
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
+import { WhatsAppButton } from "@/components/support/whatsapp";
 import { LiveCallButton } from "@/components/ui/live-call-button";
 import { cn } from "@/lib/utils";
 
@@ -96,6 +97,7 @@ export function ChatScreen({
               <StatusBadge status={open.status} />
             </span>
           </Link>
+          {client && <WhatsAppButton variant="icon" text={`About order ${open.ref ?? ""}: `} />}
           {client && <LiveCallButton phone={call.phone} hours={call.hours} compact />}
           {!designer && (
             <button

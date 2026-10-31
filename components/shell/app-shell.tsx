@@ -8,6 +8,8 @@ import { Suspense, useEffect, useState } from "react";
 
 import { useSignOut } from "@/components/auth/sign-out";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SupportStatus } from "@/components/support/support-status";
+import { WhatsAppButton } from "@/components/support/whatsapp";
 import { LiveCallButton } from "@/components/ui/live-call-button";
 import { Toaster } from "@/components/ui/toast";
 import { activeTabKey, type Tab } from "@/core";
@@ -131,7 +133,7 @@ export function AppShell({
       />
 
       <div className="min-h-screen bg-[color:var(--app-ground)] transition-[padding] duration-[var(--dur-base)] ease-out md:pl-[var(--sidebar-w)]">
-        {/* Phone: a compact top bar. Desk: only for clients, carrying the live call. */}
+        {/* Phone: a compact top bar. Desk: only for clients, carrying live support (call and WhatsApp). */}
         <header
           className={cn(
             "sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur",
@@ -146,6 +148,9 @@ export function AppShell({
             <div className="hidden flex-1 md:block" />
             {kind === "client" && (
               <>
+                {/* The portal is open 24/7; this is whether a person is answering now. */}
+                <SupportStatus showHours={false} className="mr-1 hidden lg:inline-flex" />
+                <WhatsAppButton variant="icon" text="Hi, I have a question about my CAD order." />
                 <LiveCallButton phone={call.phone} hours={call.hours} className="hidden md:inline-flex" />
                 <LiveCallButton phone={call.phone} hours={call.hours} compact className="md:hidden" />
               </>

@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
 import { AutoRefresh } from "../orders/AutoRefresh";
-import { c as claim, showClaim } from "@/content/claims";
+import { c as claim } from "@/content/claims";
 
 import { ChatScreen } from "./ChatScreen";
 import { ConversationList, type ConversationItem } from "./ConversationList";
@@ -14,7 +14,7 @@ import { InboxLive } from "./InboxLive";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "../orders/types";
 import { Page } from "@/components/ui/page";
 import { viewerZone } from "@/lib/time/zone";
-import { formatDayLabel, formatRelative, type ClientStep } from "@/core";
+import { formatDayLabel, formatRelative, supportHoursLabel, type ClientStep } from "@/core";
 
 /**
  * C7 / C7b — Messages (docs/design). Every conversation the viewer may read,
@@ -125,7 +125,7 @@ export async function MessagesView({
   role: string;
   startOn?: ThreadRow["kind"];
 }) {
-  const call = { phone: claim("LIVE_CALL_PHONE"), hours: showClaim("LIVE_CALL_HOURS") ? claim("LIVE_CALL_HOURS") : "US business hours" };
+  const call = { phone: claim("LIVE_CALL_PHONE"), hours: supportHoursLabel() };
   const tz = await viewerZone();
   const copy = describe(role);
   return (

@@ -8,7 +8,7 @@
 export const PROOF = [
   "First look in 6 hours, or it's free",
   "Every file checked twice: 19 points, two designers",
-  "From $55 a design. No retainer.",
+  "From $35 a design. Retainers for regular orders.",
 ];
 
 export const STEPS: [string, string][] = [
@@ -48,29 +48,16 @@ export const AUDIENCES = [
   "Brands and wholesalers launching new collections",
 ];
 
-export const PRICE_BANDS: { band: string; price: string; examples: string }[] = [
-  { band: "Standard", price: "$55", examples: "Bands, solitaires, simple pendants and earrings" },
-  { band: "Complex", price: "$85", examples: "Halos, pavé, multi-part pieces, bracelets" },
-  { band: "Sculpted", price: "From $120", examples: "Figurative signets, sculpted and large pieces (quoted)" },
-  { band: "First design", price: "$49", examples: "Any standard piece, once per account" },
-];
-
 export const INCLUDED = "3DM + STL · 3 renders · spec sheet · weight sheet · 3D preview link · 2 revision rounds within 14 days";
-
-export const VOLUME: [string, string][] = [
-  ["Volume credits", "20 designs for $990, 50 for $2,250."],
-  ["Monthly partner", "$1,500 a month for 35 designs, with a named account manager."],
-  ["Dedicated designer", "Your own designer in US hours — ask for pricing."],
-];
 
 export const FAQ: [string, string][] = [
   [
     "Where are you based?",
-    "Our studio is in Mumbai, India. The team works US business hours, which is how we deliver a first look within 6 hours. Your account manager works on your time zone.",
+    "Our studio is in Mumbai, India. The portal is open 24/7 and our AI works around the clock; a person answers calls and WhatsApp 5:30 AM – 2:30 PM ET (4:30 AM – 1:30 PM in US winter), every day.",
   ],
   [
     "How fast is it really?",
-    "Standard pieces get a first look within 6 hours of order confirmation, or it's free. Complex pieces get a firm deadline with the price.",
+    "A first look within 6 hours of order confirmation, bulk orders included, or it's free. Our AI does the modelling; experts check every file, and 99% of first looks are right first time. Complex pieces get a firm deadline with the price.",
   ],
   ["What files do I get?", "3DM and STL, 3 renders, a signed spec sheet, a weight sheet and a 3D preview link."],
   ["Who owns the design?", "You do, once paid. White-label, with an NDA by default."],

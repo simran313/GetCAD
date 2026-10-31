@@ -11,7 +11,8 @@ import { ROLE_LABEL, shellKind } from "@/components/shell/nav-config";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 import { POST_AUTH_PATH } from "@/config/auth-redirects";
-import { c, showClaim } from "@/content/claims";
+import { c } from "@/content/claims";
+import { supportHoursLabel } from "@/core/support/hours";
 import { tabsForRole } from "@/core";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { viewerZone } from "@/lib/time/zone";
@@ -130,7 +131,7 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
       kind={kind}
       tabs={tabs}
       user={{ name, initials, detail: ROLE_LABEL[kind] }}
-      call={{ phone: c("LIVE_CALL_PHONE"), hours: showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours" }}
+      call={{ phone: c("LIVE_CALL_PHONE"), hours: supportHoursLabel() }}
       initialCollapsed={jar.get("tcp_sidebar")?.value === "collapsed"}
     >
       {/* Above everything else, so the answer to "did that save?" is on

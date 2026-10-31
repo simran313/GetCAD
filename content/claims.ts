@@ -3,7 +3,8 @@
  * never in a page. Rules:
  *   - Never invent a number. A value nobody has confirmed stays `confirmed:
  *     false` and is listed on the page's draft banner (preview builds only).
- *   - Prices come from DECISIONS §4 (components/marketing/content PRICE_BANDS).
+ *   - The website shows one price, "from $35", and retainers for regular
+ *     clients (owner, 31 Oct 2026); the bands in DECISIONS §4 stay internal.
  *   - Promises must match DECISIONS §6–7 word for word in substance.
  */
 
@@ -19,30 +20,36 @@ const claim = <T>(value: T, confirmed: boolean, todo?: string): Claim<T> => ({ v
 
 export const CLAIMS = {
   /** "50+ senior CAD designers". */
-  DESIGNER_COUNT: claim("50+", false, "Confirm the number, and 'team' vs 'network' wording."),
+  DESIGNER_COUNT: claim("50+", true),
   /** "10+ years each in production CAD". */
-  MIN_EXPERIENCE_YEARS: claim("10+", false, "Confirm it is the minimum for every designer, not the average."),
+  MIN_EXPERIENCE_YEARS: claim("10+", true),
+  /** Share of first looks that meet the brief and the factory's requirements (owner, 31 Oct 2026). */
+  FIRST_LOOK_ACCURACY: claim("99%", true),
   /** The checklist both the designer and QC tick (components/marketing/content CHECK_GROUPS). */
   QC_CHECKPOINTS: claim(19, true),
   /** First look within N hours of order confirmation, standard tier A–F (DECISIONS §6). */
   FIRST_LOOK_HOURS: claim(6, true),
   /** Standard band (DECISIONS §4). */
-  ENTRY_PRICE: claim("$55", true),
+  ENTRY_PRICE: claim("$35", true),
   /** First design for a new account, once (DECISIONS §4). */
   FIRST_DESIGN_PRICE: claim("$49", true),
-  /** When a person answers the phone. Must match real staffing. */
-  LIVE_CALL_HOURS: claim("Mon–Fri, 9am–6pm ET", false, "Set the real hours the team answers calls."),
-  /** The number the live-call buttons dial. Null shows the contact page instead. */
-  LIVE_CALL_PHONE: claim<string | null>(null, false, "Add the phone number for live calls."),
-  /** WhatsApp number (digits with country code) for the contact band. */
-  WHATSAPP: claim<string | null>(null, false, "Add the WhatsApp number."),
+  /**
+   * When a person answers: 3 PM – midnight India time, every day. Pages show it
+   * live in ET (core/support/hours, components/support/support-status); this
+   * is the daylight-time wording for places that cannot run a clock.
+   */
+  LIVE_CALL_HOURS: claim("5:30 AM – 2:30 PM ET", true),
+  /** The number the live-call buttons dial. */
+  LIVE_CALL_PHONE: claim<string | null>("+91 83692 88293", true),
+  /** WhatsApp number (digits with country code): the same line. */
+  WHATSAPP: claim<string | null>("918369288293", true),
   /** The address clients write to. */
-  EMAIL: claim("hello@thecadpillar.com", false, "Confirm this inbox is read."),
+  EMAIL: claim("simran@thecadpillar.com", true),
   /** Revision rounds included and their window (DECISIONS §8). */
   REVISIONS: claim("2 revision rounds within 14 days", true),
   /** Spec-claim window (DECISIONS §7). */
   CLAIM_WINDOW_DAYS: claim(30, true),
-  AI_LINE: claim("AI runs our operations. Experts make your CAD.", true),
+  AI_LINE: claim("AI-native jewelry CAD. Checked by experts.", true),
   /** Anonymised team cards (role · years · specialty). No names or photos. */
   TEAM: claim(
     [
@@ -51,8 +58,7 @@ export const CLAIMS = {
       { role: "Senior CAD", years: "11 yrs", specialty: "Pavé and high jewelry" },
       { role: "Master QC", years: "20+ yrs at the bench", specialty: "Casting and finishing" },
     ],
-    false,
-    "Replace with real (anonymised) profiles: role, years, specialty.",
+    true,
   ),
 } as const;
 
