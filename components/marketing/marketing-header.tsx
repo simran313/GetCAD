@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { c, showClaim } from "@/content/claims";
+import { WhatsAppButton } from "@/components/support/whatsapp";
+import { c } from "@/content/claims";
 
 import { HeaderAccount } from "./header-account";
 import { MobileMenu } from "./mobile-menu";
@@ -33,8 +34,9 @@ export function MarketingHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
+          <WhatsAppButton variant="icon" text="Hi, I'd like a quote for a jewelry CAD design." />
           <HeaderAccount phone={phone} />
-          <MobileMenu nav={NAV} phone={phone} hours={showClaim("LIVE_CALL_HOURS") ? c("LIVE_CALL_HOURS") : "US business hours"} />
+          <MobileMenu nav={NAV} phone={phone} />
         </div>
       </div>
     </header>

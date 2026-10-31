@@ -12,14 +12,14 @@ import { startBriefLeadAction } from "./actions";
 
 export const metadata: Metadata = pageMetadata(
   "Jewelry CAD, first look in 6 hours — or it's free",
-  "Castable 3DM and STL files, checked by a second designer, from $55. Your first design is $49.",
+  "AI-native jewelry CAD: castable 3DM and STL files, checked by senior designers, from $35 a design.",
   "/jewelry-cad",
 );
 
 const BLOCKS: [string, string][] = [
-  ["Fast", "Our team works US hours. Standard pieces get a first look within 6 hours of order confirmation."],
-  ["Checked", "19 checks on every file — dimensions, stone seats, walls, prongs, open edges, mesh — by the designer, then by a second designer."],
-  ["Fair", "$55 standard, $85 complex. No retainers, no setup fees."],
+  ["Fast", "Our AI models every piece, so a first look comes within 6 hours of order confirmation, bulk orders included."],
+  ["Checked", "19 checks on every file — dimensions, stone seats, walls, prongs, open edges, mesh — by a senior designer, then by a master craftsman. 99% of first looks are right first time."],
+  ["Fair", "From $35 a design. Retainers for regular orders. No setup fees."],
 ];
 
 /** The ads landing page (LANDING-COPY "/jewelry-cad"). */
@@ -34,7 +34,7 @@ export default function JewelryCadPage() {
               Jewelry CAD, first look in 6 hours — or it&apos;s free.
             </h1>
             <p className="mt-6 max-w-xl text-[length:var(--fs-4)] leading-[var(--lh-4)] text-muted-foreground">
-              Castable 3DM and STL files, checked by a second designer, from $55. Your first design is $49.
+              AI-native jewelry CAD: castable 3DM and STL files, checked by senior designers, from $35 a design.
             </p>
             <p className="mt-6 max-w-xl text-[length:var(--fs-3)]">
               <span className="font-medium">Already have a CAD designer?</span> Use us for overflow and rush weeks. Same specs,

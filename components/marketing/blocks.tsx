@@ -69,7 +69,7 @@ export function Section({
   );
 }
 
-export function Ctas({ primary = { href: "/sign-up", label: "Start your first design — $49" }, secondary }: {
+export function Ctas({ primary = { href: "/sign-up", label: "Start your first design" }, secondary }: {
   primary?: { href: string; label: string };
   secondary?: { href: string; label: string };
 }) {
@@ -127,7 +127,7 @@ export function FinalCta({ line = "Send one design. If you don't see the first l
           href="/sign-up"
           className="inline-flex min-h-[var(--ctl)] items-center rounded-[var(--r-sm)] bg-primary-foreground px-6 text-[length:var(--fs-3)] font-medium text-primary hover:opacity-90"
         >
-          Start for $49
+          Start your first design
         </Link>
       </div>
     </section>

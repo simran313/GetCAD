@@ -1,57 +1,42 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { INCLUDED, PRICE_BANDS, VOLUME } from "@/components/marketing/content";
+import { INCLUDED } from "@/components/marketing/content";
 import { Ctas, FinalCta, Hero, Section } from "@/components/marketing/blocks";
+import { SimplePricing } from "@/components/marketing/home/more-sections";
+import { SupportStatus } from "@/components/support/support-status";
+import { WhatsAppButton } from "@/components/support/whatsapp";
+import { c } from "@/content/claims";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
   "Pricing",
-  "$55 standard, $85 complex, sculpted from $120. Your first design is $49. No retainers, no setup fees.",
+  "From $35 a design, with a fixed price before you pay. Retainers for jewelers with regular orders.",
   "/pricing",
 );
 
-/** Prices from DECISIONS §4; plans are sold by talking to us (§12: plans checkout off). */
+/**
+ * One price and retainers (owner, 31 Oct 2026): the categories and bands in
+ * DECISIONS §4 stay internal; every client gets a fixed price on their own
+ * piece before paying. Retainers are arranged by talking to us.
+ */
 export default function PricingPage() {
   return (
     <>
-      <Hero eyebrow="Pricing" title="Fixed bands. No retainer." sub="You get a price within the hour and only pay when you accept it.">
+      <Hero eyebrow="Pricing" title={`From ${c("ENTRY_PRICE")} a design.`} sub="You get a fixed price for your piece within the hour and only pay when you accept it.">
         <Ctas />
       </Hero>
-      <Section title="Per design">
-        <div className="overflow-hidden rounded-[var(--r-lg)] border border-border">
-          <table className="w-full text-left">
-            <tbody>
-              {PRICE_BANDS.map((b) => (
-                <tr key={b.band} className="border-b border-border last:border-b-0">
-                  <th scope="row" className="w-40 px-[var(--s-5)] py-[var(--s-4)] text-[length:var(--fs-3)] font-medium">
-                    {b.band}
-                  </th>
-                  <td className="tabular w-36 px-[var(--s-5)] py-[var(--s-4)] font-display text-[length:var(--fs-display)] leading-none">
-                    {b.price}
-                  </td>
-                  <td className="px-[var(--s-5)] py-[var(--s-4)] text-[length:var(--fs-3)] text-muted-foreground">{b.examples}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-6 text-[length:var(--fs-3)]">
-          <span className="font-medium">Included:</span> {INCLUDED}.
-        </p>
+      <Section>
+        <SimplePricing entry={c("ENTRY_PRICE")} included={INCLUDED} />
       </Section>
-      <Section eyebrow="For regular volume" title="Talk to us.">
-        <div className="grid gap-6 md:grid-cols-3">
-          {VOLUME.map(([t, b]) => (
-            <div key={t} className="rounded-[var(--r-lg)] border border-border bg-card p-[var(--s-5)] shadow-[var(--e-1)]">
-              <p className="text-[length:var(--fs-4)] font-medium">{t}</p>
-              <p className="mt-2 text-[length:var(--fs-3)] text-muted-foreground">{b}</p>
-            </div>
-          ))}
+      <Section eyebrow="For regular orders" title="Ask about a retainer.">
+        <p className="max-w-2xl text-[length:var(--fs-4)] leading-[var(--lh-4)] text-muted-foreground">
+          Ordering every week? A retainer gives you a monthly rate, a named account manager and priority in the queue, bulk orders
+          included. Tell us your volume and we will send a proposal.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <WhatsAppButton label="WhatsApp us about a retainer" text="Hi, I'd like to discuss a retainer for regular CAD orders." />
+          <SupportStatus />
         </div>
-        <Link href="/contact" className="mt-6 inline-block text-[length:var(--fs-3)] underline underline-offset-4">
-          Ask about volume pricing
-        </Link>
       </Section>
       <FinalCta />
     </>

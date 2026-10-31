@@ -1,5 +1,6 @@
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingHeader } from "@/components/marketing/marketing-header";
+import { WhatsAppButton } from "@/components/support/whatsapp";
 
 // Chrome for the public marketing site. Structurally isolated from the
 // authenticated product's layout (app/(app)/layout.tsx) — this header/footer
@@ -10,6 +11,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <MarketingHeader />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
+      {/* WhatsApp one tap away on every page (desk; on a phone it is in the header). */}
+      <WhatsAppButton variant="float" text="Hi, I'd like a quote for a jewelry CAD design." className="hidden md:inline-flex" />
     </div>
   );
 }

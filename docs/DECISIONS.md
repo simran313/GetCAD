@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.3 · October 2026 · Owner: Fazil Zaidi
+Version 1.4 · 31 October 2026 · Owner: Fazil Zaidi
 
-Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -15,7 +15,8 @@ Scope of this build: **jewelry CAD + renders**, client portal + staff portal + p
 - **Brand:** The CAD Pillar (TCP). Fully independent of The CAD Co. (TCC): no TCC data, files, clients, portfolio or branding anywhere in code, seed data or content.
 - **Customers:** trade only (jewelry businesses), white-label. No consumer orders.
 - **Markets:** USA first; UK, Australia, Canada accepted.
-- **Team hours:** US business hours (Eastern). The SLA depends on this.
+- **Team hours:** the portal is open 24/7. Live support (calls and WhatsApp, +91 83692 88293) answers 3 PM – midnight India time every day: **5:30 AM – 2:30 PM ET** in US daylight time, **4:30 AM – 1:30 PM ET** in standard time, shown in ET and adjusted for daylight saving automatically (core/support/hours). The SLA depends on this.
+- **Positioning (1.4):** AI-native jewelry CAD. Our AI models each piece; senior designers check and finish every file and a master craftsman signs it off. Public claims: first look within 6 hours, bulk orders included; 99% of first looks right first time; 50+ senior designers, 10+ years each (owner-confirmed). Never "first" or "only": they cannot be proven.
 - **Currency:** USD for clients; INR for designer and QC payouts. Store money as integers (cents / paise).
 
 ## 2. Roles
@@ -57,6 +58,7 @@ Every order gets one category, set by admin or pod lead before quoting.
 | Sculpted / figurative | G–L | Signets with figures, sculpted, large multi-part | **From $120, quoted** |
 | First design (new account) | A–C | One design | **$49** |
 
+- **Website (1.4):** one public price, **from $35 a design**, and retainers for regular clients. The bands and categories in this table are internal quote defaults and are not shown to clients; a quote below the band default is set by admin on the quote.
 - Admin can override any price on the quote; the system warns if job payouts exceed 40% of the price.
 - Render-only orders: quoted by admin in v1 (no fixed card yet).
 - Every price in the screen designs ($180, $240 …) is placeholder. Use this table.
