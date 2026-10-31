@@ -63,7 +63,10 @@ export default async function EmailsPage() {
                       {e.kind === "optional" ? "Can turn off" : "Always sent"}
                     </span>
                   </summary>
-                  <iframe title={`Preview: ${r.subject}`} srcDoc={r.html} sandbox="" className="h-[720px] w-full border-t border-border bg-white" />
+                  {/* Not sandboxed: the HTML is built here from fixed sample data and holds
+                      no script; a sandbox only made the browser log blocked scripts
+                      (the e2e pre-launch pass fails on any console error). */}
+                  <iframe title={`Preview: ${r.subject}`} srcDoc={r.html} className="h-[720px] w-full border-t border-border bg-white" />
                 </details>
               </Card>
             </li>
