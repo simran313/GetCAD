@@ -7,6 +7,7 @@ import { generateId } from "@/core";
 import { issueCertificate } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Refusal, refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 // Create a DRAFT order for the current user. The DB function is the source of
 // truth (audited); this action just calls it as the logged-in user.
@@ -20,6 +21,7 @@ export async function createOrderAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // Move an order to a new status. The DB rejects anything illegal / out-of-role.
@@ -38,6 +40,7 @@ export async function transitionAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 /**
@@ -68,6 +71,7 @@ export async function qcDecisionAction(formData: FormData): Promise<void> {
     }
   }
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // Phase 7a (0050): the designer's model volume, the pod lead's measured
@@ -80,6 +84,7 @@ export async function setVolumeAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 const um = (form: FormData, key: string): number | null => {
@@ -108,6 +113,7 @@ export async function recordMeasurementsAction(formData: FormData): Promise<void
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 export async function addWaiverAction(formData: FormData): Promise<void> {
@@ -120,12 +126,14 @@ export async function addWaiverAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 export async function issueCertificateAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
   await issueCertificate(supabase, formData.get("order_id")?.toString() ?? "");
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // --- Money layer (escrow). Each just calls the DB function AS THE USER; the DB
@@ -162,6 +170,7 @@ export async function quoteAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // Admin or the order's pod lead: the brief is complete, start the clock once paid (v1.1).
@@ -172,6 +181,7 @@ export async function confirmOrderAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // FINANCE (admin) records a Wise / bank / PayPal / manual payment (DECISIONS §13).
@@ -184,6 +194,7 @@ export async function markPaidAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 async function escrowRpc(fn: "release_escrow" | "refund_escrow", orderId: string) {
@@ -191,6 +202,7 @@ async function escrowRpc(fn: "release_escrow" | "refund_escrow", orderId: string
   const { error } = await supabase.rpc(fn, { p_order_id: orderId });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 export async function releaseEscrowAction(formData: FormData): Promise<void> {
@@ -211,6 +223,7 @@ export async function postMessageAction(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("post_message", { p_order_id: orderId, p_body: body });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // --- Disputes. The DB enforces role/state and records the reason/outcome. ---
@@ -224,6 +237,7 @@ export async function raiseDisputeAction(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("raise_dispute", { p_order_id: orderId, p_reason: reason });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 export async function resolveDisputeAction(formData: FormData): Promise<void> {
@@ -239,6 +253,7 @@ export async function resolveDisputeAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // Admin or the order's pod lead assigns a designer from the pod (0041).
@@ -252,6 +267,7 @@ export async function assignDesignerAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // Tick or untick one checklist line (0041). Which column, and whether this
@@ -266,6 +282,7 @@ export async function tickCheckAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // The client sends a preview back (DECISIONS §8). request_revision() checks
@@ -278,6 +295,7 @@ export async function requestRevisionAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
 }
 
 // A change after approval, or after the included rounds, is a new linked
@@ -292,5 +310,6 @@ export async function changeOrderAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
   redirect(`/orders/${newId}`);
 }

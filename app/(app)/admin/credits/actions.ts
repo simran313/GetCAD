@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Refusal, refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 /**
  * Decide a late-order credit (DECISIONS §6, owner answer Q4). Runs as the
@@ -29,4 +30,5 @@ export async function decideCreditAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
   revalidatePath("/admin/credits");
+  flushEmailsAfterResponse();
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 import { refuseOn } from "@/lib/refusal";
 
 /**
@@ -22,6 +23,8 @@ export async function sendChatMessageAction(threadId: string, body: string, ref:
     return { id: (old.data as { message_id: string }).message_id, at: new Date().toISOString() };
   }
   refuseOn(error);
+  // A team message may owe the client an email (0054); sent after this answers.
+  flushEmailsAfterResponse();
   const r = data as { message_id: string; created_at: string };
   return { id: r.message_id, at: r.created_at };
 }

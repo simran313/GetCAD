@@ -46,7 +46,9 @@ describe("Test BA3 — every template is well-formed", () => {
       const r = renderEmail(template, {});
       expect(r.subject.length).toBeGreaterThan(0);
       expect(r.text.length).toBeGreaterThan(0);
-      expect(r.html).toMatch(/^<div/);
+      // A whole document (Phase 17 layout): tables and inline styles for every mail app.
+      expect(r.html).toMatch(/^<!doctype html>/i);
+      expect(r.html).toContain("</html>");
       // The shared shell: signed, and marked automated.
       expect(r.text).toContain("The CAD Pillar");
       expect(r.text).toMatch(/automated message/i);

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { decodeFirstTouch, FIRST_TOUCH_COOKIE, isHeardAbout } from "@/core";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Refusal, refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 const NEXT = new Set(["/welcome", "/account", "/home", "/orders/new"]);
 
@@ -50,7 +51,20 @@ export async function saveClientProfileAction(formData: FormData): Promise<void>
   }
 
   revalidatePath("/account");
+  flushEmailsAfterResponse();
   revalidatePath("/home");
+  flushEmailsAfterResponse();
   const next = formData.get("next")?.toString() ?? "/account";
   redirect(NEXT.has(next) ? next : "/account");
+}
+
+/** Optional emails (Phase 17): messages, reminders, news. Order emails always go. */
+export async function saveEmailPreferencesAction(prefs: { messages: boolean; reminders: boolean; marketing: boolean }): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("set_email_preferences", {
+    p_messages: prefs.messages === true,
+    p_reminders: prefs.reminders === true,
+    p_marketing: prefs.marketing === true,
+  });
+  refuseOn(error);
 }

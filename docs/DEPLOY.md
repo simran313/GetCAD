@@ -167,6 +167,23 @@ Check: send as the client; the clock turns to ✓ at once. Open the
 conversation as the team; the client's ✓ turns to ✓✓ (blue) within a second
 with Realtime on (§2c), about 2 s without.
 
+### 2e. Client emails (test mode until the owner approves)
+
+See `docs/EMAIL.md`. Apply `db/migrations/0054_client_emails.sql` and
+`db/policies/0042_email_preferences_rls.sql` to production yourself, then set:
+
+| Variable | Value |
+|---|---|
+| `RESEND_API_KEY` | Resend API key (secret) |
+| `EMAIL_FROM` | Verified sender, e.g. `The CAD Pillar <hello@thecadpillar.com>` |
+| `EMAIL_REPLY_TO` | Optional: where replies land, e.g. `simran@thecadpillar.com` |
+| `EMAIL_TEST_TO` | Optional: the test inbox (default `simran@thecadpillar.com`) |
+| `EMAIL_DELIVERY` | **Leave unset** (test mode). `live` only after the owner approves |
+| `CRON_SECRET` | Already set for push (LAUNCH.md); the email sweep uses it too |
+
+Check: Admin → Settings → Email previews → Send all to the test inbox. Every
+email arrives at the test inbox with `[Test → …]` in the subject.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.

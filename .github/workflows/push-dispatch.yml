@@ -73,3 +73,24 @@ jobs:
           fi
 
           test "$status" = "200"
+
+      # Phase 17: the email sweep on the same schedule. Owes the reminders that
+      # are due, then sends what is waiting (and retries failures after their
+      # back-off). In test mode every email goes to the test inbox.
+      - name: Send waiting emails
+        env:
+          APP_URL: ${{ vars.APP_URL || 'https://thecadpillar.com' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          status=$(curl -sS -o /tmp/email-response -w '%{http_code}' \
+            --max-time 60 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/emails")
+          echo "HTTP ${status}"
+          cat /tmp/email-response
+          echo
+          if [ "$status" = "404" ]; then
+            echo "::error::404 from /api/cron/emails — the CRON_SECRET here does not match the one deployed to Vercel."
+            exit 1
+          fi
+          test "$status" = "200"

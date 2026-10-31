@@ -15,6 +15,9 @@
  * text/plain fallback is what keeps a transactional email out of spam.
  */
 
+import { renderLayout } from "./layout";
+import { ORDER_EMAIL_TEMPLATES, renderOrderEmail, type OrderEmailPayloads, type OrderEmailTemplate } from "./order";
+
 export const EMAIL_TEMPLATES = [
   "DESIGNER_APPLICATION_RECEIVED",
   "CONTACT_RECEIVED",
@@ -22,6 +25,8 @@ export const EMAIL_TEMPLATES = [
   "DESIGNER_APPLICATION_REJECTED",
   "PAYOUT_SENT",
   "ORDER_PLACED_FOR_YOU",
+  // Client order emails (Phase 17, migration 0054): core/email/order.ts.
+  ...ORDER_EMAIL_TEMPLATES,
 ] as const;
 export type EmailTemplate = (typeof EMAIL_TEMPLATES)[number];
 
@@ -29,7 +34,7 @@ export type EmailTemplate = (typeof EMAIL_TEMPLATES)[number];
  *  has no type for, so a template can never read a field it was not handed.
  *  Every payload here is about the RECIPIENT'S OWN thing — an application they
  *  filed, a payout owed to them — so none can carry a counterparty identity. */
-export interface EmailPayloads {
+export interface EmailPayloads extends OrderEmailPayloads {
   DESIGNER_APPLICATION_RECEIVED: { full_name?: string };
   CONTACT_RECEIVED: { name?: string };
   DESIGNER_APPLICATION_ACCEPTED: { full_name?: string };
@@ -81,71 +86,64 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Wrap body paragraphs in the same plain shell every email shares. */
-function layout(paragraphs: string[]): { text: string; html: string } {
-  const text = [...paragraphs, `— ${PRODUCT}`, "", "This is an automated message."].join("\n\n");
-
-  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#111;max-width:520px">
-${paragraphs.map((p) => `  <p style="margin:0 0 16px">${p}</p>`).join("\n")}
-  <p style="margin:24px 0 0;color:#111">— ${esc(PRODUCT)}</p>
-  <p style="margin:24px 0 0;font-size:12px;color:#888">This is an automated message.</p>
-</div>`;
-
-  return { text, html };
+/**
+ * The studio's shell (core/email/layout), shared with the order emails: the
+ * heading is the subject without the brand, the preview line the first real
+ * sentence.
+ */
+function layout(subject: string, paragraphs: string[], cta?: { label: string; href: string }): RenderedEmail {
+  const heading = subject.replace(/ — The CAD Pillar$/, "");
+  const preheader = (paragraphs[1] ?? paragraphs[0] ?? "").replace(/<[^>]+>/g, "").slice(0, 120);
+  return { subject, ...renderLayout(subject, { preheader, heading, paragraphs, cta }) };
 }
 
 function designerApplicationReceived(p: EmailPayloads["DESIGNER_APPLICATION_RECEIVED"]): RenderedEmail {
   const name = firstName(p.full_name);
-  const { text, html } = layout([
+  return layout(`We've received your application — ${PRODUCT}`, [
     `Hi ${esc(name)},`,
     `Thanks for applying to design with ${esc(PRODUCT)}. We've received your application and it's now with our team for review.`,
     `We look at every application ourselves rather than auto-screening, so this takes a little time. If it's a fit, we'll be in touch about a short paid test order — that's how we get to know a designer's work before any client does.`,
     `You don't need to do anything else for now. If you applied by mistake or want to add something, just reply to this email.`,
   ]);
-  return { subject: `We've received your application — ${PRODUCT}`, text, html };
 }
 
 function contactReceived(p: EmailPayloads["CONTACT_RECEIVED"]): RenderedEmail {
   const name = firstName(p.name);
-  const { text, html } = layout([
+  return layout(`We've received your message — ${PRODUCT}`, [
     `Hi ${esc(name)},`,
     `Thanks for getting in touch with ${esc(PRODUCT)}. We've received your message and someone from our team will get back to you.`,
     `If it's urgent, you can reply directly to this email and it'll reach us.`,
   ]);
-  return { subject: `We've received your message — ${PRODUCT}`, text, html };
 }
 
 function designerApplicationAccepted(p: EmailPayloads["DESIGNER_APPLICATION_ACCEPTED"]): RenderedEmail {
   const name = firstName(p.full_name);
-  const { text, html } = layout([
+  return layout(`Your application to ${PRODUCT} — next steps`, [
     `Hi ${esc(name)},`,
     `Good news — we'd like to move forward with your application to design with ${esc(PRODUCT)}.`,
     `The next step is a short paid test order, so we can see how you work before you're matched with a client. We'll follow up from this address with the details and how to set up your account.`,
     `No action is needed right now — just keep an eye on your inbox. If you have questions in the meantime, reply here.`,
   ]);
-  return { subject: `Your application to ${PRODUCT} — next steps`, text, html };
 }
 
 function designerApplicationRejected(p: EmailPayloads["DESIGNER_APPLICATION_REJECTED"]): RenderedEmail {
   const name = firstName(p.full_name);
-  const { text, html } = layout([
+  return layout(`An update on your application to ${PRODUCT}`, [
     `Hi ${esc(name)},`,
     `Thank you for your interest in designing with ${esc(PRODUCT)}, and for the time you put into applying.`,
     `After reviewing your application, we're not able to move forward right now. This isn't a judgement of your work — we onboard a small number of designers at a time and can't take everyone on.`,
     `You're welcome to apply again in the future. We wish you the best with your work.`,
   ]);
-  return { subject: `An update on your application to ${PRODUCT}`, text, html };
 }
 
 function payoutSent(p: EmailPayloads["PAYOUT_SENT"]): RenderedEmail {
   const amount = formatMinor(p.amount_minor, p.currency);
   const ref = p.order_ref ? ` for order ${esc(p.order_ref)}` : "";
-  const { text, html } = layout([
+  return layout(`A payout of ${amount} is on its way — ${PRODUCT}`, [
     `Hi there,`,
     `A payout of ${amount}${ref} is on its way to your bank account.`,
     `Settlement to your bank usually takes a further working day or two. You can see the status of your payouts any time on your payout settings page.`,
   ]);
-  return { subject: `A payout of ${amount} is on its way — ${PRODUCT}`, text, html };
 }
 
 const CHANNEL_WORDS: Record<string, string> = {
@@ -162,16 +160,17 @@ function orderPlacedForYou(p: EmailPayloads["ORDER_PLACED_FOR_YOU"]): RenderedEm
   const base = p.site_url && /^https:\/\/[^\s/]+/.test(p.site_url) ? p.site_url.replace(/\/+$/, "") : null;
   const link =
     base && p.order_id && /^[A-Za-z0-9_-]+$/.test(p.order_id) ? `${base}/orders/${p.order_id}` : null;
-  const { text, html } = layout([
-    `Hi there,`,
-    `We've placed order${ref} for you from ${from}. You can follow it, answer questions and pay once it's quoted in your ${esc(PRODUCT)} portal.`,
-    link
-      ? `Open your order: ${esc(link)}`
-      : `Sign in to your ${esc(PRODUCT)} portal to see it.`,
-    `Sign in with this email address. No password is needed: we'll send you a code.`,
-    `If something in the order isn't what you asked for, reply to this email or message us and we'll correct it before work starts.`,
-  ]);
-  return { subject: `Your order${ref} — ${PRODUCT}`, text, html };
+  return layout(
+    `Your order${ref} — ${PRODUCT}`,
+    [
+      `Hi there,`,
+      `We've placed order${ref} for you from ${from}. You can follow it, answer questions and pay once it's quoted in your ${esc(PRODUCT)} portal.`,
+      ...(link ? [] : [`Sign in to your ${esc(PRODUCT)} portal to see it.`]),
+      `Sign in with this email address. No password is needed: we'll send you a code.`,
+      `If something in the order isn't what you asked for, reply to this email or message us and we'll correct it before work starts.`,
+    ],
+    link ? { label: "Open your order", href: link } : undefined,
+  );
 }
 
 /**
@@ -197,6 +196,9 @@ export function renderEmail<T extends EmailTemplate>(
     case "ORDER_PLACED_FOR_YOU":
       return orderPlacedForYou(payload as EmailPayloads["ORDER_PLACED_FOR_YOU"]);
     default:
+      if ((ORDER_EMAIL_TEMPLATES as readonly string[]).includes(template)) {
+        return renderOrderEmail(template as OrderEmailTemplate, payload as OrderEmailPayloads[OrderEmailTemplate]);
+      }
       throw new Error(`unknown email template: ${String(template)}`);
   }
 }

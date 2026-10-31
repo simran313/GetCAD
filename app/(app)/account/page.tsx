@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out";
 import { InstallHint } from "@/components/pwa/install-hint";
 import { PushOptIn } from "@/components/pwa/push-opt-in";
+
+import { EmailPreferences, type EmailPrefs } from "./EmailPreferences";
 import { TimeZoneSetting } from "@/components/time-zone";
 import { Button } from "@/components/ui/button";
 import { CopyableID } from "@/components/ui/copyable-id";
@@ -69,7 +71,7 @@ export default async function AccountPage() {
   // profile table this person might have (each readable only by its owner,
   // so the others come back empty), with the sign-in email from Clerk.
   const supabase = await createUserSupabaseClient();
-  const [{ data }, { data: grants }, { data: clientProfile }, { data: account }, { data: designer }, { data: staff }, clerkUser] = await Promise.all([
+  const [{ data }, { data: grants }, { data: clientProfile }, { data: account }, { data: designer }, { data: staff }, clerkUser, { data: emailPrefs }] = await Promise.all([
     supabase.from("users").select("role, status").maybeSingle(),
     supabase.from("user_roles").select("role"),
     supabase.from("client_profiles").select("business_name, legal_name, email, phone, logo_object_key").eq("user_id", userId).maybeSingle(),
@@ -77,6 +79,7 @@ export default async function AccountPage() {
     supabase.from("designer_profiles").select("legal_name").eq("user_id", userId).maybeSingle(),
     supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     currentUser(),
+    supabase.rpc("my_email_preferences"),
   ]);
 
   const role: string = data?.role ?? "CLIENT";
@@ -205,6 +208,16 @@ export default async function AccountPage() {
           </Link>
         )}
       </section>
+
+      {/* Email (Phase 17): the optional emails a client may turn off. */}
+      {isClient && (
+        <section id="email" aria-labelledby="acc-email" className="scroll-mt-20 space-y-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+          <h2 id="acc-email" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
+            Email
+          </h2>
+          <EmailPreferences initial={(emailPrefs as EmailPrefs | null) ?? { messages: true, reminders: true, marketing: false }} />
+        </section>
+      )}
 
       {/* Settings (Phase 10d): both are per device, so both live here together. */}
       <section aria-labelledby="acc-settings" className="space-y-4 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">

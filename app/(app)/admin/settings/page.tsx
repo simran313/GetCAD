@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { buttonVariants } from "@/components/ui/button";
 import { Page } from "@/components/ui/page";
 import { PageHeader } from "@/components/ui/page-header";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
@@ -72,6 +74,11 @@ export default async function SettingsPage() {
           isAdmin
             ? "The numbers the platform runs on. Changes apply from now on and are recorded in the audit log."
             : "Read-only. An admin (Sales + Ops + Finance) can change these."
+        }
+        actions={
+          <Link href="/admin/emails" className={buttonVariants({ variant: "outline" })}>
+            Email previews
+          </Link>
         }
       />
       <SettingsForm

@@ -8,6 +8,7 @@ import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { Refusal, refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 /**
  * Start a new order and go straight to its brief.
@@ -287,7 +288,9 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath(`/orders/${orderId}`);
+  flushEmailsAfterResponse();
   revalidatePath(`/orders/${orderId}/brief`);
+  flushEmailsAfterResponse();
   // "Review and send" (N5) checks the minimum and sends from there.
   if (formData.get("intent") === "review") redirect(`/orders/${orderId}/brief/review`);
 }
@@ -302,5 +305,6 @@ export async function sendBriefAction(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("submit_brief", { p_order_id: orderId });
   refuseOn(error);
   revalidatePath("/orders");
+  flushEmailsAfterResponse();
   redirect(`/orders/${orderId}/sent`);
 }
