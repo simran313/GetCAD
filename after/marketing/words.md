@@ -5,7 +5,7 @@
 | `/` | 970 |
 | `/how-it-works` | 174 |
 | `/pricing` | 164 |
-| `/quality` | 240 |
+| `/quality` | 246 |
 | `/guarantee` | 241 |
 | `/results` | 20 |
 | `/jewelry-cad` | 175 |
