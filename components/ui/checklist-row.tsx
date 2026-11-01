@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * One line of the 19-point checklist (DECISIONS §10; docs/design D4b, P2):
- * the check, then a box per level — designer, then QC. A ticked box is
- * black with a white tick; the sign-off line is set apart.
+ * A ticked line with a box per level — designer, then QC (docs/design D4b,
+ * P2). The portal's QC sheet is components/work/checklist since 0059; this
+ * stays for the kit page. A ticked box is black with a white tick.
  */
 export function CheckBox({ checked, label }: { checked: boolean; label: string }) {
   return (

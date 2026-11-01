@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 import { png } from "./files";
-import { act, doDesignerVersion, expectGone, settled, orderIdFrom, signedIn, tickAll } from "./helpers";
+import { act, doDesignerVersion, expectGone, settled, orderIdFrom, passAll, signedIn } from "./helpers";
 import { withDb } from "./db";
 import { pdfText } from "./pdf";
 import { E2E_DIR } from "./state";
@@ -101,11 +101,22 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
 
   const lead = await signedIn(browser, "podLead");
   await lead.goto(`/qc/${orderId}`);
-  await lead.getByLabel("Revision note · required to send back").fill("1. Thicken the shank to 1.2 mm");
-  await act(lead, lead.getByRole("button", { name: "Send back" }));
-  await expectGone(lead, lead.getByRole("button", { name: "Send back" }));
+  // A failed QC manager line (0059) is the revision note: its finding and
+  // remark go to the designer as written.
+  await lead.getByLabel("Value or finding · All measurements").fill("Shank 1.0 mm at the base");
+  await lead.getByLabel("Remark · All measurements").fill("Thicken to 1.2 mm");
+  await act(lead, lead.getByRole("button", { name: "Fail · All measurements" }));
+  await settled(lead, "line failed", (timeout) =>
+    expect(lead.getByRole("button", { name: "Fail · All measurements", pressed: true })).toBeVisible({ timeout }),
+  );
+  await expect(lead.getByRole("button", { name: "Approve · pass to client" })).toBeDisabled();
+  await act(lead, lead.getByRole("button", { name: "Send back · revision needed" }));
+  await expectGone(lead, lead.getByRole("button", { name: "Send back · revision needed" }));
 
-  // Version 2, from the start: new files, new ticks, the volume again.
+  await designer.goto(`/work/${orderId}`);
+  await expect(designer.getByText(/All measurements — Shank 1\.0 mm at the base — Thicken to 1\.2 mm/)).toBeVisible();
+
+  // Version 2, from the start: new files, a fresh QC sheet, the volume again.
   await doDesignerVersion(designer, orderId);
   await designer.context().close();
   await lead.context().close();
@@ -114,7 +125,8 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
 test("the pod lead measures version 2 and passes it", async ({ browser }) => {
   const page = await signedIn(browser, "podLead");
   await page.goto(`/qc/${orderId}`);
-  await tickAll(page, "QC");
+  await passAll(page);
+  await expect(page.getByText("QC manager 5 / 5 passed")).toBeVisible();
   await page.getByLabel("Minimum wall (mm)", { exact: true }).fill("0.9");
   await page.getByLabel("Minimum prong (mm)", { exact: true }).fill("0.85");
   await page.getByLabel("Ring size", { exact: true }).fill("US 7");
@@ -123,7 +135,7 @@ test("the pod lead measures version 2 and passes it", async ({ browser }) => {
     expect(page.getByRole("button", { name: "Update measurements" })).toBeVisible({ timeout }),
   );
 
-  const pass = page.getByRole("button", { name: "Pass to client" });
+  const pass = page.getByRole("button", { name: "Approve · pass to client" });
   await expect(pass).toBeEnabled();
   await act(page, pass);
   await expectGone(page, pass);
@@ -148,12 +160,14 @@ test("the client approves and downloads the STL and the certificate", async ({ b
   expect(cert.status()).toBe(200);
   expect((await cert.body()).subarray(0, 5).toString()).toBe("%PDF-");
 
-  // A9.1: the certificate carries all 19 ticks, both columns, and the
-  // measured specs.
+  // A9.1: the certificate carries the two-stage QC — every line passed, with
+  // its time — and the measured specs.
   const text = await pdfText(await cert.body());
-  expect(text).toMatch(/19-\s*point checklist/);
-  for (let n = 1; n <= 19; n++) expect(text, `checklist line ${n}`).toMatch(new RegExp(`(^| )${String(n).padStart(2, "0")} `));
-  expect(text, "a line is not ticked").not.toContain("not ticked");
+  expect(text).toMatch(/QC stage 1\s*·\s*Designer check/);
+  expect(text).toMatch(/QC stage 2\s*·\s*QC manager check/);
+  for (let n = 1; n <= 9; n++) expect(text, `checklist line ${n}`).toMatch(new RegExp(`(^| )${String(n).padStart(2, "0")} `));
+  expect(text, "a line is not marked").not.toContain("not marked");
+  expect(text, "a line failed").not.toMatch(/\bFail\b/);
   expect(text).toMatch(/Minimum wall 0\.90 mm/);
   expect(text).toMatch(/Minimum prong 0\.85 mm/);
   expect(text).toMatch(/Ring size US 7/);

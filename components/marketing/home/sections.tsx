@@ -102,7 +102,7 @@ export function ProofBar() {
   const items: [string, string, string][] = [
     [c("DESIGNER_COUNT"), "senior CAD designers", `${c("MIN_EXPERIENCE_YEARS")} years each, factories across countries`],
     [c("FIRST_LOOK_ACCURACY"), "first looks right first time", "To your brief and your factory's rules"],
-    [String(c("QC_CHECKPOINTS")), "point factory check", "Castable, to spec, first time"],
+    [String(c("QC_STAGES")), "QC stages on every file", "Designer check, then QC manager check"],
     [`${c("FIRST_LOOK_HOURS")}h`, "first look", "Bulk orders too. Or it's free"],
   ];
   return (

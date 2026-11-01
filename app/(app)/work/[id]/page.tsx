@@ -22,6 +22,7 @@ import { setVolumeAction, transitionAction } from "../../orders/actions";
 import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import { toThreadReads, type AttachmentRow, type MessageRow, type ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
+import { countWord, stageCount } from "@/components/work/checklist";
 import { PauseButton } from "../PauseButton";
 import { SlotUpload } from "../SlotUpload";
 import { StartWorkButton } from "../StartWorkButton";
@@ -88,10 +89,10 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const brief = briefRes.data as BriefRow | null;
   const slots = ((slotsRes.data ?? []) as SlotRow[]).filter((s) => s.required);
   const checklist = (checklistRes.data ?? []) as ChecklistRow[];
-  const ticked = checklist.filter((r) => r.designer_at).length;
+  const check = stageCount(checklist, "DESIGNER");
   const filled = slots.filter((s) => s.file_version_id).length;
   const working = job.status === "IN_PROGRESS";
-  const canSubmit = working && ticked === 19 && filled === slots.length && slots.length > 0 && (!needsVolume || volume != null);
+  const canSubmit = working && check.total > 0 && check.passed === check.total && filled === slots.length && slots.length > 0 && (!needsVolume || volume != null);
   const times = timesMap.get(id);
   // With recorded pauses taken out (0057); before 0057, from Start work.
   const { dueAt: clock, pausedLeftMs } = times ? jobClock(job.minutes, times) : { dueAt: jobClockDue(job.started_at, job.minutes), pausedLeftMs: null };
@@ -273,12 +274,12 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
 
           <Card as="section">
             <CardHeader>
-              <CardTitle>Designer checklist</CardTitle>
-              <span className="tabular font-mono text-[length:var(--fs-2)]">{ticked} / 19</span>
+              <CardTitle>Designer check</CardTitle>
+              <span className="tabular font-mono text-[length:var(--fs-2)]">{countWord(check)}</span>
             </CardHeader>
             <CardBody className="space-y-3">
               <Link href={`/work/${id}/checklist`} className={`${buttonVariants({ variant: "outline" })} w-full`}>
-                Open checklist
+                {check.passed === check.total ? "Open the QC sheet" : "Mark the QC sheet"}
               </Link>
               <form action={transitionAction}>
                 <input type="hidden" name="order_id" value={id} />
@@ -289,7 +290,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               </form>
               {!canSubmit && working && (
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                  Finish the checklist ({ticked}/19), the files ({filled}/{slots.length})
+                  Pass every line of the designer check ({check.passed}/{check.total}), the files ({filled}/{slots.length})
                   {needsVolume ? ` and the model volume${volume != null ? " ✓" : ""}` : ""} to submit.
                 </p>
               )}

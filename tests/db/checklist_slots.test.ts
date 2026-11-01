@@ -5,8 +5,10 @@ import { generateId } from "../../core/ids/generateId";
 import { connectFreshDb } from "../helpers/db";
 
 /**
- * Phase 3a (0041): assignment with capacity, the two-level checklist, the
- * upload slots and the gates between them (Spec §7–§9, §12.4–5).
+ * Phase 3a (0041): assignment with capacity, the checklist, the upload slots
+ * and the gates between them (Spec §7–§9, §12.4–5). The checklist is 0059's
+ * two-stage QC: the designer check (9 lines) and the QC manager check (5),
+ * each line Pass or Fail with a finding and a remark.
  */
 
 let db: Client;
@@ -64,10 +66,13 @@ async function paidOrder(category = "C", status = "PAYMENT_HELD"): Promise<strin
 const status = async (id: string) =>
   (await db.query("SELECT status, work_version FROM orders WHERE id=$1", [id])).rows[0];
 
-async function tickAll(id: string, column: "designer" | "qc", who: string, except: number[] = []) {
-  for (let item = 1; item <= 19; item++) {
+const DESIGNER_LINES = [101, 102, 103, 104, 105, 106, 107, 108, 109];
+const MANAGER_LINES = [201, 202, 203, 204, 205];
+
+async function passAll(id: string, stage: "designer" | "manager", who: string, except: number[] = []) {
+  for (const item of stage === "designer" ? DESIGNER_LINES : MANAGER_LINES) {
     if (except.includes(item)) continue;
-    await q(who, "SELECT public.tick_check($1,$2,$3)", [id, item, column]);
+    await q(who, "SELECT public.mark_check($1,$2,'PASS')", [id, item]);
   }
 }
 
@@ -172,12 +177,35 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     await q(podLead, "SELECT public.assign_designer($1,$2)", [id, designer]);
   });
 
-  it("the designer ticks only while IN_PROGRESS, and only their own column", async () => {
-    await expect(q(designer, "SELECT public.tick_check($1,1,'designer')", [id])).rejects.toThrow(/in progress/i);
+  it("the sheet: 9 designer lines, 5 QC manager lines; the 19 old lines kept, inactive", async () => {
+    const { rows } = await db.query("SELECT id, stage FROM checklist_items WHERE active ORDER BY position");
+    expect(rows.filter((r) => r.stage === "DESIGNER").map((r) => r.id)).toEqual(DESIGNER_LINES);
+    expect(rows.filter((r) => r.stage === "MANAGER").map((r) => r.id)).toEqual(MANAGER_LINES);
+    const old = await db.query("SELECT count(*)::int AS n FROM checklist_items WHERE NOT active AND stage = 'LEGACY'");
+    expect(old.rows[0].n).toBe(19);
+  });
+
+  it("the designer marks only while IN_PROGRESS, and only the designer check", async () => {
+    await expect(q(designer, "SELECT public.mark_check($1,101,'PASS')", [id])).rejects.toThrow(/in progress/i);
     await q(designer, "SELECT public.transition_order($1,'IN_PROGRESS')", [id]);
-    await q(designer, "SELECT public.tick_check($1,1,'designer')", [id]);
-    await expect(q(busyDesigner, "SELECT public.tick_check($1,2,'designer')", [id])).rejects.toThrow(/assigned designer/i);
-    await expect(q(designer, "SELECT public.tick_check($1,2,'qc')", [id])).rejects.toThrow(/pod lead/i);
+    await q(designer, "SELECT public.mark_check($1,101,'PASS','Ring size 7, 17.3 mm','Checked against the brief')", [id]);
+    await expect(q(busyDesigner, "SELECT public.mark_check($1,102,'PASS')", [id])).rejects.toThrow(/assigned designer/i);
+    await expect(q(designer, "SELECT public.mark_check($1,201,'PASS')", [id])).rejects.toThrow(/pod lead/i);
+    await expect(q(designer, "SELECT public.mark_check($1,1,'PASS')", [id])).rejects.toThrow(/no such checklist item/i);
+    await expect(q(designer, "SELECT public.mark_check($1,102,'MAYBE')", [id])).rejects.toThrow(/PASS or FAIL/i);
+    await expect(q(designer, "SELECT public.mark_check($1,102,'PASS',$2)", [id, "x".repeat(301)])).rejects.toThrow(/300 characters/i);
+    const line = await q(designer, "SELECT outcome, finding, remark, designer_at IS NOT NULL AS at FROM public.job_checklist($1) WHERE item_id = 101", [id]);
+    expect(line.rows[0]).toEqual({ outcome: "PASS", finding: "Ring size 7, 17.3 mm", remark: "Checked against the brief", at: true });
+  });
+
+  it("a cleared line has no mark; tick_check still works as a pass for its own stage", async () => {
+    await q(designer, "SELECT public.mark_check($1,101,NULL)", [id]);
+    const cleared = await q(designer, "SELECT outcome, finding, designer_at FROM public.job_checklist($1) WHERE item_id = 101", [id]);
+    expect(cleared.rows[0]).toEqual({ outcome: null, finding: null, designer_at: null });
+    await q(designer, "SELECT public.tick_check($1,101,'designer')", [id]);
+    await expect(q(designer, "SELECT public.tick_check($1,201,'designer')", [id])).rejects.toThrow(/manager check/i);
+    const ticked = await q(designer, "SELECT outcome FROM public.job_checklist($1) WHERE item_id = 101", [id]);
+    expect(ticked.rows[0].outcome).toBe("PASS");
   });
 
   it("slot uploads are named by the server with the job code, and replace within a version", async () => {
@@ -211,17 +239,21 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     expect(n.rows[0].n).toBe(0);
   });
 
-  it("cannot submit at 18 of 19 ticks", async () => {
+  it("cannot submit with a line unmarked, or failed", async () => {
     await fillSlots(id, ["TV"]);
-    await tickAll(id, "designer", designer, [19]); // everything except the sign-off
+    await passAll(id, "designer", designer, [109]);
     await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(
-      /all 19 checklist lines/i,
+      /every line of the designer check/i,
+    );
+    await q(designer, "SELECT public.mark_check($1,109,'FAIL','STL missing')", [id]);
+    await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(
+      /every line of the designer check/i,
     );
   });
 
   it("cannot submit with a required slot empty — and says which", async () => {
     await db.query("DELETE FROM deliverables WHERE order_id=$1 AND slot='TECH'", [id]);
-    await q(designer, "SELECT public.tick_check($1,19,'designer')", [id]);
+    await q(designer, "SELECT public.mark_check($1,109,'PASS')", [id]);
     await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(
       /missing: TECH/,
     );
@@ -237,62 +269,87 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     expect((await status(id)).status).toBe("QC_REVIEW");
     const note = await db.query("SELECT 1 FROM notifications WHERE user_id=$1 AND kind='QC' AND order_id=$2", [podLead, id]);
     expect(note.rows).toHaveLength(1);
+    // The designer check is closed once submitted.
+    await expect(q(designer, "SELECT public.mark_check($1,101,'FAIL')", [id])).rejects.toThrow(/in progress/i);
   });
 
-  it("QC cannot pass at 18 of 19; another pod's lead cannot tick", async () => {
-    await expect(q(otherLead, "SELECT public.tick_check($1,1,'qc')", [id])).rejects.toThrow(/pod lead/i);
-    await tickAll(id, "qc", podLead, [19]);
-    await expect(q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id])).rejects.toThrow(/all 19 QC/i);
+  it("QC cannot pass with a manager line unmarked or failed; another pod's lead cannot mark", async () => {
+    await expect(q(otherLead, "SELECT public.mark_check($1,201,'PASS')", [id])).rejects.toThrow(/pod lead/i);
+    await passAll(id, "manager", podLead, [205]);
+    await expect(q(podLead, "SELECT public.qc_decide($1,'PASS')", [id])).rejects.toThrow(/every line of the QC manager check/i);
+    await q(podLead, "SELECT public.mark_check($1,203,'FAIL','Shank 1.1 mm at the base','Brief asks 1.4 mm minimum')", [id]);
+    await q(podLead, "SELECT public.mark_check($1,205,'FAIL',NULL,'Engraving missing')", [id]);
+    await expect(q(podLead, "SELECT public.qc_decide($1,'PASS')", [id])).rejects.toThrow(/every line of the QC manager check/i);
   });
 
-  it("sending back needs a note, opens version 2 with an empty checklist, and the note reaches the designer", async () => {
-    await expect(q(podLead, "SELECT public.record_qc_decision($1,'REVISION','  ')", [id])).rejects.toThrow(/written note/i);
-    await q(podLead, "SELECT public.record_qc_decision($1,'REVISION','Shank too thin at the base')", [id]);
+  it("sending back writes the note from the failed lines, opens version 2 with an empty checklist", async () => {
+    await expect(q(podLead, "SELECT public.qc_decide($1,'MAYBE')", [id])).rejects.toThrow(/PASS or REVISION/i);
+    await q(podLead, "SELECT public.qc_decide($1,'REVISION','Please also soften the gallery.')", [id]);
     expect(await status(id)).toEqual({ status: "REVISION_REQUESTED", work_version: 2 });
 
     const msgs = await q(designer, "SELECT body, sender_alias FROM public.order_messages($1)", [id]);
-    expect(msgs.rows).toEqual([{ body: "Sent back by QC: Shank too thin at the base", sender_alias: "Team" }]);
+    expect(msgs.rows).toEqual([
+      {
+        body: [
+          "Sent back by QC: Failed checks:",
+          "- All measurements — Shank 1.1 mm at the base — Brief asks 1.4 mm minimum",
+          "- Client's special remarks — Engraving missing",
+          "Please also soften the gallery.",
+        ].join("\n"),
+        sender_alias: "Team",
+      },
+    ]);
 
     await q(designer, "SELECT public.transition_order($1,'IN_PROGRESS')", [id]);
-    const list = await q(designer, "SELECT count(*) FILTER (WHERE designer_at IS NOT NULL)::int AS ticked FROM public.job_checklist($1)", [id]);
-    expect(list.rows[0].ticked).toBe(0);
+    const list = await q(designer, "SELECT count(*) FILTER (WHERE designer_at IS NOT NULL OR qc_at IS NOT NULL)::int AS marked FROM public.job_checklist($1)", [id]);
+    expect(list.rows[0].marked).toBe(0);
     const slots = await q(designer, "SELECT count(file_version_id)::int AS filled FROM public.job_slots($1)", [id]);
     expect(slots.rows[0].filled).toBe(0);
     const named = await q(designer, "SELECT public.add_slot_file($1,$2,'TV','k2','image/png',1,'png') AS r", [generateId(), id]);
     expect(named.rows[0].r.file_name).toBe("RN-C-77_TV_v2.png");
   });
 
-  it("QC cannot tick before the designer signs off this version", async () => {
-    await db.query("UPDATE orders SET status='QC_REVIEW' WHERE id=$1", [id]);
-    await expect(q(podLead, "SELECT public.tick_check($1,1,'qc')", [id])).rejects.toThrow(/after the designer has signed off/i);
-    await db.query("UPDATE orders SET status='IN_PROGRESS' WHERE id=$1", [id]);
+  it("the QC manager check is open only in QC review", async () => {
+    await expect(q(podLead, "SELECT public.mark_check($1,201,'PASS')", [id])).rejects.toThrow(/only in QC review/i);
+  });
+
+  it("a send-back needs a failed line or a note", async () => {
+    const other = await paidOrder("C");
+    await q(podLead, "SELECT public.assign_designer($1,$2)", [other, designer]);
+    await db.query("UPDATE orders SET status='QC_REVIEW' WHERE id=$1", [other]);
+    await expect(q(podLead, "SELECT public.qc_decide($1,'REVISION','  ')", [other])).rejects.toThrow(/written note/i);
+    await q(podLead, "SELECT public.qc_decide($1,'REVISION','Shank too thin at the base')", [other]);
+    const msgs = await q(designer, "SELECT body FROM public.order_messages($1)", [other]);
+    expect(msgs.rows).toEqual([{ body: "Sent back by QC: Shank too thin at the base" }]);
   });
 
   it("a full second pass reaches the client", async () => {
     await fillSlots(id, ["TV"]);
-    await tickAll(id, "designer", designer);
+    await passAll(id, "designer", designer);
     await q(designer, "SELECT public.set_job_volume($1, 298)", [id]);
     await q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id]);
-    await tickAll(id, "qc", podLead);
+    await passAll(id, "manager", podLead);
     // Phase 7a (0050): the measured minimums, with no open edges.
-    await expect(q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id])).rejects.toThrow(/QC measurements/i);
+    await expect(q(podLead, "SELECT public.qc_decide($1,'PASS')", [id])).rejects.toThrow(/QC measurements/i);
     await q(podLead, "SELECT public.record_qc_measurements($1, 820, 810, '[]'::jsonb, 'US 6.5', NULL, 5, 2)", [id]);
-    await expect(q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id])).rejects.toThrow(/open edges/i);
+    await expect(q(podLead, "SELECT public.qc_decide($1,'PASS')", [id])).rejects.toThrow(/open edges/i);
     await q(podLead, "SELECT public.record_qc_measurements($1, 820, 810, '[]'::jsonb, 'US 6.5', NULL, 5, 0)", [id]);
-    await q(podLead, "SELECT public.record_qc_decision($1,'PASS')", [id]);
+    await q(podLead, "SELECT public.qc_decide($1,'PASS')", [id]);
     expect((await status(id)).status).toBe("CLIENT_PREVIEW");
   });
 
   it("the checklist and slots are for the designer, pod lead and admin — never the client", async () => {
     await expect(q(client, "SELECT * FROM public.job_checklist($1)", [id])).rejects.toThrow(/order not found/i);
     await expect(q(client, "SELECT * FROM public.job_slots($1)", [id])).rejects.toThrow(/order not found/i);
-    expect((await q(podLead, "SELECT * FROM public.job_checklist($1)", [id])).rows).toHaveLength(19);
+    expect((await q(podLead, "SELECT * FROM public.job_checklist($1)", [id])).rows).toHaveLength(14);
     expect((await q(admin, "SELECT * FROM public.job_slots($1)", [id])).rows).toHaveLength(15);
+    await expect(q(client, "SELECT public.mark_check($1,101,'PASS')", [id])).rejects.toThrow(/assigned designer/i);
+    await expect(q(client, "SELECT public.qc_decide($1,'PASS')", [id])).rejects.toThrow(/only QC/i);
   });
 
-  it("every tick is audited and the chain holds", async () => {
-    const n = await db.query("SELECT count(*)::int AS n FROM audit.audit_log WHERE action='CHECK_TICKED' AND entity_id=$1", [id]);
-    expect(n.rows[0].n).toBeGreaterThanOrEqual(19 * 3);
+  it("every mark is audited and the chain holds", async () => {
+    const n = await db.query("SELECT count(*)::int AS n FROM audit.audit_log WHERE action='CHECK_MARKED' AND entity_id=$1", [id]);
+    expect(n.rows[0].n).toBeGreaterThanOrEqual(9 * 2 + 5 * 2);
     const v = await db.query("SELECT audit.verify_chain() AS v");
     expect(v.rows[0].v.valid).toBe(true);
   });

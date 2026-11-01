@@ -9,7 +9,7 @@ Every line on the new homepage, in page order. Unconfirmed claims (⚠) show on 
 | # | Question | My proposal |
 | --- | --- | --- |
 | D1 | "Double-blind" is banned website copy (IMPLEMENTATION-PLAN C11; a test fails on it). | Keep it out. Card 1 says: "Designers never see who you are or who your customer is. Your work is never shown to anyone." |
-| D2 | `DESIGNER_COUNT` "50+" and `MIN_EXPERIENCE_YEARS` "10+": are both true today? Team or network? Minimum or average? | Show only once you confirm. If not sure, the proof bar can lead with "2 experts / 19 points / 6 h / $55" instead. |
+| D2 | `DESIGNER_COUNT` "50+" and `MIN_EXPERIENCE_YEARS` "10+": are both true today? Team or network? Minimum or average? | Show only once you confirm. If not sure, the proof bar can lead with "2 experts / 2 QC stages / 6 h / $55" instead. |
 | D3 | The SLA promise. DECISIONS §6: a missed first look creates a full credit that admin decides (automatic from November). | "Miss the 6-hour first look and the full amount comes back as credit. We still finish it." (Avoids "automatically" and "wallet".) |
 | D4 | Hours story. Footer and FAQ say "Studio in Mumbai, working US business hours"; the brief says "We work your hours". | Keep both: "We work your hours" in the cards, and the honest "Studio in Mumbai, working US business hours" in the FAQ and footer. |
 | D5 | Live call: phone number, WhatsApp number, hours, inbox. | ⚠ All TODO in `content/claims.ts`. Until set, the call and WhatsApp buttons open the contact page. |
@@ -25,12 +25,12 @@ Phone: The CAD Pillar · Start a design · ☰ (menu: every page, Contact, Sign 
 - Sub: Senior designers build every file to cast first time, and a master craftsman signs it off before you see it. We work US hours, and it's guaranteed in writing.
 - Buttons: **Start your first design** · Get a free quote
 - Chips: Guaranteed in writing · We work your hours · Live call {LIVE_CALL_HOURS ⚠}
-- Visual: a live order card ("First look in 5h 42m", the designer checklist ticking; "Then a master craftsman re-checks all 19 points")
+- Visual: a live order card ("First look in 5h 42m", the designer checklist ticking; "Then the QC manager checks it again")
 
 ## c. Proof bar
 - {DESIGNER_COUNT ⚠} senior CAD designers · {MIN_EXPERIENCE_YEARS ⚠} years each in production CAD
 - 2 experts on every file · Designer builds, master craftsman signs off
-- 19 point factory check · Castable, to spec, first time
+- 2 QC stages on every file · Designer check, then QC manager check (owner, 1 Nov 2026)
 - 6h first look · Or the order is free
 
 ## d. How it works — "Three steps. The first takes two minutes."
@@ -42,8 +42,8 @@ Lead: Brief from your phone, approve a first look, download files your caster ca
 ## e. Quality — "Every file is made to be cast."
 Lead: Two people sign every file before you see it: the designer who built it, and a master craftsman who checks it against the same list and your factory's own rules.
 - Stage 1 · Senior designer builds and ticks · {MIN_EXPERIENCE_YEARS ⚠} years of manufacturable CAD — brief, references and special requirements read; dimensions and ring size to the brief; stone seats sized to the stones; no naked or open edges; wall and prong minimums met; all delivery views in the 3DM; watertight STL export.
-- Stage 2 · Master QC re-checks and signs · Craftsmen who have run the bench themselves — the same 19 points, checked again independently; your factory's own requirements; measured wall, prong and ring size recorded; spec sheet signed.
-- Nothing reaches you without both sign-offs. The 19-point list and the measured specs ship with every file as a signed spec sheet.
+- Stage 2 · QC manager check: re-checked and signed · Craftsmen who have run the bench themselves — design, diamonds, measurements and metal checked again; your factory's own requirements; measured wall, prong and ring size recorded; spec sheet signed.
+- Nothing reaches you without both sign-offs. Two-stage QC, each line passed and time-stamped, and the measured specs ship with every file as a signed spec sheet.
 
 ## f. Why it costs less — "AI runs our operations. Experts make your CAD."
 Body: AI handles intake, routing, scheduling, checklists and tracking, so you pay for design time, not overhead. Every file is still built and checked by people.

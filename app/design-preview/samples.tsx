@@ -103,7 +103,7 @@ export function MarketingSample() {
           {[
             ["50+", "senior CAD designers (TODO confirm)"],
             ["2", "experts on every file"],
-            ["19", "point factory check"],
+            ["2", "QC stages on every file"],
             ["6h", "first look, or it's free"],
           ].map(([n, l]) => (
             <div key={l} className="py-8 pr-4">

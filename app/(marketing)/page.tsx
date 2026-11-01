@@ -33,7 +33,7 @@ export default function HomePage() {
       <ProofBar />
       <HowItWorks />
       <Section id="quality" tone="subtle" eyebrow="Quality" title="Every file is made to be cast." lead="Two people sign every file before you see it: the designer who built it, and a master craftsman who checks it against the same list and your factory's own rules.">
-        <CastPipeline checkpoints={c("QC_CHECKPOINTS")} years={showClaim("MIN_EXPERIENCE_YEARS") ? c("MIN_EXPERIENCE_YEARS") : null} />
+        <CastPipeline years={showClaim("MIN_EXPERIENCE_YEARS") ? c("MIN_EXPERIENCE_YEARS") : null} />
       </Section>
       <Section eyebrow="Why it is fast, and costs less" title={c("AI_LINE")} lead="Our AI models each piece and runs intake, routing and tracking, so a first look takes hours and you pay for expertise, not overhead. Senior designers who know factory requirements across countries check every file.">
         <CostStack />

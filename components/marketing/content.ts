@@ -7,7 +7,7 @@
 
 export const PROOF = [
   "First look in 6 hours, or it's free",
-  "Every file checked twice: 19 points, two designers",
+  "Every file checked twice: two-stage QC, designer then QC manager",
   "From $35 a design. Retainers for regular orders.",
 ];
 
@@ -67,55 +67,34 @@ export const FAQ: [string, string][] = [
 ];
 
 /**
- * The 19-point checklist (build spec §8), as clients read it. The same lines
- * the designer and the second designer tick in the portal;
- * tests/db/marketing_checks.test.ts keeps the two in step.
+ * The two-stage QC (owner's QC sheet, 1 Nov 2026; DECISIONS §10), as clients
+ * read it: the designer's check, then the QC manager's. The same lines the
+ * portal marks Pass or Fail; tests/db/marketing_checks.test.ts keeps the two
+ * in step.
  */
 export const CHECK_GROUPS: { group: string; checks: string[] }[] = [
   {
-    group: "Before starting",
+    group: "Designer check",
     checks: [
-      "Brief read — measurements, stone specs and special requirements noted",
-      "Reference image open alongside the CAD — compare at every stage",
-      "Metal and stone colour noted — matches the brief",
-      "Unclear points flagged to ops before starting",
+      "Size and all measurements",
+      "Diamond sizes, colours and count",
+      "Setting type",
+      "Metal colour and karat",
+      "Client's special remarks",
+      "Overall design look, every measurement marked",
+      "No open or naked edges",
+      "STL mesh",
+      "Files exported",
     ],
   },
   {
-    group: "Dimensions",
+    group: "QC manager check",
     checks: [
-      "Length correct",
-      "Width and height / depth correct",
-      "Size correct — ring inner diameter, bangle or bracelet circumference",
-      "Shank — top width, bottom width, top depth, bottom depth match the brief",
-    ],
-  },
-  {
-    group: "Stones",
-    checks: ["Centre stone seat matches brief dimensions", "Side stone count, size and placement match the brief"],
-  },
-  { group: "Geometry", checks: ["No open or naked edges — all geometry closed"] },
-  {
-    group: "3DM file",
-    checks: [
-      "Delivery files ready — render views (one image, four views) and technical sheet (measurements, diamond details, gold weight)",
-      "Folder renamed for QC — follows the naming convention",
-    ],
-  },
-  {
-    group: "STL",
-    checks: [
-      "Magic file applied and Ctrl+T executed",
-      "Naked edge check passed before export",
-      "Mesh all files — max distance / edge = 0.005",
-    ],
-  },
-  {
-    group: "Final",
-    checks: [
-      "Special requirements fulfilled — order notes re-read before submitting",
-      "Both 3DM and STL uploaded to the correct folder",
-      "Signed off — by the designer, then by the second designer",
+      "Overall design look",
+      "Diamond sizes, shapes and colours",
+      "All measurements",
+      "Setting type, metal colour and karat",
+      "Client's special remarks",
     ],
   },
 ];

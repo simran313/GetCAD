@@ -117,7 +117,7 @@ export default async function DesignKitPage() {
           <ul>
             <ChecklistRow index={1} label="Ring size matches the brief" designer={<CheckBox checked label="Designer" />} qc={<CheckBox checked label="QC" />} />
             <ChecklistRow index={2} label="Prongs at least 0.8 mm" flag="spec" designer={<CheckBox checked label="Designer" />} qc={<CheckBox checked={false} label="QC" />} />
-            <ChecklistRow index={19} label="Sign-off" signoff designer={<CheckBox checked={false} label="Designer" />} qc={<CheckBox checked={false} label="QC" />} />
+            <ChecklistRow index={3} label="Files exported" designer={<CheckBox checked={false} label="Designer" />} qc={<CheckBox checked={false} label="QC" />} />
           </ul>
           <div className="grid gap-3 sm:grid-cols-3">
             <UploadSlot code="3DM" label="Rhino model" fileName="RN-C-14_3DM_v1.3dm" />

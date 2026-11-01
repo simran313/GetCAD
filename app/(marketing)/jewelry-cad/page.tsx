@@ -18,7 +18,7 @@ export const metadata: Metadata = pageMetadata(
 
 const BLOCKS: [string, string][] = [
   ["Fast", "Our AI models every piece, so a first look comes within 6 hours of order confirmation, bulk orders included."],
-  ["Checked", "19 checks on every file — dimensions, stone seats, walls, prongs, open edges, mesh — by a senior designer, then by a master craftsman. 99% of first looks are right first time."],
+  ["Checked", "Two-stage QC on every file — the designer's check, then the QC manager's: measurements, diamonds, setting, metal, open edges, mesh. 99% of first looks are right first time."],
   ["Fair", "From $35 a design. Retainers for regular orders. No setup fees."],
 ];
 

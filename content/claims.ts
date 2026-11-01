@@ -25,8 +25,8 @@ export const CLAIMS = {
   MIN_EXPERIENCE_YEARS: claim("10+", true),
   /** Share of first looks that meet the brief and the factory's requirements (owner, 31 Oct 2026). */
   FIRST_LOOK_ACCURACY: claim("99%", true),
-  /** The checklist both the designer and QC tick (components/marketing/content CHECK_GROUPS). */
-  QC_CHECKPOINTS: claim(19, true),
+  /** Two-stage QC: the designer's check, then the QC manager's (components/marketing/content CHECK_GROUPS; owner, 1 Nov 2026). */
+  QC_STAGES: claim(2, true),
   /** First look within N hours of order confirmation, standard tier A–F (DECISIONS §6). */
   FIRST_LOOK_HOURS: claim(6, true),
   /** Standard band (DECISIONS §4). */

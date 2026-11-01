@@ -5,12 +5,14 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
-import { assignDesignerAction, tickCheckAction } from "./actions";
+import { Checklist, countWord, stageCount, type Stage } from "@/components/work/checklist";
+
+import { assignDesignerAction } from "./actions";
 import { SlotUpload } from "../work/SlotUpload";
 
 /**
- * The working surfaces of Phase 3a: assigning a designer, the two-level
- * 19-point checklist and the upload slots. Plain server-rendered forms; the
+ * The working surfaces of Phase 3a: assigning a designer, the two-stage QC
+ * checklist (0059) and the upload slots. Plain server-rendered forms; the
  * designed screens (D4, D4b, P2, P5) replace them in Phase 5. Every rule —
  * who may act, when, and in which column — is enforced by the database
  * functions behind the actions, not here.
@@ -25,12 +27,19 @@ export interface PodDesigner {
   assignable: boolean;
 }
 
+/** A line of the two-stage QC sheet (job_checklist, 0059). */
 export interface ChecklistRow {
   item_id: number;
   group_name: string;
   label: string;
+  standard: string | null;
   flag: string | null;
   is_signoff: boolean;
+  stage: "DESIGNER" | "MANAGER" | "LEGACY";
+  position: number;
+  outcome: "PASS" | "FAIL" | null;
+  finding: string | null;
+  remark: string | null;
   designer_at: string | null;
   qc_at: string | null;
 }
@@ -99,87 +108,29 @@ export function AssignPanel({ orderId, designers }: { orderId: string; designers
 export function ChecklistPanel({
   orderId,
   rows,
-  canTickDesigner,
-  canTickQc,
+  canMark,
+  zone,
 }: {
   orderId: string;
   rows: ChecklistRow[];
-  canTickDesigner: boolean;
-  canTickQc: boolean;
+  canMark: Stage | null;
+  zone: string;
 }) {
-  const done = (col: "designer_at" | "qc_at") => rows.filter((r) => r[col]).length;
-  let group = "";
   return (
     <Panel
-      title="Checklist"
+      title="QC checklist"
       aside={
         <span className={small}>
-          Designer {done("designer_at")}/19 · QC {done("qc_at")}/19
+          Designer {countWord(stageCount(rows, "DESIGNER"))} · QC manager {countWord(stageCount(rows, "MANAGER"))}
         </span>
       }
     >
-      <ul className="space-y-1">
-        {rows.map((r) => {
-          const header = r.group_name !== group ? r.group_name : null;
-          group = r.group_name;
-          return (
-            <li key={r.item_id}>
-              {header && <p className={`mt-3 font-medium ${small}`}>{header}</p>}
-              <div className="flex items-center gap-2 text-[length:var(--fs-3)] leading-[var(--lh-3)]">
-                <TickButton orderId={orderId} row={r} column="designer" enabled={canTickDesigner} />
-                <TickButton orderId={orderId} row={r} column="qc" enabled={canTickQc} />
-                <span className={r.is_signoff ? "font-medium" : ""}>
-                  {r.item_id}. {r.is_signoff ? "Sign-off" : r.label}
-                  {r.flag && <span className={`ml-2 ${small}`}>{r.flag.replace(/_/g, " ")}</span>}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <Checklist orderId={orderId} rows={rows} stages={["DESIGNER", "MANAGER"]} canMark={canMark} zone={zone} />
       <p className={`mt-3 ${small}`}>
-        Left box: designer. Right box: QC. Submitting needs all 19 designer ticks and every required
-        file; QC starts after the designer&apos;s sign-off and needs all 19 to pass.
+        Submitting needs every designer line passed and every required file; passing QC needs every QC manager line
+        passed. A failed QC manager line goes back to the designer as the revision note.
       </p>
     </Panel>
-  );
-}
-
-function TickButton({
-  orderId,
-  row,
-  column,
-  enabled,
-}: {
-  orderId: string;
-  row: ChecklistRow;
-  column: "designer" | "qc";
-  enabled: boolean;
-}) {
-  const ticked = Boolean(column === "designer" ? row.designer_at : row.qc_at);
-  const label = `${column === "designer" ? "Designer" : "QC"} tick for item ${row.item_id}`;
-  if (!enabled) {
-    return (
-      <span aria-label={label} className="inline-flex h-6 w-6 items-center justify-center rounded border border-border text-[length:var(--fs-2)]">
-        {ticked ? "✓" : ""}
-      </span>
-    );
-  }
-  return (
-    <form action={tickCheckAction}>
-      <input type="hidden" name="order_id" value={orderId} />
-      <input type="hidden" name="item_id" value={row.item_id} />
-      <input type="hidden" name="column" value={column} />
-      <input type="hidden" name="ticked" value={ticked ? "false" : "true"} />
-      <button
-        type="submit"
-        aria-label={label}
-        aria-pressed={ticked}
-        className="inline-flex h-6 w-6 items-center justify-center rounded border border-border text-[length:var(--fs-2)] hover:bg-accent"
-      >
-        {ticked ? "✓" : ""}
-      </button>
-    </form>
   );
 }
 

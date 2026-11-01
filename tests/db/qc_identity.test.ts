@@ -71,7 +71,7 @@ async function orderInQcReview(designerId: string | null, podLead: string = qc):
     [id, client, designerId],
   );
   await putOrderInPod(db, id, podLead);
-  // QC passes need all 19 QC ticks (0041); the tests here are about who may decide.
+  // QC passes need every QC manager line passed (0059); the tests here are about who may decide.
   await completeQcTicks(db, id, podLead);
   return id;
 }
