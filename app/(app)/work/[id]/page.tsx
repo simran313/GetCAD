@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { jobClockDue, jobState, slotAccept } from "@/core";
+import { durationWord, jobClock, jobClockDue, jobState, slotAccept } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Timer } from "@/components/ui/timer";
 import { References } from "@/components/work/references";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
-import { jobTitle, loadMyWork } from "@/lib/work/load";
+import { jobTitle, loadJobTimes, loadMyWork } from "@/lib/work/load";
 import { versionNote } from "@/lib/work/notes";
 import { loadReferences } from "@/lib/work/references";
 
@@ -22,6 +22,7 @@ import { setVolumeAction, transitionAction } from "../../orders/actions";
 import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import { toThreadReads, type AttachmentRow, type MessageRow, type ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
+import { PauseButton } from "../PauseButton";
 import { SlotUpload } from "../SlotUpload";
 import { StartWorkButton } from "../StartWorkButton";
 import { Page } from "@/components/ui/page";
@@ -66,7 +67,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes] = await Promise.all([
+  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes, timesMap] = await Promise.all([
     supabase.rpc("job_brief", { p_order_id: id }),
     supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", id).order("position"),
     supabase.rpc("job_slots", { p_order_id: id }),
@@ -79,6 +80,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     versionNote(supabase, id, job.work_version),
     supabase.rpc("version_spec", { p_order_id: id }),
     supabase.rpc("thread_read_state", { p_order_id: id }),
+    loadJobTimes(supabase, id),
   ]);
   const volume = (specRes.data as { volume_mm3: number | null } | null)?.volume_mm3 ?? null;
   const needsVolume = job.service !== "render";
@@ -90,7 +92,10 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const filled = slots.filter((s) => s.file_version_id).length;
   const working = job.status === "IN_PROGRESS";
   const canSubmit = working && ticked === 19 && filled === slots.length && slots.length > 0 && (!needsVolume || volume != null);
-  const clock = jobClockDue(job.started_at, job.minutes);
+  const times = timesMap.get(id);
+  // With recorded pauses taken out (0057); before 0057, from Start work.
+  const { dueAt: clock, pausedLeftMs } = times ? jobClock(job.minutes, times) : { dueAt: jobClockDue(job.started_at, job.minutes), pausedLeftMs: null };
+  const paused = working && !!times?.paused_at;
   const state = jobState(job.status);
   const lines = briefLines(brief, (accentsRes.data ?? []) as AccentLine[]);
 
@@ -112,7 +117,16 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         <CategoryBadge letter={job.category} />
         <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
         <StatusTag kind={state.kind}>{state.word}</StatusTag>
-        {clock && working && <Timer dueAt={clock} label="Your time left" />}
+        {clock && working && !paused && <Timer dueAt={clock} label="Your time left" />}
+        {paused && (
+          <StatusTag kind="needs">
+            Paused · {pausedLeftMs != null && pausedLeftMs > 0 ? `${durationWord(pausedLeftMs)} left` : "over time"}
+          </StatusTag>
+        )}
+        {times?.active_seconds != null && (
+          <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">Active {durationWord(times.active_seconds * 1000)}</span>
+        )}
+        {working && <PauseButton orderId={id} paused={paused} />}
         {job.designer_due_at && ["ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(job.status) && (
           <Timer dueAt={job.designer_due_at} label="Due to QC" />
         )}

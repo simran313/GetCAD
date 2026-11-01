@@ -126,6 +126,12 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   await act(page, start);
   await expectGone(page, start);
 
+  // Pause and resume (Phase 13b): one tap each, recorded.
+  await act(page, page.getByRole("button", { name: "Pause" }));
+  await settled(page, "paused", (timeout) => expect(page.getByRole("button", { name: "Resume" })).toBeVisible({ timeout }));
+  await act(page, page.getByRole("button", { name: "Resume" }));
+  await settled(page, "resumed", (timeout) => expect(page.getByRole("button", { name: "Pause" })).toBeVisible({ timeout }));
+
   const volume = page.getByLabel("Model volume in cubic millimetres");
   await volume.fill("312.5");
   await submitFormOf(page, volume, "Save");

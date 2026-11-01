@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BookOpen,
   Briefcase,
   Building2,
   ClipboardCheck,
@@ -46,6 +47,7 @@ const ICON: Record<string, React.ReactNode> = {
   applications: <UserPlus />,
   leads: <Magnet />,
   settings: <Settings />,
+  materials: <BookOpen />,
   account: <User />,
 };
 
@@ -61,13 +63,14 @@ const GROUPS: Record<string, [string | undefined, string[]][]> = {
   podLead: [
     ["Work", ["qc", "board", "orders", "new"]],
     ["Inbox", ["messages"]],
+    ["Team", ["materials"]],
     ["Money", ["earnings"]],
   ],
   client: [
     [undefined, ["home", "orders", "new", "messages"]],
     ["Your account", ["wallet", "files"]],
   ],
-  designer: [[undefined, ["home", "work", "messages", "earnings"]]],
+  designer: [[undefined, ["home", "work", "messages", "materials", "earnings"]]],
 };
 
 /**

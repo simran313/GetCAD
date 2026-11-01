@@ -17,7 +17,7 @@ import { loadConversations } from "../messages/load";
 import { markNotificationsReadAction } from "./actions";
 import { ClientHome } from "./ClientHome";
 import { DesignerHome } from "./DesignerHome";
-import { loadEarnings, loadMyWork } from "@/lib/work/load";
+import { loadEarnings, loadJobTimes, loadMyWork } from "@/lib/work/load";
 import { versionNote } from "@/lib/work/notes";
 import { Page } from "@/components/ui/page";
 
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
 
   // D2 — the designer's home (Phase 5c).
   if (me?.role === "DESIGNER") {
-    const [jobs, earnings, profileRes, podRes, unreadRes, payoutRes, bankRes] = await Promise.all([
+    const [jobs, earnings, profileRes, podRes, unreadRes, payoutRes, bankRes, times] = await Promise.all([
       loadMyWork(supabase),
       loadEarnings(supabase),
       supabase.from("designer_profiles").select("designer_ref, agreement_accepted_at").maybeSingle(),
@@ -135,6 +135,7 @@ export default async function DashboardPage() {
         .limit(1)
         .maybeSingle(),
       supabase.rpc("my_payout_account"),
+      loadJobTimes(supabase),
     ]);
     const revisions = jobs.filter((j) => j.status === "REVISION_REQUESTED");
     const notes = Object.fromEntries(
@@ -149,6 +150,7 @@ export default async function DashboardPage() {
         onboarded={!!profile?.agreement_accepted_at}
         bankStatus={(bankRes.data as { status?: string } | null)?.status ?? null}
         jobs={jobs}
+        times={Object.fromEntries(times)}
         notes={notes}
         earnings={earnings}
         unread={(unreadRes.data ?? []) as { order_id: string | null; created_at: string }[]}

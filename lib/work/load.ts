@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { JobTimes } from "@/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { productWord } from "@/lib/client/orders";
@@ -111,3 +112,13 @@ export const loadPodLoad = (s: SupabaseClient) => rows<PodDesignerLoad>(s.rpc("p
 export const loadEarnings = (s: SupabaseClient) => rows<Earning>(s.rpc("my_earnings"));
 
 
+
+/**
+ * Recorded job times (0057), by order. Resolves to an empty map rather than
+ * failing the page: before 0057 is applied the clocks fall back to Start work.
+ */
+export async function loadJobTimes(s: SupabaseClient, orderId?: string): Promise<Map<string, JobTimes>> {
+  const { data, error } = await s.rpc("job_times", orderId ? { p_order_id: orderId } : {});
+  if (error) return new Map();
+  return new Map(((data ?? []) as JobTimes[]).map((t) => [t.order_id, t]));
+}

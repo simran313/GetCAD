@@ -84,3 +84,43 @@ export function rupeesWord(paise: number): string {
 export function loadWord(openMinutes: number, shiftMinutes: number): string {
   return openMinutes === 0 ? `FREE · 0 / ${shiftMinutes} MIN` : `${openMinutes} / ${shiftMinutes} MIN`;
 }
+
+/** A job's recorded times (job_times(), 0057). Seconds; null until it applies. */
+export interface JobTimes {
+  order_id: string;
+  version: number;
+  status: string;
+  assigned_at: string | null;
+  started_at: string | null;
+  submitted_at: string | null;
+  paused_at: string | null;
+  paused_seconds: number;
+  active_seconds: number | null;
+}
+
+/**
+ * The designer's own clock with pauses taken out (Phase 13b): the category
+ * time runs from Start work, a recorded pause moves its end later by exactly
+ * the paused time, and while paused it stands still (pausedLeftMs). The due
+ * time to QC is a separate clock and never moves.
+ */
+export function jobClock(
+  minutes: number | null | undefined,
+  t: Pick<JobTimes, "started_at" | "paused_at" | "paused_seconds" | "active_seconds"> | undefined,
+): { dueAt: string | null; pausedLeftMs: number | null } {
+  if (!minutes || !t?.started_at) return { dueAt: null, pausedLeftMs: null };
+  if (t.paused_at) return { dueAt: null, pausedLeftMs: minutes * 60_000 - (t.active_seconds ?? 0) * 1000 };
+  const start = Date.parse(t.started_at);
+  if (Number.isNaN(start)) return { dueAt: null, pausedLeftMs: null };
+  return { dueAt: new Date(start + minutes * 60_000 + (t.paused_seconds ?? 0) * 1000).toISOString(), pausedLeftMs: null };
+}
+
+export type DesignerBucket = "new" | "working" | "paused" | "changes" | "qc" | "done";
+
+/** Where a job sits on the designer's dashboard. */
+export function designerBucket(status: string, paused: boolean): DesignerBucket {
+  if (status === "ASSIGNED") return "new";
+  if (status === "IN_PROGRESS") return paused ? "paused" : "working";
+  if (status === "REVISION_REQUESTED" || status === "DISPUTED") return "changes";
+  return jobTab(status) === "qc" ? "qc" : jobTab(status) === "open" ? "working" : "done";
+}

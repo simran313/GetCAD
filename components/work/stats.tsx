@@ -10,7 +10,7 @@ export function Stats({ items }: { items: [string, string][] }) {
     <dl
       className={cn(
         "grid grid-cols-2 gap-px overflow-hidden rounded-[var(--r-lg)] border border-border bg-border shadow-[var(--e-1)]",
-        items.length >= 4 ? "sm:grid-cols-4" : "sm:grid-cols-3",
+        items.length >= 5 ? "sm:grid-cols-5" : items.length >= 4 ? "sm:grid-cols-4" : "sm:grid-cols-3",
       )}
     >
       {items.map(([value, label]) => {

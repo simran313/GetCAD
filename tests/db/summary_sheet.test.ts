@@ -44,9 +44,9 @@ beforeAll(async () => {
     await q(designer, "SELECT public.add_slot_file($1,$2,$3,$4,'image/png',10,'png')", [generateId(), id, slot, `${id}/${slot}.png`]);
   }
   await q(designer, "SELECT public.set_job_volume($1, 312.5)", [id]);
-  for (const [to, at] of [["CLIENT_PREVIEW", "2026-11-01T14:00:00Z"], ["APPROVED", "2026-11-01T18:00:00Z"]]) {
+  // The audit log is append-only, so these are stamped now; only their presence is checked.
+  for (const to of ["CLIENT_PREVIEW", "APPROVED"]) {
     await db.query("SELECT audit.log_event('ORDER_STATUS_CHANGED','order',$1,NULL,NULL,jsonb_build_object('to',$2::text))", [id, to]);
-    await db.query("UPDATE audit.audit_log SET created_at=$2 WHERE entity_id=$1 AND payload->>'to'=$3", [id, at, to]).catch(() => undefined);
   }
 });
 

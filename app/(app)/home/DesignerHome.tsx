@@ -1,7 +1,7 @@
 import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 
-import { jobClockDue, jobState, jobTab, rupeesWord, formatDay, formatRelative, formatTime } from "@/core";
+import { jobClock, jobClockDue, jobState, jobTab, rupeesWord, formatDay, formatRelative, formatTime, type JobTimes } from "@/core";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -26,6 +26,7 @@ export async function DesignerHome({
   onboarded,
   bankStatus,
   jobs,
+  times,
   notes,
   earnings,
   unread,
@@ -36,6 +37,7 @@ export async function DesignerHome({
   onboarded: boolean;
   bankStatus: string | null;
   jobs: Job[];
+  times: Record<string, JobTimes>;
   notes: Record<string, VersionNote | null>;
   earnings: Earning[];
   unread: { order_id: string | null; created_at: string }[];
@@ -132,14 +134,16 @@ export async function DesignerHome({
                 );
               })}
               {[...fresh, ...going].map((j) => {
-                const clock = jobClockDue(j.started_at, j.minutes);
+                const t = times[j.order_id];
+                const paused = j.status === "IN_PROGRESS" && !!t?.paused_at;
+                const { dueAt: clock } = t ? jobClock(j.minutes, t) : { dueAt: jobClockDue(j.started_at, j.minutes) };
                 return (
                   <li key={j.order_id}>
                     <Card>
                       <CardBody className="flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <StatusTag kind={jobState(j.status).kind}>{j.status === "ASSIGNED" ? "New job" : "In progress"}</StatusTag>
+                            <StatusTag kind={paused ? "needs" : jobState(j.status).kind}>{j.status === "ASSIGNED" ? "New job" : paused ? "Paused" : "In progress"}</StatusTag>
                             <CategoryBadge letter={j.category} />
                           </div>
                           <p className="mt-1 text-[length:var(--fs-4)] font-medium">{jobTitle(j)}</p>

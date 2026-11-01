@@ -3,7 +3,7 @@ import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { jobClockDue, jobState, jobTab, rupeesWord, type JobTab } from "@/core";
+import { designerBucket, durationWord, jobClock, jobClockDue, jobState, jobTab, rupeesWord, type DesignerBucket, type JobTab, type JobTimes } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -14,7 +14,8 @@ import { SlaCountdown } from "@/components/ui/sla-countdown";
 import { StatusTag } from "@/components/ui/status-tag";
 import { cn } from "@/lib/utils";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
-import { jobTitle, loadMyWork, type Job } from "@/lib/work/load";
+import { jobTitle, loadJobTimes, loadMyWork, type Job } from "@/lib/work/load";
+import { Stats } from "@/components/work/stats";
 
 import { StartWorkButton } from "./StartWorkButton";
 import { Page } from "@/components/ui/page";
@@ -44,8 +45,9 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
   if (me?.role !== "DESIGNER") redirect("/orders");
 
   let jobs: Job[];
+  let times: Map<string, JobTimes>;
   try {
-    jobs = await loadMyWork(supabase);
+    [jobs, times] = await Promise.all([loadMyWork(supabase), loadJobTimes(supabase)]);
   } catch (e) {
     return (
       <Page>
@@ -54,6 +56,8 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
     );
   }
   const count = (t: JobTab) => jobs.filter((j) => jobTab(j.status) === t).length;
+  const isPaused = (j: Job) => j.status === "IN_PROGRESS" && !!times.get(j.order_id)?.paused_at;
+  const bucket = (b: DesignerBucket) => jobs.filter((j) => designerBucket(j.status, isPaused(j)) === b).length;
   const shown = jobs.filter((j) => jobTab(j.status) === active);
   // One black button: the first job waiting to be started.
   const firstToStart = shown.find((j) => j.status === "ASSIGNED")?.order_id;
@@ -70,7 +74,13 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
         </span>
       ),
     },
-    { key: "status", header: "Status", card: "badge", className: "whitespace-nowrap", cell: (j) => <StatusTag kind={jobState(j.status).kind}>{jobState(j.status).word}</StatusTag> },
+    {
+      key: "status",
+      header: "Status",
+      card: "badge",
+      className: "whitespace-nowrap",
+      cell: (j) => (isPaused(j) ? <StatusTag kind="needs">Paused</StatusTag> : <StatusTag kind={jobState(j.status).kind}>{jobState(j.status).word}</StatusTag>),
+    },
     {
       key: "cat",
       header: "Category",
@@ -88,7 +98,10 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
       header: "Your time",
       className: "whitespace-nowrap",
       cell: (j) => {
-        const clock = jobClockDue(j.started_at, j.minutes);
+        const t = times.get(j.order_id);
+        const { dueAt: clock, pausedLeftMs } = t ? jobClock(j.minutes, t) : { dueAt: jobClockDue(j.started_at, j.minutes), pausedLeftMs: null };
+        if (active === "open" && pausedLeftMs != null)
+          return <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">{pausedLeftMs > 0 ? `${durationWord(pausedLeftMs)} left` : "Over time"}</span>;
         return clock && active === "open" ? (
           <SlaCountdown dueAt={clock} label="Your time" />
         ) : (
@@ -122,7 +135,17 @@ export default async function WorkPage({ searchParams }: { searchParams: Promise
 
   return (
     <Page>
-      <PageHeader title="Open jobs" description="Only the jobs your pod lead has assigned to you. Your timer starts when you press Start work." />
+      <PageHeader title="Open jobs" description="Only the jobs your pod lead has assigned to you. Your timer starts when you press Start work, and stops while you pause." />
+
+      <Stats
+        items={[
+          [String(bucket("new")), "new"],
+          [String(bucket("working")), "in progress"],
+          [String(bucket("paused")), "paused"],
+          [String(bucket("changes")), "changes requested"],
+          [String(bucket("qc")), "with QC"],
+        ]}
+      />
 
       <nav aria-label="Jobs" className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
         <ul className="flex min-w-max gap-6 border-b border-border">

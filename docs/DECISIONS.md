@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.5 · 1 November 2026 · Owner: Fazil Zaidi
+Version 1.6 · 1 November 2026 · Owner: Fazil Zaidi
 
-Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.6: designers can pause and resume a job; every pause is recorded and the designer's own clock stops while paused (the due time to QC does not move); pod leads share materials (instructions, charts) with their pod (§11). Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -150,6 +150,8 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
   - Visible in the client's portal.
   - The clock starts only when the order is paid and confirmed (section 6).
 - **Flow:** admin → pod lead → designer. Capacity 480 category-minutes per designer per shift; over capacity needs an admin override with a reason.
+- **Designer time (1 Nov 2026):** assignment, start, every pause and resume, and submission are recorded. Active time = start → submission (or now) minus pauses. The designer's own category clock stops while paused; the due time to QC never moves. Pod leads see paused time.
+- **Pod materials:** a pod lead shares instructions, charts and references (PDF, image, ZIP, STEP) with a title and description; every designer in the pod reads them; only the lead (or an admin) adds and removes.
 - **Pod routing:** when an order is paid or confirmed and has no pod, it joins the pod automatically if exactly one pod has a pod lead. With several pods, admin chooses the pod from the queue.
 - **Account managers:** admin can name one team member as each client's account manager. There is no business check before pricing: a new client is never held back from a quote.
 - **Messaging:**
