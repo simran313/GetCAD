@@ -247,7 +247,13 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               </CardHeader>
               <CardBody className="space-y-2">
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                  From Rhino (Analyze → Mass properties → Volume) on the final model. The weight sheet is made from it.
+                  From Rhino (Analyze → Mass properties → Volume) on the final model. The weight sheet is made from it.{" "}
+                  <Link
+                    href={volume != null ? `/tools?gold=${((Number(volume) / 1000) * 14).toFixed(2)}` : "/tools"}
+                    className="underline underline-offset-4"
+                  >
+                    Gold and diamond calculators
+                  </Link>
                 </p>
                 {working && (
                   <form action={setVolumeAction} className="flex items-end gap-2">
