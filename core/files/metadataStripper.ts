@@ -205,10 +205,24 @@ export function stripStep(bytes: Uint8Array): StripResult {
  */
 const STL_NEUTRAL_HEADER = "binary STL";
 
-export function isBinaryStl(bytes: Uint8Array): boolean {
-  if (bytes.length < 84) return false;
+/**
+ * Some exporters pad a binary STL with a few bytes after the last triangle.
+ * Up to this many are tolerated (and cut off when the file is cleaned); more
+ * than that is not a binary STL.
+ */
+const STL_TAIL_TOLERANCE = 4096;
+
+/** The length the triangle count says a binary STL has, or null. */
+function binaryStlLength(bytes: Uint8Array): number | null {
+  if (bytes.length < 84) return null;
   const count = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(80, true);
-  return bytes.length === 84 + count * 50;
+  const expected = 84 + count * 50;
+  if (count === 0 && bytes.length !== 84) return null;
+  return bytes.length >= expected && bytes.length - expected <= STL_TAIL_TOLERANCE ? expected : null;
+}
+
+export function isBinaryStl(bytes: Uint8Array): boolean {
+  return binaryStlLength(bytes) !== null;
 }
 
 export function isStl(bytes: Uint8Array): boolean {
@@ -220,8 +234,10 @@ export function isStl(bytes: Uint8Array): boolean {
 const ASCII_STL_LINE = /^(facet normal|outer loop|vertex|endloop|endfacet)\b/;
 
 export function stripStl(bytes: Uint8Array): StripResult {
-  if (isBinaryStl(bytes)) {
-    const out = new Uint8Array(bytes);
+  const binaryLength = binaryStlLength(bytes);
+  if (binaryLength !== null) {
+    // A copy of exactly the triangles: any padding after them is dropped.
+    const out = bytes.slice(0, binaryLength);
     out.fill(0x20, 0, 80);
     out.set(enc.encode(STL_NEUTRAL_HEADER), 0);
     const count = new DataView(out.buffer).getUint32(80, true);

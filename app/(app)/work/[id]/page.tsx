@@ -5,13 +5,11 @@ import { redirect } from "next/navigation";
 import { jobClockDue, jobState, slotAccept } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import { FilePicker } from "@/components/ui/file-picker";
 import { Input } from "@/components/ui/input";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Timer } from "@/components/ui/timer";
-import { Circle, CircleCheck } from "lucide-react";
 import { References } from "@/components/work/references";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
@@ -21,10 +19,10 @@ import { loadReferences } from "@/lib/work/references";
 
 import { AutoRefresh } from "../../orders/AutoRefresh";
 import { setVolumeAction, transitionAction } from "../../orders/actions";
-import { uploadSlotAction } from "../../orders/fileActions";
 import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import { toThreadReads, type AttachmentRow, type MessageRow, type ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
+import { SlotUpload } from "../SlotUpload";
 import { StartWorkButton } from "../StartWorkButton";
 import { Page } from "@/components/ui/page";
 import { minutesLabel } from "@/lib/work/minutes";
@@ -32,10 +30,20 @@ import { minutesLabel } from "@/lib/work/minutes";
 /**
  * D4 — one job (docs/design). The brief without the client (job_brief drops
  * their label and links), the reference pictures, why this version exists,
- * the ten upload slots, the checklist count and Submit to QC. Everything the
+ * the four deliverables (one tap each: choose and it uploads), the checklist count and Submit to QC. Everything the
  * page offers is checked again by the database when it is pressed.
  */
 export const dynamic = "force-dynamic";
+// Uploads finish here: a large 3DM is rebuilt (blocks exploded) on the server.
+export const maxDuration = 60;
+
+/** What each of the four deliverables is (0056), in the designer's words. */
+const SLOT_WORDS: Record<string, [string, string]> = {
+  "3DM": ["Rhino 3DM", "The final model. Blocks are fine: they are exploded on upload."],
+  STL: ["STL", "Print-ready mesh, binary or ASCII."],
+  RENDER: ["Render views", "One image with the four basic render views."],
+  TECH: ["Technical sheet", "One image: four views with measurements, diamond details and gold weight (kt)."],
+};
 
 export default async function JobPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
@@ -163,42 +171,21 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             <CardBody>
               <ul className="divide-y divide-border">
                 {slots.map((s) => (
-                  <li key={s.code} className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0 md:flex-row md:items-center">
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      {s.file_name ? (
-                        <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--tone-success-fg)]" aria-label="Uploaded" />
-                      ) : (
-                        <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-label="Empty" />
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-[length:var(--fs-3)] font-medium leading-[var(--lh-3)]">
-                          {s.label} <span className="font-mono text-[length:var(--fs-2)] font-normal text-muted-foreground">{s.code}</span>
-                        </p>
-                        <p className="truncate font-mono text-[length:var(--fs-2)] text-muted-foreground">{s.file_name ?? "Not uploaded yet"}</p>
-                      </div>
-                    </div>
-                    {working && (
-                      <form action={uploadSlotAction} className="flex flex-wrap items-center gap-2 md:justify-end">
-                        <input type="hidden" name="order_id" value={id} />
-                        <input type="hidden" name="slot" value={s.code} />
-                        <FilePicker
-                          name="file"
-                          required
-                          accept={slotAccept(s.code)}
-                          label={`File for ${s.code}`}
-                          buttonLabel="Choose"
-                          className="md:max-w-[16rem]"
-                        />
-                        <Button type="submit" size="sm" variant="secondary">
-                          {s.file_version_id ? "Replace" : "Upload"}
-                        </Button>
-                      </form>
-                    )}
-                  </li>
+                  <SlotUpload
+                    key={s.code}
+                    orderId={id}
+                    code={s.code}
+                    label={SLOT_WORDS[s.code]?.[0] ?? s.label}
+                    hint={SLOT_WORDS[s.code]?.[1]}
+                    accept={slotAccept(s.code)}
+                    fileName={s.file_name}
+                    enabled={working}
+                  />
                 ))}
               </ul>
               <p className="mt-4 text-[length:var(--fs-2)] text-muted-foreground">
-                Names, authors and other details inside each file are removed on upload, and the system names the files.
+                Choose or drop a file and it uploads. Names, authors and other details inside each file are removed, and the system
+                names the files. The summary sheet is made automatically from these.
               </p>
             </CardBody>
           </Card>

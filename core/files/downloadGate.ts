@@ -42,6 +42,7 @@ export type FileKind =
   | "RENDER"
   | "WEIGHT_CHART"
   | "DIAMOND_DETAILS"
+  | "TECHNICAL_SHEET"
   | "STL"
   | "RHINO_3DM"
   | "SUMMARY_SHEET"
@@ -64,7 +65,7 @@ export interface DownloadContext {
  * Images and figures, not geometry. Nothing here can be sent to a mill, which
  * is precisely why it is safe to show before money is released.
  */
-export const REVIEW_KINDS: readonly FileKind[] = ["RENDER", "WEIGHT_CHART", "DIAMOND_DETAILS"];
+export const REVIEW_KINDS: readonly FileKind[] = ["RENDER", "WEIGHT_CHART", "DIAMOND_DETAILS", "TECHNICAL_SHEET"];
 
 /**
  * The release set: what the client is actually buying.

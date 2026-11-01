@@ -184,6 +184,22 @@ See `docs/EMAIL.md`. Apply `db/migrations/0054_client_emails.sql` and
 Check: Admin → Settings → Email previews → Send all to the test inbox. Every
 email arrives at the test inbox with `[Test → …]` in the subject.
 
+### 2f. Four deliverables and direct uploads (Phase 13a)
+
+Apply `db/migrations/0055_technical_sheet_kind.sql` first, **run it on its
+own**, then `db/migrations/0056_four_deliverables.sql`. (A new enum value has
+to be committed before 0056 uses it.)
+
+- Designers now upload four files: 3DM, STL, render views (one image), technical
+  sheet (one image). Versions already in progress keep their uploaded files and
+  need the two new images before they can be submitted.
+- Uploads go from the browser straight to Supabase Storage, then the server
+  checks and cleans them, so Vercel's ~4.5 MB request limit no longer applies.
+  The limit is 50 MB per file. Supabase → Storage → `order-files` bucket →
+  file size limit must be 50 MB or more (the default is 50 MB).
+- Check: open a job as a designer, press Start work, and choose a 3DM with
+  blocks: it uploads with a progress bar and shows the file name.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.

@@ -192,12 +192,18 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     const tv = await db.query("SELECT count(*)::int AS n FROM deliverables WHERE order_id=$1 AND slot='TV'", [id]);
     expect(tv.rows[0].n).toBe(1);
     const kinds = await db.query(
-      "SELECT app.slot_kind('TV') AS tv, app.slot_kind('3DM') AS r, app.slot_kind('M') AS m, app.slot_kind('GW') AS gw",
+      "SELECT app.slot_kind('TV') AS tv, app.slot_kind('3DM') AS r, app.slot_kind('M') AS m, app.slot_kind('GW') AS gw, app.slot_kind('RENDER') AS render, app.slot_kind('TECH') AS tech",
     );
-    expect(kinds.rows[0]).toEqual({ tv: "RENDER", r: "RHINO_3DM", m: "OTHER", gw: "WEIGHT_CHART" });
+    expect(kinds.rows[0]).toEqual({ tv: "RENDER", r: "RHINO_3DM", m: "OTHER", gw: "WEIGHT_CHART", render: "RENDER", tech: "TECHNICAL_SHEET" });
     await expect(
       q(busyDesigner, "SELECT public.add_slot_file($1,$2,'PV','k','image/png',1,'png')", [generateId(), id]),
     ).rejects.toThrow(/assigned designer/i);
+  });
+
+  it("a version needs four files: 3DM, STL, render views, technical sheet (0056); old slots kept, optional", async () => {
+    const { rows } = await db.query("SELECT code, required FROM deliverable_slots ORDER BY position");
+    expect(rows.filter((r) => r.required).map((r) => r.code)).toEqual(["3DM", "STL", "RENDER", "TECH"]);
+    expect(rows.map((r) => r.code)).toEqual(expect.arrayContaining(["TV", "PV", "GW", "DD", "SUMMARY"]));
   });
 
   it("designer uploads do not message the client", async () => {
@@ -214,15 +220,15 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
   });
 
   it("cannot submit with a required slot empty — and says which", async () => {
-    await db.query("DELETE FROM deliverables WHERE order_id=$1 AND slot='GW'", [id]);
+    await db.query("DELETE FROM deliverables WHERE order_id=$1 AND slot='TECH'", [id]);
     await q(designer, "SELECT public.tick_check($1,19,'designer')", [id]);
     await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(
-      /missing: GW/,
+      /missing: TECH/,
     );
   });
 
   it("submitting goes straight to the pod lead's QC queue", async () => {
-    await fillSlots(id, ["TV", "3DM", "STL", "PV", "RV", "FV", "BV", "M", "DD"]); // only GW was missing
+    await fillSlots(id, ["3DM", "STL", "RENDER"]); // only TECH was missing
     // Phase 7a (0050): the model volume first.
     await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(/model volume/i);
     await q(designer, "SELECT public.set_job_volume($1, 312.5)", [id]);
@@ -281,7 +287,7 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     await expect(q(client, "SELECT * FROM public.job_checklist($1)", [id])).rejects.toThrow(/order not found/i);
     await expect(q(client, "SELECT * FROM public.job_slots($1)", [id])).rejects.toThrow(/order not found/i);
     expect((await q(podLead, "SELECT * FROM public.job_checklist($1)", [id])).rows).toHaveLength(19);
-    expect((await q(admin, "SELECT * FROM public.job_slots($1)", [id])).rows).toHaveLength(13);
+    expect((await q(admin, "SELECT * FROM public.job_slots($1)", [id])).rows).toHaveLength(15);
   });
 
   it("every tick is audited and the chain holds", async () => {

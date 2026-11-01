@@ -67,4 +67,42 @@ describe("strip3dm", () => {
     const refused = await sanitizeUploadAsync(input, "opaque123", { requireMetadataStrip: true });
     expect(refused.ok).toBe(false);
   }, 60_000);
+
+  it("explodes blocks (nested too) into placed geometry, dropping block names", async () => {
+    const rh = await (await import("rhino3dm")).default();
+    const f = new rh.File3dm();
+    const layer = new rh.Layer();
+    layer.name = "Stones";
+    f.layers().add(layer);
+    const a = new rh.ObjectAttributes();
+    a.layerIndex = 0;
+    // The typings leave out the constructor's arguments; the library takes them.
+    type Ref = import("rhino3dm").InstanceReference;
+    const Placement = rh.InstanceReference as unknown as new (idefId: string, xform: import("rhino3dm").Transform) => Ref;
+    // A "stone" block, and a "head" block that places the stone 2 mm up.
+    f.instanceDefinitions().add("Dana stone", "owner-dana", "", "", [0, 0, 0], [new rh.Sphere([0, 0, 0], 1).toBrep()], [a]);
+    const stone = f.instanceDefinitions().get(0);
+    const inner = new Placement(stone.id, rh.Transform.translationXYZ(0, 0, 2));
+    f.instanceDefinitions().add("Dana head", "", "", "", [0, 0, 0], [inner], [a]);
+    const head = f.instanceDefinitions().get(1);
+    // The head placed twice, at x=10 and x=-10, plus a plain shank.
+    f.objects().addInstanceObject(new Placement(head.id, rh.Transform.translationXYZ(10, 0, 0)), a);
+    f.objects().addInstanceObject(new Placement(head.id, rh.Transform.translationXYZ(-10, 0, 0)), a);
+    f.objects().addSphere(new rh.Sphere([0, 0, 0], 5), a);
+
+    const result = await strip3dm(f.toByteArray());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(latin1(result.bytes)).not.toContain("Dana");
+    const back = rh.File3dm.fromByteArray(result.bytes);
+    expect(back.instanceDefinitions().count).toBe(0);
+    const centres: number[][] = [];
+    for (let i = 0; i < back.objects().count; i++) {
+      const g = back.objects().get(i).geometry();
+      expect(g instanceof rh.InstanceReference).toBe(false);
+      centres.push(g.getBoundingBox(true).center.map((v: number) => Math.round(v)));
+    }
+    expect(centres).toHaveLength(3);
+    expect(centres).toEqual(expect.arrayContaining([[10, 0, 2], [-10, 0, 2], [0, 0, 0]]));
+  }, 60_000);
 });

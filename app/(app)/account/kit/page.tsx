@@ -122,7 +122,7 @@ export default async function DesignKitPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <UploadSlot code="3DM" label="Rhino model" fileName="RN-C-14_3DM_v1.3dm" />
             <UploadSlot code="STL" label="Print mesh" />
-            <UploadSlot code="TV" label="Top view" fileName="RN-C-14_TV_v1.png" />
+            <UploadSlot code="RENDER" label="Render views" fileName="RN-C-14_RENDER_v1.png" />
           </div>
         </CardBody>
       </Card>

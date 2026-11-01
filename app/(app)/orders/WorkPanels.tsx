@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
 import { assignDesignerAction, tickCheckAction } from "./actions";
-import { uploadSlotAction } from "./fileActions";
+import { SlotUpload } from "../work/SlotUpload";
 
 /**
  * The working surfaces of Phase 3a: assigning a designer, the two-level
@@ -184,33 +184,28 @@ function TickButton({
 }
 
 export function SlotsPanel({ orderId, slots, canUpload }: { orderId: string; slots: SlotRow[]; canUpload: boolean }) {
-  const missing = slots.filter((s) => s.required && !s.file_version_id).length;
+  // The four required files (0056), and any older slot that still holds a file.
+  const shown = slots.filter((s) => s.required || s.file_version_id);
+  const missing = shown.filter((s) => s.required && !s.file_version_id).length;
   return (
     <Panel title="Upload slots" aside={<span className={small}>{missing === 0 ? "All required files in" : `${missing} required missing`}</span>}>
       <ul className="divide-y divide-border">
-        {slots.map((s) => (
-          <li key={s.code} className="flex flex-wrap items-center justify-between gap-2 py-2 text-[length:var(--fs-3)] leading-[var(--lh-3)]">
-            <span className="min-w-0">
-              <span className="font-mono">{s.code}</span> <span className={small}>{s.label}{s.required ? "" : " (optional)"}</span>
-              {s.file_name && <span className={`block font-mono ${small}`}>{s.file_name}</span>}
-            </span>
-            {canUpload && (
-              <form action={uploadSlotAction} className="flex items-center gap-2">
-                <input type="hidden" name="order_id" value={orderId} />
-                <input type="hidden" name="slot" value={s.code} />
-                <FilePicker name="file" required accept={slotAccept(s.code)} label={`Upload ${s.code}`} buttonLabel="Choose" />
-                <Button type="submit" size="sm" variant="outline">
-                  {s.file_version_id ? "Replace" : "Upload"}
-                </Button>
-              </form>
-            )}
-          </li>
+        {shown.map((s) => (
+          <SlotUpload
+            key={s.code}
+            orderId={orderId}
+            code={s.code}
+            label={`${s.code} · ${s.label}${s.required ? "" : " (optional)"}`}
+            accept={slotAccept(s.code)}
+            fileName={s.file_name}
+            enabled={canUpload}
+          />
         ))}
       </ul>
       {canUpload && (
         <p className={`mt-2 ${small}`}>
-          3DM and STL files are cleaned of author and studio details; images of EXIF. Files are named
-          by the system as job code, slot and version.
+          Choose or drop a file and it uploads. 3DM and STL files are cleaned of author and studio details (Rhino blocks are
+          exploded); images of EXIF. Files are named by the system as job code, slot and version.
         </p>
       )}
     </Panel>

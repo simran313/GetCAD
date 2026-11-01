@@ -115,9 +115,9 @@ export async function tickAll(page: Page, column: "Designer" | "QC") {
   throw new Error(`${column} checklist did not complete`);
 }
 
-export const REQUIRED_SLOTS = ["3DM", "STL", "TV", "PV", "RV", "FV", "BV", "M", "DD", "GW"] as const;
+export const REQUIRED_SLOTS = ["3DM", "STL", "RENDER", "TECH"] as const;
 
-/** The designer's whole version: start, volume, ten files, 19 ticks, submit. */
+/** The designer's whole version: start, volume, four files, 19 ticks, submit. */
 export async function doDesignerVersion(page: Page, orderId: string) {
   await page.goto(`/work/${orderId}`);
   // Assigned, or sent back by QC: either way the version starts here.
@@ -131,12 +131,12 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   await submitFormOf(page, volume, "Save");
   await settled(page, "volume saved", (timeout) => expect(volume).toHaveValue("312.5", { timeout }));
 
+  // Choosing a file uploads it (Phase 13a): browser → storage → checked into the slot.
   for (const code of REQUIRED_SLOTS) {
     const input = page.getByLabel(`File for ${code}`, { exact: true });
     await input.setInputFiles(await slotFile(code));
-    await submitFormOf(page, input, /Upload|Replace/);
-    const replace = page.locator("form", { has: page.getByLabel(`File for ${code}`, { exact: true }) }).getByRole("button", { name: "Replace" });
-    await settled(page, `${code} uploaded`, (timeout) => expect(replace).toBeVisible({ timeout }));
+    const row = page.locator("li", { has: page.getByLabel(`File for ${code}`, { exact: true }) });
+    await settled(page, `${code} uploaded`, (timeout) => expect(row.getByRole("button", { name: "Replace" })).toBeVisible({ timeout }));
   }
 
   await page.goto(`/work/${orderId}/checklist`);

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -25,7 +25,13 @@ function enumValuesFromMigration(): string[] {
   if (!match?.[1]) throw new Error("could not find the file_kind enum in 0030_file_kinds.sql");
   // Digits matter: RHINO_3DM is silently skipped by an [A-Z_]-only class, and a
   // kind this test cannot see is a kind it cannot police.
-  return [...match[1].matchAll(/'([A-Z0-9_]+)'/g)].map((m) => m[1]!);
+  const created = [...match[1].matchAll(/'([A-Z0-9_]+)'/g)].map((m) => m[1]!);
+  // Values added later (ALTER TYPE … ADD VALUE, e.g. 0055) count too.
+  const dir = join(process.cwd(), "db/migrations");
+  const added = readdirSync(dir)
+    .filter((f) => f.endsWith(".sql"))
+    .flatMap((f) => [...readFileSync(join(dir, f), "utf8").matchAll(/ALTER TYPE file_kind ADD VALUE (?:IF NOT EXISTS )?'([A-Z0-9_]+)'/g)].map((m) => m[1]!));
+  return [...new Set([...created, ...added])];
 }
 
 describe("file_kind stays in sync with the download gate", () => {

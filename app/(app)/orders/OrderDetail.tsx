@@ -53,6 +53,7 @@ const FILE_KIND_LABELS: Record<string, string> = {
   RENDER: "Render",
   WEIGHT_CHART: "Gold weight chart",
   DIAMOND_DETAILS: "Diamond details",
+  TECHNICAL_SHEET: "Technical sheet",
   STL: "STL",
   RHINO_3DM: "Rhino 3DM",
   SUMMARY_SHEET: "Order summary sheet",

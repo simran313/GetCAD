@@ -21,7 +21,7 @@ export interface WeightSheetData {
   measurements: { ring_size: string | null; inner_diameter_um: number | null } | null;
 }
 
-const pretty = (v: unknown) =>
+export const pretty = (v: unknown) =>
   typeof v === "string" && v ? v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : null;
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -33,17 +33,11 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function WeightSheetDoc({ d }: { d: WeightSheetData }) {
-  const s = d.spec ?? {};
-  const table = weightTable(Number(d.volume_mm3), d.densities_mg_cm3);
-  const dims: [string, string | null][] = [
-    ["Product", pretty(s.product)],
-    ["Ring size", (d.measurements?.ring_size ?? (s.ring_size as string)) || null],
-    ["Inner diameter", d.measurements?.inner_diameter_um ? mmWord(d.measurements.inner_diameter_um) : s.inner_diameter_um ? mmWord(Number(s.inner_diameter_um)) : null],
-    ["Length", s.length_um ? mmWord(Number(s.length_um)) : null],
-    ["Model volume", `${Number(d.volume_mm3).toFixed(1)} mm³`],
-  ];
-  const stones: string[] = [
+export function stoneLines(
+  s: Record<string, string | number | boolean | null>,
+  accents: WeightSheetData["accents"],
+): string[] {
+  return [
     ...(s.has_centre_stone
       ? [
           [
@@ -58,10 +52,23 @@ function WeightSheetDoc({ d }: { d: WeightSheetData }) {
             .join(" "),
         ]
       : []),
-    ...d.accents.map((a, i) =>
+    ...accents.map((a, i) =>
       [`Side ${i + 1}`, `${a.quantity} ×`, pretty(a.shape), `${a.width_um / 1000} mm`, pretty(a.setting)].filter(Boolean).join(" "),
     ),
   ];
+}
+
+function WeightSheetDoc({ d }: { d: WeightSheetData }) {
+  const s = d.spec ?? {};
+  const table = weightTable(Number(d.volume_mm3), d.densities_mg_cm3);
+  const dims: [string, string | null][] = [
+    ["Product", pretty(s.product)],
+    ["Ring size", (d.measurements?.ring_size ?? (s.ring_size as string)) || null],
+    ["Inner diameter", d.measurements?.inner_diameter_um ? mmWord(d.measurements.inner_diameter_um) : s.inner_diameter_um ? mmWord(Number(s.inner_diameter_um)) : null],
+    ["Length", s.length_um ? mmWord(Number(s.length_um)) : null],
+    ["Model volume", `${Number(d.volume_mm3).toFixed(1)} mm³`],
+  ];
+  const stones = stoneLines(s, d.accents);
   return (
     <Document title={`Weight sheet ${d.ref ?? ""}`}>
       <Page size="A4" style={pdf.page}>
