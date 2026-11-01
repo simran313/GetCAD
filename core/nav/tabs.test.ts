@@ -33,7 +33,7 @@ describe("tabsForRole", () => {
 
   // P1–P6 (Phase 5c): the pod lead's own workspace.
   it("gives a pod lead the QC queue, team board, materials, orders, create order, messages, earnings", () => {
-    expect(tabsForRole("QC").map((t) => t.key)).toEqual(["qc", "board", "materials", "orders", "new", "messages", "earnings", "account"]);
+    expect(tabsForRole("QC").map((t) => t.key)).toEqual(["qc", "board", "performance", "materials", "orders", "new", "messages", "earnings", "account"]);
     expect(activeTabKey("/qc/orders", tabsForRole("QC"))).toBe("orders");
     expect(activeTabKey("/qc/ord_1", tabsForRole("QC"))).toBe("qc");
   });
@@ -79,6 +79,7 @@ describe("tabsForRole", () => {
       "/qc/orders",
       "/qc/earnings",
       "/pod/board",
+      "/pod/performance",
       "/materials",
       "/admin",
       "/admin/orders",

@@ -154,3 +154,7 @@ export {
 export type { FirstTouch, HeardAbout } from "./analytics/utm";
 export { METALS, METAL_NAMES, grams, gramsWord, weightTable, mmWord } from "./weights/weights";
 export type { Metal } from "./weights/weights";
+export { designerMetrics, summarise, teamTotals, periodRange, deltaWord } from "./work/metrics";
+export type { ActivityRow, MetricJob, Period, DesignerMetrics, DesignerSummary, PeriodKey } from "./work/metrics";
+export { toCsv, toXlsx, zipStore, crc32 } from "./export/table";
+export type { Cell, Sheet } from "./export/table";

@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BarChart3,
   BookOpen,
   Briefcase,
   Building2,
@@ -48,6 +49,7 @@ const ICON: Record<string, React.ReactNode> = {
   leads: <Magnet />,
   settings: <Settings />,
   materials: <BookOpen />,
+  performance: <BarChart3 />,
   account: <User />,
 };
 
@@ -63,7 +65,7 @@ const GROUPS: Record<string, [string | undefined, string[]][]> = {
   podLead: [
     ["Work", ["qc", "board", "orders", "new"]],
     ["Inbox", ["messages"]],
-    ["Team", ["materials"]],
+    ["Team", ["performance", "materials"]],
     ["Money", ["earnings"]],
   ],
   client: [

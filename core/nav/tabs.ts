@@ -74,6 +74,8 @@ const DESIGNER_TABS: Tab[] = [
 const POD_LEAD_TABS: Tab[] = [
   { key: "qc", label: "QC queue", href: "/qc", icon: "queue" },
   { key: "board", label: "Team board", href: "/pod/board", icon: "board" },
+  // Output, working time, turnaround, quality and exports (Phase 13c).
+  { key: "performance", label: "Performance", href: "/pod/performance", icon: "board", mobile: false },
   { key: "materials", label: "Materials", href: "/materials", icon: "file", mobile: false },
   { key: "orders", label: "All orders", href: "/qc/orders", icon: "list" },
   { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus", mobile: false },

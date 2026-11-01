@@ -12,6 +12,9 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
  * anything an action's own after-response flush missed, and failed sends
  * whose back-off has passed. Safe to overlap (claim_emails skips locked rows)
  * and safe to miss (the outbox keeps everything).
+ *
+ * Also sends the job alerts (Phase 13c): a reminder an hour before a job is
+ * due to QC, and an overdue alert to the designer and the pod lead.
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,10 +23,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!cronRequestIsAuthorised(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
-  const { data: reminders, error } = await createAdminSupabaseClient().rpc("enqueue_email_reminders");
+  const admin = createAdminSupabaseClient();
+  const [{ data: reminders, error }, { data: alerts, error: alertError }] = await Promise.all([
+    admin.rpc("enqueue_email_reminders"),
+    // Job due-soon and overdue alerts (0058): portal notifications and pushes.
+    admin.rpc("sweep_job_alerts"),
+  ]);
   const outcomes = await dispatchEmails(40);
   return NextResponse.json({
     reminders: error ? `failed: ${error.message}` : reminders,
+    jobAlerts: alertError ? `failed: ${alertError.message}` : alerts,
     sent: outcomes.filter((o) => o.result === "sent").length,
     failed: outcomes.filter((o) => o.result === "failed").length,
   });

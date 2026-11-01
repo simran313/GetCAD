@@ -59,11 +59,14 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
       </Page>
     );
   }
-  const [podsRes, creditsRes, claimsRes] = await Promise.all([
+  const [podsRes, creditsRes, claimsRes, escalationsRes] = await Promise.all([
     supabase.rpc("pods_overview"),
     supabase.rpc("pending_sla_credits"),
     supabase.rpc("claims_queue"),
+    supabase.rpc("job_escalations_list", { p_include_resolved: false }),
   ]);
+  // Jobs pod leads escalated (0058); empty until it is applied.
+  const escalations = ((escalationsRes.data ?? []) as unknown[]).length;
   const pods = (podsRes.data ?? []) as PodOption[];
   const pendingCredits = ((creditsRes.data ?? []) as unknown[]).length;
   const claims = ((claimsRes.data ?? []) as ClaimQueueRow[]).filter((r) => r.status === "open" || r.status === "admin_review");
@@ -97,6 +100,17 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
       action: (
         <Link href="/admin/credits" className={buttonVariants({ variant: "secondary", size: "sm" })}>
           Decide
+        </Link>
+      ),
+    },
+    escalations > 0 && {
+      key: "escalations",
+      tone: "attention" as const,
+      icon: <Flag />,
+      text: `${plural(escalations, "job")} escalated by a pod lead.`,
+      action: (
+        <Link href="/pod/performance" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+          Review
         </Link>
       ),
     },
