@@ -2,13 +2,13 @@
 
 | Route | Words |
 | --- | ---: |
-| `/home` | 84 |
-| `/work` | 126 |
-| `/work/85HMGij8hf9bK54v6brnG` | 189 |
-| `/work/85HMGij8hf9bK54v6brnG/checklist` | 223 |
+| `/home` | 106 |
+| `/work` | 153 |
+| `/work/hqREtJzpSnjz5KJUmYaTU` | 196 |
+| `/work/hqREtJzpSnjz5KJUmYaTU/checklist` | 325 |
 | `/work/earnings` | 138 |
 | `/settings/payouts` | 110 |
 | `/onboarding/designer` | 30 |
-| `/messages` | 70 |
+| `/messages` | 78 |
 | `/materials` | 20 |
 | `/account` | 60 |
