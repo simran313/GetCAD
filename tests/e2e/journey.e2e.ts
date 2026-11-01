@@ -114,7 +114,8 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
   await expectGone(lead, lead.getByRole("button", { name: "Send back · revision needed" }));
 
   await designer.goto(`/work/${orderId}`);
-  await expect(designer.getByText(/All measurements — Shank 1\.0 mm at the base — Thicken to 1\.2 mm/)).toBeVisible();
+  // The "Pod lead notes" card lists it as one item (the thread carries the raw message too).
+  await expect(designer.getByRole("listitem").filter({ hasText: /^All measurements — Shank 1\.0 mm at the base — Thicken to 1\.2 mm$/ })).toBeVisible();
 
   // Version 2, from the start: new files, a fresh QC sheet, the volume again.
   await doDesignerVersion(designer, orderId);
