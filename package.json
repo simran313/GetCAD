@@ -55,6 +55,7 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.81.0",
     "rhino3dm": "^8.32.1",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^2.6.0",
     "three": "^0.169.0",
     "web-push": "^3.6.7",
