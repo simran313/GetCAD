@@ -67,9 +67,11 @@ describe("the website", () => {
     }
   });
 
-  it("lists 19 checks in 7 groups", () => {
-    expect(CHECK_GROUPS).toHaveLength(7);
-    expect(CHECK_GROUPS.flatMap((g) => g.checks)).toHaveLength(19);
+  it("lists the two-stage QC: 9 designer checks, then 5 QC manager checks", () => {
+    expect(CHECK_GROUPS.map((g) => [g.group, g.checks.length])).toEqual([
+      ["Designer check", 9],
+      ["QC manager check", 5],
+    ]);
   });
 });
 

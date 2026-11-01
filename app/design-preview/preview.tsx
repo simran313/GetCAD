@@ -89,7 +89,7 @@ export function Preview() {
             <p className="text-[40px] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[56px]">Factory-ready jewelry CAD, checked twice.</p>
             <p className="mt-4 text-[32px] font-semibold leading-[1.1] tracking-[-0.03em]">Every file is made to be cast.</p>
             <p className="mt-4 text-[18px] leading-[1.5] text-muted-foreground">Senior designers build every file to cast first time. Body copy at 16–18px for comfort at arm&apos;s length.</p>
-            <p className="mt-4 text-[32px] font-semibold tracking-[-0.03em] tabular">$55 · 5h 42m · 19/19</p>
+            <p className="mt-4 text-[32px] font-semibold tracking-[-0.03em] tabular">$55 · 5h 42m · 9/9</p>
             <p className="mt-2 font-mono text-[14px] text-muted-foreground">MJ1-RN-C-10 · DSG-0001</p>
           </div>
           <ol className="mt-10 space-y-3">

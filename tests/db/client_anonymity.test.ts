@@ -368,11 +368,12 @@ describe("Phase 1 must-fix — a designer cannot identify or link a client", () 
   it("nothing identifying is shared between two orders of the same client", async () => {
     const enums = await db.query("SELECT enumlabel FROM pg_enum");
     // Fixed reference text the designer legitimately sees on every job: the
-    // checklist (0037) and the upload slots. Read from the database, so a
+    // checklist (0037, 0059) and the upload slots. Read from the database, so a
     // client-specific value can never be smuggled in through this list.
     const reference = await db.query(
       `SELECT group_name AS v FROM checklist_items UNION SELECT label FROM checklist_items
        UNION SELECT flag FROM checklist_items WHERE flag IS NOT NULL
+       UNION SELECT standard FROM checklist_items WHERE standard IS NOT NULL
        UNION SELECT code FROM deliverable_slots UNION SELECT label FROM deliverable_slots`,
     );
     const labels = new Set<string>([

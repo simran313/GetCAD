@@ -100,24 +100,25 @@ export async function submitFormOf(page: Page, control: Locator, button: string 
 }
 
 /**
- * Tick every box of one checklist column (19), one server action at a time.
- * The sign-off line only opens once the 18 checks are ticked, so after each
- * press wait for the count of unticked boxes to drop before the next.
+ * Pass every line of the QC sheet this viewer may mark (0059: the designer
+ * check on /work/…/checklist, the QC manager check on /qc/…), one server
+ * action at a time: after each press, wait for the count of lines not yet
+ * passed to drop before the next.
  */
-export async function tickAll(page: Page, column: "Designer" | "QC") {
-  const unticked = page.getByRole("button", { name: new RegExp(`^Tick ${column} · line`) });
-  for (let i = 0; i < 25; i++) {
-    const n = await unticked.count();
+export async function passAll(page: Page) {
+  const open = page.getByRole("button", { name: /^Pass · /, pressed: false });
+  for (let i = 0; i < 20; i++) {
+    const n = await open.count();
     if (n === 0) return;
-    await act(page, unticked.first());
-    await settled(page, `${n - 1} ${column} boxes left`, (timeout) => expect(unticked).toHaveCount(n - 1, { timeout }));
+    await act(page, open.first());
+    await settled(page, `${n - 1} lines left`, (timeout) => expect(open).toHaveCount(n - 1, { timeout }));
   }
-  throw new Error(`${column} checklist did not complete`);
+  throw new Error("the QC sheet did not complete");
 }
 
 export const REQUIRED_SLOTS = ["3DM", "STL", "RENDER", "TECH"] as const;
 
-/** The designer's whole version: start, volume, four files, 19 ticks, submit. */
+/** The designer's whole version: start, volume, four files, the designer check, submit. */
 export async function doDesignerVersion(page: Page, orderId: string) {
   await page.goto(`/work/${orderId}`);
   // Assigned, or sent back by QC: either way the version starts here.
@@ -146,8 +147,8 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   }
 
   await page.goto(`/work/${orderId}/checklist`);
-  await tickAll(page, "Designer");
-  await expect(page.getByText("Ticked 19 / 19")).toBeVisible();
+  await passAll(page);
+  await expect(page.getByText("9 / 9 passed").first()).toBeVisible();
 
   await page.goto(`/work/${orderId}`);
   const submit = page.getByRole("button", { name: "Submit to QC" });

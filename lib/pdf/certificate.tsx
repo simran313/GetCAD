@@ -8,9 +8,10 @@ import { pdf } from "./styles";
 
 /**
  * The QC certificate and spec sheet (SPEC-ADDENDUM A2), built from
- * certificate_data() (0050). Measured minimums, the 19 lines with both
- * ticks and their times, waivers, the files' SHA-256 fingerprints, and the
- * designer and pod by reference only.
+ * certificate_data() (0050, 0059). Measured minimums, the two-stage QC — the
+ * designer check and the QC manager check, each line's result and time (a
+ * version checked before 0059 shows its 19 ticked lines) — waivers, the
+ * files' SHA-256 fingerprints, and the designer and pod by reference only.
  */
 export interface CertificateData {
   order_ref: string | null;
@@ -30,7 +31,17 @@ export interface CertificateData {
   };
   minimums: { wall_um: number | null; prong_um: number | null };
   waivers: { spec: string; requested: string; note: string | null }[];
-  checklist: { item: number; group: string; label: string; signoff: boolean; designer_at: string | null; qc_at: string | null }[];
+  checklist: {
+    item: number;
+    group: string;
+    label: string;
+    signoff: boolean;
+    /** DESIGNER / MANAGER (0059); LEGACY or absent for a version checked before. */
+    stage?: string;
+    outcome?: "PASS" | "FAIL" | null;
+    designer_at: string | null;
+    qc_at: string | null;
+  }[];
   designer_ref: string | null;
   pod_name: string | null;
   files: { slot: string; sha256: string; size_bytes: number; file_name: string }[];
@@ -88,28 +99,60 @@ function CertificateDoc({ d }: { d: CertificateData }) {
           </>
         )}
 
-        <Text style={pdf.h2}>19-point checklist</Text>
-        <View style={[pdf.row, { borderBottomColor: "#0A0A0A" }]}>
-          <Text style={[pdf.mono, { width: 18 }]}>#</Text>
-          <Text style={[pdf.value, pdf.mono]}>CHECK</Text>
-          <Text style={pdf.tick}>DESIGNER TICKED</Text>
-          <Text style={pdf.tick}>QC TICKED</Text>
-        </View>
-        {d.checklist.map((c) => (
-          <View key={c.item} style={pdf.row} wrap={false}>
-            <Text style={[pdf.mono, { width: 18 }]}>{String(c.item).padStart(2, "0")}</Text>
-            <Text style={pdf.value}>
-              {c.signoff ? "Sign-off" : c.label} <Text style={{ color: "#85857E" }}>· {c.group}</Text>
-            </Text>
-            {/* The built-in PDF fonts have no tick glyph; the time it was ticked is the tick. */}
-            <Text style={pdf.tick}>{c.designer_at ? when(c.designer_at).slice(5, 16) : "not ticked"}</Text>
-            <Text style={pdf.tick}>{c.qc_at ? when(c.qc_at).slice(5, 16) : "not ticked"}</Text>
-          </View>
-        ))}
+        {d.checklist.some((c) => c.stage === "DESIGNER" || c.stage === "MANAGER") ? (
+          (["DESIGNER", "MANAGER"] as const).map((stage) => {
+            const lines = d.checklist.filter((c) => c.stage === stage);
+            if (lines.length === 0) return null;
+            return (
+              <View key={stage}>
+                <Text style={pdf.h2}>{stage === "DESIGNER" ? "QC stage 1 · Designer check" : "QC stage 2 · QC manager check"}</Text>
+                <View style={[pdf.row, { borderBottomColor: "#0A0A0A" }]}>
+                  <Text style={[pdf.mono, { width: 18 }]}>#</Text>
+                  <Text style={[pdf.value, pdf.mono]}>CHECK</Text>
+                  <Text style={pdf.tick}>RESULT</Text>
+                  <Text style={pdf.tick}>MARKED (UTC)</Text>
+                </View>
+                {lines.map((c, i) => {
+                  const at = stage === "DESIGNER" ? c.designer_at : c.qc_at;
+                  return (
+                    <View key={c.item} style={pdf.row} wrap={false}>
+                      <Text style={[pdf.mono, { width: 18 }]}>{String(i + 1).padStart(2, "0")}</Text>
+                      <Text style={pdf.value}>{c.label}</Text>
+                      <Text style={pdf.tick}>{!at ? "not marked" : c.outcome === "FAIL" ? "Fail" : "Pass"}</Text>
+                      <Text style={pdf.tick}>{at ? when(at).slice(5, 16) : "—"}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })
+        ) : (
+          <>
+            <Text style={pdf.h2}>Checklist</Text>
+            <View style={[pdf.row, { borderBottomColor: "#0A0A0A" }]}>
+              <Text style={[pdf.mono, { width: 18 }]}>#</Text>
+              <Text style={[pdf.value, pdf.mono]}>CHECK</Text>
+              <Text style={pdf.tick}>DESIGNER TICKED</Text>
+              <Text style={pdf.tick}>QC TICKED</Text>
+            </View>
+            {d.checklist.map((c) => (
+              <View key={c.item} style={pdf.row} wrap={false}>
+                <Text style={[pdf.mono, { width: 18 }]}>{String(c.item).padStart(2, "0")}</Text>
+                <Text style={pdf.value}>
+                  {c.signoff ? "Sign-off" : c.label} <Text style={{ color: "#85857E" }}>· {c.group}</Text>
+                </Text>
+                {/* The built-in PDF fonts have no tick glyph; the time it was ticked is the tick. */}
+                <Text style={pdf.tick}>{c.designer_at ? when(c.designer_at).slice(5, 16) : "not ticked"}</Text>
+                <Text style={pdf.tick}>{c.qc_at ? when(c.qc_at).slice(5, 16) : "not ticked"}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={pdf.h2}>Sign-off</Text>
         <Row label="Designer" value={d.designer_ref ?? "—"} />
-        <Row label="QC reviewed by" value={`Pod lead${d.pod_name ? ` · ${d.pod_name}` : ""}`} />
+        <Row label="QC manager" value={`Pod lead${d.pod_name ? ` · ${d.pod_name}` : ""}`} />
+        <Row label="Status" value={d.passed_at ? `Approved · ${when(d.passed_at)}` : "—"} />
 
         {d.files.length > 0 && (
           <>

@@ -154,18 +154,19 @@ export async function putOrderInPod(client: Client, orderId: string, podLeadId: 
 }
 
 /**
- * Do the designer's side of the current work version (0041): all 19 designer
- * ticks and a file in every required slot. Fixture setup as the superuser —
- * tick_check / add_slot_file have their own suite (tests/db/checklist_slots).
+ * Do the designer's side of the current work version (0041, 0059): every
+ * designer-check line passed and a file in every required slot. Fixture setup
+ * as the superuser — mark_check / add_slot_file have their own suite
+ * (tests/db/checklist_slots).
  */
 export async function completeDesignerWork(client: Client, orderId: string, designerId: string): Promise<void> {
   const { rows } = await client.query("SELECT work_version FROM orders WHERE id = $1", [orderId]);
   const version = rows[0].work_version as number;
   await client.query(
-    `INSERT INTO order_checks (order_id, version, item_id, designer_by, designer_at)
-     SELECT $1, $2, id, $3, now() FROM checklist_items
+    `INSERT INTO order_checks (order_id, version, item_id, designer_by, designer_at, outcome)
+     SELECT $1, $2, id, $3, now(), 'PASS' FROM checklist_items WHERE active AND stage = 'DESIGNER'
      ON CONFLICT (order_id, version, item_id) DO UPDATE
-       SET designer_by = EXCLUDED.designer_by, designer_at = EXCLUDED.designer_at`,
+       SET designer_by = EXCLUDED.designer_by, designer_at = EXCLUDED.designer_at, outcome = 'PASS'`,
     [orderId, version, designerId],
   );
   // The model volume for this version (0050): a CAD version cannot be
@@ -195,13 +196,13 @@ export async function completeDesignerWork(client: Client, orderId: string, desi
   }
 }
 
-/** Tick all 19 QC lines of the current version (0041), as the given pod lead. */
+/** Pass every QC manager line of the current version (0059), as the given pod lead. */
 export async function completeQcTicks(client: Client, orderId: string, podLeadId: string): Promise<void> {
   await client.query(
-    `INSERT INTO order_checks (order_id, version, item_id, qc_by, qc_at)
-     SELECT o.id, o.work_version, i.id, $2, now() FROM orders o CROSS JOIN checklist_items i
-     WHERE o.id = $1
-     ON CONFLICT (order_id, version, item_id) DO UPDATE SET qc_by = EXCLUDED.qc_by, qc_at = EXCLUDED.qc_at`,
+    `INSERT INTO order_checks (order_id, version, item_id, qc_by, qc_at, outcome)
+     SELECT o.id, o.work_version, i.id, $2, now(), 'PASS' FROM orders o CROSS JOIN checklist_items i
+     WHERE o.id = $1 AND i.active AND i.stage = 'MANAGER'
+     ON CONFLICT (order_id, version, item_id) DO UPDATE SET qc_by = EXCLUDED.qc_by, qc_at = EXCLUDED.qc_at, outcome = 'PASS'`,
     [orderId, podLeadId],
   );
   // The QC measurements for this version (0050): a CAD version cannot pass

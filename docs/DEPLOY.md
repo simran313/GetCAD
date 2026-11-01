@@ -221,6 +221,24 @@ history) and download Excel, CSV and PDF; on the team board, Move a job to
 another designer and Escalate one; as an admin, the Queue shows the
 escalation and Performance resolves it.
 
+### 2i. Two-stage QC checklist (Phase 13d)
+
+Apply `db/migrations/0059_qc_checklist_v2.sql` **before** deploying the app
+(the new screens call `mark_check` and `qc_decide`; the old screens keep
+working on the new lines through `tick_check`). No policy file; nothing to
+set.
+
+- The 19-line checklist becomes the designer check (9 lines) and the QC
+  manager check (5 lines), each Pass or Fail with a finding and a remark.
+  The 19 old lines stay in the database, inactive, so earlier certificates
+  still read.
+- A job in progress when this is applied needs its designer check marked
+  again; a job in QC review needs the QC manager check.
+- Check: as a designer, mark the nine lines and submit; as the pod lead, fail
+  one line with a finding and send it back — the designer sees that line as
+  the revision note; pass all five and approve — the certificate shows both
+  stages.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.

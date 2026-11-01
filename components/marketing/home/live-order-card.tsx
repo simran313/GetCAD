@@ -73,7 +73,7 @@ export function LiveOrderCard() {
           })}
         </ul>
         <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-[14px]">
-          <span className="text-muted-foreground">Then a master craftsman re-checks all 19 points</span>
+          <span className="text-muted-foreground">Then the QC manager checks it again</span>
         </div>
       </div>
     </div>

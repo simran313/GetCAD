@@ -113,8 +113,10 @@ describe("fingerprints and the certificate", () => {
 
     const data = (await q(client, "SELECT public.certificate_data($1) AS d", [id])).rows[0].d;
     expect(data).toMatchObject({ order_ref: "TCP-T1", version: 1, category: "D", issued: false });
-    expect(data.checklist).toHaveLength(19);
-    expect(data.checklist.every((c: { designer_at: string | null; qc_at: string | null }) => c.designer_at && c.qc_at)).toBe(true);
+    expect(data.checklist).toHaveLength(14); // 9 designer + 5 QC manager lines (0059)
+    type Line = { stage: string; outcome: string | null; designer_at: string | null; qc_at: string | null };
+    expect(data.checklist.every((c: Line) => c.outcome === "PASS" && (c.stage === "DESIGNER" ? c.designer_at : c.qc_at))).toBe(true);
+    expect(data.checklist.map((c: Line) => c.stage).join(",")).toBe(["DESIGNER,".repeat(9), "MANAGER,".repeat(4), "MANAGER"].join(""));
     expect(data.files).toEqual([{ slot: "STL", sha256: SHA, size_bytes: 10, file_name: expect.any(String) }]);
     expect(data.waivers).toHaveLength(1);
     expect(data.designer_ref).toMatch(/\S/);

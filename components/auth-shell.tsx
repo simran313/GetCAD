@@ -18,7 +18,7 @@ export function AuthShell({ title, children }: { title: string; children: React.
           </p>
           <ul className="mt-8 space-y-2 text-[length:var(--fs-3)] text-white/80">
             <li>First look within 6 hours of order confirmation, or it&apos;s free</li>
-            <li>Every file checked twice: 19 points, two designers</li>
+            <li>Every file checked twice: two-stage QC, designer then QC manager</li>
             <li>STL, 3DM and a spec sheet with every order</li>
           </ul>
         </div>

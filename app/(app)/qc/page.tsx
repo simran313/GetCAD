@@ -108,7 +108,7 @@ async function Queue({ title, rows, action, empty }: { title: string; rows: PodJ
               reference={j.order_ref}
               title={j.title}
               meta={`${j.designer_ref ?? "Designer"} · v${j.work_version}${j.submitted_at ? ` · submitted ${formatRelative(j.submitted_at, tz)}` : ""}${
-                j.qc_ticks > 0 ? ` · QC ${j.qc_ticks}/19` : ""
+                j.qc_ticks > 0 ? ` · QC ${j.qc_ticks} marked` : ""
               }`}
               trailing={
                 <>

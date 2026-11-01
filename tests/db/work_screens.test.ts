@@ -115,7 +115,7 @@ describe("pod_jobs and pod_load (P1, P3, P5)", () => {
       designer_name: "Rohan M",
       client_code: "TT7",
       title: "Mrs Smith halo",
-      designer_ticks: 19,
+      designer_ticks: 9,
       qc_ticks: 0,
       minutes: 60,
     });

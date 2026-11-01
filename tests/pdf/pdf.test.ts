@@ -6,7 +6,30 @@ vi.mock("server-only", () => ({}));
  * Phase 7a: the certificate and weight sheet render to real PDFs from the
  * shapes certificate_data() and weight_sheet_data() return (0050).
  */
-const checklist = Array.from({ length: 19 }, (_, i) => ({
+const checklist = [
+  ...Array.from({ length: 9 }, (_, i) => ({
+    item: 101 + i,
+    group: "Designer check",
+    label: `Designer line ${i + 1}`,
+    signoff: false,
+    stage: "DESIGNER",
+    outcome: "PASS" as const,
+    designer_at: "2026-11-03T09:00:00Z",
+    qc_at: null,
+  })),
+  ...Array.from({ length: 5 }, (_, i) => ({
+    item: 201 + i,
+    group: "QC manager check",
+    label: `QC manager line ${i + 1}`,
+    signoff: false,
+    stage: "MANAGER",
+    outcome: "PASS" as const,
+    designer_at: null,
+    qc_at: "2026-11-03T11:00:00Z",
+  })),
+];
+/** A version checked before 0059: the 19 ticked lines. */
+const legacy = Array.from({ length: 19 }, (_, i) => ({
   item: i + 1,
   group: i < 4 ? "Before starting" : "Final",
   label: `Check ${i + 1}`,
@@ -16,7 +39,10 @@ const checklist = Array.from({ length: 19 }, (_, i) => ({
 }));
 
 describe("PDFs", () => {
-  it("renders the certificate", async () => {
+  it.each([
+    ["two-stage QC", checklist],
+    ["a version checked before 0059", legacy],
+  ] as const)("renders the certificate: %s", async (_name, lines) => {
     const { renderCertificate } = await import("../../lib/pdf/certificate");
     const buf = await renderCertificate({
       order_ref: "TCP-J261102-003",
@@ -36,7 +62,7 @@ describe("PDFs", () => {
       },
       minimums: { wall_um: 800, prong_um: 800 },
       waivers: [{ spec: "prong", requested: "0.6 mm", note: "client asked" }],
-      checklist,
+      checklist: [...lines],
       designer_ref: "DSG-0142",
       pod_name: "Rhino pod",
       files: [{ slot: "STL", sha256: "a".repeat(64), size_bytes: 1000, file_name: "RN-C-12_STL_v2.stl" }],

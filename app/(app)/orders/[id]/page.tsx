@@ -30,6 +30,7 @@ import type { LineageRow, RevisionAllowance, RevisionRow } from "../RevisionsPan
 import type { ClientContact, Screenshot } from "../IntakePanel";
 import { AutoRefresh } from "../AutoRefresh";
 import type { ChecklistRow, PodDesigner, SlotRow } from "../WorkPanels";
+import { countWord, stageCount } from "@/components/work/checklist";
 import { toThreadReads, type AttachmentRow, type DisputeRow, type LedgerRow, type MessageRow, type OrderRow, type ThreadRow, type VersionRow } from "../types";
 import { Page } from "@/components/ui/page";
 
@@ -369,8 +370,8 @@ export default async function OrderPage({
           )}
           {checklistRows.length > 0 && (
             <p className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
-              v{job?.work_version ?? 1} · designer {checklistRows.filter((r) => r.designer_at).length}/19 · QC{" "}
-              {checklistRows.filter((r) => r.qc_at).length}/19 · files {slotRows.filter((r) => r.file_version_id).length}/{slotRows.length}
+              v{job?.work_version ?? 1} · designer {countWord(stageCount(checklistRows, "DESIGNER"))} · QC{" "}
+              {countWord(stageCount(checklistRows, "MANAGER"))} · files {slotRows.filter((r) => r.file_version_id).length}/{slotRows.length}
             </p>
           )}
           <p className="flex flex-wrap gap-3 text-[length:var(--fs-2)]">

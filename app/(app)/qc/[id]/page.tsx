@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { mmWord, rupeesWord } from "@/core";
+import { formatDateTime, mmWord, rupeesWord } from "@/core";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -14,10 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { VersionSpec } from "@/lib/work/spec";
 import { Timer } from "@/components/ui/timer";
-import { Checklist } from "@/components/work/checklist";
+import { Checklist, countWord, stageCount } from "@/components/work/checklist";
 import { References } from "@/components/work/references";
 import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { viewerZone } from "@/lib/time/zone";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
 import { loadPodJobs } from "@/lib/work/load";
 import { loadReferences } from "@/lib/work/references";
@@ -33,9 +34,10 @@ import { minutesLabel } from "@/lib/work/minutes";
 /**
  * P2 — QC review (docs/design). The designer's files for this version (and
  * any earlier one, to compare), the brief they were working to, and the
- * two-level checklist: the designer's ticks beside the pod lead's own.
- * Pass unlocks at 19 / 19; a send-back needs a note, which goes to the
- * designer's thread (record_qc_decision).
+ * two-stage QC sheet (0059): the pod lead marks the QC manager check line by
+ * line, with the designer's own check below. Approve needs every line
+ * passed; a send-back carries the failed lines (and any note) to the
+ * designer's thread (qc_decide).
  */
 export const dynamic = "force-dynamic";
 
@@ -91,8 +93,11 @@ export default async function QcReviewPage({
   const images = files.filter((f) => IMAGE.test(f.file_name));
   const others = files.filter((f) => !IMAGE.test(f.file_name));
   const rows = (checklistRes.data ?? []) as ChecklistRow[];
-  const designerDone = rows.filter((r) => r.designer_at).length;
-  const qcDone = rows.filter((r) => r.qc_at).length;
+  const designer = stageCount(rows, "DESIGNER");
+  const manager = stageCount(rows, "MANAGER");
+  const allPassed = manager.total > 0 && manager.passed === manager.total;
+  const failed = rows.filter((r) => r.stage === "MANAGER" && r.qc_at && r.outcome === "FAIL");
+  const zone = await viewerZone();
   // Only the order's own pod lead records QC (record_qc_decision); an admin
   // looking in sees the review read-only.
   const inReview = job.status === "QC_REVIEW" && relRes.data === "POD_LEAD";
@@ -182,12 +187,37 @@ export default async function QcReviewPage({
             </CardBody>
           </Card>
 
+          <Card as="section">
+            <CardHeader>
+              <CardTitle>QC checklist</CardTitle>
+              <span className="tabular font-mono text-[length:var(--fs-2)]">QC manager {countWord(manager)}</span>
+            </CardHeader>
+            <CardBody className="space-y-3">
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">
+                {designer.total > 0 && designer.passed === designer.total
+                  ? `The designer passed all ${designer.total} lines of their check. Check each line yourself; a failed line goes back to the designer with your finding and remark.`
+                  : `The designer has passed ${designer.passed} of ${designer.total} lines.`}
+              </p>
+              <Checklist
+                orderId={id}
+                rows={rows}
+                stages={["MANAGER", "DESIGNER"]}
+                canMark={inReview ? "MANAGER" : null}
+                zone={zone}
+                signature={{
+                  DESIGNER: job.submitted_at ? `Signed by ${job.designer_ref ?? "the designer"} at submission, ${formatDateTime(job.submitted_at, zone)}.` : null,
+                  MANAGER: inReview ? "Signature and date: you, recorded with your decision." : null,
+                }}
+              />
+            </CardBody>
+          </Card>
+
           {inReview && (
             <Card as="section">
               <CardHeader>
                 <CardTitle>Decision</CardTitle>
                 <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
-                  Pass unlocks at 19 / 19{isCad ? " + measurements" : ""}
+                  Approve needs every QC manager line passed{isCad ? " + measurements" : ""}
                   {job.qc_payout_paise ? ` · your QC payout ${rupeesWord(job.qc_payout_paise)}` : ""}
                   {job.price_total ? ` (${formatMoney(job.price_total, job.currency ?? "USD")} order)` : ""}
                 </span>
@@ -196,19 +226,36 @@ export default async function QcReviewPage({
                 <form action={qcDecisionAction} className="space-y-2">
                   <input type="hidden" name="order_id" value={id} />
                   <input type="hidden" name="outcome" value="REVISION" />
+                  {failed.length > 0 && (
+                    <div className="space-y-1 text-[length:var(--fs-2)]">
+                      <p className="font-medium">Revision needed · the designer receives these failed lines:</p>
+                      <ul className="list-disc space-y-0.5 pl-5">
+                        {failed.map((r) => (
+                          <li key={r.item_id}>{[r.label, r.finding, r.remark].filter(Boolean).join(" — ")}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <label htmlFor="qc-note" className="text-[length:var(--fs-2)] font-medium">
-                    Revision note · required to send back
+                    {failed.length > 0 ? "Anything else for the designer (optional)" : "Revision note · required to send back"}
                   </label>
-                  <Textarea id="qc-note" name="notes" required minLength={3} rows={3} placeholder="1. Halo claws to 0.8 mm  2. Blend the band seam" />
-                  <Button type="submit" variant="outline">
-                    Send back
+                  <Textarea
+                    id="qc-note"
+                    name="notes"
+                    required={failed.length === 0}
+                    minLength={failed.length === 0 ? 3 : undefined}
+                    rows={3}
+                    placeholder="1. Halo claws to 0.8 mm  2. Blend the band seam"
+                  />
+                  <Button type="submit" variant={failed.length > 0 ? "default" : "outline"}>
+                    Send back · revision needed
                   </Button>
                 </form>
                 <form action={qcDecisionAction} className="flex items-end">
                   <input type="hidden" name="order_id" value={id} />
                   <input type="hidden" name="outcome" value="PASS" />
-                  <Button type="submit" disabled={qcDone < 19 || !measured} className="w-full md:w-auto">
-                    Pass to client
+                  <Button type="submit" variant={failed.length > 0 ? "outline" : "default"} disabled={!allPassed || !measured} className="w-full md:w-auto">
+                    Approve · pass to client
                   </Button>
                 </form>
               </CardBody>
@@ -309,26 +356,6 @@ export default async function QcReviewPage({
             </Card>
           )}
 
-          <Card as="section">
-            <CardHeader>
-              <CardTitle>Two-level checklist</CardTitle>
-              <span className="tabular font-mono text-[length:var(--fs-2)]">QC {qcDone} / 19</span>
-            </CardHeader>
-            <CardBody className="space-y-3">
-              <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                {designerDone === 19
-                  ? "The designer ticked 19 of 19 and signed off. Re-check each line yourself."
-                  : `The designer has ticked ${designerDone} of 19.`}
-              </p>
-              <Checklist
-                orderId={id}
-                rows={rows}
-                canTickDesigner={false}
-                canTickQc={inReview && designerDone === 19}
-                signoffLabel="QC sign-off · when all 18 are re-checked"
-              />
-            </CardBody>
-          </Card>
         </div>
 
         <aside className="space-y-4">

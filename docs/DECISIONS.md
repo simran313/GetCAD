@@ -128,11 +128,13 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 
 ## 10. Quality system
 
-- **19-point checklist, two levels (designer, then QC):**
-  - The designer can't submit until all 19 are ticked and signed off.
-  - QC can't pass until all 19 are ticked.
-  - Sending a job back requires a written note.
-  - Full list: build spec section 8.
+- **Two-stage QC (owner's QC sheet, 1 Nov 2026; replaces the 19-point checklist):**
+  - Stage 1, designer check (9 lines): size and all measurements; diamond sizes, colours and count; setting type; metal colour and karat; the client's special remarks; overall design look with every measurement marked; no open or naked edges; STL mesh max distance / edge 0.005; files exported (3DM, STL, render image, technical image).
+  - Stage 2, QC manager check (5 lines, the pod lead, never the designer): overall design look; diamond sizes, shapes and colours; all measurements; setting type, metal colour and karat; the client's special remarks.
+  - Each line is Pass or Fail, with an optional finding (the value) and remark. The signature and date are the recorded person and time: of each mark, of the submission and of the QC decision.
+  - The designer can't submit until every designer line passes. QC can't approve until every manager line passes (and, for CAD, the measurements are recorded).
+  - Sending a job back needs a failed line or a written note; the failed lines (line — finding — remark) are the revision note the designer reads.
+  - The sheet's "client information" section is left out: the brief carries it.
 - Every tick, decision, credit and payout writes to the audit log.
 
 ## 11. Orders, assignment, messaging

@@ -322,8 +322,8 @@ export async function OrderDetail({
         <ChecklistPanel
           orderId={o.id}
           rows={checklist}
-          canTickDesigner={isOrderDesigner && o.status === "IN_PROGRESS"}
-          canTickQc={o.relation === "POD_LEAD" && o.status === "QC_REVIEW"}
+          canMark={isOrderDesigner && o.status === "IN_PROGRESS" ? "DESIGNER" : o.relation === "POD_LEAD" && o.status === "QC_REVIEW" ? "MANAGER" : null}
+          zone={tz}
         />
       )}
     </>

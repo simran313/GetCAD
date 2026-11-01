@@ -54,7 +54,8 @@ export async function qcDecisionAction(formData: FormData): Promise<void> {
   const notes = formData.get("notes")?.toString().trim() || null;
 
   const supabase = await createUserSupabaseClient();
-  const { error } = await supabase.rpc("record_qc_decision", {
+  // qc_decide (0059): a send-back's note starts with the failed lines.
+  const { error } = await supabase.rpc("qc_decide", {
     p_order_id: orderId,
     p_outcome: outcome,
     p_notes: notes,
@@ -270,19 +271,21 @@ export async function assignDesignerAction(formData: FormData): Promise<void> {
   flushEmailsAfterResponse();
 }
 
-// Tick or untick one checklist line (0041). Which column, and whether this
-// person may tick it now, is decided by tick_check().
-export async function tickCheckAction(formData: FormData): Promise<void> {
+// Mark one QC line Pass or Fail, with a finding and a remark, or clear it
+// (0059). Which stage, and whether this person may mark it now, is decided
+// by mark_check().
+export async function markCheckAction(formData: FormData): Promise<void> {
+  const outcome = formData.get("outcome")?.toString() ?? "";
   const supabase = await createUserSupabaseClient();
-  const { error } = await supabase.rpc("tick_check", {
+  const { error } = await supabase.rpc("mark_check", {
     p_order_id: formData.get("order_id")?.toString() ?? "",
     p_item_id: Number(formData.get("item_id")),
-    p_column: formData.get("column")?.toString() ?? "",
-    p_ticked: formData.get("ticked") === "true",
+    p_outcome: outcome === "PASS" || outcome === "FAIL" ? outcome : null,
+    p_finding: formData.get("finding")?.toString() ?? null,
+    p_remark: formData.get("remark")?.toString() ?? null,
   });
   refuseOn(error);
   revalidatePath("/", "layout");
-  flushEmailsAfterResponse();
 }
 
 // The client sends a preview back (DECISIONS §8). request_revision() checks
