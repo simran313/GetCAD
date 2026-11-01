@@ -138,8 +138,8 @@ export type { Remaining } from "./time/remaining";
 export { clientTab, clientNextStep, clientStepsDone, firstLookHours, whatYouGet, CLIENT_STEPS } from "./orders/clientView";
 export type { ClientStepContext } from "./orders/clientView";
 export type { ClientTab, ClientStep } from "./orders/clientView";
-export { jobTab, isOpenJob, jobState, minutesWord, jobClockDue, qcPayoutPaise, rupeesWord, loadWord } from "./work/view";
-export type { JobTab } from "./work/view";
+export { jobTab, isOpenJob, jobState, minutesWord, jobClockDue, qcPayoutPaise, rupeesWord, loadWord, jobClock, designerBucket } from "./work/view";
+export type { JobTab, JobTimes, DesignerBucket } from "./work/view";
 export { staffStage, staffNext, queueRank, STAFF_STAGES, STAGE_LABELS } from "./orders/staffView";
 export type { StaffStage, StaffFacts, StaffNext } from "./orders/staffView";
 export {

@@ -32,15 +32,15 @@ describe("tabsForRole", () => {
   });
 
   // P1–P6 (Phase 5c): the pod lead's own workspace.
-  it("gives a pod lead the QC queue, team board, orders, create order, messages, earnings", () => {
-    expect(tabsForRole("QC").map((t) => t.key)).toEqual(["qc", "board", "orders", "new", "messages", "earnings", "account"]);
+  it("gives a pod lead the QC queue, team board, materials, orders, create order, messages, earnings", () => {
+    expect(tabsForRole("QC").map((t) => t.key)).toEqual(["qc", "board", "materials", "orders", "new", "messages", "earnings", "account"]);
     expect(activeTabKey("/qc/orders", tabsForRole("QC"))).toBe("orders");
     expect(activeTabKey("/qc/ord_1", tabsForRole("QC"))).toBe("qc");
   });
 
   // D2–D6 (Phase 5c).
-  it("gives a designer Home, Open jobs, Messages, Earnings, Account", () => {
-    expect(tabsForRole("DESIGNER").map((t) => t.label)).toEqual(["Home", "Open jobs", "Messages", "Earnings", "Account"]);
+  it("gives a designer Home, Open jobs, Messages, Materials, Earnings, Account", () => {
+    expect(tabsForRole("DESIGNER").map((t) => t.label)).toEqual(["Home", "Open jobs", "Messages", "Materials", "Earnings", "Account"]);
     expect(activeTabKey("/work/earnings", tabsForRole("DESIGNER"))).toBe("earnings");
     expect(activeTabKey("/work/ord_1/checklist", tabsForRole("DESIGNER"))).toBe("work");
   });
@@ -79,6 +79,7 @@ describe("tabsForRole", () => {
       "/qc/orders",
       "/qc/earnings",
       "/pod/board",
+      "/materials",
       "/admin",
       "/admin/orders",
       "/admin/billing",
@@ -151,8 +152,8 @@ describe("workspaceFor (Phase 5)", () => {
 
   it("keeps the phone bar to Home, Orders, Messages, Account for a client", () => {
     expect(mobileTabs(tabsForRole("CLIENT")).map((t) => t.key)).toEqual(["home", "orders", "messages", "account"]);
-    // A designer keeps all five; a pod lead's phone bar drops Create order and Earnings.
-    expect(mobileTabs(tabsForRole("DESIGNER"))).toEqual(tabsForRole("DESIGNER"));
+    // A designer keeps five (Materials is reached from More); a pod lead's phone bar drops Create order and Earnings.
+    expect(mobileTabs(tabsForRole("DESIGNER")).map((t) => t.key)).toEqual(["home", "work", "messages", "earnings", "account"]);
     expect(mobileTabs(tabsForRole("QC")).map((t) => t.key)).toEqual(["qc", "board", "orders", "messages", "account"]);
   });
 });

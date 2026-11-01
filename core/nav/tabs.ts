@@ -63,6 +63,8 @@ const DESIGNER_TABS: Tab[] = [
   { key: "home", label: "Home", href: "/home", icon: "home" },
   { key: "work", label: "Open jobs", href: "/work", icon: "work" },
   { key: "messages", label: "Messages", href: "/messages", icon: "message" },
+  // Instructions and charts the pod lead shares (Phase 13b).
+  { key: "materials", label: "Materials", href: "/materials", icon: "file", mobile: false },
   { key: "earnings", label: "Earnings", href: "/work/earnings", icon: "money" },
   ACCOUNT,
 ];
@@ -72,6 +74,7 @@ const DESIGNER_TABS: Tab[] = [
 const POD_LEAD_TABS: Tab[] = [
   { key: "qc", label: "QC queue", href: "/qc", icon: "queue" },
   { key: "board", label: "Team board", href: "/pod/board", icon: "board" },
+  { key: "materials", label: "Materials", href: "/materials", icon: "file", mobile: false },
   { key: "orders", label: "All orders", href: "/qc/orders", icon: "list" },
   { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus", mobile: false },
   { key: "messages", label: "Messages", href: "/messages", icon: "message" },

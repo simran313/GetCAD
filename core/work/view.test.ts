@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isOpenJob, jobClockDue, jobState, jobTab, loadWord, minutesWord, qcPayoutPaise, rupeesWord } from "./view";
+import { designerBucket, isOpenJob, jobClock, jobClockDue, jobState, jobTab, loadWord, minutesWord, qcPayoutPaise, rupeesWord } from "./view";
 
 describe("jobTab / jobState", () => {
   it("sorts statuses into the designer's three tabs", () => {
@@ -42,5 +42,30 @@ describe("qcPayoutPaise (DECISIONS §5)", () => {
     expect(rupeesWord(150000)).toBe("₹1,500");
     expect(loadWord(0, 480)).toBe("FREE · 0 / 480 MIN");
     expect(loadWord(270, 480)).toBe("270 / 480 MIN");
+  });
+});
+
+describe("the designer's clock with pauses (Phase 13b)", () => {
+  const started = "2026-11-01T10:00:00.000Z";
+  it("runs from Start work, moved later by recorded pauses", () => {
+    expect(jobClock(120, { started_at: started, paused_at: null, paused_seconds: 0, active_seconds: 600 }).dueAt).toBe("2026-11-01T12:00:00.000Z");
+    expect(jobClock(120, { started_at: started, paused_at: null, paused_seconds: 1800, active_seconds: 600 }).dueAt).toBe("2026-11-01T12:30:00.000Z");
+  });
+  it("stands still while paused, showing what is left", () => {
+    const c = jobClock(120, { started_at: started, paused_at: "2026-11-01T11:00:00Z", paused_seconds: 60, active_seconds: 3540 });
+    expect(c).toEqual({ dueAt: null, pausedLeftMs: (7200 - 3540) * 1000 });
+  });
+  it("has no clock before Start work", () => {
+    expect(jobClock(120, undefined)).toEqual({ dueAt: null, pausedLeftMs: null });
+  });
+  it("buckets jobs for the dashboard", () => {
+    expect(["ASSIGNED", "IN_PROGRESS", "IN_PROGRESS", "REVISION_REQUESTED", "QC_REVIEW", "DELIVERED"].map((s, i) => designerBucket(s, i === 2))).toEqual([
+      "new",
+      "working",
+      "paused",
+      "changes",
+      "qc",
+      "done",
+    ]);
   });
 });

@@ -200,6 +200,16 @@ to be committed before 0056 uses it.)
 - Check: open a job as a designer, press Start work, and choose a 3DM with
   blocks: it uploads with a progress bar and shows the file name.
 
+### 2g. Pause/resume and pod materials (Phase 13b)
+
+Apply `db/migrations/0057_job_time_materials.sql`, then
+`db/policies/0043_job_time_materials_rls.sql`. Nothing to set. Until they
+are applied, job pages fall back to the clock from Start work and Materials
+says it is not available.
+
+Check: as a designer, Pause and Resume a job in progress (the clock stops and
+resumes); as a pod lead, share a PDF on Materials; the pod's designer sees it.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.
