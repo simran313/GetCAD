@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { isOpenJob, jobState, loadWord } from "@/core";
+import { isOpenJob, jobState, loadWord, type JobTimes } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,12 @@ import { Select } from "@/components/ui/select";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Timer } from "@/components/ui/timer";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
-import { loadPodJobs, loadPodLoad, type PodDesignerLoad, type PodJob } from "@/lib/work/load";
+import { loadJobTimes, loadPodJobs, loadPodLoad, type PodDesignerLoad, type PodJob } from "@/lib/work/load";
 import { requireTeam } from "@/lib/work/team";
 
 import { assignDesignerAction } from "../../orders/actions";
+import { RefreshEvery } from "../RefreshEvery";
+import { JobActions } from "./JobActions";
 import { Page } from "@/components/ui/page";
 import { minutesLabel } from "@/lib/work/minutes";
 
@@ -36,8 +38,9 @@ export default async function TeamBoardPage() {
 
   let jobs: PodJob[];
   let designers: PodDesignerLoad[];
+  let times: Map<string, JobTimes>;
   try {
-    [jobs, designers] = await Promise.all([loadPodJobs(supabase), loadPodLoad(supabase)]);
+    [jobs, designers, times] = await Promise.all([loadPodJobs(supabase), loadPodLoad(supabase), loadJobTimes(supabase)]);
   } catch (e) {
     return (
       <Page>
@@ -53,14 +56,20 @@ export default async function TeamBoardPage() {
 
   return (
     <Page>
+      <RefreshEvery seconds={30} />
       <PageHeader
         eyebrow={`${[...new Set(designers.map((d) => d.pod_name))].join(", ") || "Your pod"} · who is working on what`}
         title="Team board"
         description={`Shift 9:30 AM–6:30 PM IST · ${shift} minutes per designer. Going over warns; capacity blocking is off.`}
         actions={
-          <Link href="/admin/new-order" className={buttonVariants({ variant: "secondary" })}>
-            Create order
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/pod/performance" className={buttonVariants({ variant: "secondary" })}>
+              Performance
+            </Link>
+            <Link href="/admin/new-order" className={buttonVariants({ variant: "secondary" })}>
+              Create order
+            </Link>
+          </div>
         }
       />
 
@@ -114,15 +123,29 @@ export default async function TeamBoardPage() {
               over={d.open_minutes > d.shift_minutes}
             >
               {mine.length === 0 && <Empty>Free for new work.</Empty>}
-              {mine.map((j) => (
-                <JobCard key={j.order_id} job={j}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusTag kind={jobState(j.status).kind}>{jobState(j.status).word}</StatusTag>
-                    {j.designer_due_at && j.status !== "QC_REVIEW" && <Timer dueAt={j.designer_due_at} />}
-                    {j.status === "QC_REVIEW" && j.sla_due_at && <Timer dueAt={j.sla_due_at} />}
-                  </div>
-                </JobCard>
-              ))}
+              {mine.map((j) => {
+                const paused = j.status === "IN_PROGRESS" && !!times.get(j.order_id)?.paused_at;
+                const movable = ["ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(j.status);
+                return (
+                  <JobCard key={j.order_id} job={j}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {paused ? <StatusTag kind="needs">Paused</StatusTag> : <StatusTag kind={jobState(j.status).kind}>{jobState(j.status).word}</StatusTag>}
+                      {j.designer_due_at && j.status !== "QC_REVIEW" && <Timer dueAt={j.designer_due_at} />}
+                      {j.status === "QC_REVIEW" && j.sla_due_at && <Timer dueAt={j.sla_due_at} />}
+                    </div>
+                    {movable && (
+                      <JobActions
+                        orderId={j.order_id}
+                        label={j.order_ref ?? "job"}
+                        status={j.status}
+                        designers={designers
+                          .filter((o) => o.pod_id === j.pod_id && o.designer_id !== d.designer_id)
+                          .map((o) => ({ id: o.designer_id, name: o.name ?? o.designer_ref ?? "Designer", load: `${o.open_minutes}/${o.shift_minutes}`, assignable: o.assignable }))}
+                      />
+                    )}
+                  </JobCard>
+                );
+              })}
             </Column>
           );
         })}

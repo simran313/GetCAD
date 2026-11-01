@@ -189,7 +189,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
   podLead: {
     persona: "podLead",
     paths: async () => [
-      "/home", "/qc", "/qc/orders", "/qc/earnings", ...(crawl ? [`/qc/${crawl}`] : []), "/pod/board", "/materials",
+      "/home", "/qc", "/qc/orders", "/qc/earnings", ...(crawl ? [`/qc/${crawl}`] : []), "/pod/board", "/pod/performance", "/materials",
       ...orderPages(journey), "/messages", "/account",
     ],
   },

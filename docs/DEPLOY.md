@@ -210,6 +210,17 @@ says it is not available.
 Check: as a designer, Pause and Resume a job in progress (the clock stops and
 resumes); as a pod lead, share a PDF on Materials; the pod's designer sees it.
 
+### 2h. Pod lead operations (Phase 13c)
+
+Apply `db/migrations/0058_pod_ops.sql`, then `db/policies/0044_pod_ops_rls.sql`.
+Nothing to set: the 5-minute email sweep (`/api/cron/emails`) also sends the
+due-soon and overdue job alerts.
+
+Check: as a pod lead, open Performance (numbers, bottlenecks, a designer's
+history) and download Excel, CSV and PDF; on the team board, Move a job to
+another designer and Escalate one; as an admin, the Queue shows the
+escalation and Performance resolves it.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.
