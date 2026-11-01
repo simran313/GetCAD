@@ -49,7 +49,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       pdf = await renderSummarySheet(d, { render: null, technical: null });
     } catch (e2) {
       console.error("summary: rendering failed", id, e2);
-      return NextResponse.json({ error: "The summary sheet could not be made. The team has been told." }, { status: 500 });
+      // The team sees the cause (a client never does): it is the fastest way
+      // from "it failed" to the fix.
+      const team = d.ref && (await supabase.rpc("i_am_team")).data === true;
+      return NextResponse.json(
+        { error: "The summary sheet could not be made. The team has been told.", ...(team ? { detail: e2 instanceof Error ? e2.message : String(e2) } : {}) },
+        { status: 500 },
+      );
     }
   }
   return new NextResponse(new Uint8Array(pdf), {

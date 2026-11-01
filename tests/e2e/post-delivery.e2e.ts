@@ -217,3 +217,23 @@ test("the weight sheet shows 5 alloys and follows the densities on the Settings 
   await admin.context().close();
   await client.context().close();
 });
+
+test("the summary sheet: the team and the approving client get the PDF with both images; the designer does not", async ({ browser }) => {
+  const admin = await signedIn(browser, "admin");
+  const res = await admin.request.get(`/api/orders/${orderId}/summary`);
+  const body = Buffer.from(await res.body());
+  expect(res.status(), body.toString("utf8").slice(0, 500)).toBe(200);
+  const text = await pdfText(body);
+  expect(text.replace(/\s/g, "")).toContain("ORDERSUMMARY");
+  expect(text.replace(/\s/g, "")).toContain("RENDERVIEWS");
+  expect(text).toMatch(/Gold weight/);
+  await admin.context().close();
+
+  const client = await signedIn(browser, "client");
+  expect((await client.request.get(`/api/orders/${orderId}/summary`)).status()).toBe(200);
+  await client.context().close();
+
+  const designer = await signedIn(browser, "designer");
+  expect((await designer.request.get(`/api/orders/${orderId}/summary`)).status()).toBe(404);
+  await designer.context().close();
+});

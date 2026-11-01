@@ -34,8 +34,15 @@ const nextConfig = {
   // @react-pdf/renderer (Phase 7a certificate and weight sheet) runs in Node,
   // required at runtime rather than bundled.
   serverExternalPackages: ["rhino3dm", "@react-pdf/renderer"],
+  // pdfkit (under @react-pdf) loads its built-in fonts through a package
+  // "#standard-fonts/…" import that file tracing does not follow, so on Vercel
+  // every PDF failed with "Cannot find module …/standard-fonts/Helvetica.cjs".
+  // 192 KB, included everywhere a PDF can be made: the summary sheet, the
+  // certificate (also issued by the QC pass action), the weight sheet and
+  // the pod report.
   outputFileTracingIncludes: {
     "/orders/**": ["./node_modules/rhino3dm/rhino3dm.wasm"],
+    "/**": ["./node_modules/pdfkit/js/standard-fonts/**", "./node_modules/pdfkit/package.json"],
   },
   // Pages from the old site (owner answer Q15, Phase 6): kept as addresses
   // so links and search results still land, on the page that replaced them.
