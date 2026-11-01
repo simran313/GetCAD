@@ -75,5 +75,7 @@ describe("diamond charts", () => {
     expect(weightWord(5.1)).toBe("5.10");
     expect(weightWord(0.005)).toBe("0.005");
     expect(weightWord(0)).toBe("0.00");
+    expect(weightWord(0.06, 3)).toBe("0.060"); // the total of 20 × 1.5 mm rounds, in grams
+    expect(weightWord(0.06)).toBe("0.060");
   });
 });

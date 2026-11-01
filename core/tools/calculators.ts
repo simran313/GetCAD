@@ -104,8 +104,8 @@ export function stoneTotals(lines: StoneLine[]): StoneTotals {
   return out;
 }
 
-/** Fixed decimals, trailing zeros kept short: 5.1 → "5.10", 0.005 → "0.005". */
+/** Fixed decimals, at least three under 0.1 so small stones still read: 5.1 → "5.10", 0.005 → "0.005", 0.06 → "0.060". */
 export function weightWord(n: number, digits = 2): string {
-  if (n !== 0 && Math.abs(n) < 0.1) return Number(n.toFixed(3)).toString();
+  if (n !== 0 && Math.abs(n) < 0.1) return n.toFixed(Math.max(digits, 3));
   return n.toFixed(digits);
 }
