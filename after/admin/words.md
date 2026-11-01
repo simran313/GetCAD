@@ -2,9 +2,9 @@
 
 | Route | Words |
 | --- | ---: |
-| `/home` | 67 |
-| `/admin` | 67 |
-| `/admin/orders` | 240 |
+| `/home` | 109 |
+| `/admin` | 109 |
+| `/admin/orders` | 267 |
 | `/admin/new-order` | 173 |
 | `/admin/credits` | 34 |
 | `/admin/clients` | 136 |
@@ -15,10 +15,10 @@
 | `/admin/billing` | 115 |
 | `/admin/payouts` | 32 |
 | `/admin/users` | 190 |
-| `/admin/settings` | 327 |
-| `/dashboard` | 67 |
-| `/orders` | 70 |
-| `/orders/SqdrvagAEst2hY3BtRBke` | 288 |
-| `/orders/hqREtJzpSnjz5KJUmYaTU` | 89 |
-| `/messages` | 196 |
+| `/admin/settings` | 334 |
+| `/dashboard` | 109 |
+| `/orders` | 77 |
+| `/orders/2sizRj9DNfdRs2CHzzeCj` | 471 |
+| `/orders/bgRuMeh76saJPJfwbHe8D` | 89 |
+| `/messages` | 223 |
 | `/account` | 52 |
