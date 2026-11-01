@@ -4,7 +4,7 @@
 | --- | ---: |
 | `/home` | 109 |
 | `/admin` | 109 |
-| `/admin/orders` | 267 |
+| `/admin/orders` | 213 |
 | `/admin/new-order` | 173 |
 | `/admin/credits` | 34 |
 | `/admin/clients` | 136 |
@@ -17,8 +17,8 @@
 | `/admin/users` | 190 |
 | `/admin/settings` | 334 |
 | `/dashboard` | 109 |
-| `/orders` | 77 |
-| `/orders/MCzjaaJq55xyf6XMJQJEZ` | 462 |
-| `/orders/VFrHKh5zg5jA8STL3cZQM` | 87 |
-| `/messages` | 216 |
+| `/orders` | 65 |
+| `/orders/BGzFMVtZUaZ8D4hHTbXPf` | 462 |
+| `/orders/HQVjzstMQMurK3bYYVVH4` | 87 |
+| `/messages` | 177 |
 | `/account` | 52 |
