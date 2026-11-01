@@ -98,7 +98,7 @@ export const CHECK_GROUPS: { group: string; checks: string[] }[] = [
   {
     group: "3DM file",
     checks: [
-      "Delivery views captured — TV, PV, RV, FV, BV, M, DD, GW",
+      "Delivery files ready — render views (one image, four views) and technical sheet (measurements, diamond details, gold weight)",
       "Folder renamed for QC — follows the naming convention",
     ],
   },

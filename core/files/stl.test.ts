@@ -87,4 +87,18 @@ describe("STL", () => {
     );
     expect(gate.ok).toBe(false);
   });
+
+  it("binary with a short tail after the last triangle: accepted, and the tail is cut off", () => {
+    const exact = binaryStl("exporter pads the end", 3);
+    const padded = new Uint8Array(exact.length + 2);
+    padded.set(exact);
+    expect(isStl(padded)).toBe(true);
+    const r = stripStl(padded);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.bytes.length).toBe(exact.length);
+    // Far more than a tail is not a binary STL.
+    const junk = new Uint8Array(exact.length + 10_000);
+    junk.set(exact);
+    expect(isStl(junk)).toBe(false);
+  });
 });

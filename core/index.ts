@@ -50,6 +50,8 @@ export { briefName, briefRows, productWord } from "./orders/briefRows";
 export type { BriefRow } from "./orders/briefRows";
 export type { BriefQuality, BriefGap, BriefGrade, BriefContext, BriefSize, GapSeverity, MinimumGap } from "./orders/briefQuality";
 export { ORDER_STATUS_META, statusMeta, statusKind } from "./orders/status";
+export { summaryTimes, durationWord } from "./orders/summary";
+export type { SummaryTimes, StatusStep } from "./orders/summary";
 export { friendlyReason } from "./errors/friendly";
 export { supportHoursLabel, supportOnline, supportStatusLabel, supportWindow, SUPPORT_DISPLAY_ZONE } from "./support/hours";
 export type { StatusTone, StatusMeta, StatusKind } from "./orders/status";
@@ -64,7 +66,7 @@ export {
   VOICE_ALLOWLIST,
   ASYNC_STRIPPABLE_TYPES,
 } from "./files/sanitizationGate";
-export { slotAccept, slotContentType, SLOT_ACCEPT, attachmentContentType, THREAD_ACCEPT } from "./files/slotTypes";
+export { slotAccept, slotContentType, SLOT_ACCEPT, MAX_DELIVERABLE_BYTES, attachmentContentType, THREAD_ACCEPT } from "./files/slotTypes";
 export type { SlotTypeResult } from "./files/slotTypes";
 export {
   stripMetadata,

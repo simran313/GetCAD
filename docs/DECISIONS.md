@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.4 · 31 October 2026 · Owner: Fazil Zaidi
+Version 1.5 · 1 November 2026 · Owner: Fazil Zaidi
 
-Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -116,11 +116,14 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 ## 9. Deliverables (every CAD order)
 
 - 3DM + STL (mesh max distance/edge 0.005).
-- 3 render views.
+- Render views: one image with the four basic render views.
+- Technical sheet: one image with four views, measurements, diamond details and gold weight (karat).
+- Summary sheet PDF, made by the platform (not uploaded): the order, both images, stones, gold weight per metal, time taken and the timeline. The client gets it from approval on, with the 3DM and STL.
 - QC certificate PDF, which doubles as the spec sheet.
 - Weight sheet: estimated grams in 10K, 14K, 18K, Pt950 and Ag925 from the model volume. No metal cost in v1.
 - Branded 3D preview link the jeweler can send their own customer (3D view built from the STL; renders alongside).
-- Required designer upload slots: 3DM, STL, TV, PV, RV, FV, BV, M, DD, GW.
+- Required designer upload slots: 3DM, STL, RENDER, TECH (owner, 1 Nov 2026; the ten view slots before it stay readable on older versions).
+- A designer chooses or drops a file and it uploads straight to storage (up to 50 MB), then is checked and cleaned; Rhino blocks are exploded into geometry on the way.
 - Files are auto-named `{ORDER}_{SLOT}_v{n}.{ext}`; metadata stripped; delivered files fingerprinted (SHA-256) and archived read-only.
 
 ## 10. Quality system

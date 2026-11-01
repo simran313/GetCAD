@@ -1,7 +1,7 @@
 // The e2e stand-in for the Supabase API gateway (Phase 8).
 //
 //   /rest/v1/*     → PostgREST (the real thing, against the throwaway Postgres)
-//   /storage/v1/*  → a small file store on disk, for the four storage calls
+//   /storage/v1/*  → a small file store on disk, for the storage calls
 //                    the app makes: upload, createSignedUrl, remove, and the
 //                    signed download a browser follows.
 //
@@ -83,7 +83,52 @@ async function storage(req, res, path) {
     return createReadStream(file).pipe(res);
   }
 
+  // A browser uploading straight to storage with a signed upload URL
+  // (Phase 13a): the preflight, then PUT /object/upload/sign/{bucket}/{path}?token=…
+  const cors = { "access-control-allow-origin": req.headers.origin ?? "*", "access-control-allow-methods": "PUT, OPTIONS",
+    "access-control-allow-headers": "authorization, apikey, content-type, x-upsert, cache-control, x-client-info" };
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, cors);
+    return res.end();
+  }
+  if (req.method === "PUT" && path.startsWith("/object/upload/sign/")) {
+    const objectPath = decodeURIComponent(path.slice("/object/upload/sign/".length));
+    const [exp, mac] = (url.searchParams.get("token") ?? "").split(".");
+    const valid = exp && mac && Number(exp) > Date.now() / 1000 && mac === sign(`up:${objectPath}`, exp);
+    if (!valid) {
+      res.writeHead(400, { ...cors, "content-type": "application/json" });
+      return res.end(JSON.stringify({ statusCode: "400", error: "InvalidSignature", message: "invalid signature" }));
+    }
+    const [bucket, ...rest] = objectPath.split("/");
+    const file = fileFor(bucket, rest.join("/"));
+    if (!file || rest.length === 0) return json(res, 400, { statusCode: "400", error: "InvalidKey", message: "invalid key" });
+    const bytes = await body(req);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, bytes);
+    writeFileSync(`${file}.meta.json`, JSON.stringify({ contentType: req.headers["content-type"] ?? "application/octet-stream" }));
+    res.writeHead(200, { ...cors, "content-type": "application/json" });
+    return res.end(JSON.stringify({ Key: objectPath }));
+  }
+
   if (!isService(req)) return json(res, 403, { statusCode: "403", error: "Unauthorized", message: "service role only" });
+
+  // createSignedUploadUrl: POST /object/upload/sign/{bucket}/{path}
+  if (req.method === "POST" && path.startsWith("/object/upload/sign/")) {
+    const objectPath = decodeURIComponent(path.slice("/object/upload/sign/".length));
+    const exp = String(Math.floor(Date.now() / 1000) + 7200);
+    return json(res, 200, { url: `/object/upload/sign/${objectPath}?token=${exp}.${sign(`up:${objectPath}`, exp)}` });
+  }
+
+  // download: GET /object/{bucket}/{path}
+  if (req.method === "GET" && path.startsWith("/object/")) {
+    const objectPath = decodeURIComponent(path.slice("/object/".length));
+    const [bucket, ...rest] = objectPath.split("/");
+    const file = fileFor(bucket, rest.join("/"));
+    if (!file || !existsSync(file)) return json(res, 400, { statusCode: "404", error: "not_found", message: "Object not found" });
+    const meta = existsSync(`${file}.meta.json`) ? JSON.parse(readFileSync(`${file}.meta.json`, "utf8")) : {};
+    res.writeHead(200, { "content-type": meta.contentType ?? "application/octet-stream", "content-length": statSync(file).size });
+    return createReadStream(file).pipe(res);
+  }
 
   // createSignedUrl: POST /object/sign/{bucket}/{path} {expiresIn}
   if (req.method === "POST" && path.startsWith("/object/sign/")) {

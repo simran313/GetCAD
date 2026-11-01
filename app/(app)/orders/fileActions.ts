@@ -11,6 +11,7 @@ import {
   sanitizeUpload,
   sanitizeUploadAsync,
   slotContentType,
+  MAX_DELIVERABLE_BYTES,
   RELEASE_KINDS,
   REVIEW_KINDS,
   type FileKind,
@@ -105,30 +106,69 @@ export async function uploadFileAction(formData: FormData): Promise<void> {
   flushEmailsAfterResponse();
 }
 
-/**
- * The designer puts a file into an upload slot (Phase 3a, DECISIONS §9).
- *
- * The slot decides the content type (core/files/slotTypes), the gate verifies
- * the bytes and cleans them — STL in core, 3DM rebuilt by lib/files/strip3dm —
- * and the database names the file {JOB_CODE}_{SLOT}_v{n}.{ext}. Uploading into
- * a filled slot replaces it for this version.
- */
-export async function uploadSlotAction(formData: FormData): Promise<void> {
-  const orderId = formData.get("order_id")?.toString() ?? "";
-  const slot = formData.get("slot")?.toString() ?? "";
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    throw new Refusal("no file provided");
-  }
+const INCOMING = (orderId: string) => `incoming/${orderId}/`;
+const INCOMING_KEY = /^incoming\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/;
 
+/**
+ * Direct upload, step 1 (Phase 13a): the browser asks where to put the file.
+ * Only the order's designer, while the version is in progress. The answer is
+ * a one-off upload address in a holding area; nothing there is ever served.
+ */
+export async function beginSlotUploadAction(orderId: string, slot: string, size: number): Promise<{ url: string; key: string }> {
+  if (!Number.isFinite(size) || size <= 0) throw new Refusal("no file provided");
+  if (size > MAX_DELIVERABLE_BYTES) throw new Refusal(`file too large (over ${MAX_DELIVERABLE_BYTES / 1048576} MB)`);
+  const supabase = await createUserSupabaseClient();
+  const [{ data: jobs, error }, { data: slots, error: slotError }] = await Promise.all([
+    supabase.rpc("my_work", { p_order_id: orderId }),
+    supabase.rpc("job_slots", { p_order_id: orderId }),
+  ]);
+  refuseOn(error ?? slotError);
+  const job = ((jobs ?? []) as { status: string }[])[0];
+  if (!job) throw new Refusal("job not found");
+  if (job.status !== "IN_PROGRESS") throw new Refusal("press Start work before uploading");
+  if (!((slots ?? []) as { code: string }[]).some((s) => s.code === slot)) throw new Refusal(`no such slot: ${slot}`);
+
+  const key = `${INCOMING(orderId)}${generateId()}`;
+  const { data, error: signError } = await createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET).createSignedUploadUrl(key);
+  if (signError || !data) throw new Error(`could not prepare the upload: ${signError?.message ?? "no address"}`);
+  return { url: data.signedUrl, key };
+}
+
+/**
+ * Direct upload, step 2: the file is in the holding area. Read it, run it
+ * through the same gate as every other deliverable, store the clean copy in
+ * its slot, and delete the original whatever happens.
+ */
+export async function finishSlotUploadAction(orderId: string, slot: string, key: string, fileName: string, browserType: string): Promise<{ fileName: string }> {
+  if (!INCOMING_KEY.test(key) || !key.startsWith(INCOMING(orderId))) throw new Refusal("upload not found");
+  const admin = createAdminSupabaseClient();
+  try {
+    const { data: blob, error } = await admin.storage.from(ORDER_FILES_BUCKET).download(key);
+    if (error || !blob) throw new Refusal("the upload did not arrive — try again");
+    if (blob.size > MAX_DELIVERABLE_BYTES) throw new Refusal(`file too large (over ${MAX_DELIVERABLE_BYTES / 1048576} MB)`);
+    const stored = await storeSlotFile(orderId, slot, { name: fileName, type: browserType, bytes: new Uint8Array(await blob.arrayBuffer()) });
+    revalidatePath("/", "layout");
+    flushEmailsAfterResponse();
+    return stored;
+  } finally {
+    await admin.storage.from(ORDER_FILES_BUCKET).remove([key]);
+  }
+}
+
+/**
+ * One file into one slot: the slot decides the content type
+ * (core/files/slotTypes), the gate verifies the bytes and cleans them (STL in
+ * core, 3DM rebuilt with blocks exploded by lib/files/strip3dm), and the
+ * database names the file {JOB_CODE}_{SLOT}_v{n}.{ext}.
+ */
+async function storeSlotFile(orderId: string, slot: string, file: { name: string; type: string; bytes: Uint8Array }): Promise<{ fileName: string }> {
   const type = slotContentType(slot, file.type);
   if (!type.ok) throw new Refusal(type.reason);
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
   const gate = await sanitizeUploadAsync(
-    { filename: file.name, declaredMimeType: type.contentType, sizeBytes: file.size, bytes },
+    { filename: file.name, declaredMimeType: type.contentType, sizeBytes: file.bytes.length, bytes: file.bytes },
     generateId(),
-    { requireMetadataStrip: true, strip3dm },
+    { requireMetadataStrip: true, strip3dm, maxBytes: MAX_DELIVERABLE_BYTES },
   );
   if (!gate.ok) {
     throw new Refusal(`rejected by sanitization gate: ${gate.reason}`);
@@ -145,7 +185,7 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
 
   const supabase = await createUserSupabaseClient();
   const fileVersionId = generateId();
-  const { error } = await supabase.rpc("add_slot_file", {
+  const { data, error } = await supabase.rpc("add_slot_file", {
     p_id: fileVersionId,
     p_order_id: orderId,
     p_slot: slot,
@@ -162,9 +202,7 @@ export async function uploadSlotAction(formData: FormData): Promise<void> {
   // The fingerprint of exactly the bytes stored (A3, 0050): what a spec
   // claim is matched against later.
   await recordFingerprint(fileVersionId, gate.file.bytes);
-
-  revalidatePath("/", "layout");
-  flushEmailsAfterResponse();
+  return { fileName: (data as { file_name?: string } | null)?.file_name ?? "" };
 }
 
 /**

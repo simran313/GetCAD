@@ -39,6 +39,9 @@ import { minutesLabel } from "@/lib/work/minutes";
  */
 export const dynamic = "force-dynamic";
 
+/** The two images of a version (0056); older versions show their old slot codes. */
+const SLOT_NAMES: Record<string, string> = { RENDER: "Render views", TECH: "Technical sheet" };
+
 const IMAGE = /\.(png|jpe?g)$/i;
 
 export default async function QcReviewPage({
@@ -144,17 +147,17 @@ export default async function QcReviewPage({
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">No files for this version yet.</p>
               ) : (
                 <>
-                  <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {images.map((f) => (
                       <li key={f.slot}>
                         <a href={`/api/files/${f.file_version_id}`} target="_blank" rel="noreferrer" className="block space-y-1">
                           {/* eslint-disable-next-line @next/next/no-img-element -- served through the download gate */}
                           <img
                             src={`/api/files/${f.file_version_id}`}
-                            alt={`${f.slot} view`}
-                            className="aspect-square w-full rounded-[var(--r-sm)] border border-border bg-subtle object-cover"
+                            alt={SLOT_NAMES[f.slot] ?? `${f.slot} view`}
+                            className="aspect-[4/3] w-full rounded-[var(--r-sm)] border border-border bg-subtle object-contain"
                           />
-                          <span className="block font-mono text-[length:var(--fs-2)]">{f.slot}</span>
+                          <span className="block text-[length:var(--fs-2)]">{SLOT_NAMES[f.slot] ?? f.slot}</span>
                         </a>
                       </li>
                     ))}

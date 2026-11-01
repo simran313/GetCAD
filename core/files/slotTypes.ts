@@ -11,6 +11,13 @@
  * can clean, and PDF metadata cannot be cleaned reliably (sanitizationGate).
  */
 
+/**
+ * The largest deliverable a designer may upload (Phase 13a). Direct uploads
+ * go from the browser to storage, so the server's request limit no longer
+ * caps them; Supabase's default per-file limit (50 MB) does.
+ */
+export const MAX_DELIVERABLE_BYTES = 50 * 1024 * 1024;
+
 export const SLOT_ACCEPT: Record<string, string> = {
   "3DM": ".3dm",
   STL: ".stl",

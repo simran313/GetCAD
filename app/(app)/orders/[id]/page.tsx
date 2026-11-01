@@ -51,6 +51,8 @@ import { Page } from "@/components/ui/page";
  * over a slow connection, that difference is the whole experience.
  */
 export const dynamic = "force-dynamic";
+// Uploads finish here: a large 3DM is rebuilt (blocks exploded) on the server.
+export const maxDuration = 60;
 
 export default async function OrderPage({
   params,
@@ -386,6 +388,11 @@ export default async function OrderPage({
                   Weight sheet
                 </a>
               </>
+            )}
+            {postQc && (
+              <a href={`/api/orders/${order.id}/summary`} className="underline underline-offset-4">
+                Summary sheet
+              </a>
             )}
           </p>
           {postQc && order.service !== "render" && vs && !vs.certificate && (

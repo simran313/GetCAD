@@ -12,11 +12,18 @@ import type { StripResult } from "@/core";
  *
  * So the file is REBUILT: a new, empty model receives only the unit system
  * and tolerances, the layers (name and colour) and each object's geometry
- * on its layer. Everything else is left behind by construction. Block
- * definitions (instance references) cannot be rebuilt faithfully here, so a
- * file containing them is refused with a message asking for them to be
- * exploded, rather than delivered broken.
+ * on its layer. Everything else is left behind by construction.
+ *
+ * Blocks (instance references: stones, heads, prongs placed many times) are
+ * EXPLODED on the way: each placement becomes a copy of the block's geometry
+ * moved into place, nested blocks included. The block's name and definition
+ * table are not carried over, so nothing named inside a block can leak
+ * either. (Before, any file with a block was refused, and most jewelry
+ * files have them.)
  */
+
+/** A block nested deeper than this is a loop, not a design. */
+const MAX_BLOCK_DEPTH = 16;
 
 type Rhino = import("rhino3dm").RhinoModule;
 
@@ -35,10 +42,6 @@ export async function strip3dm(bytes: Uint8Array): Promise<StripResult> {
   if (!src) return { ok: false, reason: "not a readable 3DM file" };
 
   try {
-    if (src.instanceDefinitions().count > 0) {
-      return { ok: false, reason: "the 3DM contains blocks — explode them in Rhino and upload again" };
-    }
-
     const out = new rh.File3dm();
     const s = src.settings();
     const o = out.settings();
@@ -56,16 +59,47 @@ export async function strip3dm(bytes: Uint8Array): Promise<StripResult> {
       out.layers().add(layer);
     }
 
-    const objects = src.objects();
     let copied = 0;
-    for (let i = 0; i < objects.count; i++) {
-      const obj = objects.get(i);
-      const geometry = obj.geometry();
-      if (!geometry) continue;
+    const put = (geometry: import("rhino3dm").GeometryBase, layerIndex: number) => {
       const attrs = new rh.ObjectAttributes();
-      attrs.layerIndex = obj.attributes().layerIndex;
+      attrs.layerIndex = layerIndex;
       out.objects().add(geometry, attrs);
       copied++;
+    };
+
+    // A block placement: copy each member of its definition, moved by the
+    // placement (and by every enclosing placement, for nested blocks).
+    const explode = (ref: import("rhino3dm").InstanceReference, xform: import("rhino3dm").Transform, depth: number) => {
+      if (depth > MAX_BLOCK_DEPTH) throw new Error("the 3DM has blocks nested too deeply to read");
+      const def = src.instanceDefinitions().findId(ref.parentIdefId);
+      if (!def) return; // a placement of a missing block: nothing to draw
+      for (const id of def.getObjectIds() as string[]) {
+        const member = src.objects().findId(id);
+        const g = member?.geometry();
+        if (!member || !g) continue;
+        if (g instanceof rh.InstanceReference) {
+          explode(g, rh.Transform.multiply(xform, g.xform), depth + 1);
+          continue;
+        }
+        const copy = g.duplicate();
+        copy.transform(xform);
+        put(copy, member.attributes().layerIndex);
+      }
+    };
+
+    const objects = src.objects();
+    for (let i = 0; i < objects.count; i++) {
+      const obj = objects.get(i);
+      const attributes = obj.attributes();
+      // A block's own members are drawn through its placements, not here.
+      if (attributes.isInstanceDefinitionObject) continue;
+      const geometry = obj.geometry();
+      if (!geometry) continue;
+      if (geometry instanceof rh.InstanceReference) {
+        explode(geometry, geometry.xform, 1);
+        continue;
+      }
+      put(geometry, attributes.layerIndex);
     }
     if (copied === 0) return { ok: false, reason: "the 3DM has no geometry" };
 

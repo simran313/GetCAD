@@ -17,6 +17,9 @@ export interface FileVersionRow {
   version_no: number;
 }
 
+/** Statuses from approval on: the release set, the summary sheet included (0056). */
+const RELEASED = ["APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED"];
+
 /** Statuses past QC: documents exist and fingerprints are recorded (0050). */
 export const POST_QC = ["CLIENT_PREVIEW", "APPROVED", "DELIVERED", "CLOSED", "PAYOUT_RELEASED", "DISPUTED", "REVISION_REQUESTED"];
 
@@ -24,9 +27,10 @@ const KIND_WORDS: Partial<Record<FileKind, [string, string]>> = {
   STL: ["For your caster", "STL · print-ready"],
   RHINO_3DM: ["For editing", "3DM · Rhino, layered"],
   SUMMARY_SHEET: ["Summary sheet", "Weights, stones, sizes"],
-  RENDER: ["Render", "Image"],
+  RENDER: ["Render views", "Image"],
   WEIGHT_CHART: ["Gold weight", "Image"],
   DIAMOND_DETAILS: ["Diamond details", "Image"],
+  TECHNICAL_SHEET: ["Technical sheet", "Measurements, diamonds, gold weight"],
   CLIENT_REFERENCE: ["Your file", "Sent by you"],
   OTHER: ["File", ""],
 };
@@ -64,7 +68,7 @@ export function OrderFiles({
   shas: Map<string, string>;
 }) {
   const rows = visibleFiles(order, files, role);
-  const ready = rows.some((r) => r.grant === "ALLOW" && ["STL", "RHINO_3DM", "SUMMARY_SHEET"].includes(r.f.kind));
+  const ready = RELEASED.includes(order.status);
   return (
     <div className="space-y-2">
       {!ready && (
@@ -77,6 +81,13 @@ export function OrderFiles({
           </a>
           <a href={`/api/orders/${order.id}/weight-sheet`} className="underline underline-offset-4">
             Weight sheet (PDF)
+          </a>
+        </p>
+      )}
+      {ready && (
+        <p className="text-[length:var(--fs-2)]">
+          <a href={`/api/orders/${order.id}/summary`} className="underline underline-offset-4">
+            Summary sheet (PDF): renders, technical sheet, diamonds, gold weight and timeline
           </a>
         </p>
       )}
