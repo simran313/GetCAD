@@ -26,14 +26,14 @@
  * moves money under an anonymity guarantee should not.
  */
 
-// v2: the black-on-white pillar icons (2 Nov 2026) replace the cached v1 set.
-const VERSION = "v2";
+// v3: the black pillar icons under new names (2 Nov 2026); the old cached set is dropped.
+const VERSION = "v3";
 const STATIC_CACHE = `tcp-static-${VERSION}`;
 const OFFLINE_URL = "/offline";
 
 // Cached at install so the offline page is available the first time it is
 // needed, which by definition is when it cannot be fetched.
-const PRECACHE = [OFFLINE_URL, "/icons/icon-192.png"];
+const PRECACHE = [OFFLINE_URL, "/icons/pillar-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -65,7 +65,7 @@ function isStaticAsset(url) {
     url.origin === self.location.origin &&
     (url.pathname.startsWith("/_next/static/") ||
       url.pathname.startsWith("/icons/") ||
-      url.pathname === "/favicon-32.png")
+      url.pathname.startsWith("/pillar-favicon"))
   );
 }
 
@@ -154,8 +154,8 @@ self.addEventListener("push", (event) => {
       // Replacing a notification must not buzz again — the user has already
       // been told; this is an update to what they were told.
       renotify: false,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: "/icons/pillar-192.png",
+      badge: "/icons/pillar-192.png",
       data: { url: typeof message.url === "string" ? message.url : "/dashboard" },
     }),
   );

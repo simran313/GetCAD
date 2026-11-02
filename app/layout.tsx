@@ -42,9 +42,15 @@ export const metadata: Metadata = {
     title: "CAD Pillar",
     statusBarStyle: "black-translucent",
   },
+  // The black pillar icons (2 Nov 2026) have new file names on purpose:
+  // browsers and phones keep a favicon or app icon cached by its address, so
+  // only a new address replaces the old blue icon.
   icons: {
-    icon: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    icon: [
+      { url: "/pillar-favicon.svg", type: "image/svg+xml" },
+      { url: "/pillar-favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/pillar-apple-touch-180.png", sizes: "180x180" }],
   },
 };
 
