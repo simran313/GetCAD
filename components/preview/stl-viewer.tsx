@@ -45,6 +45,7 @@ export function StlViewer({
   failedText = "The 3D view could not load on this device. The pictures below show the piece.",
   downloadUrl,
   fill = false,
+  fileKey,
 }: {
   url: string;
   fallbackUrl?: string;
@@ -53,15 +54,28 @@ export function StlViewer({
   downloadUrl?: string;
   /** Fill the parent's height (the final review) instead of a fixed shape. */
   fill?: boolean;
+  /**
+   * What the file is (its version id). The view loads once per file: a page
+   * refresh that signs a new address for the same file does not reload it
+   * (owner, 2 Nov 2026: every checklist tick reloaded the 3D view).
+   */
+  fileKey?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
   const [progress, setProgress] = useState<number | null>(null);
   const [reason, setReason] = useState<string | null>(null);
+  // The addresses as of this load; a fresh signature for the same file is ignored.
+  const source = useRef({ url, fallbackUrl });
+  const loadKey = fileKey ?? url;
+  const loaded = useRef<string | null>(null);
+  if (loaded.current !== loadKey) source.current = { url, fallbackUrl };
 
   useEffect(() => {
     let disposed = false;
     let cleanup = () => {};
+    loaded.current = loadKey;
+    const { url: from, fallbackUrl: backup } = source.current;
     (async () => {
       try {
         const THREE = await import("three");
@@ -71,11 +85,11 @@ export function StlViewer({
 
         let bytes: ArrayBuffer;
         try {
-          bytes = await readWithProgress(url, (p) => !disposed && setProgress(p));
+          bytes = await readWithProgress(from, (p) => !disposed && setProgress(p));
         } catch (first) {
-          if (!fallbackUrl) throw first;
+          if (!backup) throw first;
           setProgress(null);
-          bytes = await readWithProgress(fallbackUrl, (p) => !disposed && setProgress(p));
+          bytes = await readWithProgress(backup, (p) => !disposed && setProgress(p));
         }
         const el = box.current;
         if (!el || disposed) return;
@@ -147,7 +161,7 @@ export function StlViewer({
       disposed = true;
       cleanup();
     };
-  }, [url, fallbackUrl]);
+  }, [loadKey]);
 
   return (
     <div

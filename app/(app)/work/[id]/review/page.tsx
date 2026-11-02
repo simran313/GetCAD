@@ -81,10 +81,10 @@ export default async function FinalReviewPage({ params }: { params: Promise<{ id
   }
   const views: ModelView[] = [
     ...(stlUrl && stlId
-      ? [{ key: "stl" as const, label: "3D model (STL)", url: stlUrl, fallbackUrl: `/api/files/${stlId}/stream`, downloadUrl: `/api/files/${stlId}` }]
+      ? [{ key: "stl" as const, id: stlId, label: "3D model (STL)", url: stlUrl, fallbackUrl: `/api/files/${stlId}/stream`, downloadUrl: `/api/files/${stlId}` }]
       : []),
-    ...(file("RENDER") ? [{ key: "render" as const, label: "Render views", url: `/api/files/${file("RENDER")}` }] : []),
-    ...(file("TECH") ? [{ key: "tech" as const, label: "Technical sheet", url: `/api/files/${file("TECH")}` }] : []),
+    ...(file("RENDER") ? [{ key: "render" as const, id: file("RENDER")!, label: "Render views", url: `/api/files/${file("RENDER")}` }] : []),
+    ...(file("TECH") ? [{ key: "tech" as const, id: file("TECH")!, label: "Technical sheet", url: `/api/files/${file("TECH")}` }] : []),
   ];
 
   const missing = [
