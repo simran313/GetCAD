@@ -273,7 +273,13 @@ export default async function QcReviewPage({
               <CardBody className="space-y-4">
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
                   Model volume from the designer: {vs?.volume_mm3 != null ? `${Number(vs.volume_mm3).toFixed(1)} mm³` : "not entered"}.
-                  Minimums: wall {mmWord(vs?.minimums.wall_um)}, prong {mmWord(vs?.minimums.prong_um)}.
+                  Minimums: wall {mmWord(vs?.minimums.wall_um)}, prong {mmWord(vs?.minimums.prong_um)}.{" "}
+                  <Link
+                    href={vs?.volume_mm3 != null ? `/tools?gold=${((Number(vs.volume_mm3) / 1000) * 14).toFixed(2)}` : "/tools"}
+                    className="underline underline-offset-4"
+                  >
+                    Gold and diamond calculators
+                  </Link>
                 </p>
                 {inReview ? (
                   <form action={recordMeasurementsAction} className="grid gap-3 sm:grid-cols-3">

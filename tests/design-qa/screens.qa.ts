@@ -189,7 +189,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
   podLead: {
     persona: "podLead",
     paths: async () => [
-      "/home", "/qc", "/qc/orders", "/qc/earnings", ...(crawl ? [`/qc/${crawl}`] : []), "/pod/board", "/pod/performance", "/materials",
+      "/home", "/qc", "/qc/orders", "/qc/earnings", ...(crawl ? [`/qc/${crawl}`] : []), "/pod/board", "/pod/performance", "/materials", "/tools",
       ...orderPages(journey), "/messages", "/account",
     ],
   },
@@ -197,7 +197,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
     persona: "designer",
     paths: async () => [
       "/home", "/work", ...(crawl ? [`/work/${crawl}`, `/work/${crawl}/checklist`] : []), "/work/earnings",
-      "/settings/payouts", "/onboarding/designer", "/messages", "/materials", "/account",
+      "/settings/payouts", "/onboarding/designer", "/messages", "/materials", "/tools", "/account",
     ],
   },
 };

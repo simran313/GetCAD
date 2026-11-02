@@ -135,6 +135,9 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
   - The designer can't submit until every designer line passes. QC can't approve until every manager line passes (and, for CAD, the measurements are recorded).
   - Sending a job back needs a failed line or a written note; the failed lines (line — finding — remark) are the revision note the designer reads.
   - The sheet's "client information" section is left out: the brief carries it.
+- **Calculators (owner's spreadsheets, 1 Nov 2026):** designers, pod leads and admins have Calculators (`/tools`). Nothing is saved.
+  - Gold casting weight: 18K cast weight + 0.1 g casting allowance (+ 1 g post allowance for "with post"); other metals = that ÷ 14 × density (22K 16, 18K 14, 14K 12, 10K 11.3, 9K 11, silver 10, platinum 21 g/cm³). The sheet's "without lock" and "without chain" use the same formula as the cast weight.
+  - Diamond weight: pieces × carat per stone from the size chart (side and melee stones, 10 shapes) or the Boone & Sons chart (centre stones), totals by shape, grams = ct × 0.2.
 - Every tick, decision, credit and payout writes to the audit log.
 
 ## 11. Orders, assignment, messaging

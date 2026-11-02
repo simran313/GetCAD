@@ -65,6 +65,8 @@ const DESIGNER_TABS: Tab[] = [
   { key: "messages", label: "Messages", href: "/messages", icon: "message" },
   // Instructions and charts the pod lead shares (Phase 13b).
   { key: "materials", label: "Materials", href: "/materials", icon: "file", mobile: false },
+  // Gold casting and diamond weight, from the owner's spreadsheets (Phase 13e).
+  { key: "tools", label: "Calculators", href: "/tools", icon: "board", mobile: false },
   { key: "earnings", label: "Earnings", href: "/work/earnings", icon: "money" },
   ACCOUNT,
 ];
@@ -77,6 +79,7 @@ const POD_LEAD_TABS: Tab[] = [
   // Output, working time, turnaround, quality and exports (Phase 13c).
   { key: "performance", label: "Performance", href: "/pod/performance", icon: "board", mobile: false },
   { key: "materials", label: "Materials", href: "/materials", icon: "file", mobile: false },
+  { key: "tools", label: "Calculators", href: "/tools", icon: "board", mobile: false },
   { key: "orders", label: "All orders", href: "/qc/orders", icon: "list" },
   { key: "new", label: "Create order", href: "/admin/new-order", icon: "plus", mobile: false },
   { key: "messages", label: "Messages", href: "/messages", icon: "message" },
