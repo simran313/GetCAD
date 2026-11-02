@@ -62,7 +62,7 @@ describe("the website", () => {
   // Owner, 31 Oct 2026: one public price and retainers; the bands stay internal.
   it("shows one price to the public, from $35, and no price bands", () => {
     expect(CLAIMS.ENTRY_PRICE).toEqual({ value: "$35", confirmed: true, todo: undefined });
-    for (const page of ["app/(marketing)/page.tsx", "app/(marketing)/pricing/page.tsx", "app/(marketing)/jewelry-cad/page.tsx"]) {
+    for (const page of ["app/(marketing)/page.tsx", "app/(marketing)/pricing/page.tsx", "app/(marketing)/jewelry-cad/page.tsx", "app/(marketing)/terms/page.tsx"]) {
       expect(read(page)).not.toMatch(/\$(55|85|49|120)\b/);
     }
   });

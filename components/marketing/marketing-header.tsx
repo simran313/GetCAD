@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PillarMark } from "@/components/brand/pillar-mark";
 import { WhatsAppButton } from "@/components/support/whatsapp";
 import { c } from "@/content/claims";
 
@@ -23,7 +24,8 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-6 px-4 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="The CAD Pillar, home" className="shrink-0 whitespace-nowrap text-[17px] font-semibold tracking-[-0.02em]">
+        <Link href="/" aria-label="The CAD Pillar, home" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[17px] font-semibold tracking-[-0.02em]">
+          <PillarMark className="h-[18px] w-[18px]" />
           The CAD Pillar
         </Link>
         <nav aria-label="Website" className="hidden items-center gap-6 lg:flex">

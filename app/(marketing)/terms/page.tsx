@@ -16,7 +16,7 @@ const SECTIONS = [
   {
     heading: "Orders and prices",
     body: [
-      "You send a brief through your account. We reply with a price. Standard pieces are $55, complex pieces $85, sculpted and figurative pieces are quoted from $120, and your first standard design is $49 (once per account). Render-only orders are quoted.",
+      "You send a brief through your account. We reply with a fixed price for that piece. Prices start from $35 a design; the price depends on the piece and how detailed it is, and render-only orders are quoted. Regular clients can ask for a retainer.",
       "You only pay when you accept a price. An order starts once it is paid and we have confirmed the brief is complete.",
       "Payment is by card or UPI through Razorpay, or by Wise, bank transfer or PayPal by arrangement. Prices are in US dollars.",
     ],
@@ -24,15 +24,15 @@ const SECTIONS = [
   {
     heading: "What you receive",
     body: [
-      "For a CAD order: 3DM and STL files, three render views, a signed spec sheet, a weight sheet and a 3D preview link. Files are named by our system and have identifying metadata removed.",
+      "For a CAD order: 3DM and STL files, a render image with four views, a technical sheet with measurements, diamond details and gold weight, a summary sheet, a signed spec sheet, a weight sheet and a 3D preview link. Files are named by our system and have identifying metadata removed.",
       "Final files are released once you approve the work.",
     ],
   },
   {
     heading: "First-look guarantee",
     body: [
-      "For standard pieces (categories A–F), we share a first look within 6 hours of the order being both paid and confirmed. If we miss it, the full amount you paid is credited, and we still complete the order. We decide the form of the credit (applied to your next order, refunded, or partly credited) and tell you.",
-      "Complex pieces (categories G–L) have a deadline we state with the price; no credit applies to them.",
+      "For standard pieces, we share a first look within 6 hours of the order being both paid and confirmed. If we miss it, the full amount you paid is credited, and we still complete the order. We decide the form of the credit (applied to your next order, refunded, or partly credited) and tell you.",
+      "Complex and sculpted pieces have a deadline we state with the price; no credit applies to them.",
     ],
   },
   {
