@@ -4,8 +4,8 @@
 | --- | ---: |
 | `/home` | 84 |
 | `/work` | 126 |
-| `/work/bgRuMeh76saJPJfwbHe8D` | 200 |
-| `/work/bgRuMeh76saJPJfwbHe8D/checklist` | 325 |
+| `/work/EyCmen6ChJEGMGip7KKAj` | 200 |
+| `/work/EyCmen6ChJEGMGip7KKAj/checklist` | 325 |
 | `/work/earnings` | 138 |
 | `/settings/payouts` | 110 |
 | `/onboarding/designer` | 30 |
