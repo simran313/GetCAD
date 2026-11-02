@@ -196,7 +196,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
   designer: {
     persona: "designer",
     paths: async () => [
-      "/home", "/work", ...(crawl ? [`/work/${crawl}`, `/work/${crawl}/checklist`] : []), "/work/earnings",
+      "/home", "/work", ...(crawl ? [`/work/${crawl}`, `/work/${crawl}/checklist`, `/work/${crawl}/review`] : []), "/work/earnings",
       "/settings/payouts", "/onboarding/designer", "/messages", "/materials", "/tools", "/account",
     ],
   },

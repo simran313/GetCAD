@@ -74,7 +74,12 @@ async function storage(req, res, path) {
     const file = fileFor(bucket, rest.join("/"));
     if (!file || !existsSync(file)) return json(res, 404, { statusCode: "404", error: "not_found", message: "Object not found" });
     const meta = existsSync(`${file}.meta.json`) ? JSON.parse(readFileSync(`${file}.meta.json`, "utf8")) : {};
-    const headers = { "content-type": meta.contentType ?? "application/octet-stream", "content-length": statSync(file).size };
+    // As Supabase storage does: a signed object can be read by a page on another origin (the 3D views).
+    const headers = {
+      "content-type": meta.contentType ?? "application/octet-stream",
+      "content-length": statSync(file).size,
+      "access-control-allow-origin": "*",
+    };
     if (url.searchParams.has("download")) {
       const name = url.searchParams.get("download") || rest.at(-1);
       headers["content-disposition"] = `attachment; filename="${name}"`;

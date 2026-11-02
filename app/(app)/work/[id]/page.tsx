@@ -18,7 +18,7 @@ import { versionNote } from "@/lib/work/notes";
 import { loadReferences } from "@/lib/work/references";
 
 import { AutoRefresh } from "../../orders/AutoRefresh";
-import { setVolumeAction, transitionAction } from "../../orders/actions";
+import { setVolumeAction } from "../../orders/actions";
 import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import { toThreadReads, type AttachmentRow, type MessageRow, type ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
@@ -34,7 +34,7 @@ import { minutesLabel } from "@/lib/work/minutes";
 /**
  * D4 — one job (docs/design). The brief without the client (job_brief drops
  * their label and links), the reference pictures, why this version exists,
- * the four deliverables (one tap each: choose and it uploads), the checklist count and Submit to QC. Everything the
+ * the four deliverables (one tap each: choose and it uploads), the checklist count and the final review (Send to QC). Everything the
  * page offers is checked again by the database when it is pressed.
  */
 export const dynamic = "force-dynamic";
@@ -298,17 +298,17 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               <Link href={`/work/${id}/checklist`} className={`${buttonVariants({ variant: "outline" })} w-full`}>
                 {check.passed === check.total ? "Open the QC sheet" : "Mark the QC sheet"}
               </Link>
-              <form action={transitionAction}>
-                <input type="hidden" name="order_id" value={id} />
-                <input type="hidden" name="to_status" value="DESIGNER_SUBMITTED" />
-                <Button type="submit" className="w-full" disabled={!canSubmit}>
-                  Submit to QC
-                </Button>
-              </form>
+              {/* Owner, 2 Nov 2026: every version goes to QC from the final review —
+                  the client's references beside the model, the weights, then Send to QC. */}
+              {working && (
+                <Link href={`/work/${id}/review`} className={`${buttonVariants({ variant: canSubmit ? "default" : "outline" })} w-full`}>
+                  Final review and send to QC
+                </Link>
+              )}
               {!canSubmit && working && (
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
                   Pass every line of the designer check ({check.passed}/{check.total}), the files ({filled}/{slots.length})
-                  {needsVolume ? `, the model volume${volume != null ? " ✓" : ""} and the gold weight${weightsSaved ? " ✓" : ""}` : ""} to submit.
+                  {needsVolume ? `, the model volume${volume != null ? " ✓" : ""} and the gold weight${weightsSaved ? " ✓" : ""}` : ""} before sending.
                 </p>
               )}
               {job.status === "QC_REVIEW" && (
