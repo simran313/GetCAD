@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.7 · 1 November 2026 · Owner: Fazil Zaidi
+Version 1.8 · 2 November 2026 · Owner: Fazil Zaidi
 
-Changes in 1.7: pod leads move jobs between their designers (a reason once work has started), escalate jobs to admins, and see performance computed from recorded events; jobs alert an hour before and once overdue (§11). Changes in 1.6: designers can pause and resume a job; every pause is recorded and the designer's own clock stops while paused (the due time to QC does not move); pod leads share materials (instructions, charts) with their pod (§11). Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.8: the logo is three black pillars on white, used for the favicon, app icons and beside the name on the website and portal (§1); $35 is the real entry price, and the Terms page shows it instead of the internal bands (§4). Changes in 1.7: pod leads move jobs between their designers (a reason once work has started), escalate jobs to admins, and see performance computed from recorded events; jobs alert an hour before and once overdue (§11). Changes in 1.6: designers can pause and resume a job; every pause is recorded and the designer's own clock stops while paused (the due time to QC does not move); pod leads share materials (instructions, charts) with their pod (§11). Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -12,6 +12,7 @@ Scope of this build: **jewelry CAD + renders**, client portal + staff portal + p
 
 ## 1. Business basics
 
+- **Logo (1.8):** three vertical pillars, black (#0A0A0A) on white; the mark sits before the name "The CAD Pillar" (Geist 600). Master drawing: `components/brand/pillar-mark.tsx`; icons in `public/icons` and `public/favicon-32.png`.
 - **Brand:** The CAD Pillar (TCP). Fully independent of The CAD Co. (TCC): no TCC data, files, clients, portfolio or branding anywhere in code, seed data or content.
 - **Customers:** trade only (jewelry businesses), white-label. No consumer orders.
 - **Markets:** USA first; UK, Australia, Canada accepted.
@@ -58,7 +59,7 @@ Every order gets one category, set by admin or pod lead before quoting.
 | Sculpted / figurative | G–L | Signets with figures, sculpted, large multi-part | **From $120, quoted** |
 | First design (new account) | A–C | One design | **$49** |
 
-- **Website (1.4):** one public price, **from $35 a design**, and retainers for regular clients. The bands and categories in this table are internal quote defaults and are not shown to clients; a quote below the band default is set by admin on the quote.
+- **Website (1.4, confirmed 1.8):** one public price, **from $35 a design** (the real entry price, owner, 2 Nov 2026), and retainers for regular clients. The Terms page says the same. The bands and categories in this table are internal quote defaults and are not shown to clients; a quote below the band default is set by admin on the quote.
 - Admin can override any price on the quote; the system warns if job payouts exceed 40% of the price.
 - Render-only orders: quoted by admin in v1 (no fixed card yet).
 - Every price in the screen designs ($180, $240 …) is placeholder. Use this table.

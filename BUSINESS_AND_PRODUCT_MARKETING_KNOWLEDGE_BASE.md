@@ -6,6 +6,11 @@
 
 **Prepared:** 2 November 2026, from the `main` branch after the latest release (the final review page with reference zoom).
 
+**Updated:** 2 November 2026 with the owner's answers:
+
+- **$35 is the real price.** The Terms page has been updated to match.
+- **The logo and favicon are black pillars on a white background.** This now applies everywhere.
+
 **Ranking of sources.** The governing source is `docs/DECISIONS.md`, the owner's record of business rules, version 1.7. Where documents disagree, that record wins. Section 11 lists every disagreement found.
 
 ---
@@ -45,7 +50,7 @@
 
 ### 1.1 What the business does
 
-The CAD Pillar (short form **TCP**, mark **"TCP"**) is a **trade-only jewelry CAD studio and production platform**. Jewelry businesses send a design brief (a sketch, photo or reference plus size, metal and stones) and receive production files:
+The CAD Pillar (short form **TCP**; logo: three black pillars) is a **trade-only jewelry CAD studio and production platform**. Jewelry businesses send a design brief (a sketch, photo or reference plus size, metal and stones) and receive production files:
 
 - 3D files ready for printing and casting;
 - render images;
@@ -82,11 +87,11 @@ All of this runs through a client web portal. [VERIFIED]
 
 ### 1.4 Business model and pricing facts
 
-**Public price.** The rule is "**From $35 a design**", with **retainers** for regular clients. [VERIFIED: website; DECISIONS §4 v1.4]
+**Public price.** "**From $35 a design**", with **retainers** for regular clients. **The owner confirmed on 2 Nov 2026 that $35 is the real price.** [VERIFIED: website, Terms page; OWNER CONFIRMED]
 
 **How a price is set.** Every order gets a **fixed price (quote) before payment**. The client pays only after accepting it. [VERIFIED]
 
-**Internal quote defaults** (DECISIONS §4). These are not meant for the website, but the **Terms page still publishes them** (see §11):
+**Internal quote defaults** (DECISIONS §4). These are used inside the portal when the team prepares a quote. **Never publish them.** As of 2 Nov 2026 the Terms page no longer lists them; it says "Prices start from $35 a design".
 
 | Band | Typical pieces | Default quote |
 | --- | --- | --- |
@@ -95,7 +100,7 @@ All of this runs through a client web portal. [VERIFIED]
 | Sculpted / figurative | Signets with figures, sculpted, large multi-part | From $120, quoted |
 | First design (new account, once) | Standard pieces | $49 |
 
-- **Reaching "$35".** The $35 entry price is reached by the team setting a lower price on a quote. The system's automatic default for a standard piece is $55. [VERIFIED]
+- **How $35 is set today.** The team enters $35 on the quote. The portal's automatic default for a standard piece is still $55. This is an internal setting and is never shown to clients (see §11). [VERIFIED]
 - **Plans for regular clients.** The documented structures are volume credit packs, a monthly partner plan and a dedicated designer. They are **behind a switch that is off (wallet checkout)** and are **sold manually**. The website mentions only "retainers": "A monthly rate for a steady flow of designs · A named account manager · Priority in the queue, bulk orders included". [VERIFIED] Exact plan prices are internal defaults and must be confirmed by the owner before any marketing use. [UNKNOWN]
 - **Payment methods:**
   - **Card checkout through Razorpay** in the portal. BUILT – NEEDS ACTIVATION: live keys are an owner setting.
@@ -265,12 +270,13 @@ These are points the system or the owner's confirmed statements actually support
 | Item | Fact | File |
 | --- | --- | --- |
 | Brand name | **The CAD Pillar**. Short name: **CAD Pillar**. Abbreviation: **TCP**. | `app/manifest.ts`, `components/wordmark.tsx` |
-| Wordmark | "The CAD Pillar" set in **Geist, weight 600**, tight tracking (−0.02em), never wrapping. Inherits text colour (black on white; white on black). | `components/wordmark.tsx` |
-| Portal badge | A small black square with white **"TCP"** letters beside the wordmark (portal sidebar). | Portal screenshots (`after/client/*`) |
-| App icon / favicon | **Three vertical rounded bars (pillars)** in blue **#2F51D9** on near-black **#0C0D0F**. Includes a maskable version. | `public/icons/icon-512.png`, `icon-192.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `public/favicon-32.png` |
+| **Logo mark** | **Three vertical pillars (rounded bars), black #0A0A0A on white.** Owner decision, 2 Nov 2026. Proportions on a 78-unit square: bars 12 wide, gaps 21, full height, corner radius 2.4. The mark takes the text colour, so it turns white on a black band. | Vector: `components/brand/pillar-mark.tsx` |
+| **Logo lock-up (wordmark)** | The pillar mark followed by "The CAD Pillar" in **Geist, weight 600**, tight tracking (−0.02em), never wrapping, with the mark sized to the text. Used in the website header and footer, the portal sidebar and header, sign-in pages and the offline page. | `components/wordmark.tsx`, `components/marketing/marketing-header.tsx`, `components/shell/sidebar.tsx` |
+| **App icon / favicon** | **Black pillars on a white square.** Included: 512 and 192 px app icons, a padded "maskable" version for phone launchers, a 180 px Apple touch icon, and a pixel-sharp 32 px favicon. | `public/icons/icon-512.png`, `icon-192.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `public/favicon-32.png` |
+| Retired | The earlier blue-on-black icon and the "TCP" letter badge in the portal sidebar were **replaced on 2 Nov 2026**. Do not use them. | — |
 | Independence rule | The brand is fully independent of "The CAD Co." No data, portfolio or branding from it may appear anywhere. | DECISIONS §1, §14 |
 
-[UNKNOWN] There is no standalone logo file (SVG) beyond the icon and the text wordmark. No brand guidelines document exists beyond the design tokens. The blue of the icon is **not used anywhere in the website or portal UI**, which are black and white. Claude Design should treat the icon blue as an existing asset whose role in the wider brand is undecided.
+**The brand is monochrome.** The logo, website and portal are black on white, and colour appears only to signal status (§5.2). [UNKNOWN] There is no exported standalone SVG or PDF logo file and no brand-guidelines document beyond the design tokens. The vector component above is the master drawing to export from.
 
 ### 5.2 Colour system (from `app/globals.css`, "premium black on white, quiet utility")
 
@@ -302,6 +308,7 @@ These are points the system or the owner's confirmed statements actually support
   - Lead text: 18 px, line height 1.55, grey.
 - **Eyebrows:** small uppercase labels (12 px, tracking 0.06em). This is the only place uppercase is allowed.
 - **Older mockups** (`docs/design/screens/`) used Instrument Serif for display. That choice is **superseded**: the current brand is Geist only.
+- **Logo rule:** the pillar mark always sits to the left of the name, vertically centred, at about the text's height.
 
 ### 5.4 Shape, depth and motion
 
@@ -322,6 +329,7 @@ These are points the system or the owner's confirmed statements actually support
 - **Support status chip:** a green dot, "Live support online · 4:30 AM – 1:30 PM ET".
 - **WhatsApp floating button** (green circle) and the WhatsApp mark.
 - **Tiles:** Chat, Files, Revisions, Timeline. **Cards:** title row plus body. **Checklist rows:** Pass/Fail with a time.
+- **Pillar mark:** usable alone as an icon, or with the name as the lock-up.
 - **Interactive 3D viewer:** a gold-coloured metal model on a light grey panel, drag to turn.
 - **Zoomable reference viewer** with numbered pins.
 - **Generated documents:** summary sheet, QC certificate and weight sheet (PDFs), and the technical image with its gold/diamond panel (white panel, black tables, "GOLD WEIGHT" and "DIAMOND DETAILS" headings).
@@ -425,7 +433,7 @@ The pain points are **[ASSUMPTION]**: inferred from the business's own copy ("Fe
 | Results | `/results` | `app/(marketing)/results/page.tsx` | OFF until real data |
 | Contact | `/contact` | `app/(marketing)/contact/page.tsx` | Form for businesses and designers |
 | Apply as designer | `/apply-designer` | `app/(marketing)/apply-designer/page.tsx` | Recruitment form |
-| Terms / Privacy | `/terms`, `/privacy` | `app/(marketing)/terms`, `/privacy` | Legal pages. The Terms page lists band prices (see §11) |
+| Terms / Privacy | `/terms`, `/privacy` | `app/(marketing)/terms`, `/privacy` | Legal pages. Prices "from $35 a design"; current deliverables listed |
 | Branded preview (public) | `/p/[token]` | `app/p/[token]/page.tsx` | The jeweler's logo and name, 3D model, renders |
 | Sign in / Sign up | `/sign-in`, `/sign-up` | `app/(auth)/…` | Clerk screens |
 
@@ -456,6 +464,7 @@ Shared marketing components: `components/marketing/blocks.tsx`, `components/mark
 
 - **Location:** the git branch `design-qa`, folder `after/`. Generated automatically on 2 Nov 2026 after the latest release.
 - **Naming:** `after/<persona>/<route with "/" as "_">@<width>.png`. Widths are **1440** (desktop), **768** (tablet) and **390** (phone). An accessibility report sits in each persona folder (`axe.md`).
+- **Logo:** screenshots taken after 2 Nov 2026 show the black pillar logo. Earlier ones show the retired "TCP" badge and a text-only header.
 - **Test data:** screenshots use test accounts such as "Meera Jewels" and "E2E halo ring". **Do not present these as real customers or real work.** Use them for layout reference only.
 
 | Persona folder | Pages captured (selection) |
@@ -595,14 +604,14 @@ Shared marketing components: `components/marketing/blocks.tsx`, `components/mark
 
 | # | Issue | Detail | Recommendation for content |
 | --- | --- | --- | --- |
-| 1 | **Published price bands vs "from $35"** | DECISIONS v1.4 says the website shows only "from $35" and keeps the bands internal. The **Terms page** still lists $55 / $85 / from $120 / first design $49. The system's automatic standard quote is $55; $35 needs a team override. Older copy docs say "From $55. Your first $49." | Use "From $35 a design" only; ask the owner whether $35 is a real everyday price and update the Terms page. |
-| 2 | **Deliverables wording** | Website lists "3 render views" and omits the technical sheet and summary sheet. Since 1 Nov 2026 the delivery is one render image with four views + technical sheet + summary sheet PDF + QC certificate + weight sheet + preview link. | Use the current list (§2 A14). |
+| 1 | **Price** | **RESOLVED 2 Nov 2026:** $35 is the real price. The Terms page now says "Prices start from $35 a design", with no band prices. What remains: the portal's automatic quote default for a standard piece is still $55, and the team enters $35 on the quote. The older copy documents (`docs/marketing/LANDING-COPY.md`, `docs/redesign/HOMEPAGE-COPY.md`) still mention $55 and $49 and are superseded. | Use "From $35 a design". Optional for the owner: change the portal's default quote to $35. |
+| 2 | **Deliverables wording** | The Terms page now lists the current deliverables (2 Nov 2026). The homepage, FAQ and /pricing still say "3 render views" or "3 renders" and omit the technical sheet and summary sheet. Since 1 Nov 2026 the delivery is one render image with four views + technical sheet + summary sheet PDF + QC certificate + weight sheet + preview link. | Use the current list (§2 A14). |
 | 3 | **AI positioning history** | Older approved copy said "No, AI runs our operations; every file is modelled by a senior designer." DECISIONS v1.4 and the live site say "AI models each piece; experts check and finish." | Use the current AI-native wording; the AI modelling itself is an owner claim, not visible in this codebase. |
 | 4 | **Weight figures differ by source** | The weight sheet uses one set of alloy densities (admin settings); the gold calculator/technical panel uses the owner's spreadsheet densities and allowances. Numbers for the same piece can differ. | Say "estimated weights"; don't quote exact densities or grams in marketing. |
 | 5 | **Activation status unknown** | Card checkout (Razorpay live keys), client emails (test mode by default), push notifications (keys) and feature switches are owner-controlled in production. | Confirm before promising email or push updates or card checkout. |
 | 6 | **"Price within the hour"** | Stated on the website; quoting is manual and not timed by the system. | Keep as stated only if the owner confirms. |
 | 7 | **Retainer and plan details** | Plan structures exist in the decisions file but are not published and are sold manually. | Get the owner's approved retainer offer before marketing it. |
-| 8 | **Logo** | Only an icon (three blue pillars) and a text wordmark exist; the UI is black and white; there is no vector logo or guidelines. | Brand work should define the logo and decide whether the icon blue becomes a brand colour. |
+| 8 | **Logo** | **RESOLVED 2 Nov 2026:** black pillars on white, applied to the favicon, app icons, website header and footer, and the portal. No exported SVG/PDF logo file or brand guidelines exist yet. | Export the master mark from `components/brand/pillar-mark.tsx` for print and social use; Claude Design can build the guidelines around it. |
 | 9 | **Real proof assets** | No customer testimonials, logos, case studies or cleared portfolio images exist in the project. | Collect before use; never fabricate. |
 | 10 | **Production domain** | Not in the repository. | Owner to supply. |
 

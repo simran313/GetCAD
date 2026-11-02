@@ -4,6 +4,7 @@ import * as Menu from "@radix-ui/react-dropdown-menu";
 import { ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Search, User } from "lucide-react";
 import Link from "next/link";
 
+import { PillarMark } from "@/components/brand/pillar-mark";
 import { cn } from "@/lib/utils";
 
 import { prefetchTab } from "./nav-config";
@@ -59,7 +60,7 @@ export function Sidebar({
       <div className={cn("flex h-14 items-center gap-2 px-3", collapsed && "justify-center")}>
         {!collapsed && (
           <Link href={homeHref} className="flex min-w-0 flex-1 items-center gap-2 rounded-[var(--r-sm)] px-2 py-1.5 hover:bg-accent">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[var(--r-xs)] bg-foreground text-[11px] font-semibold text-background">TCP</span>
+            <PillarMark className="h-[18px] w-[18px]" />
             <span className="truncate text-[15px] font-semibold tracking-[-0.01em]">The CAD Pillar</span>
           </Link>
         )}

@@ -26,7 +26,8 @@
  * moves money under an anonymity guarantee should not.
  */
 
-const VERSION = "v1";
+// v2: the black-on-white pillar icons (2 Nov 2026) replace the cached v1 set.
+const VERSION = "v2";
 const STATIC_CACHE = `tcp-static-${VERSION}`;
 const OFFLINE_URL = "/offline";
 
