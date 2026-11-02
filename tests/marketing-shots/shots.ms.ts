@@ -69,7 +69,13 @@ async function shoot(page: Page, name: string, path: string, before?: (page: Pag
     await page.waitForLoadState("networkidle", { timeout: 8_000 }).catch(() => {});
     if (before) await before(page).catch((e) => console.log(`! ${name} @${width}: ${e}`));
     await page.evaluate(() => document.fonts.ready).catch(() => {});
-    await page.waitForTimeout(600);
+    // The window as tall as the page, so the sidebar and the phone's tab bar
+    // sit where they belong instead of stopping at the first screen.
+    if (fullPage) {
+      const tall = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body.scrollHeight));
+      if (tall > height) await page.setViewportSize({ width, height: Math.min(tall, 8000) });
+    }
+    await page.waitForTimeout(800);
     const file = join(OUT, `${name}_${width}.png`);
     await page.screenshot({ path: file, fullPage, animations: "disabled" });
     await check(`${name}_${width}.png`, `${await page.title()}\n${await page.locator("body").innerText().catch(() => "")}`);
@@ -349,7 +355,9 @@ test("screens: before the brief and pay orders exist", async ({ browser }) => {
     await check(`${name}_${REFS.delivered}.pdf`, await pdfText(body));
   }
   await client.goto("/files");
-  const href = await client.locator("li", { hasText: "Technical sheet" }).first().getByRole("link", { name: "Download" }).getAttribute("href");
+  // The delivered order's card (the in-progress order's rows are locked), its newest technical sheet.
+  const card = client.locator("section, article, div").filter({ hasText: REFS.delivered }).filter({ has: client.getByText("Technical sheet") }).last();
+  const href = await card.locator("li", { hasText: "Technical sheet" }).first().getByRole("link", { name: "Download" }).getAttribute("href");
   const tech = await client.request.get(href!);
   expect(tech.status(), "technical image download").toBe(200);
   const ext = (tech.headers()["content-type"] ?? "").includes("jpeg") ? "jpg" : "png";
