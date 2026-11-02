@@ -157,20 +157,23 @@ export async function doDesignerVersion(page: Page, orderId: string) {
     expect(page.getByText("Saved and added under the technical image.")).toBeVisible({ timeout }),
   );
 
-  await page.goto(`/work/${orderId}/checklist`);
-  await passAll(page);
-  await expect(page.getByText("9 / 9 passed").first()).toBeVisible();
-
-  // The final review (owner, 2 Nov 2026): references beside the model and the
-  // weights, then Send to QC — the one way a version goes to QC.
+  // The final review (owner, 2 Nov 2026): full screen, the client's
+  // references beside the model, the designer check marked here while
+  // matching; Send to QC opens once the last line passes.
   await page.goto(`/work/${orderId}`);
   await page.getByRole("link", { name: "Final review and send to QC" }).click();
   await page.waitForURL(`**/work/${orderId}/review`);
   await expect(page.getByRole("heading", { name: "The client's references" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "3D model (STL)" })).toBeVisible();
+  // The STL really draws (WebGL), from storage or through our own stream.
+  await settled(page, "3D view drawn", (timeout) => expect(page.locator('[data-state="ready"]')).toBeVisible({ timeout }));
   await expect(page.getByRole("table", { name: "Diamond details" })).toBeVisible();
-  await expect(page.getByText("Everything is in. Matches the references? Send it.")).toBeVisible();
   const send = page.getByRole("button", { name: "Send to QC" });
+  await expect(send).toBeDisabled();
+  await passAll(page);
+  await expect(page.getByText("9 / 9 passed").first()).toBeVisible();
+  await expect(page.getByText("Everything is in. Matches the references? Send it.")).toBeVisible();
+  await expect(send).toBeEnabled();
   await act(page, send);
   // Submitted versions go straight to the pod lead's review.
   await settled(page, "submitted to QC", (timeout) => expect(page.getByText(/With your pod lead for QC/)).toBeVisible({ timeout }));

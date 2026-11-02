@@ -41,6 +41,7 @@ export function Checklist({
   canMark,
   zone,
   signature,
+  compact = false,
 }: {
   orderId: string;
   rows: Row[];
@@ -51,6 +52,8 @@ export function Checklist({
   zone: string;
   /** The sheet's "signature & date" line per stage: who and when, as recorded. */
   signature?: Partial<Record<Stage, string | null>>;
+  /** A narrow column (the final review): each line's form stacks. */
+  compact?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -66,7 +69,7 @@ export function Checklist({
             </div>
             <ol>
               {lines.map((r, i) => (
-                <Line key={r.item_id} orderId={orderId} row={r} index={i + 1} editable={canMark === stage} zone={zone} />
+                <Line key={r.item_id} orderId={orderId} row={r} index={i + 1} editable={canMark === stage} zone={zone} compact={compact} />
               ))}
             </ol>
             {signature?.[stage] && <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">{signature[stage]}</p>}
@@ -89,7 +92,7 @@ function Outcome({ row, zone }: { row: Row; zone: string }) {
   );
 }
 
-function Line({ orderId, row, index, editable, zone }: { orderId: string; row: Row; index: number; editable: boolean; zone: string }) {
+function Line({ orderId, row, index, editable, zone, compact }: { orderId: string; row: Row; index: number; editable: boolean; zone: string; compact: boolean }) {
   const at = markedAt(row);
   const head = (
     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
@@ -151,24 +154,24 @@ function Line({ orderId, row, index, editable, zone }: { orderId: string; row: R
               Change<span className="sr-only"> · {row.label}</span>
             </summary>
             <div className="mt-2">
-              <MarkForm orderId={orderId} row={row} marked />
+              <MarkForm orderId={orderId} row={row} marked compact={compact} />
             </div>
           </details>
         </>
       ) : (
         <div className="ml-8">
-          <MarkForm orderId={orderId} row={row} marked={false} />
+          <MarkForm orderId={orderId} row={row} marked={false} compact={compact} />
         </div>
       )}
     </li>
   );
 }
 
-function MarkForm({ orderId, row, marked }: { orderId: string; row: Row; marked: boolean }) {
+function MarkForm({ orderId, row, marked, compact }: { orderId: string; row: Row; marked: boolean; compact: boolean }) {
   const id = `chk-${row.item_id}`;
   const failed = marked && row.outcome === "FAIL";
   return (
-    <form action={markCheckAction} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]">
+    <form action={markCheckAction} className={cn("grid gap-2", !compact && "sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]")}>
       <input type="hidden" name="order_id" value={orderId} />
       <input type="hidden" name="item_id" value={row.item_id} />
       <label htmlFor={`${id}-f`} className="sr-only">
