@@ -18,6 +18,8 @@ import {
 } from "@/core";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { strip3dm } from "@/lib/files/strip3dm";
+import { joinTechSheet } from "@/lib/files/techSheet";
+import type { SavedStone } from "@/core/tools/calculators";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { recordFingerprint } from "@/lib/certificates/issue";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
@@ -147,9 +149,16 @@ export async function finishSlotUploadAction(orderId: string, slot: string, key:
     if (error || !blob) throw new Refusal("the upload did not arrive — try again");
     if (blob.size > MAX_DELIVERABLE_BYTES) throw new Refusal(`file too large (over ${MAX_DELIVERABLE_BYTES / 1048576} MB)`);
     const stored = await storeSlotFile(orderId, slot, { name: fileName, type: browserType, bytes: new Uint8Array(await blob.arrayBuffer()) });
+    // The plain technical image (Phase 13f): remember it, and join the
+    // saved weights under it if there are any yet.
+    if (slot === "TECH") {
+      const supabase = await createUserSupabaseClient();
+      refuseOn((await supabase.rpc("set_tech_source", { p_order_id: orderId, p_file_version_id: stored.fileVersionId })).error);
+      await joinWeights(orderId);
+    }
     revalidatePath("/", "layout");
     flushEmailsAfterResponse();
-    return stored;
+    return { fileName: stored.fileName };
   } finally {
     await admin.storage.from(ORDER_FILES_BUCKET).remove([key]);
   }
@@ -161,7 +170,11 @@ export async function finishSlotUploadAction(orderId: string, slot: string, key:
  * core, 3DM rebuilt with blocks exploded by lib/files/strip3dm), and the
  * database names the file {JOB_CODE}_{SLOT}_v{n}.{ext}.
  */
-async function storeSlotFile(orderId: string, slot: string, file: { name: string; type: string; bytes: Uint8Array }): Promise<{ fileName: string }> {
+async function storeSlotFile(
+  orderId: string,
+  slot: string,
+  file: { name: string; type: string; bytes: Uint8Array },
+): Promise<{ fileName: string; fileVersionId: string }> {
   const type = slotContentType(slot, file.type);
   if (!type.ok) throw new Refusal(type.reason);
 
@@ -202,7 +215,80 @@ async function storeSlotFile(orderId: string, slot: string, file: { name: string
   // The fingerprint of exactly the bytes stored (A3, 0050): what a spec
   // claim is matched against later.
   await recordFingerprint(fileVersionId, gate.file.bytes);
-  return { fileName: (data as { file_name?: string } | null)?.file_name ?? "" };
+  return { fileName: (data as { file_name?: string } | null)?.file_name ?? "", fileVersionId };
+}
+
+interface WeightsRow {
+  gold_18k_g: number | null;
+  casting_allowance_g: number;
+  post_allowance_g: number;
+  stones: SavedStone[];
+  tech_source_id: string | null;
+  tech_current_id: string | null;
+}
+
+/**
+ * Join the saved weights under the plain technical image (Phase 13f) and
+ * store the result as the version's TECH file. Nothing to do until both the
+ * gold weight and a technical image exist. A technical image uploaded before
+ * this existed counts as the plain one. Best effort: if the join fails the
+ * plain image stays and the job page says so.
+ */
+async function joinWeights(orderId: string): Promise<boolean> {
+  const supabase = await createUserSupabaseClient();
+  const { data, error } = await supabase.rpc("job_weights_get", { p_order_id: orderId });
+  if (error || !data) return false;
+  const w = data as WeightsRow;
+  if (w.gold_18k_g == null) return false;
+  let source = w.tech_source_id;
+  if (!source && w.tech_current_id) {
+    source = w.tech_current_id;
+    refuseOn((await supabase.rpc("set_tech_source", { p_order_id: orderId, p_file_version_id: source })).error);
+  }
+  if (!source) return false;
+  try {
+    const { data: fv, error: fvError } = await supabase.from("file_versions").select("object_key").eq("id", source).maybeSingle();
+    if (fvError || !fv) throw new Error(fvError?.message ?? "technical image not found");
+    const { data: blob, error: dlError } = await createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET).download(fv.object_key as string);
+    if (dlError || !blob) throw new Error(dlError?.message ?? "technical image not downloaded");
+    const joined = await joinTechSheet(new Uint8Array(await blob.arrayBuffer()), {
+      gold18k: Number(w.gold_18k_g),
+      castingAllowance: Number(w.casting_allowance_g),
+      postAllowance: Number(w.post_allowance_g),
+      stones: w.stones ?? [],
+    });
+    await storeSlotFile(orderId, "TECH", { name: `technical.${joined.extension}`, type: joined.contentType, bytes: new Uint8Array(joined.bytes) });
+    return true;
+  } catch (e) {
+    console.error("technical image: weights not joined", orderId, (e as Error).message);
+    return false;
+  }
+}
+
+/**
+ * Save the version's gold weight and diamonds from the job page's weights
+ * card (Phase 13f), then join them under the technical image.
+ */
+export async function saveWeightsAction(formData: FormData): Promise<void> {
+  const orderId = formData.get("order_id")?.toString() ?? "";
+  const num = (k: string) => Number((formData.get(k)?.toString() ?? "").replace(",", "."));
+  let stones: unknown = [];
+  try {
+    stones = JSON.parse(formData.get("stones")?.toString() || "[]");
+  } catch {
+    throw new Refusal("the diamond lines could not be read");
+  }
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("set_job_weights", {
+    p_order_id: orderId,
+    p_gold_18k_g: num("gold_18k_g"),
+    p_casting_allowance_g: num("casting_allowance_g"),
+    p_post_allowance_g: num("post_allowance_g"),
+    p_stones: stones,
+  });
+  refuseOn(error);
+  await joinWeights(orderId);
+  revalidatePath("/", "layout");
 }
 
 /**

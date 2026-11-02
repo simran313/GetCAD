@@ -23,6 +23,8 @@ import { ThreadsPanel } from "../../orders/ThreadsPanel";
 import { toThreadReads, type AttachmentRow, type MessageRow, type ThreadRow } from "../../orders/types";
 import type { ChecklistRow, SlotRow } from "../../orders/WorkPanels";
 import { countWord, stageCount } from "@/components/work/checklist";
+
+import { WeightsCard, type SavedWeights } from "../WeightsCard";
 import { PauseButton } from "../PauseButton";
 import { SlotUpload } from "../SlotUpload";
 import { StartWorkButton } from "../StartWorkButton";
@@ -68,7 +70,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes, timesMap] = await Promise.all([
+  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes, timesMap, weightsRes] = await Promise.all([
     supabase.rpc("job_brief", { p_order_id: id }),
     supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", id).order("position"),
     supabase.rpc("job_slots", { p_order_id: id }),
@@ -82,6 +84,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     supabase.rpc("version_spec", { p_order_id: id }),
     supabase.rpc("thread_read_state", { p_order_id: id }),
     loadJobTimes(supabase, id),
+    supabase.rpc("job_weights_get", { p_order_id: id }),
   ]);
   const volume = (specRes.data as { volume_mm3: number | null } | null)?.volume_mm3 ?? null;
   const needsVolume = job.service !== "render";
@@ -92,7 +95,11 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const check = stageCount(checklist, "DESIGNER");
   const filled = slots.filter((s) => s.file_version_id).length;
   const working = job.status === "IN_PROGRESS";
-  const canSubmit = working && check.total > 0 && check.passed === check.total && filled === slots.length && slots.length > 0 && (!needsVolume || volume != null);
+  // Phase 13f (0060): the gold weight and diamonds, joined under the technical image.
+  const weights = (weightsRes.error ? null : weightsRes.data) as SavedWeights | null;
+  const weightsSaved = !needsVolume || weights?.gold_18k_g != null;
+  const canSubmit =
+    working && check.total > 0 && check.passed === check.total && filled === slots.length && slots.length > 0 && (!needsVolume || volume != null) && weightsSaved;
   const times = timesMap.get(id);
   // With recorded pauses taken out (0057); before 0057, from Start work.
   const { dueAt: clock, pausedLeftMs } = times ? jobClock(job.minutes, times) : { dueAt: jobClockDue(job.started_at, job.minutes), pausedLeftMs: null };
@@ -205,6 +212,10 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             </CardBody>
           </Card>
 
+          {needsVolume && weights && (
+            <WeightsCard key={`${volume ?? ""}-${weights.updated_at ?? ""}`} orderId={id} saved={weights} volumeMm3={volume == null ? null : Number(volume)} editable={working} />
+          )}
+
           <ThreadsPanel
             orderId={id}
             relation="DESIGNER"
@@ -297,7 +308,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               {!canSubmit && working && (
                 <p className="text-[length:var(--fs-2)] text-muted-foreground">
                   Pass every line of the designer check ({check.passed}/{check.total}), the files ({filled}/{slots.length})
-                  {needsVolume ? ` and the model volume${volume != null ? " ✓" : ""}` : ""} to submit.
+                  {needsVolume ? `, the model volume${volume != null ? " ✓" : ""} and the gold weight${weightsSaved ? " ✓" : ""}` : ""} to submit.
                 </p>
               )}
               {job.status === "QC_REVIEW" && (

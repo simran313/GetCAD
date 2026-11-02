@@ -89,13 +89,13 @@ function GoldCard({ initial }: { initial: string }) {
   );
 }
 
-interface Row extends StoneLine {
+export interface Row extends StoneLine {
   id: number;
 }
 
 const firstSize = (chart: ChartName, shape: string) => CHARTS[chart].shapes.find((s) => s.shape === shape)?.sizes[0]?.[0] ?? "";
 
-function newRow(id: number, chart: ChartName = "size"): Row {
+export function newRow(id: number, chart: ChartName = "size"): Row {
   const shape = CHARTS[chart].shapes[0]!.shape;
   return { id, chart, shape, size: firstSize(chart, shape), pcs: 1 };
 }
@@ -178,7 +178,7 @@ function DiamondCard() {
   );
 }
 
-function StoneRow({
+export function StoneRow({
   n,
   row,
   totalCt,

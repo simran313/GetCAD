@@ -42,7 +42,13 @@ const nextConfig = {
   // the pod report.
   outputFileTracingIncludes: {
     "/orders/**": ["./node_modules/rhino3dm/rhino3dm.wasm"],
-    "/**": ["./node_modules/pdfkit/js/standard-fonts/**", "./node_modules/pdfkit/package.json"],
+    // next/og draws the weights panel on the technical image (Phase 13f) with its own font and wasm.
+    "/**": [
+      "./node_modules/pdfkit/js/standard-fonts/**",
+      "./node_modules/pdfkit/package.json",
+      "./node_modules/next/dist/compiled/@vercel/og/*.ttf",
+      "./node_modules/next/dist/compiled/@vercel/og/*.wasm",
+    ],
   },
   // Pages from the old site (owner answer Q15, Phase 6): kept as addresses
   // so links and search results still land, on the page that replaced them.

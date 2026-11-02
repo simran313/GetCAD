@@ -146,6 +146,17 @@ export async function doDesignerVersion(page: Page, orderId: string) {
     await settled(page, `${code} uploaded`, (timeout) => expect(row.getByRole("button", { name: "Replace" })).toBeVisible({ timeout }));
   }
 
+  // The gold weight and diamonds (Phase 13f): saved, then joined under the
+  // technical image uploaded above.
+  await page.getByLabel("18K cast weight (g) · this job").fill("4.38");
+  // Version 2 starts from version 1's lines; add one more either way.
+  await page.getByRole("button", { name: "Add diamonds" }).click();
+  await page.getByLabel("Pieces").last().fill("12");
+  await act(page, page.getByRole("button", { name: "Save weights" }));
+  await settled(page, "weights joined to the technical image", (timeout) =>
+    expect(page.getByText("Saved and added under the technical image.")).toBeVisible({ timeout }),
+  );
+
   await page.goto(`/work/${orderId}/checklist`);
   await passAll(page);
   await expect(page.getByText("9 / 9 passed").first()).toBeVisible();

@@ -138,6 +138,7 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 - **Calculators (owner's spreadsheets, 1 Nov 2026):** designers, pod leads and admins have Calculators (`/tools`). Nothing is saved.
   - Gold casting weight: 18K cast weight + 0.1 g casting allowance (+ 1 g post allowance for "with post"); other metals = that ÷ 14 × density (22K 16, 18K 14, 14K 12, 10K 11.3, 9K 11, silver 10, platinum 21 g/cm³). The sheet's "without lock" and "without chain" use the same formula as the cast weight.
   - Diamond weight: pieces × carat per stone from the size chart (side and melee stones, 10 shapes) or the Boone & Sons chart (centre stones), totals by shape, grams = ct × 0.2.
+- **Weights on the technical image (owner, 2 Nov 2026):** for each CAD version the designer saves the 18K cast gold weight (casting and post allowances) and the diamonds on the job page, with the same charts (carat per stone kept as saved). The server joins a panel under the uploaded technical image — cast weight in every metal, each diamond line, totals in ct and grams — and that joined image is the version's technical image for QC, the client and the summary sheet. Re-uploading the image or saving the weights again rebuilds it. A CAD version cannot be submitted without the gold weight. Version 2 starts from version 1's weights.
 - Every tick, decision, credit and payout writes to the audit log.
 
 ## 11. Orders, assignment, messaging

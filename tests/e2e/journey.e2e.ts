@@ -106,9 +106,11 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
   await lead.getByLabel("Value or finding · All measurements").fill("Shank 1.0 mm at the base");
   await lead.getByLabel("Remark · All measurements").fill("Thicken to 1.2 mm");
   await act(lead, lead.getByRole("button", { name: "Fail · All measurements" }));
+  // The marked line folds to its result, with the failed line previewed for the send-back.
   await settled(lead, "line failed", (timeout) =>
-    expect(lead.getByRole("button", { name: "Fail · All measurements", pressed: true })).toBeVisible({ timeout }),
+    expect(lead.getByText("Revision needed · the designer receives these failed lines:")).toBeVisible({ timeout }),
   );
+  await expect(lead.getByRole("button", { name: "Fail · All measurements" })).toBeHidden();
   await expect(lead.getByRole("button", { name: "Approve · pass to client" })).toBeDisabled();
   await act(lead, lead.getByRole("button", { name: "Send back · revision needed" }));
   await expectGone(lead, lead.getByRole("button", { name: "Send back · revision needed" }));

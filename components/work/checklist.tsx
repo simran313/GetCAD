@@ -111,76 +111,103 @@ function Line({ orderId, row, index, editable, zone }: { orderId: string; row: R
     </div>
   );
 
+  const notes = (row.finding || row.remark) && (
+    <dl className="ml-8 grid gap-x-4 text-[length:var(--fs-2)] sm:grid-cols-2">
+      {row.finding && (
+        <div>
+          <dt className="inline text-muted-foreground">Finding: </dt>
+          <dd className="inline">{row.finding}</dd>
+        </div>
+      )}
+      {row.remark && (
+        <div>
+          <dt className="inline text-muted-foreground">Remark: </dt>
+          <dd className="inline">{row.remark}</dd>
+        </div>
+      )}
+    </dl>
+  );
+  const failed = row.outcome === "FAIL" && at;
+
   if (!editable) {
     return (
       <li className="space-y-1 border-b border-border py-[var(--s-3)] last:border-b-0">
         {head}
-        {(row.finding || row.remark) && (
-          <dl className="ml-8 grid gap-x-4 text-[length:var(--fs-2)] sm:grid-cols-2">
-            {row.finding && (
-              <div>
-                <dt className="inline text-muted-foreground">Finding: </dt>
-                <dd className="inline">{row.finding}</dd>
-              </div>
-            )}
-            {row.remark && (
-              <div>
-                <dt className="inline text-muted-foreground">Remark: </dt>
-                <dd className="inline">{row.remark}</dd>
-              </div>
-            )}
-          </dl>
-        )}
+        {notes}
       </li>
     );
   }
 
-  const id = `chk-${row.item_id}`;
+  // A marked line folds to its result; "Change" opens the form again (owner,
+  // 2 Nov 2026: the buttons stayed after Pass). Native <details>, no script.
   return (
-    <li className={cn("space-y-2 border-b border-border py-[var(--s-3)] last:border-b-0", row.outcome === "FAIL" && at && "-mx-2 rounded-[var(--r-sm)] bg-[color:var(--tone-danger-bg)] px-2")}>
+    <li className={cn("space-y-2 border-b border-border py-[var(--s-3)] last:border-b-0", failed && "-mx-2 rounded-[var(--r-sm)] bg-[color:var(--tone-danger-bg)] px-2")}>
       {head}
-      {/* Keyed by the mark, so the inputs show what was saved after each press. */}
-      <form key={`${row.outcome ?? ""}-${at ?? ""}`} action={markCheckAction} className="ml-8 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]">
-        <input type="hidden" name="order_id" value={orderId} />
-        <input type="hidden" name="item_id" value={row.item_id} />
-        <label htmlFor={`${id}-f`} className="sr-only">
-          Value or finding · {row.label}
-        </label>
-        <Input id={`${id}-f`} name="finding" maxLength={300} defaultValue={row.finding ?? ""} placeholder="Value / finding" className="h-[var(--ctl-sm)]" />
-        <label htmlFor={`${id}-r`} className="sr-only">
-          Remark · {row.label}
-        </label>
-        <Input id={`${id}-r`} name="remark" maxLength={500} defaultValue={row.remark ?? ""} placeholder="Remark" className="h-[var(--ctl-sm)]" />
-        <div className="flex gap-2">
-          <Button
-            type="submit"
-            name="outcome"
-            value="PASS"
-            size="sm"
-            variant={at && row.outcome !== "FAIL" ? "default" : "secondary"}
-            aria-pressed={Boolean(at && row.outcome !== "FAIL")}
-            aria-label={`Pass · ${row.label}`}
-          >
-            Pass
-          </Button>
-          <Button
-            type="submit"
-            name="outcome"
-            value="FAIL"
-            size="sm"
-            variant={at && row.outcome === "FAIL" ? "destructive" : "secondary"}
-            aria-pressed={Boolean(at && row.outcome === "FAIL")}
-            aria-label={`Fail · ${row.label}`}
-          >
-            Fail
-          </Button>
-          {at && (
-            <Button type="submit" name="outcome" value="CLEAR" size="sm" variant="ghost" aria-label={`Clear · ${row.label}`}>
-              Clear
-            </Button>
-          )}
+      {at ? (
+        <>
+          {notes}
+          <details className="ml-8">
+            <summary className="w-fit cursor-pointer text-[length:var(--fs-2)] text-muted-foreground underline underline-offset-4 hover:text-foreground">
+              Change<span className="sr-only"> · {row.label}</span>
+            </summary>
+            <div className="mt-2">
+              <MarkForm orderId={orderId} row={row} marked />
+            </div>
+          </details>
+        </>
+      ) : (
+        <div className="ml-8">
+          <MarkForm orderId={orderId} row={row} marked={false} />
         </div>
-      </form>
+      )}
     </li>
+  );
+}
+
+function MarkForm({ orderId, row, marked }: { orderId: string; row: Row; marked: boolean }) {
+  const id = `chk-${row.item_id}`;
+  const failed = marked && row.outcome === "FAIL";
+  return (
+    <form action={markCheckAction} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]">
+      <input type="hidden" name="order_id" value={orderId} />
+      <input type="hidden" name="item_id" value={row.item_id} />
+      <label htmlFor={`${id}-f`} className="sr-only">
+        Value or finding · {row.label}
+      </label>
+      <Input id={`${id}-f`} name="finding" maxLength={300} defaultValue={row.finding ?? ""} placeholder="Value / finding" className="h-[var(--ctl-sm)]" />
+      <label htmlFor={`${id}-r`} className="sr-only">
+        Remark · {row.label}
+      </label>
+      <Input id={`${id}-r`} name="remark" maxLength={500} defaultValue={row.remark ?? ""} placeholder="Remark" className="h-[var(--ctl-sm)]" />
+      <div className="flex gap-2">
+        <Button
+          type="submit"
+          name="outcome"
+          value="PASS"
+          size="sm"
+          variant={marked && !failed ? "default" : "secondary"}
+          aria-pressed={marked && !failed}
+          aria-label={`Pass · ${row.label}`}
+        >
+          Pass
+        </Button>
+        <Button
+          type="submit"
+          name="outcome"
+          value="FAIL"
+          size="sm"
+          variant={failed ? "destructive" : "secondary"}
+          aria-pressed={failed}
+          aria-label={`Fail · ${row.label}`}
+        >
+          Fail
+        </Button>
+        {marked && (
+          <Button type="submit" name="outcome" value="CLEAR" size="sm" variant="ghost" aria-label={`Clear · ${row.label}`}>
+            Clear
+          </Button>
+        )}
+      </div>
+    </form>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { castWeights, caratFor, CHARTS, stoneTotals, weightWord } from "./calculators";
+import { castWeights, caratFor, CHARTS, stoneTotals, techPanel, toSavedStones, weightWord } from "./calculators";
 import { CENTRE_CHART, SIZE_CHART } from "./diamondCharts";
 
 describe("castWeights (GOLD_WEIGHT_7.xlsx)", () => {
@@ -77,5 +77,34 @@ describe("diamond charts", () => {
     expect(weightWord(0)).toBe("0.00");
     expect(weightWord(0.06, 3)).toBe("0.060"); // the total of 20 × 1.5 mm rounds, in grams
     expect(weightWord(0.06)).toBe("0.060");
+  });
+});
+
+describe("the technical image's panel (0060)", () => {
+  it("uses the saved carat per stone and the saved allowances", () => {
+    const p = techPanel({
+      gold18k: 5,
+      castingAllowance: 0.1,
+      postAllowance: 1,
+      stones: [
+        { chart: "size", shape: "Round Brilliant", size: "1.5", carat: 0.015, pcs: 20 },
+        { chart: "centre", shape: "Oval", size: "8.0 × 6.0", carat: 1.5, pcs: 1 },
+      ],
+    });
+    expect(p.gold.find((g) => g.metal === "18K")).toMatchObject({ cast: 5.1, withPost: 6.1 });
+    expect(p.stones.map((s) => s.totalCt)).toEqual([0.3, 1.5]);
+    expect(p.totals.pcs).toBe(21);
+    expect(p.totals.ct).toBeCloseTo(1.8, 10);
+    expect(p.totals.grams).toBeCloseTo(0.36, 10);
+  });
+
+  it("turns calculator rows into saved stones, dropping incomplete lines", () => {
+    expect(
+      toSavedStones([
+        { chart: "size", shape: "Round Brilliant", size: "1.5", pcs: 20 },
+        { chart: "size", shape: "Round Brilliant", size: "nope", pcs: 2 },
+        { chart: "size", shape: "Princess", size: "2.0", pcs: 0 },
+      ]),
+    ).toEqual([{ chart: "size", shape: "Round Brilliant", size: "1.5", carat: 0.015, pcs: 20 }]);
   });
 });
