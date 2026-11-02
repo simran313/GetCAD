@@ -185,6 +185,9 @@ async function designerVersion(page: Page, orderId: string, submit: boolean) {
     await line(1).getByLabel("Size (mm)").selectOption("6.5");
     await line(1).getByLabel("Pieces").fill("1");
     await page.getByRole("button", { name: "Add diamonds" }).click();
+    // A new line starts as a copy of the last one: back to the side-stone chart.
+    await page.getByLabel("Chart · line 2").selectOption("size");
+    await line(2).getByLabel("Shape").selectOption("Round Brilliant");
     await line(2).getByLabel("Size (mm)").selectOption("1.3");
     await line(2).getByLabel("Pieces").fill("16");
   } catch (e) {

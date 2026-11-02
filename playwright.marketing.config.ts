@@ -16,6 +16,9 @@ export default defineConfig({
   reporter: "list",
   use: {
     ...base.use,
+    // A step that cannot happen fails in seconds, not at the 30-minute test limit.
+    actionTimeout: 20_000,
+    navigationTimeout: 60_000,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] },
