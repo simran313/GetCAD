@@ -24,6 +24,15 @@ class Mesh {
     this.tri(a, b, c, inside);
     this.tri(a, c, d, inside);
   }
+  /** Turn the whole piece: `tilt` about x, then `yaw` about y (radians). */
+  turn(tilt: number, yaw: number) {
+    const rot = ([x, y, z]: V): V => {
+      const y1 = y * Math.cos(tilt) - z * Math.sin(tilt);
+      const z1 = y * Math.sin(tilt) + z * Math.cos(tilt);
+      return [x * Math.cos(yaw) + z1 * Math.sin(yaw), y1, -x * Math.sin(yaw) + z1 * Math.cos(yaw)];
+    };
+    this.tris = this.tris.map((t) => t.map(rot) as [V, V, V]);
+  }
   stl(): Buffer {
     const buf = Buffer.alloc(84 + this.tris.length * 50);
     buf.write("halo engagement ring", 0, "ascii");
@@ -74,7 +83,7 @@ function lathe(m: Mesh, x: number, z: number, profile: [number, number][], seg: 
 }
 
 /** US 6.5 halo engagement ring, millimetres: band, halo frame, 16 halo stones, a 6.5 mm centre, four prongs. */
-export function ringStl(): Buffer {
+export function ringStl(tilt = 0.6, yaw = 0.5): Buffer {
   const m = new Mesh();
   // Band: finger axis along z, 16.9 mm inside, 2.0 mm wide, 1.7 mm thick.
   const R = 8.45 + 0.85;
@@ -103,6 +112,9 @@ export function ringStl(): Buffer {
     const z = 3.15 * Math.sin(a);
     lathe(m, x, z, [[0, top], [0.38, top], [0.38, g + 0.6], [0.2, g + 0.85], [0, g + 0.85]], 12, [x, g, z]);
   }
+  // A three-quarter view for the 3D viewer's fixed camera: the head tipped
+  // towards the viewer, so the halo and centre stone show from the start.
+  m.turn(tilt, yaw);
   return m.stl();
 }
 

@@ -28,7 +28,7 @@ const WIDTHS = [
   [1440, 900],
 ] as const;
 // Names the e2e suite uses; none may reach a marketing picture.
-const BANNED = /meera|tara fine|tara iyer|\be2e\b|clerk_test|getcad\.dev|mehta|kapoor|iyer eternity|rohan designer|brief for the screens/i;
+const BANNED = /meera|tara fine|tara iyer|\be2e\b|clerk_test|getcad\.dev|mehta|kapoor|iyer eternity|rohan designer|brief for the screens|\bMJ1\b/i;
 
 const DEMO = {
   email: "demo-jeweler+clerk_test@getcad.dev",
@@ -100,6 +100,16 @@ async function startBrief(page: Page, name: string, product = "Ring"): Promise<s
 }
 
 async function fillRingBrief(page: Page, notes: string) {
+  // A 6.5 mm round centre in four claws (best effort: the rest of the brief does not depend on it).
+  try {
+    await page.getByLabel("Centre stone", { exact: true }).check();
+    await choose(page, "Shape", "Round");
+    await page.getByLabel("Length (mm)", { exact: true }).first().fill("6.5");
+    await page.getByLabel("Width (mm)", { exact: true }).first().fill("6.5");
+    await choose(page, "Setting", "Prong 4");
+  } catch (e) {
+    console.log(`! centre stone: ${e}`);
+  }
   await choose(page, "Stones supplied by", "Client");
   await page.getByLabel("Ring size", { exact: true }).fill("US 6.5");
   await choose(page, "Metal", "Yellow");
@@ -371,8 +381,16 @@ test("screens: the public preview, the designer's final review, the website", as
   await shoot(viewer, "public_preview", previewPath, async (p) => {
     await p.locator('[data-state="ready"]').first().waitFor({ timeout: 30_000 }).catch(() => {});
   });
-  await shoot(viewer, "marketing_home", "/");
-  await shoot(viewer, "marketing_home_hero", "/", undefined, false);
+  // The homepage's sample order card is fixed copy with a test client's
+  // code (MJ1-…); in the picture it shows the demo order's reference.
+  const demoCard = async (p: Page) => {
+    await p.evaluate((ref) => {
+      const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n = walk.nextNode(); n; n = walk.nextNode()) if (/\bMJ1-[A-Z]+-[A-Z]+-\d+\b/.test(n.nodeValue ?? "")) n.nodeValue = (n.nodeValue ?? "").replace(/\bMJ1-[A-Z]+-[A-Z]+-\d+\b/g, ref);
+    }, REFS.delivered);
+  };
+  await shoot(viewer, "marketing_home", "/", demoCard);
+  await shoot(viewer, "marketing_home_hero", "/", demoCard, false);
   await viewer.context().close();
 
   const designer = await signedIn(browser, "designer");
@@ -389,6 +407,13 @@ test("screens: the brief form and the pay page", async ({ browser }) => {
 
   // A brief being written: the photo with two numbered pins.
   orders.draft = await startBrief(client, "Pear halo pendant", "Pendant");
+  await client.getByLabel("Length (mm)", { exact: true }).last().fill("22").catch(() => {});
+  await choose(client, "Metal", "Yellow").catch(() => {});
+  await client.getByLabel("Karat", { exact: true }).fill("18K").catch(() => {});
+  // The brief saves itself a moment after typing: let it, before the page is opened again.
+  await client.waitForTimeout(2_500);
+  await expect(client.getByLabel("Saving")).toHaveCount(0, { timeout: 15_000 }).catch(() => {});
+  await client.waitForTimeout(1_500);
   await pin(orders.draft);
   await shoot(client, "client_brief", `/orders/${orders.draft}/brief`);
   await shoot(client, "client_brief_pins", `/orders/${orders.draft}/brief`, async (p) => {
