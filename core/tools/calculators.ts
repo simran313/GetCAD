@@ -109,3 +109,41 @@ export function weightWord(n: number, digits = 2): string {
   if (n !== 0 && Math.abs(n) < 0.1) return n.toFixed(Math.max(digits, 3));
   return n.toFixed(digits);
 }
+
+/** A stone line as saved with the job (0060): the carat per stone is kept, so a later chart change never alters a delivered sheet. */
+export interface SavedStone {
+  chart: ChartName;
+  shape: string;
+  size: string;
+  carat: number;
+  pcs: number;
+}
+
+export interface JobWeights {
+  gold18k: number;
+  castingAllowance: number;
+  postAllowance: number;
+  stones: SavedStone[];
+}
+
+/** What the technical image's panel shows: gold per metal, each stone line, the totals. */
+export function techPanel(w: JobWeights) {
+  const gold = castWeights(w.gold18k, { casting: w.castingAllowance, post: w.postAllowance });
+  const stones = w.stones
+    .filter((s) => s.carat > 0 && s.pcs > 0)
+    .map((s) => ({ ...s, totalCt: s.carat * s.pcs }));
+  const pcs = stones.reduce((n, s) => n + s.pcs, 0);
+  const ct = stones.reduce((n, s) => n + s.totalCt, 0);
+  return { gold, stones, totals: { pcs, ct, grams: ctToGrams(ct) } };
+}
+
+/** Stone lines from the calculator rows, with each line's carat from its chart; lines with no chart row or no pieces are left out. */
+export function toSavedStones(lines: StoneLine[]): SavedStone[] {
+  const out: SavedStone[] = [];
+  for (const l of lines) {
+    const carat = caratFor(l.chart, l.shape, l.size);
+    const pcs = Number.isFinite(l.pcs) ? Math.floor(l.pcs) : 0;
+    if (carat != null && pcs > 0) out.push({ chart: l.chart, shape: l.shape, size: l.size, carat, pcs });
+  }
+  return out;
+}

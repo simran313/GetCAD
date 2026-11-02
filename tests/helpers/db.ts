@@ -176,6 +176,13 @@ export async function completeDesignerWork(client: Client, orderId: string, desi
      ON CONFLICT (order_id, version) DO NOTHING`,
     [orderId, version, designerId],
   );
+  // The gold weight for this version (0060): a CAD version cannot be
+  // submitted without it.
+  await client.query(
+    `INSERT INTO job_weights (order_id, version, gold_18k_g, entered_by) VALUES ($1, $2, 4.2, $3)
+     ON CONFLICT (order_id, version) DO UPDATE SET gold_18k_g = 4.2`,
+    [orderId, version, designerId],
+  );
   const slots = await client.query("SELECT code FROM deliverable_slots WHERE required ORDER BY position");
   for (const { code } of slots.rows as { code: string }[]) {
     const fileId = `fx_${orderId}_${code}_${version}`;

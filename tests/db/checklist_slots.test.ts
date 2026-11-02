@@ -264,6 +264,12 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     // Phase 7a (0050): the model volume first.
     await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(/model volume/i);
     await q(designer, "SELECT public.set_job_volume($1, 312.5)", [id]);
+    // Phase 13f (0060): the gold weight and diamonds, which the technical image carries.
+    await expect(q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id])).rejects.toThrow(/gold weight/i);
+    await q(designer, "SELECT public.set_job_weights($1, 4.37, 0.1, 1, $2::jsonb)", [
+      id,
+      JSON.stringify([{ chart: "size", shape: "Round Brilliant", size: "1.5", carat: 0.015, pcs: 20 }]),
+    ]);
     const r = await q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED') AS r", [id]);
     expect(r.rows[0].r.to).toBe("QC_REVIEW");
     expect((await status(id)).status).toBe("QC_REVIEW");
@@ -327,6 +333,10 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     await fillSlots(id, ["TV"]);
     await passAll(id, "designer", designer);
     await q(designer, "SELECT public.set_job_volume($1, 298)", [id]);
+    // Version 2 starts from version 1's weights; saving them is still the designer's.
+    const start = (await q(designer, "SELECT public.job_weights_get($1) AS w", [id])).rows[0].w;
+    expect(start).toMatchObject({ version: 2, gold_18k_g: null, previous: { version: 1, gold_18k_g: 4.37 } });
+    await q(designer, "SELECT public.set_job_weights($1, 4.1)", [id]);
     await q(designer, "SELECT public.transition_order($1,'DESIGNER_SUBMITTED')", [id]);
     await passAll(id, "manager", podLead);
     // Phase 7a (0050): the measured minimums, with no open edges.
@@ -352,5 +362,55 @@ describe("checklist + slots + submit (Spec §8–9, §12.5)", () => {
     expect(n.rows[0].n).toBeGreaterThanOrEqual(9 * 2 + 5 * 2);
     const v = await db.query("SELECT audit.verify_chain() AS v");
     expect(v.rows[0].v.valid).toBe(true);
+  });
+});
+
+describe("job weights (0060)", () => {
+  let id: string;
+  beforeAll(async () => {
+    id = await paidOrder("B");
+    await q(podLead, "SELECT public.assign_designer($1,$2)", [id, designer]);
+  });
+
+  it("only the assigned designer saves them, while in progress, with sane values", async () => {
+    await expect(q(designer, "SELECT public.set_job_weights($1, 5)", [id])).rejects.toThrow(/in progress/i);
+    await q(designer, "SELECT public.transition_order($1,'IN_PROGRESS')", [id]);
+    await expect(q(busyDesigner, "SELECT public.set_job_weights($1, 5)", [id])).rejects.toThrow(/assigned designer/i);
+    await expect(q(podLead, "SELECT public.set_job_weights($1, 5)", [id])).rejects.toThrow(/assigned designer/i);
+    await expect(q(designer, "SELECT public.set_job_weights($1, 0)", [id])).rejects.toThrow(/18K gold weight/i);
+    await expect(q(designer, "SELECT public.set_job_weights($1, 5, -1)", [id])).rejects.toThrow(/allowances/i);
+    for (const bad of [
+      [{ chart: "other", shape: "Oval", size: "6 × 4", carat: 0.5, pcs: 1 }],
+      [{ chart: "size", shape: "Oval", size: "6 × 4", carat: 0, pcs: 1 }],
+      [{ chart: "size", shape: "Oval", size: "6 × 4", carat: 0.5, pcs: 1.5 }],
+      [{ chart: "size", shape: "", size: "6 × 4", carat: 0.5, pcs: 1 }],
+      Array.from({ length: 61 }, () => ({ chart: "size", shape: "Oval", size: "6 × 4", carat: 0.5, pcs: 1 })),
+    ]) {
+      await expect(q(designer, "SELECT public.set_job_weights($1, 5, 0.1, 1, $2::jsonb)", [id, JSON.stringify(bad)])).rejects.toThrow(/stone line/i);
+    }
+    await q(designer, "SELECT public.set_job_weights($1, 5, 0.1, 1, $2::jsonb)", [
+      id,
+      JSON.stringify([{ chart: "centre", shape: "Oval", size: "8.0 × 6.0", carat: 1.5, pcs: 1 }]),
+    ]);
+    const w = (await q(podLead, "SELECT public.job_weights_get($1) AS w", [id])).rows[0].w;
+    expect(w).toMatchObject({ version: 1, gold_18k_g: 5, casting_allowance_g: 0.1, post_allowance_g: 1, tech_source_id: null, previous: null });
+    expect(w.stones).toHaveLength(1);
+  });
+
+  it("the plain technical image must be this version's TECH upload", async () => {
+    await expect(q(designer, "SELECT public.set_tech_source($1, 'nope')", [id])).rejects.toThrow(/technical image/i);
+    const fv = generateId();
+    await q(designer, "SELECT public.add_slot_file($1,$2,'TECH',$3,'image/png',10,'png')", [fv, id, `slots/${generateId()}.png`]);
+    await q(designer, "SELECT public.set_tech_source($1, $2)", [id, fv]);
+    const w = (await q(designer, "SELECT public.job_weights_get($1) AS w", [id])).rows[0].w;
+    expect(w).toMatchObject({ tech_source_id: fv, tech_current_id: fv, gold_18k_g: 5 });
+  });
+
+  it("are for the team only, and not readable directly", async () => {
+    await expect(q(client, "SELECT public.job_weights_get($1)", [id])).rejects.toThrow(/order not found/i);
+    await expect(q(outsider, "SELECT public.job_weights_get($1)", [id])).rejects.toThrow(/order not found/i);
+    await expect(q(designer, "SELECT * FROM job_weights")).rejects.toThrow(/permission denied/i);
+    const n = await db.query("SELECT count(*)::int AS n FROM audit.audit_log WHERE action='WEIGHTS_SET' AND entity_id=$1", [id]);
+    expect(n.rows[0].n).toBe(1);
   });
 });

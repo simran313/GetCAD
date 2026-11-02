@@ -239,6 +239,17 @@ set.
   the revision note; pass all five and approve — the certificate shows both
   stages.
 
+### 2j. Weights on the technical image (Phase 13f)
+
+Apply `db/migrations/0060_job_weights.sql`, then `db/policies/0045_job_weights_rls.sql`,
+**before** deploying the app. Nothing to set.
+
+- A CAD job in progress needs its gold weight (and diamonds) saved on the job
+  page before it can be submitted.
+- Check: as a designer, upload the technical image, save the weights — the
+  card says "Saved and added under the technical image", and opening the
+  technical image shows the gold and diamond panel underneath.
+
 ## 3. Domain
 
 Vercel → Settings → Domains → add your domain and follow the DNS instructions.
