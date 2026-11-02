@@ -12,7 +12,7 @@ Scope of this build: **jewelry CAD + renders**, client portal + staff portal + p
 
 ## 1. Business basics
 
-- **Logo (1.8):** three vertical pillars, black (#0A0A0A) on white; the mark sits before the name "The CAD Pillar" (Geist 600). Master drawing: `components/brand/pillar-mark.tsx`; icons in `public/icons` and `public/favicon-32.png`.
+- **Logo (1.8):** three vertical pillars, black (#0A0A0A) on white; the mark sits before the name "The CAD Pillar" (Geist 600). Master drawing: `components/brand/pillar-mark.tsx`; icons in `public/icons/pillar-*` and `public/pillar-favicon.svg` / `pillar-favicon-32.png`.
 - **Brand:** The CAD Pillar (TCP). Fully independent of The CAD Co. (TCC): no TCC data, files, clients, portfolio or branding anywhere in code, seed data or content.
 - **Customers:** trade only (jewelry businesses), white-label. No consumer orders.
 - **Markets:** USA first; UK, Australia, Canada accepted.

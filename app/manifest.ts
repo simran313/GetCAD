@@ -37,14 +37,14 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#ffffff",
     categories: ["business", "productivity"],
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/pillar-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/pillar-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       // Cropped to whatever shape the launcher wants — a circle on much of
       // Android — so its artwork sits inside the middle 80% safe zone. Without
       // a maskable variant the OS pads the "any" icon into a white square,
       // which is how installed apps end up looking broken next to native ones.
       {
-        src: "/icons/icon-maskable-512.png",
+        src: "/icons/pillar-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
