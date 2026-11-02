@@ -161,12 +161,19 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   await passAll(page);
   await expect(page.getByText("9 / 9 passed").first()).toBeVisible();
 
+  // The final review (owner, 2 Nov 2026): references beside the model and the
+  // weights, then Send to QC — the one way a version goes to QC.
   await page.goto(`/work/${orderId}`);
-  const submit = page.getByRole("button", { name: "Submit to QC" });
-  await expect(submit).toBeEnabled();
-  await act(page, submit);
+  await page.getByRole("link", { name: "Final review and send to QC" }).click();
+  await page.waitForURL(`**/work/${orderId}/review`);
+  await expect(page.getByRole("heading", { name: "The client's references" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "3D model (STL)" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Diamond details" })).toBeVisible();
+  await expect(page.getByText("Everything is in. Matches the references? Send it.")).toBeVisible();
+  const send = page.getByRole("button", { name: "Send to QC" });
+  await act(page, send);
   // Submitted versions go straight to the pod lead's review.
-  await settled(page, "submitted to QC", (timeout) => expect(submit).toBeDisabled({ timeout }));
+  await settled(page, "submitted to QC", (timeout) => expect(page.getByText(/With your pod lead for QC/)).toBeVisible({ timeout }));
 }
 
 /** The order id from a URL like /orders/{id}/… */

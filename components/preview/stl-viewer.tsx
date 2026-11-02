@@ -7,7 +7,15 @@ import { useEffect, useRef, useState } from "react";
  * the approved STL). Plain, rotatable, no materials. three.js is loaded on
  * demand so the page shows the renders straight away on slow phones.
  */
-export function StlViewer({ url, label }: { url: string; label: string }) {
+export function StlViewer({
+  url,
+  label,
+  failedText = "The 3D view could not load on this device. The pictures below show the piece.",
+}: {
+  url: string;
+  label: string;
+  failedText?: string;
+}) {
   const box = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
 
@@ -90,7 +98,7 @@ export function StlViewer({ url, label }: { url: string; label: string }) {
       <div ref={box} className="absolute inset-0" role="img" aria-label={`${label} — drag to turn`} />
       {state !== "ready" && (
         <p className="absolute inset-0 flex items-center justify-center text-[length:var(--fs-2)] text-muted-foreground">
-          {state === "loading" ? "Loading the 3D view…" : "The 3D view could not load on this device. The pictures below show the piece."}
+          {state === "loading" ? "Loading the 3D view…" : failedText}
         </p>
       )}
     </div>
