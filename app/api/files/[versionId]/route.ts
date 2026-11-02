@@ -1,10 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { fileGrantFor, type FileKind } from "@/core";
 import { ORDER_FILES_BUCKET, SIGNED_URL_TTL_SECONDS } from "@/config/supabase";
+import { grantedObjectKey } from "@/lib/files/access";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 /**
  * Download a file version via a SHORT-TTL SIGNED URL (files are never public).
@@ -17,7 +16,9 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
  *
  * This is also the ONLY place a signed URL is minted. That is on purpose: a
  * signed URL is a bearer token for the object, so the moment two routes can
- * mint one, the gate has two doors and only one of them is tested.
+ * mint one, the gate has two doors and only one of them is tested. The
+ * stream beside it (./stream, for the 3D views) mints none and asks the same
+ * gate (lib/files/access).
  *
  * A WITHHELD file answers 404, not 403. The UI already tells the client what
  * they have and what unlocks it, in a place where the sentence makes sense; a
@@ -36,48 +37,13 @@ export async function GET(
   const { versionId } = await ctx.params;
   const notFound = NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const supabase = await createUserSupabaseClient();
-  const { data: version, error } = await supabase
-    .from("file_versions")
-    .select("object_key, order_id, kind, uploader_party")
-    .eq("id", versionId)
-    .maybeSingle();
-  if (error || !version) return notFound;
-
-  // visible_orders() returns null for an order the caller cannot see, so the
-  // request ends here rather than in the gate. It also says how the caller
-  // relates to the order, which is all the gate needs: no user id is compared
-  // here, because none is readable any more (0036).
-  const [orderRes, meRes] = await Promise.all([
-    supabase
-      .rpc("visible_orders", { p_order_id: version.order_id as string })
-      .select("status, relation")
-      .maybeSingle(),
-    supabase.from("users").select("role").maybeSingle(),
-  ]);
-  if (orderRes.error || !orderRes.data || meRes.error || !meRes.data) return notFound;
-
-  const order = orderRes.data as { status: string; relation: string };
-  const me = meRes.data as { role: string };
-  const isOrderClient = order.relation === "CLIENT";
-  const isOrderDesigner = order.relation === "DESIGNER";
-
-  const grant = fileGrantFor({
-    orderStatus: order.status,
-    role: me.role,
-    isOrderClient,
-    isOrderDesigner,
-    isUploader:
-      (version.uploader_party === "CLIENT" && isOrderClient) ||
-      (version.uploader_party === "DESIGNER" && isOrderDesigner),
-    fileKind: version.kind as FileKind,
-  });
-  if (grant !== "ALLOW") return notFound;
+  const granted = await grantedObjectKey(versionId);
+  if (!granted) return notFound;
 
   const admin = createAdminSupabaseClient();
   const signed = await admin.storage
     .from(ORDER_FILES_BUCKET)
-    .createSignedUrl(version.object_key as string, SIGNED_URL_TTL_SECONDS);
+    .createSignedUrl(granted.objectKey, SIGNED_URL_TTL_SECONDS);
   if (signed.error || !signed.data) {
     return NextResponse.json({ error: "could not sign url" }, { status: 500 });
   }
