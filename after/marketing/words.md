@@ -13,7 +13,7 @@
 | `/contact` | 47 |
 | `/apply-designer` | 133 |
 | `/privacy` | 504 |
-| `/terms` | 648 |
+| `/terms` | 664 |
 | `/sign-in` | 22 |
 | `/sign-up` | 30 |
 | `/p/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` | 21 |
