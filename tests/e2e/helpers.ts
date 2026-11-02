@@ -168,9 +168,17 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   // The STL really draws (WebGL), from storage or through our own stream.
   await settled(page, "3D view drawn", (timeout) => expect(page.locator('[data-state="ready"]')).toBeVisible({ timeout }));
   await expect(page.getByRole("table", { name: "Diamond details" })).toBeVisible();
+  // The references zoom without zooming the page.
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(page.getByText(/^150% · /)).toBeVisible();
+  await page.getByRole("button", { name: "Fit the picture" }).click();
+  await expect(page.getByText(/^100% · /)).toBeVisible();
   const send = page.getByRole("button", { name: "Send to QC" });
   await expect(send).toBeDisabled();
+  // Ticking the checklist must not reload the 3D view (owner, 2 Nov 2026).
+  const canvas = await page.locator('[data-state="ready"] canvas').elementHandle();
   await passAll(page);
+  expect(await canvas!.evaluate((el) => el.isConnected), "the 3D view reloaded after a tick").toBe(true);
   await expect(page.getByText("9 / 9 passed").first()).toBeVisible();
   await expect(page.getByText("Everything is in. Matches the references? Send it.")).toBeVisible();
   await expect(send).toBeEnabled();

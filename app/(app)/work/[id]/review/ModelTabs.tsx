@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
  */
 export interface ModelView {
   key: "stl" | "render" | "tech";
+  /** The file version: what stays the same across page refreshes. */
+  id: string;
   label: string;
   /** The STL's signed address, or the image's download path. */
   url: string;
@@ -47,7 +49,8 @@ export function ModelTabs({ views }: { views: ModelView[] }) {
       <div role="tabpanel" aria-label={view.label} className="min-h-0 flex-1">
         {view.key === "stl" ? (
           <StlViewer
-            key={view.url}
+            key={view.id}
+            fileKey={view.id}
             url={view.url}
             fallbackUrl={view.fallbackUrl}
             downloadUrl={view.downloadUrl}
