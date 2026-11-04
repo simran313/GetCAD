@@ -35,9 +35,10 @@ test("the admin adds a designer, their bank details, a document and a pod", asyn
   await page.getByLabel("Checked against the bank proof and PAN card").check();
   await act(page, page.getByRole("button", { name: /bank details$/ }));
   await settled(page, "bank saved", (timeout) => expect(page.getByText("Verified ··9012")).toBeVisible({ timeout }));
-  await page.getByRole("link", { name: "Show in full" }).click();
-  await page.waitForURL(/\?show=bank$/);
-  await settled(page, "full bank details shown", (timeout) => expect(page.getByText("ABCDE1234F", { exact: true })).toBeVisible({ timeout }));
+  // Read on the press, in place: the address stays the same.
+  await page.getByRole("button", { name: "Show in full" }).click();
+  await expect(page.getByText("ABCDE1234F", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Hide" }).click();
 
   await page.getByLabel("Files (JPG, PNG, WebP or PDF, up to 10 MB each)").setInputFiles({ name: "pan-card.png", mimeType: "image/png", buffer: png([30, 60, 120], 32) });
   await act(page, page.getByRole("button", { name: "Upload" }));

@@ -132,3 +132,21 @@ export async function setDesignerPodAction(formData: FormData): Promise<void> {
   refuseOn(error);
   revalidatePath("/", "layout");
 }
+
+export interface FullBank {
+  beneficiary_name: string;
+  pan: string;
+  account_number: string;
+  ifsc: string;
+  account_type: string;
+  status: string;
+}
+
+/** The full bank details for "Show in full": one audited read per press (payout_account_full, 0061). */
+export async function revealBankAction(userId: string): Promise<FullBank | { error: string }> {
+  const supabase = await createUserSupabaseClient();
+  const { data, error } = await supabase.rpc("payout_account_full", { p_user_id: userId }).maybeSingle();
+  if (error) return { error: error.message };
+  if (!data) return { error: "No bank details on file." };
+  return data as FullBank;
+}
