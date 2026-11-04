@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { DESIGNER_DOCUMENTS_BUCKET } from "@/config/supabase";
 import { generateId } from "@/core";
@@ -28,6 +29,16 @@ async function requireAdmin() {
   const { error } = await supabase.rpc("admin_designers");
   refuseOn(error);
   return supabase;
+}
+
+/**
+ * After a change, back to the designer's page, fresh: the page is
+ * re-rendered for certain (an upload from the "Show in full" view was left
+ * stale), and full bank details are hidden again after every change.
+ */
+function backToDesigner(userId: string): never {
+  revalidatePath("/", "layout");
+  redirect(/^user_[A-Za-z0-9]+$/.test(userId) ? `/admin/designers/${userId}` : "/admin/designers");
 }
 
 /** One designer per line: "email - Name" (or name first, commas, an optional phone). */
@@ -71,7 +82,7 @@ export async function saveBankAction(formData: FormData): Promise<void> {
     p_verified: formData.get("verified") === "on",
   });
   refuseOn(error);
-  revalidatePath("/", "layout");
+  backToDesigner(userId);
 }
 
 const KINDS = new Set(["PAN_CARD", "AADHAAR", "BANK_PROOF", "PHOTO", "OTHER"]);
@@ -110,15 +121,16 @@ export async function uploadDocumentsAction(formData: FormData): Promise<void> {
       refuseOn(error);
     }
   }
-  revalidatePath("/", "layout");
+  backToDesigner(userId);
 }
 
 export async function removeDocumentAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
+  const userId = formData.get("user_id")?.toString() ?? "";
   const { data: key, error } = await supabase.rpc("remove_designer_document", { p_id: formData.get("document_id")?.toString() ?? "" });
   refuseOn(error);
   if (typeof key === "string") await createAdminSupabaseClient().storage.from(DESIGNER_DOCUMENTS_BUCKET).remove([key]);
-  revalidatePath("/", "layout");
+  backToDesigner(userId);
 }
 
 /** Place the designer in a pod (its pod lead then sees and assigns them), or take them out. */
@@ -130,5 +142,5 @@ export async function setDesignerPodAction(formData: FormData): Promise<void> {
     ? await supabase.rpc("set_pod_member", { p_pod_id: podId, p_user_id: userId, p_member_role: "DESIGNER" })
     : await supabase.rpc("remove_pod_member", { p_user_id: userId });
   refuseOn(error);
-  revalidatePath("/", "layout");
+  backToDesigner(userId);
 }
