@@ -16,6 +16,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { viewerZone } from "@/lib/time/zone";
 
 import { removeDocumentAction, saveBankAction, setDesignerPodAction, uploadDocumentsAction } from "../actions";
+import { RefreshForm } from "../RefreshForm";
 import { bankWord, DOCUMENT_KINDS, statusWord, type DesignerRow } from "../words";
 
 /**
@@ -117,7 +118,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
           <CardTitle>Pod</CardTitle>
         </CardHeader>
         <CardBody>
-          <form action={setDesignerPodAction} className="flex flex-wrap items-end gap-2">
+          <RefreshForm action={setDesignerPodAction} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="user_id" value={id} />
             <Field label="Pod lead who sees and assigns this designer" htmlFor="pod_id" className="min-w-64 flex-1">
               <Select id="pod_id" name="pod_id" defaultValue={d.pod_id ?? ""}>
@@ -133,7 +134,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
             <Button type="submit" variant="outline">
               Save
             </Button>
-          </form>
+          </RefreshForm>
           <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">
             New pod or lead: <Link href="/admin/access/pods" className="underline underline-offset-4">Pods</Link>.
           </p>
@@ -176,7 +177,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
                 <span className="text-muted-foreground">(each view is recorded in the audit log)</span>
               </p>
             ))}
-          <form action={saveBankAction} className="grid gap-3 sm:grid-cols-2">
+          <RefreshForm action={saveBankAction} className="grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="user_id" value={id} />
             <Field label="Name at the bank" htmlFor="beneficiary_name">
               <Input id="beneficiary_name" name="beneficiary_name" required defaultValue={bank?.beneficiary_name ?? d.legal_name} />
@@ -203,7 +204,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
             <div className="sm:col-span-2">
               <Button type="submit">{d.payout_status ? "Replace bank details" : "Save bank details"}</Button>
             </div>
-          </form>
+          </RefreshForm>
         </CardBody>
       </Card>
 
@@ -212,7 +213,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
           <CardTitle>Documents</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          <form action={uploadDocumentsAction} className="flex flex-wrap items-end gap-2">
+          <RefreshForm action={uploadDocumentsAction} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="user_id" value={id} />
             <Field label="What it is" htmlFor="kind">
               <Select id="kind" name="kind" defaultValue="PAN_CARD">
@@ -229,7 +230,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
             <Button type="submit" variant="outline">
               Upload
             </Button>
-          </form>
+          </RefreshForm>
           <p className="text-[length:var(--fs-2)] text-muted-foreground">
             Aadhaar: keep the masked copy (only the last 4 digits showing). The designer can download it from UIDAI&apos;s site.
           </p>
@@ -249,13 +250,13 @@ export default async function DesignerPage({ params, searchParams }: { params: P
                     <a href={`/api/designer-documents/${doc.id}`} target="_blank" rel="noreferrer" className="text-[length:var(--fs-2)] underline underline-offset-4">
                       Open
                     </a>
-                    <form action={removeDocumentAction}>
+                    <RefreshForm action={removeDocumentAction}>
                       <input type="hidden" name="user_id" value={id} />
                       <input type="hidden" name="document_id" value={doc.id} />
                       <Button type="submit" size="sm" variant="ghost" aria-label={`Remove ${doc.file_name}`}>
                         Remove
                       </Button>
-                    </form>
+                    </RefreshForm>
                   </span>
                 </li>
               ))}
