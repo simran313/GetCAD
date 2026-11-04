@@ -4,8 +4,8 @@
 | --- | ---: |
 | `/home` | 100 |
 | `/orders` | 127 |
-| `/orders/VdvyDnxJdeGM9ZLSg2VKK` | 60 |
-| `/orders/VdvyDnxJdeGM9ZLSg2VKK/pay` | 124 |
+| `/orders/MuAWRYQU67AtuDRSY3DVG` | 60 |
+| `/orders/MuAWRYQU67AtuDRSY3DVG/pay` | 124 |
 | `/wallet` | 99 |
-| `/orders/dt33SbajWxijja6RgEL7a/brief` | 34 |
-| `/orders/dt33SbajWxijja6RgEL7a/brief/review` | 23 |
+| `/orders/Bbf8CJsNgwsBxG23wUpQ3/brief` | 34 |
+| `/orders/Bbf8CJsNgwsBxG23wUpQ3/brief/review` | 23 |
