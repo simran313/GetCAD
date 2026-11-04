@@ -76,6 +76,7 @@ export default async function DesignerPage({ params, searchParams }: { params: P
   const docs = (docsRes.data ?? []) as Doc[];
   const pods = (podsRes.data ?? []) as { pod_id: string; name: string; lead_name: string | null }[];
   const bank = (bankRes.data ?? null) as Bank | null;
+  const bankError = "error" in bankRes && bankRes.error ? bankRes.error.message : null;
   const status = statusWord(d);
   const bankState = bankWord(d);
 
@@ -164,9 +165,12 @@ export default async function DesignerPage({ params, searchParams }: { params: P
                   </div>
                 ))}
               </dl>
+            ) : bankError ? (
+              <p className="text-[length:var(--fs-2)] text-[color:var(--tone-danger-fg)]">The full details could not be shown: {bankError}</p>
             ) : (
               <p className="text-[length:var(--fs-2)]">
-                <Link href={`/admin/designers/${id}?show=bank`} className="underline underline-offset-4">
+                {/* Not prefetched: opening the full details is an audited read, made only on a press. */}
+                <Link href={`/admin/designers/${id}?show=bank`} prefetch={false} className="underline underline-offset-4">
                   Show in full
                 </Link>{" "}
                 <span className="text-muted-foreground">(each view is recorded in the audit log)</span>
