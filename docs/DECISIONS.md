@@ -1,8 +1,8 @@
 # The CAD Pillar — DECISIONS (source of truth)
 
-Version 1.8 · 2 November 2026 · Owner: Fazil Zaidi
+Version 1.9 · 4 November 2026 · Owner: Fazil Zaidi
 
-Changes in 1.8: the logo is three black pillars on white, used for the favicon, app icons and beside the name on the website and portal (§1); $35 is the real entry price, and the Terms page shows it instead of the internal bands (§4). Changes in 1.7: pod leads move jobs between their designers (a reason once work has started), escalate jobs to admins, and see performance computed from recorded events; jobs alert an hour before and once overdue (§11). Changes in 1.6: designers can pause and resume a job; every pause is recorded and the designer's own clock stops while paused (the due time to QC does not move); pod leads share materials (instructions, charts) with their pod (§11). Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
+Changes in 1.9: admins add designers by name and email, record their bank details and keep their identity documents (PAN card, masked Aadhaar, bank proof); only admins see these, every view is logged, and a designer's pod decides which pod lead sees and assigns them (§2, §14). Changes in 1.8: the logo is three black pillars on white, used for the favicon, app icons and beside the name on the website and portal (§1); $35 is the real entry price, and the Terms page shows it instead of the internal bands (§4). Changes in 1.7: pod leads move jobs between their designers (a reason once work has started), escalate jobs to admins, and see performance computed from recorded events; jobs alert an hour before and once overdue (§11). Changes in 1.6: designers can pause and resume a job; every pause is recorded and the designer's own clock stops while paused (the due time to QC does not move); pod leads share materials (instructions, charts) with their pod (§11). Changes in 1.5: a CAD job delivers four uploaded files (3DM, STL, one render image with four views, one technical sheet with measurements, diamond details and gold weight) plus a summary sheet the platform makes; Rhino blocks are accepted and exploded on upload (§9). Changes in 1.4: the website shows one price, "from $35", and retainers; the bands below stay internal (§4). Positioning is AI-native: AI models, experts check (§1). Live support hours and the portal's 24/7 availability (§1). Changes in 1.3: weight sheet in grams only, no metal cost (§9); preview link 3D view built from the STL (§9). Changes in 1.2: pod routing and account managers (§11). Changes in 1.1: the SLA clock starts when the order is both paid and confirmed by the team (§6); payment providers (PayPal, Wise, others) are connected last (§13); late credits are decided by admin (§6).
 
 **Rule:** if this file disagrees with any other document, screen or chat, this file wins. If something is still unclear, stop and ask; do not guess. Update the version line on every change.
 
@@ -30,6 +30,8 @@ Scope of this build: **jewelry CAD + renders**, client portal + staff portal + p
 | Admin (Sales + Ops + Finance) | Everything | — |
 
 Visibility is enforced in the database (row-level security), not just the UI.
+
+- **Designers added by the team (1.9):** an admin adds designers on Admin → Designers (one per line, "email - Name"). Each gets a sign-in account for that email, signs in with an emailed code, and signs the designer agreement before they can be assigned. Placing a designer in a pod gives that pod's lead visibility and assignment; nothing else does.
 
 ## 3. Categories
 
@@ -193,6 +195,7 @@ Plans are **behind a feature flag** in v1 (see section 12); sell them manually u
 
 - No TCC data, files, client lists or samples anywhere.
 - Prospect data from public sources only.
+- **Designer identity data (1.9):** bank details, PAN card, Aadhaar and bank proof are entered and seen by admins only (not pod leads, not other designers). Full bank details show only on request, and every full view and document open is written to the audit log. Aadhaar is kept as the masked copy (last 4 digits only). Files live in the private `designer-documents` bucket; a removed document's file is deleted.
 - Terms and privacy pages live before go-live.
 - Dental (later): HIPAA BAA before the first case.
 

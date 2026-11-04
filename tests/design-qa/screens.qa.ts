@@ -181,7 +181,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
   admin: {
     persona: "admin",
     paths: async () => [
-      "/home", "/admin", "/admin/orders", "/admin/new-order", "/admin/credits", "/admin/clients", "/admin/access",
+      "/home", "/admin", "/admin/orders", "/admin/new-order", "/admin/credits", "/admin/clients", "/admin/designers", "/admin/access",
       "/admin/access/pods", "/admin/applications", "/admin/leads", "/admin/billing", "/admin/payouts", "/admin/users",
       "/admin/settings", "/dashboard", "/orders", ...orderPages(journey), ...orderPages(crawl), "/messages", "/account",
     ],
