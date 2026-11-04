@@ -26,6 +26,9 @@ export const ORDER_FILES_BUCKET = "order-files";
 /** The private bucket Stage-1 designer application portfolio files live in. Never public. */
 export const DESIGNER_APPLICATION_FILES_BUCKET = "designer-application-files";
 
+/** The private bucket designers' identity documents (PAN card, Aadhaar, bank proof) live in. Never public. */
+export const DESIGNER_DOCUMENTS_BUCKET = "designer-documents";
+
 /** Signed download URLs are short-lived. */
 export const SIGNED_URL_TTL_SECONDS = 60;
 

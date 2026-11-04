@@ -99,6 +99,8 @@ const STAFF_TABS: Tab[] = [
   { key: "messages", label: "Messages", href: "/messages", icon: "message", mobile: false },
   { key: "billing", label: "Billing", href: "/admin/billing", icon: "wallet", mobile: false },
   { key: "clients", label: "Clients", href: "/admin/clients", icon: "user", mobile: false },
+  // The team's own designers: bank details, documents, pod (owner, 4 Nov 2026).
+  { key: "designers", label: "Designers", href: "/admin/designers", icon: "user", mobile: false },
   { key: "access", label: "Access", href: "/admin/access", icon: "board", mobile: false },
   { key: "applications", label: "Applications", href: "/admin/applications", icon: "work", mobile: false },
   { key: "leads", label: "Leads", href: "/admin/leads", icon: "message", mobile: false },
