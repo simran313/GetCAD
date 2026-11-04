@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Select } from "@/components/ui/select";
 import { StatusTag } from "@/components/ui/status-tag";
+import { identitiesFor } from "@/lib/clerk/identities";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadPodLoad, type PodDesignerLoad } from "@/lib/work/load";
 
 import { createPodAction, removePodMemberAction, setPodMemberAction } from "../../actions";
+import { createLeadPodAction } from "../actions";
 import { Page } from "@/components/ui/page";
 
 /**
@@ -73,6 +75,16 @@ export default async function PodsPage() {
   ];
   const inPod = new Set(members.map((m) => m.designer_id));
 
+  // Names, not ids (owner, 4 Nov 2026: a new pod lead showed as an id): the
+  // staff first name where set, else the sign-in account's name or email,
+  // read after the audited identity lookup (0038).
+  const people = [...new Set([...leadIds, ...designers.map((d) => d.id)])];
+  const { error: lookupError } = await supabase.rpc("record_identity_lookup", { p_user_ids: people, p_purpose: "pods screen" });
+  const who = lookupError ? new Map<string, { name: string | null; email: string | null }>() : await identitiesFor(people).catch(() => new Map());
+  const nameOf = (id: string) => names.get(id) ?? who.get(id)?.name ?? who.get(id)?.email ?? id;
+  const leading = new Set(pods.map((p) => p.lead_id).filter(Boolean));
+  const leadsWithoutPod = leadIds.filter((id) => !leading.has(id));
+
   return (
     <Page>
       <Link href="/admin/access" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
@@ -87,6 +99,32 @@ export default async function PodsPage() {
             : "With more than one pod, each paid order waits in the Queue until you choose its pod."
         }
       />
+
+      {leadsWithoutPod.length > 0 && (
+        <Card as="section">
+          <CardHeader>
+            <CardTitle>Pod leads without a pod</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-3">
+            <p className="text-[length:var(--fs-2)] text-muted-foreground">
+              They hold the pod lead role but lead no pod, so no order can go to them yet. Create their pod, then add their designers.
+            </p>
+            <ul className="divide-y divide-border rounded-[var(--r-sm)] border border-border">
+              {leadsWithoutPod.map((id) => (
+                <li key={id} className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
+                  <span className="text-[length:var(--fs-3)] font-medium">{nameOf(id)}</span>
+                  <form action={createLeadPodAction}>
+                    <input type="hidden" name="user_id" value={id} />
+                    <Button type="submit" size="sm">
+                      Create their pod
+                    </Button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </CardBody>
+        </Card>
+      )}
 
       {pods.length === 0 && (
         <Card className="p-[var(--s-6)] text-[length:var(--fs-3)] text-muted-foreground">No pods yet. Create the first one below.</Card>
@@ -107,7 +145,7 @@ export default async function PodsPage() {
                 <p className="text-[length:var(--fs-3)]">
                   Pod lead:{" "}
                   {p.lead_id ? (
-                    <span className="font-medium">{p.lead_name ?? p.lead_id}</span>
+                    <span className="font-medium">{p.lead_name ?? (p.lead_id ? nameOf(p.lead_id) : "")}</span>
                   ) : (
                     <StatusTag kind="needs">None</StatusTag>
                   )}
@@ -121,7 +159,7 @@ export default async function PodsPage() {
                     </option>
                     {leadIds.map((id) => (
                       <option key={id} value={id}>
-                        {names.get(id) ?? id}
+                        {nameOf(id)}
                       </option>
                     ))}
                   </Select>
@@ -163,7 +201,8 @@ export default async function PodsPage() {
                   </option>
                   {designers.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.reference ?? `${d.id.slice(0, 14)}… (no profile yet)`}
+                      {nameOf(d.id)}
+                      {d.reference ? ` · ${d.reference}` : ""}
                       {inPod.has(d.id) ? " · moves from another pod" : ""}
                       {d.status !== "ACTIVE" ? ` · ${d.status.toLowerCase()}` : ""}
                     </option>
