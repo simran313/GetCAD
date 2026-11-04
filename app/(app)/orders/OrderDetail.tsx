@@ -310,9 +310,24 @@ export async function OrderDetail({
     </>
   );
 
+  // Assigning the designer is the pod lead's job (owner, 4 Nov 2026); an
+  // admin keeps it as an exception, folded away so the page shows one next step.
   const assignEl = (
     <>
-      {designers && <AssignPanel orderId={o.id} designers={designers} />}
+      {designers &&
+        (isAdmin ? (
+          <details className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] px-[var(--s-4)] py-[var(--s-3)]">
+            <summary className="cursor-pointer text-[length:var(--fs-3)] font-medium">
+              Exception: assign a designer yourself
+              <span className="ml-2 font-normal text-muted-foreground">Normally the pod lead does this.</span>
+            </summary>
+            <div className="mt-3">
+              <AssignPanel orderId={o.id} designers={designers} />
+            </div>
+          </details>
+        ) : (
+          <AssignPanel orderId={o.id} designers={designers} />
+        ))}
     </>
   );
 

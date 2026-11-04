@@ -29,25 +29,11 @@ test("the admin adds a designer, their bank details, a document and a pod", asyn
   await page.waitForURL(/\/admin\/designers\/user_/);
   await expect(page.getByText("Waiting to sign in")).toBeVisible();
 
-  // Diagnostics (CI only shows logs): every action and page refresh, and the browser console.
-  const t0 = Date.now();
-  page.on("request", (r) => {
-    const h = r.headers();
-    if (r.method() === "POST" || h["rsc"]) console.log(`[req +${Date.now() - t0}ms] ${r.method()} ${r.url().replace(/^https?:\/\/[^/]+/, "")} action=${h["next-action"] ?? "-"} rsc=${h["rsc"] ?? "-"}`);
-  });
-  page.on("response", (r) => {
-    const h = r.request().headers();
-    if (r.request().method() === "POST" || h["rsc"]) console.log(`[res +${Date.now() - t0}ms] ${r.status()} ${r.url().replace(/^https?:\/\/[^/]+/, "")} revalidated=${r.headers()["x-action-revalidated"] ?? "-"} redirect=${r.headers()["x-action-redirect"] ?? "-"}`);
-  });
-  page.on("console", (m) => console.log(`[console +${Date.now() - t0}ms] ${m.type()}: ${m.text().slice(0, 300)}`));
-
   await page.getByLabel("PAN", { exact: true }).fill("abcde1234f");
   await page.getByLabel("Account number", { exact: true }).fill("123456789012");
   await page.getByLabel("IFSC", { exact: true }).fill("sbin0001234");
   await page.getByLabel("Checked against the bank proof and PAN card").check();
-  console.log(`[step +${Date.now() - t0}ms] press save`);
   await act(page, page.getByRole("button", { name: /bank details$/ }));
-  console.log(`[step +${Date.now() - t0}ms] action answered; pill now: ${await page.locator("text=/No bank details|Verified|To check/").first().textContent().catch(() => "?")}`);
   await settled(page, "bank saved", (timeout) => expect(page.getByText("Verified ··9012")).toBeVisible({ timeout }));
   // Read on the press, in place: the address stays the same.
   await page.getByRole("button", { name: "Show in full" }).click();
