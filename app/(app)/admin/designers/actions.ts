@@ -54,7 +54,7 @@ export async function addDesignersAction(_prev: AddDesignersResult | null, formD
       result.problems.push(`${person.email}: ${e instanceof Error ? e.message : "the sign-in account could not be opened"}`);
     }
   }
-  revalidatePath("/admin/designers");
+  revalidatePath("/", "layout");
   return result;
 }
 
@@ -71,8 +71,7 @@ export async function saveBankAction(formData: FormData): Promise<void> {
     p_verified: formData.get("verified") === "on",
   });
   refuseOn(error);
-  revalidatePath(`/admin/designers/${userId}`);
-  revalidatePath("/admin/designers");
+  revalidatePath("/", "layout");
 }
 
 const KINDS = new Set(["PAN_CARD", "AADHAAR", "BANK_PROOF", "PHOTO", "OTHER"]);
@@ -111,18 +110,15 @@ export async function uploadDocumentsAction(formData: FormData): Promise<void> {
       refuseOn(error);
     }
   }
-  revalidatePath(`/admin/designers/${userId}`);
-  revalidatePath("/admin/designers");
+  revalidatePath("/", "layout");
 }
 
 export async function removeDocumentAction(formData: FormData): Promise<void> {
   const supabase = await createUserSupabaseClient();
-  const userId = formData.get("user_id")?.toString() ?? "";
   const { data: key, error } = await supabase.rpc("remove_designer_document", { p_id: formData.get("document_id")?.toString() ?? "" });
   refuseOn(error);
   if (typeof key === "string") await createAdminSupabaseClient().storage.from(DESIGNER_DOCUMENTS_BUCKET).remove([key]);
-  revalidatePath(`/admin/designers/${userId}`);
-  revalidatePath("/admin/designers");
+  revalidatePath("/", "layout");
 }
 
 /** Place the designer in a pod (its pod lead then sees and assigns them), or take them out. */
@@ -134,7 +130,5 @@ export async function setDesignerPodAction(formData: FormData): Promise<void> {
     ? await supabase.rpc("set_pod_member", { p_pod_id: podId, p_user_id: userId, p_member_role: "DESIGNER" })
     : await supabase.rpc("remove_pod_member", { p_user_id: userId });
   refuseOn(error);
-  revalidatePath(`/admin/designers/${userId}`);
-  revalidatePath("/admin/designers");
-  revalidatePath("/admin/access/pods");
+  revalidatePath("/", "layout");
 }
