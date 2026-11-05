@@ -123,14 +123,10 @@ export function briefRows(
   }
   rows.push(
     { key: "metal", label: "Metal", value: [pretty(s.metal), s.karatage].filter(Boolean).join(" · ") || null, step: metalStep, field: "metal" },
-    { key: "finish", label: "Finish", value: pretty(s.finish), step: metalStep, field: "finish" },
   );
-  if (!render) {
-    rows.push(
-      { key: "purpose", label: "Made for", value: pretty(s.purpose), step: metalStep, field: "purpose" },
-      { key: "format", label: "Files", value: s.format === "THREE_DM" ? "3DM" : pretty(s.format), step: metalStep, field: "format" },
-    );
-  }
+  // Finish, "made for" and the file format are no longer asked (owner, 5 Nov
+  // 2026): every order is for casting, with 3DM and STL, high polish, unless
+  // the notes say otherwise.
   rows.push({ key: "notes", label: "Notes", value: (s.notes as string) || null, step: metalStep, field: "notes" });
   return rows;
 }

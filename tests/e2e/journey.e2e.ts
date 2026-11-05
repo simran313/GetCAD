@@ -40,14 +40,13 @@ test("a client sends a CAD brief", async ({ browser }) => {
   await expect(page.getByRole("img", { name: /reference photo/i }).first()).toBeVisible({ timeout: 20_000 });
 
   await page.getByLabel("Name this job").fill("E2E halo ring");
-  await choose(page, "What are we modelling?", "Ring");
-  await choose(page, "Stones supplied by", "No stones");
-  await page.getByLabel("Ring size", { exact: true }).fill("US 7");
-  await choose(page, "Metal", "Yellow");
-  await page.getByLabel("Karat", { exact: true }).fill("18K");
-  await choose(page, "Made for", "Casting");
-  await choose(page, "Files", "Both");
-  await choose(page, "Finish", "High polish");
+  // Dropdowns (owner, 5 Nov 2026); the centre stone must be answered.
+  await page.getByLabel("What are we modelling?").selectOption("RING");
+  await page.getByLabel("Centre stone", { exact: true }).selectOption("NONE");
+  await page.getByLabel("Country", { exact: true }).selectOption("US");
+  await page.getByLabel("Ring size", { exact: true }).selectOption("7");
+  await page.getByLabel("Metal", { exact: true }).selectOption("YELLOW");
+  await page.getByLabel("Karat", { exact: true }).selectOption("18K");
   await page.getByRole("button", { name: "Review", exact: true }).click();
 
   await page.waitForURL(`**/orders/${orderId}/brief/review`);

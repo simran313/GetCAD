@@ -189,13 +189,14 @@ export default async function BriefPage({
     <Page form>
       <BackLink id={id} />
 
+      {/* Tight on a phone (owner, 5 Nov 2026): the form starts near the top. */}
       <PageHeader
-        className="mt-4"
+        className="mt-2 md:mt-4"
         eyebrow={order.display_ref ?? undefined}
         title={order.service === "render" ? "Render brief" : "CAD brief"}
       />
 
-      <div className="mt-6">
+      <div className="mt-3 md:mt-6">
         {isOwner ? (
           <BriefWizard
             orderId={id}
