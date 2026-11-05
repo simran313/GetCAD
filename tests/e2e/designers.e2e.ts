@@ -49,7 +49,11 @@ test("the admin adds a designer, their bank details, a document and a pod", asyn
   expect((await file.body()).subarray(1, 4).toString()).toBe("PNG");
 
   await page.getByLabel("Pod lead who sees and assigns this designer").selectOption({ label: "Pod Two · no lead yet" });
+  // The form reloads the page after saving (ReloadForm): wait for that
+  // reload, or it aborts the next navigation.
+  const reloaded = page.waitForEvent("load");
   await act(page, page.getByRole("button", { name: "Save", exact: true }));
+  await reloaded;
   await page.goto("/admin/designers");
   await expect(page.getByRole("link", { name: /Neha Designer/ })).toContainText("Pod Two");
   const designerPath = new URL(href!, page.url()).pathname;
