@@ -20,8 +20,10 @@ test("the admin adds a designer, their bank details, a document and a pod", asyn
   await withDb((db) => db.query("INSERT INTO pods (name) VALUES ('Pod Two') ON CONFLICT DO NOTHING"));
   const page = await signedIn(browser, "admin");
   await page.goto("/admin/designers");
+  // Pressed once the page is interactive, and the press must reach the server.
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Designers, one per line").fill(`${EMAIL} - Neha Designer\nno email here`);
-  await page.getByRole("button", { name: "Add designers" }).click();
+  await act(page, page.getByRole("button", { name: "Add designers" }));
   await expect(page.getByText(/Line 2 \(no email here\): no email on this line/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/(Added 1|Already on file):/)).toBeVisible();
 
