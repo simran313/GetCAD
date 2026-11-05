@@ -25,6 +25,7 @@ import { saveBriefAction } from "./actions";
 import { Photos } from "./Photos";
 import type { ReferenceImage } from "./ReferenceSection";
 import { refusalReason } from "@/lib/refusal";
+import { formatRingSize, parseRingSize, RING_SIZE_SYSTEMS, ringSystem } from "@/core/sizes/ringSizes";
 
 /**
  * The brief, as a form.
@@ -49,14 +50,26 @@ const SHAPES = [
 ];
 const SETTINGS = ["PRONG_4", "PRONG_6", "BEZEL", "HALO", "PAVE", "CHANNEL", "TENSION", "FLUSH", "OTHER"];
 const METALS = ["YELLOW", "WHITE", "ROSE", "TWO_TONE", "TRI_COLOUR", "PLATINUM", "SILVER"];
-const PURPOSES: Array<[string, string]> = [
-  ["CASTING", "Casting"],
-  ["DIRECT_PRINT", "Direct print"],
-  ["RENDER_ONLY", "Images only"],
-];
-const FORMATS = ["THREE_DM", "STL", "BOTH", "STEP"];
-const FINISHES = ["HIGH_POLISH", "MATTE", "BRUSHED", "HAMMERED", "MIXED"];
-const SUPPLY = ["NONE", "CLIENT", "DESIGNER", "PLATFORM"];
+
+/** Karats offered for each metal (a value saved before stays offered). */
+const GOLD_KARATS = ["9K", "10K", "14K", "18K", "22K"];
+function karatsFor(metal: string): string[] {
+  if (metal === "PLATINUM") return ["PT950", "PT900"];
+  if (metal === "SILVER") return ["925"];
+  return GOLD_KARATS;
+}
+
+/**
+ * "Other" piece (owner, 5 Nov 2026): the client says what it is; it is kept
+ * as the first line of the notes, "Piece: …", which designers read with the
+ * rest of the notes.
+ */
+const PIECE_PREFIX = "Piece: ";
+function splitPiece(notes: string): { piece: string; rest: string } {
+  const [first, ...more] = notes.split("\n");
+  return first?.startsWith(PIECE_PREFIX) ? { piece: first.slice(PIECE_PREFIX.length), rest: more.join("\n") } : { piece: "", rest: notes };
+}
+const joinPiece = (piece: string, rest: string) => (piece.trim() ? `${PIECE_PREFIX}${piece.trim()}${rest ? `\n${rest}` : ""}` : rest);
 
 const label = (v: string) =>
   v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
@@ -94,8 +107,8 @@ export interface BriefDefaults extends Partial<OrderSpecInput> {
  * phone they are steps. A render order (N7) asks for views instead of stones
  * and size.
  */
-const CAD_STEPS = ["The piece", "Stones", "Size", "Metal & finish"];
-const RENDER_STEPS = ["The piece", "Views", "Metal & finish"];
+const CAD_STEPS = ["The piece", "Stones", "Size", "Metal & notes"];
+const RENDER_STEPS = ["The piece", "Views", "Metal & notes"];
 
 /** Which size a product is made to (DECISIONS §11 minimum). */
 function sizeKind(product: string): "ring" | "wrist" | "length" | "none" {
@@ -150,7 +163,7 @@ export function BriefWizard({
     component_count: "1",
     render_views: String(defaults.renderViews ?? (isRender ? 5 : 0)),
     priority: "STANDARD",
-    notes: defaults.notes ?? "",
+    notes: splitPiece(defaults.notes ?? "").rest,
     ring_size: defaults.ringSize ?? "",
     inner_circumference_mm: defaults.innerCircumferenceUm ? String(micronsToMm(defaults.innerCircumferenceUm)) : "",
     inner_diameter_mm: defaults.innerDiameterUm ? String(micronsToMm(defaults.innerDiameterUm)) : "",
@@ -159,6 +172,19 @@ export function BriefWizard({
   const [hasCentre, setHasCentre] = useState(defaults.hasCentreStone ?? false);
   const [certified, setCertified] = useState(false);
   const [accents, setAccents] = useState<AccentRow[]>(defaults.accents ?? []);
+  // A new brief has no answer about the centre stone yet; the dropdown asks.
+  const [centreAnswered, setCentreAnswered] = useState(defaults.hasCentreStone != null);
+  // Ring size: the country's system, then a size from its list.
+  const savedSize = parseRingSize(defaults.ringSize);
+  // No size yet: the country of the client's last ring size, else US.
+  const [ringSys, setRingSys] = useState(defaults.ringSize ? savedSize.code : parseRingSize(lastRingSize).code);
+  const [ringSz, setRingSz] = useState(savedSize.size);
+  const [ringOther, setRingOther] = useState<string | null>(savedSize.other);
+  const ringSizeText = ringOther ?? formatRingSize(ringSys, ringSz);
+  // "Other": what the piece is, kept as the notes' first line.
+  const savedNotes = splitPiece(defaults.notes ?? "");
+  const [piece, setPiece] = useState(savedNotes.piece);
+  const notesText = joinPiece(form.product === "OTHER" ? piece : "", form.notes ?? "");
   // Named for the client until they name it: "Ring · 18K yellow".
   const [named, setNamed] = useState(!!defaults.referenceName);
   const autoName = briefName({ product: form.product, karatage: form.karatage, metal: form.metal });
@@ -190,7 +216,7 @@ export function BriefWizard({
       }
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [form, hasCentre, certified, accents, named, readOnly]);
+  }, [form, hasCentre, certified, accents, named, readOnly, ringSys, ringSz, ringOther, piece, centreAnswered]);
 
   const set = (key: string) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
   const mm = (key: string) => micronsFrom(form, key);
@@ -220,13 +246,35 @@ export function BriefWizard({
       pinnedImageCount,
       service,
       size: {
-        ringSize: form.ring_size,
+        ringSize: ringSizeText,
         innerCircumferenceUm: micronsFrom(form, "inner_circumference_mm"),
         innerDiameterUm: micronsFrom(form, "inner_diameter_mm"),
         lengthUm: micronsFrom(form, "length_mm"),
       },
     });
-  }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount, service]);
+  }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount, service, ringSizeText]);
+  const centreGap = !isRender && !centreAnswered;
+
+  // Filled in, on to the next (owner, 5 Nov 2026): after a choice the next
+  // field scrolls into view, and an empty text box there takes the cursor.
+  const advance = (fromId: string) =>
+    window.setTimeout(() => {
+      const fields = [...(formRef.current?.querySelectorAll<HTMLElement>("[data-field]") ?? [])].filter((el) => el.offsetParent !== null);
+      const next = fields[fields.findIndex((el) => el.dataset.field === fromId) + 1];
+      if (!next) {
+        document.getElementById("brief-next")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      next.scrollIntoView({ behavior: "smooth", block: "center" });
+      const box = next.querySelector<HTMLInputElement | HTMLTextAreaElement>("input:not([type=hidden]):not([type=file]), textarea");
+      if (box && !box.value) box.focus({ preventScroll: true });
+    }, 60);
+  const enterAdvances = (id: string) => (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
+      e.preventDefault();
+      advance(id);
+    }
+  };
 
   // "Answer whichever you have, we work out the other" — shown, never stored,
   // so it can never overwrite a certified stone's real weight.
@@ -268,8 +316,24 @@ export function BriefWizard({
       <input type="hidden" name="inner_diameter_um" value={mm("inner_diameter_mm") ?? ""} />
       <input type="hidden" name="length_um" value={mm("length_mm") ?? ""} />
 
+      <input type="hidden" name="ring_size" value={ringSizeText} />
+      <input type="hidden" name="notes" value={notesText} />
       <StepBar step={step} steps={STEPS} onPick={setStep} />
-      <QualityChip quality={quality} onJump={jump} />
+      <QualityChip
+        quality={
+          centreGap
+            ? {
+                ...quality,
+                blockingCount: quality.blockingCount + 1,
+                gaps: [
+                  { severity: "blocking", field: "centre_choice", what: "Whether there is a centre stone", why: "The head and the band are built around it." },
+                  ...quality.gaps,
+                ],
+              }
+            : quality
+        }
+        onJump={jump}
+      />
 
       <Pane show={step === 0} title={STEPS[0]!}>
         <Field id="reference_name" label="Name this job">
@@ -281,16 +345,33 @@ export function BriefWizard({
               setNamed(true);
               set("reference_name")(e.target.value);
             }}
+            onKeyDown={enterAdvances("reference_name")}
             className="min-h-[var(--ctl)]"
           />
         </Field>
-        <Choice
+        <SelectField
+          id="product"
           name="product"
-          legend="What are we modelling?"
+          label="What are we modelling?"
           options={PRODUCTS.map((v) => [v, label(v)])}
-          value={form.product ?? ""}
-          onChange={set("product")}
+          value={form.product ?? "RING"}
+          onChange={(v) => {
+            set("product")(v);
+            advance("product");
+          }}
         />
+        {form.product === "OTHER" && (
+          <Field id="other_piece" label="What is it?">
+            <Input
+              id="other_piece"
+              value={piece}
+              onChange={(e) => setPiece(e.target.value)}
+              onKeyDown={enterAdvances("other_piece")}
+              placeholder="Brooch, cufflinks, nose pin…"
+              className="min-h-[var(--ctl)]"
+            />
+          </Field>
+        )}
         <Photos orderId={orderId} images={images} />
       </Pane>
 
@@ -312,184 +393,201 @@ export function BriefWizard({
       ) : null}
 
       <Pane show={!isRender && step === 1} title="Stones" hidden={isRender}>
-        <Toggle
-          name="has_centre_stone"
-          checked={hasCentre}
-          onChange={setHasCentre}
+        <input type="hidden" name="has_centre_stone" value={hasCentre ? "on" : ""} />
+        <input type="hidden" name="centre_shape" value={hasCentre ? form.centre_shape : ""} />
+        <input type="hidden" name="stones_supplied_by" value={form.stones_supplied_by} />
+        <p className="eyebrow mt-1">Stone details</p>
+        <SelectField
+          id="centre_choice"
           label="Centre stone"
+          options={[...(centreAnswered ? [] : ([["", "Choose…"]] as Array<[string, string]>)), ["NONE", "No centre stone"], ...SHAPES.map((v) => [v, label(v)] as [string, string])]}
+          value={centreAnswered ? (hasCentre ? (form.centre_shape ?? "ROUND") : "NONE") : ""}
+          onChange={(v) => {
+            if (!v) return;
+            setCentreAnswered(true);
+            setHasCentre(v !== "NONE");
+            if (v !== "NONE") set("centre_shape")(v);
+            advance("centre_choice");
+          }}
         />
 
         {hasCentre ? (
           <>
-            <Choice
-              name="centre_shape"
-              legend="Shape"
-              options={SHAPES.map((v) => [v, label(v)])}
-              value={form.centre_shape ?? ""}
-              onChange={set("centre_shape")}
-            />
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {(["centre_length_mm", "centre_width_mm", "centre_depth_mm"] as const).map((k, i) => (
-                <Field key={k} id={k} label={["Length", "Width", "Depth"][i] + " (mm)"}>
+                <Field key={k} id={k} label={["Length", "Width", "Depth"][i] + " mm"}>
                   <Input
                     id={k}
                     inputMode="decimal"
                     value={form[k]}
                     onChange={(e) => set(k)(e.target.value)}
+                    onKeyDown={enterAdvances(k)}
                     placeholder="6.50"
                     className="min-h-[var(--ctl)]"
                   />
                 </Field>
               ))}
             </div>
-
             {estimatedCarat ? (
-              <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">
+              <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">
                 ≈ <span className="tabular font-medium">{estimatedCarat}</span>
               </p>
             ) : null}
-
-            <Toggle
-              name="centre_certified"
-              checked={certified}
-              onChange={setCertified}
-              label="Certified stone"
-            />
-
-            <Field id="centre_quantity" label="Quantity">
-              <Input
+            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-2">
+              <SelectField
+                id="centre_setting"
+                name="centre_setting"
+                label="Setting"
+                options={SETTINGS.map((v) => [v, label(v)])}
+                value={form.centre_setting ?? "PRONG_6"}
+                onChange={(v) => {
+                  set("centre_setting")(v);
+                  advance("centre_setting");
+                }}
+              />
+              <SelectField
                 id="centre_quantity"
                 name="centre_quantity"
-                inputMode="numeric"
-                value={form.centre_quantity}
-                onChange={(e) => set("centre_quantity")(e.target.value)}
-                className="min-h-[var(--ctl)]"
+                label="How many"
+                options={["1", "2", "3", "4", "5"].map((n) => [n, n])}
+                value={form.centre_quantity || "1"}
+                onChange={(v) => {
+                  set("centre_quantity")(v);
+                  advance("centre_quantity");
+                }}
               />
-            </Field>
-
-            <Choice
-              name="centre_setting"
-              legend="Setting"
-              options={SETTINGS.map((v) => [v, label(v)])}
-              value={form.centre_setting ?? ""}
-              onChange={set("centre_setting")}
-            />
+            </div>
+            <label className="mt-2 flex min-h-[var(--ctl-sm)] cursor-pointer items-center gap-2 text-[length:var(--fs-3)]">
+              <Checkbox name="centre_certified" checked={certified} onChange={(e) => setCertified(e.target.checked)} />
+              Certified stone
+            </label>
           </>
         ) : null}
 
-        <h3 id="accent_shape" className="mt-8 scroll-mt-24 text-[length:var(--fs-4)] font-medium">Accent stones</h3>
+        <p id="accent_shape" className="eyebrow mt-5 scroll-mt-24">Side stones (accents)</p>
 
-        {accents.map((row, i) => (
-          <div
-            key={i}
-            className="mt-3 rounded-[var(--r-md)] border border-border p-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[length:var(--fs-2)] text-muted-foreground">
-                Row {i + 1}
-              </span>
-              <Button
+        {accents.map((row, i) => {
+          // "Same as the centre stone" shows the centre's values.
+          const sameShape = hasCentre ? ([[form.centre_shape ?? "ROUND", `Same as centre (${label(form.centre_shape ?? "ROUND")})`]] as Array<[string, string]>) : [];
+          const sameSetting = hasCentre ? ([[form.centre_setting ?? "PRONG_6", `Same as centre (${label(form.centre_setting ?? "PRONG_6")})`]] as Array<[string, string]>) : [];
+          return (
+            <div key={i} className="mt-2 rounded-[var(--r-md)] border border-border p-2.5">
+              <input type="hidden" name="accent_shape" value={row.shape} />
+              <input type="hidden" name="accent_setting" value={row.setting} />
+              <input type="hidden" name="accent_width_um" value={row.widthMm ? mmToMicrons(Number(row.widthMm) || 0) : 0} />
+              <input type="hidden" name="accent_quantity" value={Number(row.quantity) || 0} />
+              <div className="grid grid-cols-2 gap-2">
+                <SelectField
+                  id={`as${i}`}
+                  label="Shape"
+                  options={[...sameShape, ...SHAPES.filter((v) => !sameShape.some(([s]) => s === v)).map((v) => [v, label(v)] as [string, string])]}
+                  value={row.shape}
+                  onChange={(v) => updateAccent(setAccents, i, { shape: v })}
+                />
+                <SelectField
+                  id={`ast${i}`}
+                  label="Setting"
+                  options={[...sameSetting, ...SETTINGS.filter((v) => !sameSetting.some(([s]) => s === v)).map((v) => [v, label(v)] as [string, string])]}
+                  value={row.setting}
+                  onChange={(v) => updateAccent(setAccents, i, { setting: v })}
+                />
+                <Field id={`aw${i}`} label="Width mm">
+                  <Input
+                    id={`aw${i}`}
+                    inputMode="decimal"
+                    value={row.widthMm}
+                    onChange={(e) => updateAccent(setAccents, i, { widthMm: e.target.value })}
+                    onKeyDown={enterAdvances(`aw${i}`)}
+                    placeholder="1.30"
+                    className="min-h-[var(--ctl)]"
+                  />
+                </Field>
+                <Field id={`aq${i}`} label="How many">
+                  <Input
+                    id={`aq${i}`}
+                    inputMode="numeric"
+                    value={row.quantity}
+                    onChange={(e) => updateAccent(setAccents, i, { quantity: e.target.value })}
+                    onKeyDown={enterAdvances(`aq${i}`)}
+                    placeholder="18"
+                    className="min-h-[var(--ctl)]"
+                  />
+                </Field>
+              </div>
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
+                className="mt-1 text-[length:var(--fs-2)] text-muted-foreground underline underline-offset-4 hover:text-foreground"
                 onClick={() => setAccents((a) => a.filter((_, j) => j !== i))}
               >
-                Remove
-              </Button>
+                Remove this row
+              </button>
             </div>
-            <input type="hidden" name="accent_shape" value={row.shape} />
-            <input type="hidden" name="accent_setting" value={row.setting} />
-            <input
-              type="hidden"
-              name="accent_width_um"
-              value={row.widthMm ? mmToMicrons(Number(row.widthMm) || 0) : 0}
-            />
-            <input type="hidden" name="accent_quantity" value={Number(row.quantity) || 0} />
-
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <SelectField
-                label="Shape"
-                options={SHAPES.map((v) => [v, label(v)])}
-                value={row.shape}
-                onChange={(v) => updateAccent(setAccents, i, { shape: v })}
-              />
-              <SelectField
-                label="Setting"
-                options={SETTINGS.map((v) => [v, label(v)])}
-                value={row.setting}
-                onChange={(v) => updateAccent(setAccents, i, { setting: v })}
-              />
-              <Field id={`aw${i}`} label="Width (mm)">
-                <Input
-                  id={`aw${i}`}
-                  inputMode="decimal"
-                  value={row.widthMm}
-                  onChange={(e) => updateAccent(setAccents, i, { widthMm: e.target.value })}
-                  placeholder="1.30"
-                  className="min-h-[var(--ctl)]"
-                />
-              </Field>
-              <Field id={`aq${i}`} label="How many">
-                <Input
-                  id={`aq${i}`}
-                  inputMode="numeric"
-                  value={row.quantity}
-                  onChange={(e) => updateAccent(setAccents, i, { quantity: e.target.value })}
-                  placeholder="18"
-                  className="min-h-[var(--ctl)]"
-                />
-              </Field>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         <Button
           type="button"
           variant="outline"
-          className="mt-3 min-h-[var(--ctl)] w-full"
+          className="mt-2 min-h-[var(--ctl)] w-full"
           onClick={() =>
             setAccents((a) => [
               ...a,
-              { shape: "ROUND", widthMm: "", quantity: "", setting: "PAVE" },
+              hasCentre
+                ? { shape: form.centre_shape ?? "ROUND", widthMm: "", quantity: "", setting: form.centre_setting ?? "PRONG_6" }
+                : { shape: "ROUND", widthMm: "", quantity: "", setting: "PAVE" },
             ])
           }
         >
-          {accents.length === 0 ? "Add accent stones" : "Another size"}
+          {accents.length === 0 ? "Add side stones" : "Another size"}
         </Button>
-
-        <Choice
-          name="stones_supplied_by"
-          legend="Stones supplied by"
-          options={SUPPLY.map((v) => [v, v === "NONE" ? "No stones" : label(v)])}
-          value={form.stones_supplied_by ?? ""}
-          onChange={set("stones_supplied_by")}
-        />
       </Pane>
 
       <Pane show={!isRender && step === 2} title="Size" hidden={isRender}>
         {sizeKind(form.product ?? "") === "ring" && (
           <>
-            <Field id="ring_size" label="Ring size">
-              <Input
+            <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-2">
+              <SelectField
+                id="ring_system"
+                label="Country"
+                options={RING_SIZE_SYSTEMS.map((r) => [r.code, r.label])}
+                value={ringSys}
+                onChange={(v) => {
+                  setRingSys(v);
+                  if (!ringSystem(v).sizes.includes(ringSz)) setRingSz("");
+                  setRingOther(null);
+                  advance("ring_system");
+                }}
+              />
+              <SelectField
                 id="ring_size"
-                name="ring_size"
-                value={form.ring_size}
-                onChange={(e) => set("ring_size")(e.target.value)}
-                placeholder={lastRingSize || "US 6.5"}
-                className="min-h-[var(--ctl)]"
+                label="Ring size"
+                options={[["", "Choose…"], ...ringSystem(ringSys).sizes.map((z) => [z, z] as [string, string])]}
+                value={ringOther ? "" : ringSz}
+                onChange={(v) => {
+                  setRingSz(v);
+                  setRingOther(null);
+                  if (v) advance("ring_size");
+                }}
               />
-            </Field>
-            <Field id="inner_circumference_mm" label="Or inner circumference (mm)">
-              <Input
-                id="inner_circumference_mm"
-                inputMode="decimal"
-                value={form.inner_circumference_mm}
-                onChange={(e) => set("inner_circumference_mm")(e.target.value)}
-                placeholder="53.1"
-                className="min-h-[var(--ctl)]"
-              />
-            </Field>
+            </div>
+            {ringOther && (
+              <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">Saved before as “{ringOther}”. Choose a size to replace it.</p>
+            )}
+            <details className="mt-2">
+              <summary className="w-fit cursor-pointer text-[length:var(--fs-2)] text-muted-foreground underline underline-offset-4">
+                Know the inside circumference instead?
+              </summary>
+              <Field id="inner_circumference_mm" label="Inner circumference (mm)">
+                <Input
+                  id="inner_circumference_mm"
+                  inputMode="decimal"
+                  value={form.inner_circumference_mm}
+                  onChange={(e) => set("inner_circumference_mm")(e.target.value)}
+                  placeholder="53.1"
+                  className="min-h-[var(--ctl)]"
+                />
+              </Field>
+            </details>
           </>
         )}
         {sizeKind(form.product ?? "") === "wrist" && (
@@ -533,58 +631,38 @@ export function BriefWizard({
         )}
       </Pane>
 
-      <Pane show={step === STEPS.length - 1} title="Metal & finish">
-        <Choice
-          name="metal"
-          legend="Metal"
-          options={METALS.map((v) => [v, label(v)])}
-          value={form.metal ?? ""}
-          onChange={set("metal")}
-        />
-
-        <Field id="karatage" label="Karat">
-          <Input
+      <Pane show={step === STEPS.length - 1} title="Metal & notes">
+        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-2">
+          <SelectField
+            id="metal"
+            name="metal"
+            label="Metal"
+            options={METALS.map((v) => [v, label(v)])}
+            value={form.metal ?? "YELLOW"}
+            onChange={(v) => {
+              set("metal")(v);
+              if (!karatsFor(v).includes(form.karatage ?? "")) set("karatage")(karatsFor(v)[v === "PLATINUM" || v === "SILVER" ? 0 : 3]!);
+              advance("metal");
+            }}
+          />
+          <SelectField
             id="karatage"
             name="karatage"
-            value={form.karatage}
-            onChange={(e) => set("karatage")(e.target.value)}
-            placeholder="18K"
-            className="min-h-[var(--ctl)]"
+            label="Karat"
+            options={[...new Set([...karatsFor(form.metal ?? "YELLOW"), ...(form.karatage ? [form.karatage] : [])])].map((k) => [k, k])}
+            value={form.karatage ?? "18K"}
+            onChange={(v) => {
+              set("karatage")(v);
+              advance("karatage");
+            }}
           />
-        </Field>
+        </div>
 
-        {isRender ? (
-          <>
-            <input type="hidden" name="purpose" value="RENDER_ONLY" />
-            <input type="hidden" name="format" value={form.format} />
-          </>
-        ) : (
-        <>
-        <Choice
-          name="purpose"
-          legend="Made for"
-          options={PURPOSES}
-          value={form.purpose ?? ""}
-          onChange={set("purpose")}
-        />
-
-        <Choice
-          name="format"
-          legend="Files"
-          options={FORMATS.map((v) => [v, v === "THREE_DM" ? "3DM" : label(v)])}
-          value={form.format ?? ""}
-          onChange={set("format")}
-        />
-        </>
-        )}
-
-        <Choice
-          name="finish"
-          legend="Finish"
-          options={FINISHES.map((v) => [v, label(v)])}
-          value={form.finish ?? ""}
-          onChange={set("finish")}
-        />
+        {/* Not asked (owner, 5 Nov 2026): made for, files, finish and who
+            supplies the stones keep their saved or standard values. */}
+        <input type="hidden" name="purpose" value={isRender ? "RENDER_ONLY" : form.purpose} />
+        <input type="hidden" name="format" value={form.format} />
+        <input type="hidden" name="finish" value={form.finish} />
 
         {/* No priority choice: rush is off until it is defined (DECISIONS §12),
             and upsert_order_spec refuses anything but STANDARD while it is. */}
@@ -592,7 +670,6 @@ export function BriefWizard({
         <Field id="notes" label="Notes">
           <Textarea
             id="notes"
-            name="notes"
             rows={3}
             placeholder="Two-tone parts, stone layout, anything else"
             value={form.notes}
@@ -616,7 +693,10 @@ export function BriefWizard({
         </button>
         <SaveState state={saveState} reason={saveRefusal} />
         {step < STEPS.length - 1 ? (
-          <Button type="button" className="min-h-[var(--ctl)] flex-1 md:hidden" onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}>
+          <Button id="brief-next" type="button" className="min-h-[var(--ctl)] flex-1 md:hidden" onClick={() => {
+            setStep((s) => Math.min(STEPS.length - 1, s + 1));
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}>
             Next
           </Button>
         ) : null}
@@ -652,15 +732,16 @@ function stepForField(field: string): number {
 }
 
 function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]; onPick: (n: number) => void }) {
+  // One line and a thin bar, kept in view under the top bar while scrolling.
   return (
-    <div className="mb-5 md:hidden">
-      <p className="text-[length:var(--fs-2)] text-muted-foreground">
-        Step {step + 1} of {STEPS.length}
+    <div className="sticky top-[57px] z-20 -mx-[var(--s-4)] mb-3 bg-background/95 px-[var(--s-4)] pb-1 pt-2 backdrop-blur md:hidden">
+      <p className="flex items-baseline gap-2 text-[length:var(--fs-3)]">
+        <span className="tabular text-muted-foreground">
+          {step + 1}/{STEPS.length}
+        </span>
+        <span className="font-semibold">{STEPS[step]}</span>
       </p>
-      <h2 className="mt-0.5 text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)] tracking-[var(--ls-5)]">
-        {STEPS[step]}
-      </h2>
-      <div className="mt-2 flex gap-1" role="tablist" aria-label="Brief steps">
+      <div className="mt-1 flex gap-1" role="tablist" aria-label="Brief steps">
         {STEPS.map((s, i) => (
           <button
             key={s}
@@ -670,8 +751,8 @@ function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]
             aria-label={s}
             onClick={() => onPick(i)}
             className={cn(
-              // A 24px tap target around a 4px bar.
-              "relative h-6 flex-1 before:absolute before:inset-x-0 before:top-1/2 before:h-1 before:-translate-y-1/2 before:rounded-[var(--r-full)] before:transition-colors before:duration-[var(--dur-fast)]",
+              // A 24px tap target (WCAG 2.5.8) around a 2px bar.
+              "relative h-6 flex-1 before:absolute before:inset-x-0 before:top-1/2 before:h-0.5 before:-translate-y-1/2 before:rounded-[var(--r-full)] before:transition-colors before:duration-[var(--dur-fast)]",
               i <= step ? "before:bg-primary" : "before:bg-muted",
             )}
           />
@@ -718,12 +799,12 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mt-4">
+    <div className="mt-3 scroll-mt-28" data-field={id}>
       <Label htmlFor={id}>{text}</Label>
       {hint ? (
-        <p className="mb-1.5 mt-0.5 text-[length:var(--fs-2)] text-muted-foreground">{hint}</p>
+        <p className="mb-1 mt-0.5 text-[length:var(--fs-2)] text-muted-foreground">{hint}</p>
       ) : (
-        <div className="mb-1.5" />
+        <div className="mb-1" />
       )}
       {children}
     </div>
@@ -786,65 +867,37 @@ function Choice({
   );
 }
 
+/**
+ * A labelled dropdown (owner, 5 Nov 2026: dropdowns instead of rows of
+ * buttons, so a question takes one line). With a name it posts with the
+ * form; without one its value is posted through a hidden input.
+ */
 function SelectField({
+  id,
+  name,
   label: text,
   options,
   value,
   onChange,
 }: {
+  id: string;
+  name?: string;
   label: string;
   options: Array<[string, string]>;
   value: string;
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="mt-4">
-      <Label>{text}</Label>
-      <Select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5"
-      >
+    <div className="mt-3 scroll-mt-28" data-field={id}>
+      <Label htmlFor={id}>{text}</Label>
+      <Select id={id} name={name} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1">
         {options.map(([v, t]) => (
-          <option key={v} value={v}>
+          <option key={v} value={v} disabled={v === "" && value !== ""}>
             {t}
           </option>
         ))}
       </Select>
     </div>
-  );
-}
-
-function Toggle({
-  name,
-  checked,
-  onChange,
-  label: text,
-  hint,
-}: {
-  name: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-  hint?: string;
-}) {
-  return (
-    <label id={name} className="mt-5 flex min-h-[var(--ctl)] scroll-mt-24 cursor-pointer items-start gap-3">
-      <Checkbox
-        name={name}
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5"
-      />
-      <span>
-        <span className="text-[length:var(--fs-4)] font-medium">{text}</span>
-        {hint ? (
-          <span className="mt-0.5 block text-[length:var(--fs-2)] text-muted-foreground">
-            {hint}
-          </span>
-        ) : null}
-      </span>
-    </label>
   );
 }
 
