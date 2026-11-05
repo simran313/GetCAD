@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 
 import { saveBriefAction } from "./actions";
 import { Photos } from "./Photos";
+import { Certificates } from "./Certificates";
+import type { CertificateView } from "@/lib/client/standingActions";
 import type { ReferenceImage } from "./ReferenceSection";
 import { refusalReason } from "@/lib/refusal";
 import { formatRingSize, parseRingSize, RING_SIZE_SYSTEMS, ringSystem } from "@/core/sizes/ringSizes";
@@ -126,6 +128,7 @@ export function BriefWizard({
   images = [],
   lastRingSize = null,
   initialStep = 0,
+  certificates = [],
 }: {
   orderId: string;
   defaults: BriefDefaults;
@@ -139,6 +142,8 @@ export function BriefWizard({
   lastRingSize?: string | null;
   /** Opened from a row on Review: start on that row's step. */
   initialStep?: number;
+  /** Diamond certificate pictures already on the order (0062). */
+  certificates?: CertificateView[];
 }) {
   const referenceImageCount = images.length;
   const pinnedImageCount = images.filter((i) => i.pins.length > 0).length;
@@ -461,6 +466,7 @@ export function BriefWizard({
               <Checkbox name="centre_certified" checked={certified} onChange={(e) => setCertified(e.target.checked)} />
               Certified stone
             </label>
+            {(certified || certificates.length > 0) && <Certificates orderId={orderId} initial={certificates} readOnly={readOnly} />}
           </>
         ) : null}
 
