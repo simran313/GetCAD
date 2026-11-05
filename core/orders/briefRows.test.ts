@@ -51,7 +51,7 @@ describe("briefRows", () => {
     const rows = briefRows(ring, { service: "cad", photos: 1 });
     expect(rows.find((r) => r.key === "photos")).toMatchObject({ step: 0, field: "photos" });
     expect(rows.find((r) => r.key === "size")).toMatchObject({ step: 2, field: "ring_size" });
-    expect(rows.find((r) => r.key === "metal")).toMatchObject({ step: 3, field: "metal" });
+    expect(rows.find((r) => r.key === "metal")).toMatchObject({ step: 2, field: "metal" });
   });
 
   it("asks a render brief for views, not stones or size, and its metal is step 3 of 3", () => {

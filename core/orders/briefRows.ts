@@ -64,7 +64,8 @@ export function briefRows(
     (s.inner_diameter_um ? `${mm("inner_diameter_um")} inside` : null) ||
     (s.length_um ? `${mm("length_um")} long` : null);
   const accents = opts.accents ?? [];
-  const metalStep = render ? 2 : 3;
+  // Metal and notes are on the last step: 3 of 3 for both (owner, 5 Nov 2026).
+  const metalStep = 2;
   const rows: BriefRow[] = [
     { key: "name", label: "Name", value: (s.reference_name as string) || null, step: 0, field: "reference_name" },
     { key: "product", label: "Piece", value: s.product ? productWord(s.product as string) : null, step: 0, field: "product" },
