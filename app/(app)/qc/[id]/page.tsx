@@ -22,6 +22,8 @@ import { viewerZone } from "@/lib/time/zone";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
 import { loadPodJobs } from "@/lib/work/load";
 import { loadReferences } from "@/lib/work/references";
+import { loadStanding } from "@/lib/work/standing";
+import { StandingInstructions } from "@/components/work/standing";
 import { requireTeam } from "@/lib/work/team";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +75,7 @@ export default async function QcReviewPage({
   }
   const version = Math.min(Math.max(Number(v) || job.work_version, 1), job.work_version);
 
-  const [filesRes, checklistRes, specRes, accentsRes, stampRes, refs, relRes, vsRes] = await Promise.all([
+  const [filesRes, checklistRes, specRes, accentsRes, stampRes, refs, relRes, vsRes, standing] = await Promise.all([
     supabase.from("deliverables").select("slot, file_version_id, file_name").eq("order_id", id).eq("version", version),
     supabase.rpc("job_checklist", { p_order_id: id }),
     supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
@@ -82,6 +84,7 @@ export default async function QcReviewPage({
     loadReferences(supabase, id),
     supabase.rpc("my_order_relation", { p_order_id: id }),
     supabase.rpc("version_spec", { p_order_id: id }),
+    loadStanding(supabase, id),
   ]);
   // Phase 7a (0050): this version's measured minimums, the designer's
   // volume and any waivers; Pass needs the measurements, with no open edges.
@@ -126,6 +129,7 @@ export default async function QcReviewPage({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
+          <StandingInstructions standing={standing} />
           <Card as="section">
             <CardHeader>
               <CardTitle>Version {version}</CardTitle>

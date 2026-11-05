@@ -8,6 +8,7 @@ import { ErrorPanel } from "@/components/error-panel";
 import { PageHeader } from "@/components/ui/page-header";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { briefRows } from "@/lib/client/orders";
+import { loadStanding } from "@/lib/work/standing";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { BriefWizard, type AccentRow } from "./BriefWizard";
@@ -88,7 +89,7 @@ export default async function BriefPage({
   const { data: rel } = await supabase.rpc("my_order_relation", { p_order_id: id });
   const isDesigner = rel === "DESIGNER";
 
-  const [orderRes, specRes, accentsRes, imagesRes] = await Promise.all([
+  const [orderRes, specRes, accentsRes, imagesRes, standing] = await Promise.all([
     supabase.rpc("visible_orders", { p_order_id: id }).select("id, status, relation, source, service, display_ref").maybeSingle(),
     isDesigner
       ? supabase.rpc("job_brief", { p_order_id: id })
@@ -103,6 +104,7 @@ export default async function BriefPage({
       .select("id, object_key, is_primary, position, order_reference_pins(x_bp, y_bp, label, position)")
       .eq("order_id", id)
       .order("position"),
+    loadStanding(supabase, id),
   ]);
 
   if (orderRes.error) {
@@ -196,6 +198,15 @@ export default async function BriefPage({
         title={order.service === "render" ? "Render brief" : "CAD brief"}
       />
 
+      {order.relation === "CLIENT" && (
+        <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">
+          {standing.master ? "Your master instructions are added to this order. " : "Same factory rules on every order? "}
+          <Link href="/account#master" className="underline underline-offset-4">
+            {standing.master ? "Edit them" : "Add master instructions"}
+          </Link>
+        </p>
+      )}
+
       <div className="mt-3 md:mt-6">
         {isOwner ? (
           <BriefWizard
@@ -205,6 +216,7 @@ export default async function BriefPage({
             images={images}
             lastRingSize={lastRingSize}
             initialStep={Number((await searchParams).step) || 0}
+            certificates={standing.certificates}
             defaults={{
               referenceName: spec?.reference_name,
               product: spec?.product,

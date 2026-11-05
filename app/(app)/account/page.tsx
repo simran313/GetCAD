@@ -23,6 +23,7 @@ import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { uploadLogoAction } from "../orders/previewActions";
 
 import { ClientProfileForm, type ClientProfile } from "./ClientProfileForm";
+import { MasterInstructionsForm } from "./MasterInstructionsForm";
 
 /**
  * Account.
@@ -71,7 +72,7 @@ export default async function AccountPage() {
   // profile table this person might have (each readable only by its owner,
   // so the others come back empty), with the sign-in email from Clerk.
   const supabase = await createUserSupabaseClient();
-  const [{ data }, { data: grants }, { data: clientProfile }, { data: account }, { data: designer }, { data: staff }, clerkUser, { data: emailPrefs }] = await Promise.all([
+  const [{ data }, { data: grants }, { data: clientProfile }, { data: account }, { data: designer }, { data: staff }, clerkUser, { data: emailPrefs }, { data: masterRow }] = await Promise.all([
     supabase.from("users").select("role, status").maybeSingle(),
     supabase.from("user_roles").select("role"),
     supabase.from("client_profiles").select("business_name, legal_name, email, phone, logo_object_key").eq("user_id", userId).maybeSingle(),
@@ -80,7 +81,10 @@ export default async function AccountPage() {
     supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle(),
     currentUser(),
     supabase.rpc("my_email_preferences"),
+    // 0062: their own only (nothing for anyone else).
+    supabase.rpc("my_master_instructions").maybeSingle(),
   ]);
+  const master = masterRow as { body: string } | null;
 
   const role: string = data?.role ?? "CLIENT";
   const status: string = data?.status ?? "PENDING";
@@ -165,6 +169,21 @@ export default async function AccountPage() {
           </h2>
           <div className="mt-4">
             <ClientProfileForm profile={profile as ClientProfile | null} email={email} next="/account" submitLabel="Save" askHeardAbout={!profile} />
+          </div>
+        </section>
+      )}
+
+      {isClient && (
+        <section id="master" aria-labelledby="acc-master" className="scroll-mt-20 rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
+          <h2 id="acc-master" className="text-[length:var(--fs-4)] leading-[var(--lh-4)]">
+            Master instructions
+          </h2>
+          <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">
+            Your factory&apos;s rules, followed on every order. Your designer and pod lead see them on each job. Leave out your company name and
+            contact details.
+          </p>
+          <div className="mt-4">
+            <MasterInstructionsForm initial={master?.body ?? ""} />
           </div>
         </section>
       )}

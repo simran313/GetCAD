@@ -12,6 +12,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PodPicker, type PodOption } from "@/components/work/pod-picker";
 import type { PodJob } from "@/lib/work/load";
 import type { VersionSpec } from "@/lib/work/spec";
+import { loadStanding } from "@/lib/work/standing";
+import { StandingInstructions } from "@/components/work/standing";
+import { Textarea } from "@/components/ui/textarea";
+import { saveOrderMasterInstructionsAction } from "@/lib/client/standingActions";
+import { ReloadForm } from "@/components/reload-form";
 import { issueCertificateAction } from "../actions";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
@@ -347,6 +352,33 @@ export default async function OrderPage({
     const checklistRows = (checklistRes.data as ChecklistRow[] | null) ?? [];
     const slotRows = ((slotsRes.data as SlotRow[] | null) ?? []).filter((r) => r.required);
     const movable = ["SUBMITTED", "QUOTED", "PAYMENT_HELD", "ASSIGNED"].includes(order.status);
+    // 0062: the client's master instructions and any diamond certificate.
+    // An admin may write them here for a client the team looks after.
+    const standing = await loadStanding(supabase, order.id);
+    const standingCard = (
+      <StandingInstructions
+        standing={standing}
+        footer={
+          order.relation === "ADMIN" ? (
+            <details className="group">
+              <summary className="cursor-pointer text-[length:var(--fs-2)] underline underline-offset-4">
+                {standing.master ? "Edit for this client" : "Add for this client"}
+              </summary>
+              <ReloadForm action={saveOrderMasterInstructionsAction} className="mt-2 space-y-2">
+                <input type="hidden" name="order_id" value={order.id} />
+                <label htmlFor="master-body-admin" className="sr-only">
+                  Master instructions for this client
+                </label>
+                <Textarea id="master-body-admin" name="body" rows={4} maxLength={4000} defaultValue={standing.master?.body ?? ""} />
+                <Button type="submit" size="sm" variant="outline">
+                  Save for every order of this client
+                </Button>
+              </ReloadForm>
+            </details>
+          ) : undefined
+        }
+      />
+    );
     const teamTop = (
       <Card as="section">
         <CardHeader>
@@ -422,14 +454,11 @@ export default async function OrderPage({
         <OrderDetail
           layout="team"
           teamTop={
-            teamClaims.length > 0 ? (
-              <>
-                {teamTop}
-                <TeamClaims orderId={order.id} claims={teamClaims} isAdmin={order.relation === "ADMIN"} />
-              </>
-            ) : (
-              teamTop
-            )
+            <>
+              {teamTop}
+              {standingCard}
+              {teamClaims.length > 0 && <TeamClaims orderId={order.id} claims={teamClaims} isAdmin={order.relation === "ADMIN"} />}
+            </>
           }
           order={order}
           role={role}

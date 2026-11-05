@@ -27,7 +27,8 @@ test("the admin adds a designer, their bank details, a document and a pod", asyn
   await expect(page.getByText(/Line 2 \(no email here\): no email on this line/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/(Added 1|Already on file):/)).toBeVisible();
 
-  await page.getByRole("link", { name: /Neha Designer/ }).click();
+  // The result links the designer (the list below refreshes on the next visit).
+  await page.getByRole("link", { name: /Neha Designer/ }).first().click();
   await page.waitForURL(/\/admin\/designers\/user_/);
   await expect(page.getByText("Waiting to sign in")).toBeVisible();
 

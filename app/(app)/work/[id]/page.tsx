@@ -16,6 +16,8 @@ import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
 import { jobTitle, loadJobTimes, loadMyWork } from "@/lib/work/load";
 import { versionNote } from "@/lib/work/notes";
 import { loadReferences } from "@/lib/work/references";
+import { loadStanding } from "@/lib/work/standing";
+import { StandingInstructions } from "@/components/work/standing";
 
 import { AutoRefresh } from "../../orders/AutoRefresh";
 import { setVolumeAction } from "../../orders/actions";
@@ -70,7 +72,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes, timesMap, weightsRes] = await Promise.all([
+  const [briefRes, accentsRes, slotsRes, checklistRes, threadsRes, messagesRes, filesRes, stampRes, refs, note, specRes, readsRes, timesMap, weightsRes, standing] = await Promise.all([
     supabase.rpc("job_brief", { p_order_id: id }),
     supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", id).order("position"),
     supabase.rpc("job_slots", { p_order_id: id }),
@@ -85,6 +87,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
     supabase.rpc("thread_read_state", { p_order_id: id }),
     loadJobTimes(supabase, id),
     supabase.rpc("job_weights_get", { p_order_id: id }),
+    loadStanding(supabase, id),
   ]);
   const volume = (specRes.data as { volume_mm3: number | null } | null)?.volume_mm3 ?? null;
   const needsVolume = job.service !== "render";
@@ -155,6 +158,8 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-6">
+          <StandingInstructions standing={standing} />
+
           {note && (
             <Card as="section">
               <CardHeader>

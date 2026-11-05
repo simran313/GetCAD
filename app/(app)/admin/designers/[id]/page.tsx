@@ -17,7 +17,7 @@ import { viewerZone } from "@/lib/time/zone";
 
 import { removeDocumentAction, saveBankAction, setDesignerPodAction, uploadDocumentsAction } from "../actions";
 import { BankReveal } from "../BankReveal";
-import { ReloadForm } from "../ReloadForm";
+import { ReloadForm } from "@/components/reload-form";
 import { bankWord, DOCUMENT_KINDS, statusWord, type DesignerRow } from "../words";
 
 /**

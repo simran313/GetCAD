@@ -17,9 +17,14 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
  * the row is written.
  */
 
+export interface AddedDesigner {
+  userId: string;
+  label: string;
+}
+
 export interface AddDesignersResult {
-  added: string[];
-  already: string[];
+  added: AddedDesigner[];
+  already: AddedDesigner[];
   problems: string[];
 }
 
@@ -49,12 +54,14 @@ export async function addDesignersAction(_prev: AddDesignersResult | null, formD
         result.problems.push(`${person.email}: ${error.message}`);
         continue;
       }
-      ((data as { new: boolean } | null)?.new ? result.added : result.already).push(`${person.name} · ${person.email}`);
+      ((data as { new: boolean } | null)?.new ? result.added : result.already).push({ userId: account.userId, label: `${person.name} · ${person.email}` });
     } catch (e) {
       result.problems.push(`${person.email}: ${e instanceof Error ? e.message : "the sign-in account could not be opened"}`);
     }
   }
-  revalidatePath("/", "layout");
+  // No page refresh here: it can re-render the page through its loading
+  // screen and drop this result before it is seen. The result links each
+  // designer instead; the list below is fresh on the next visit.
   return result;
 }
 

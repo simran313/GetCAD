@@ -14,6 +14,8 @@ import { viewerZone } from "@/lib/time/zone";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
 import { jobTitle, loadMyWork } from "@/lib/work/load";
 import { loadReferences } from "@/lib/work/references";
+import { loadStanding } from "@/lib/work/standing";
+import { StandingInstructions } from "@/components/work/standing";
 import { cn } from "@/lib/utils";
 
 import { transitionAction } from "../../../orders/actions";
@@ -46,7 +48,7 @@ export default async function FinalReviewPage({ params }: { params: Promise<{ id
   const [job] = await loadMyWork(supabase, id).catch(() => []);
   if (!job) redirect("/work");
 
-  const [briefRes, accentsRes, slotsRes, checklistRes, specRes, weightsRes, refs, zone] = await Promise.all([
+  const [briefRes, accentsRes, slotsRes, checklistRes, specRes, weightsRes, refs, zone, standing] = await Promise.all([
     supabase.rpc("job_brief", { p_order_id: id }),
     supabase.from("order_spec_accents").select("shape, width_um, quantity, setting").eq("order_id", id).order("position"),
     supabase.rpc("job_slots", { p_order_id: id }),
@@ -55,6 +57,7 @@ export default async function FinalReviewPage({ params }: { params: Promise<{ id
     supabase.rpc("job_weights_get", { p_order_id: id }),
     loadReferences(supabase, id),
     viewerZone(),
+    loadStanding(supabase, id),
   ]);
 
   const slots = ((slotsRes.data ?? []) as SlotRow[]).filter((s) => s.required);
@@ -133,6 +136,7 @@ export default async function FinalReviewPage({ params }: { params: Promise<{ id
             The client&apos;s references
           </h2>
           <RefViewer images={refs} />
+          <StandingInstructions standing={standing} />
           {lines.length > 0 && (
             <div className="space-y-1">
               <h2 className={h2}>The brief</h2>

@@ -29,6 +29,12 @@ const choose = (page: Page, legend: string, option: string) =>
 
 test("a client sends a CAD brief", async ({ browser }) => {
   const page = await signedIn(browser, "client");
+  // Master instructions (0062): written once on Account, shown on every job.
+  await page.goto("/account#master");
+  await page.getByRole("textbox", { name: "Master instructions" }).fill("Shank at least 1.8 mm. Sprue inside the shank.");
+  await page.locator("#master").getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Saved · on every order")).toBeVisible({ timeout: 20_000 });
+
   await page.goto("/orders/new");
   await page.getByRole("button", { name: /^CAD design/ }).click();
   await page.waitForURL(/\/orders\/[^/]+\/brief$/);
@@ -115,6 +121,8 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
   await expectGone(lead, lead.getByRole("button", { name: "Send back · revision needed" }));
 
   await designer.goto(`/work/${orderId}`);
+  // The client's master instructions sit on the job (0062).
+  await expect(designer.getByRole("region", { name: "Master instructions" })).toContainText("Shank at least 1.8 mm. Sprue inside the shank.");
   // The "Pod lead notes" card lists it as one item (the thread carries the raw message too).
   await expect(designer.getByRole("listitem").filter({ hasText: /^All measurements — Shank 1\.0 mm at the base — Thicken to 1\.2 mm$/ })).toBeVisible();
 
