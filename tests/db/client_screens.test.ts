@@ -60,7 +60,7 @@ describe("quotes are in US dollars", () => {
     const id = await submitted("INR");
     await q(admin, "SELECT public.quote_order_v2($1,'C')", [id]);
     const o = await db.query("SELECT currency, price_total FROM orders WHERE id=$1", [id]);
-    expect(o.rows[0]).toEqual({ currency: "USD", price_total: 4900 });
+    expect(o.rows[0]).toEqual({ currency: "USD", price_total: 3500 });
   });
 
   it("a USD order stays USD", async () => {

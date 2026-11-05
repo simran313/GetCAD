@@ -519,7 +519,7 @@ export async function OrderDetail({
                   Set quote
                 </Button>
                 <span className="w-full text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
-                  Leave the price empty for the band: A–C $55 ($49 first design), D–F $85, G–L from $120.
+                  Leave the price empty for the band: A–C $35, D–F $85, G–L from $120.
                   Designer and QC pay are locked from the category.
                 </span>
               </form>
