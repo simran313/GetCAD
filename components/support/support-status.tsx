@@ -55,7 +55,14 @@ export function SupportStatus({ className, tone = "default", showHours = true }:
             ))}
           </span>
         </span>
-        {showHours && <span className="tabular whitespace-nowrap"> · {hours}</span>}
+        {/* The space sits outside the no-wrap spans, so a narrow column
+            breaks the line here instead of running into its neighbour. */}
+        {showHours && (
+          <>
+            {" "}
+            <span className="tabular whitespace-nowrap">· {hours}</span>
+          </>
+        )}
       </span>
     </span>
   );

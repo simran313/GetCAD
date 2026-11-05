@@ -34,8 +34,11 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-subtle">
-      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 md:grid-cols-4 lg:px-8">
-        <div>
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 sm:grid-cols-3 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:px-8">
+        {/* The brand column has its own row until there is room for its
+            support line beside three link columns (owner, 5 Nov 2026: it ran
+            into "Product"). */}
+        <div className="sm:col-span-3 lg:col-span-1">
           <Wordmark />
           <p className="mt-3 max-w-xs text-[15px] leading-[1.5] text-muted-foreground">
             The AI-native jewelry CAD studio. The portal is open 24/7.
@@ -60,7 +63,7 @@ export function MarketingFooter() {
       </div>
       <div className="border-t border-border pb-24 pt-5 md:pb-5">
         <p className="mx-auto max-w-[1200px] px-4 text-[14px] text-muted-foreground sm:px-6 lg:px-8">
-          © {new Date().getFullYear()} The CAD Pillar. All rights reserved.
+          © {new Date().getFullYear()} Ichizu Private Limited. The CAD Pillar is a brand of Ichizu Private Limited. All rights reserved.
         </p>
       </div>
     </footer>

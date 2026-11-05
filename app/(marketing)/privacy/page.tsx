@@ -15,6 +15,7 @@ const SECTIONS = [
   {
     heading: "What we collect, and when",
     body: [
+      "The CAD Pillar is a brand of Ichizu Private Limited, which is responsible for the data described here.",
       "Website forms: the name, company, email and message you send us, or the email and piece you enter to get a price.",
       "Your account: an identifier from our sign-in provider (Clerk), your business name, contact name, email and phone, your role and account status.",
       "Orders: the brief, reference pictures, files, messages, prices, payments and every status change.",

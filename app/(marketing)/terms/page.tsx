@@ -10,7 +10,7 @@ const SECTIONS = [
   {
     heading: "Who we are and who we serve",
     body: [
-      "The CAD Pillar (\"we\") makes jewelry CAD files and renders for jewelry businesses. We work only with businesses (\"you\"), not with consumers. Our studio is in Mumbai, India, and works US business hours.",
+      "The CAD Pillar, a brand of Ichizu Private Limited (\"we\"), makes jewelry CAD files and renders for jewelry businesses. We work only with businesses (\"you\"), not with consumers. Our studio is in Mumbai, India, and works US business hours.",
     ],
   },
   {
