@@ -216,9 +216,9 @@ describe("the minimum to send matches review (brief_missing)", () => {
 describe("draftProgress (draft rows)", () => {
   const size = { ringSize: null };
   it("counts the step a draft is stuck on", () => {
-    expect(draftProgress(null, { referenceImageCount: 0, service: "cad", size })).toBe("Step 1 of 4");
-    expect(draftProgress("RING", { referenceImageCount: 0, service: "cad", size })).toBe("Step 1 of 4");
-    expect(draftProgress("RING", { referenceImageCount: 1, service: "cad", size })).toBe("Step 3 of 4");
+    expect(draftProgress(null, { referenceImageCount: 0, service: "cad", size })).toBe("Step 1 of 3");
+    expect(draftProgress("RING", { referenceImageCount: 0, service: "cad", size })).toBe("Step 1 of 3");
+    expect(draftProgress("RING", { referenceImageCount: 1, service: "cad", size })).toBe("Step 3 of 3");
     expect(draftProgress("RING", { referenceImageCount: 1, service: "cad", size: { ringSize: "US 7" } })).toBe("Ready to send");
   });
   it("gives renders three steps and no size", () => {

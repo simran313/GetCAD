@@ -109,7 +109,8 @@ export interface BriefDefaults extends Partial<OrderSpecInput> {
  * phone they are steps. A render order (N7) asks for views instead of stones
  * and size.
  */
-const CAD_STEPS = ["The piece", "Stones", "Size", "Metal & notes"];
+// Three steps (owner, 5 Nov 2026): metal, karat and notes sit with the size.
+const CAD_STEPS = ["The piece", "Stones", "Size & metal"];
 const RENDER_STEPS = ["The piece", "Views", "Metal & notes"];
 
 /** Which size a product is made to (DECISIONS §11 minimum). */
@@ -733,8 +734,8 @@ function updateAccent(
 function stepForField(field: string): number {
   if (field === "referenceName" || field === "product" || field === "references") return 0;
   if (field.startsWith("centre")) return 1;
-  if (field === "size") return 2;
-  return 3;
+  // Size, metal and notes share the last step.
+  return 2;
 }
 
 function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]; onPick: (n: number) => void }) {
