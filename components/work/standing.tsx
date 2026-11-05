@@ -1,4 +1,4 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, FileText } from "lucide-react";
 
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Standing } from "@/lib/work/standing";
@@ -33,8 +33,16 @@ export function StandingInstructions({ standing, footer }: { standing: Standing;
               {certificates.map((c, i) => (
                 <li key={c.id}>
                   <a href={c.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[var(--r-sm)] border border-border bg-subtle">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL */}
-                    <img src={c.url} alt={`Diamond certificate ${i + 1}`} className="h-24 w-24 object-cover" />
+                    {c.isPdf ? (
+                      <span className="flex h-24 w-24 flex-col items-center justify-center gap-1 text-[length:var(--fs-2)] text-muted-foreground">
+                        <FileText className="h-6 w-6" aria-hidden />
+                        PDF {i + 1}
+                        <span className="sr-only">Diamond certificate {i + 1}</span>
+                      </span>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL
+                      <img src={c.url} alt={`Diamond certificate ${i + 1}`} className="h-24 w-24 object-cover" />
+                    )}
                   </a>
                 </li>
               ))}

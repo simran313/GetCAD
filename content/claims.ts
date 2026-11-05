@@ -32,7 +32,7 @@ export const CLAIMS = {
   /** Standard band (DECISIONS §4). */
   ENTRY_PRICE: claim("$35", true),
   /** First design for a new account, once (DECISIONS §4). */
-  FIRST_DESIGN_PRICE: claim("$49", true),
+  FIRST_DESIGN_PRICE: claim("$35", true),
   /**
    * When a person answers: 3 PM – midnight India time, every day. Pages show it
    * live in ET (core/support/hours, components/support/support-status); this

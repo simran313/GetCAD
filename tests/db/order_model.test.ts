@@ -73,13 +73,13 @@ describe("categories and price bands (DECISIONS §3, §4)", () => {
     ]);
   });
 
-  it("seeds the price bands: $55 A–C, $85 D–F, from $120 G–L, $49 first design", async () => {
+  it("price bands: $35 A–C (first design too, 0063), $85 D–F, from $120 G–L", async () => {
     const { rows } = await db.query(
-      "SELECT code, first_category, last_category, price_cents, is_from, first_order_only FROM price_bands ORDER BY price_cents",
+      "SELECT code, first_category, last_category, price_cents, is_from, first_order_only FROM price_bands ORDER BY price_cents, code",
     );
     expect(rows).toEqual([
-      { code: "BAND_FIRST", first_category: "A", last_category: "C", price_cents: 4900, is_from: false, first_order_only: true },
-      { code: "BAND_STANDARD", first_category: "A", last_category: "C", price_cents: 5500, is_from: false, first_order_only: false },
+      { code: "BAND_FIRST", first_category: "A", last_category: "C", price_cents: 3500, is_from: false, first_order_only: true },
+      { code: "BAND_STANDARD", first_category: "A", last_category: "C", price_cents: 3500, is_from: false, first_order_only: false },
       { code: "BAND_COMPLEX", first_category: "D", last_category: "F", price_cents: 8500, is_from: false, first_order_only: false },
       { code: "BAND_SCULPTED", first_category: "G", last_category: "L", price_cents: 12000, is_from: true, first_order_only: false },
     ]);

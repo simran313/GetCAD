@@ -141,7 +141,7 @@ export async function issueCertificateAction(formData: FormData): Promise<void> 
 // enforces role, state, and money conservation. ---
 
 // SALES (admin) quotes from the category (DECISIONS §4). Price and deadline
-// are optional: the database fills the band price, applies the $49 first
+// are optional: the database fills the band price, applies the first-design
 // design once per account, and locks designer and QC pay in paise.
 export async function quoteAction(formData: FormData): Promise<void> {
   const orderId = formData.get("order_id")?.toString() ?? "";

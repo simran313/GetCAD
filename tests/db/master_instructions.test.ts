@@ -138,11 +138,12 @@ describe("diamond certificates", () => {
     await expect(as(client, () => db.query("SELECT id FROM order_stone_certificates"))).rejects.toThrow(/permission denied/);
   });
 
-  it("only PNG or JPEG, and up to five", async () => {
+  it("PNG, JPEG or PDF (0063), and up to five", async () => {
     await expect(
-      as(client, () => db.query("SELECT public.add_stone_certificate($1, $1 || '/certs/a.pdf', 'application/pdf', 10)", [draft])),
+      as(client, () => db.query("SELECT public.add_stone_certificate($1, $1 || '/certs/a.gif', 'image/gif', 10)", [draft])),
     ).rejects.toThrow(/content_type/);
-    for (let i = 0; i < 4; i++) await add(client, draft);
+    await as(client, () => db.query("SELECT public.add_stone_certificate($1, $1 || '/certs/b.pdf', 'application/pdf', 10)", [draft]));
+    for (let i = 0; i < 3; i++) await add(client, draft);
     await expect(add(client, draft)).rejects.toThrow(/up to 5/);
   });
 

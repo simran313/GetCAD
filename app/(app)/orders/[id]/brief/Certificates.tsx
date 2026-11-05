@@ -1,6 +1,6 @@
 "use client";
 
-import { FileBadge, Loader2, X } from "lucide-react";
+import { FileBadge, FileText, Loader2, X } from "lucide-react";
 import { useId, useState, useTransition } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -9,8 +9,8 @@ import { actionErrorText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 
 /**
- * Optional diamond certificate (owner, 5 Nov 2026; 0062): a picture of the
- * grading report, so the designer cuts the seat to the real stone. Inside the
+ * Optional diamond certificate (owner, 5 Nov 2026; 0062, 0063): a picture
+ * or PDF of the grading report, so the designer cuts the seat to the real stone. Inside the
  * brief's own form, so it cannot be a form itself: choosing a picture sends
  * it straight away (the input has no name, so the brief never carries it).
  */
@@ -29,7 +29,7 @@ export function Certificates({ orderId, initial, readOnly }: { orderId: string; 
       try {
         setCerts(await addCertificateAction(fd));
       } catch (e) {
-        setError(actionErrorText(e) ?? "The picture could not be added. Try again.");
+        setError(actionErrorText(e) ?? "The certificate could not be added. Try again.");
       }
     });
   };
@@ -58,8 +58,8 @@ export function Certificates({ orderId, initial, readOnly }: { orderId: string; 
             <input
               id={inputId}
               type="file"
-              accept="image/jpeg,image/png"
-              aria-label="Diamond certificate picture"
+              accept="image/jpeg,image/png,application/pdf,.pdf"
+              aria-label="Diamond certificate file"
               className="sr-only"
               disabled={pending}
               onChange={(e) => {
@@ -71,14 +71,22 @@ export function Certificates({ orderId, initial, readOnly }: { orderId: string; 
           </label>
         )}
       </div>
-      <p className="mt-1 text-[length:var(--fs-1)] text-muted-foreground">JPG or PNG. For a PDF, take a screenshot. Cover any company name.</p>
+      <p className="mt-1 text-[length:var(--fs-1)] text-muted-foreground">JPG, PNG or PDF, up to 10 MB. Hidden file details are removed; cover any company name on the page.</p>
       {certs.length > 0 && (
         <ul className="mt-2 flex flex-wrap gap-2" aria-label="Certificates added">
           {certs.map((c, i) => (
             <li key={c.id} className="relative">
               <a href={c.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-[var(--r-sm)] border border-border bg-subtle">
-                {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL */}
-                <img src={c.url} alt={`Certificate ${i + 1}`} className="h-16 w-16 object-cover" />
+                {c.isPdf ? (
+                  <span className="flex h-16 w-16 flex-col items-center justify-center gap-0.5 text-[length:var(--fs-1)] text-muted-foreground">
+                    <FileText className="h-5 w-5" aria-hidden />
+                    <span>PDF {i + 1}</span>
+                    <span className="sr-only">Certificate {i + 1}</span>
+                  </span>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL
+                  <img src={c.url} alt={`Certificate ${i + 1}`} className="h-16 w-16 object-cover" />
+                )}
               </a>
               {!readOnly && (
                 <button

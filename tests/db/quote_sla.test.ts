@@ -115,12 +115,12 @@ describe("quote (DECISIONS §4)", () => {
   it("first design: $49 once per account, then the band price", async () => {
     const first = await submitted();
     const r1 = await quote(first, "C");
-    expect(r1.price_total).toBe(4900);
+    expect(r1.price_total).toBe(3500); // the first design is $35 (0063)
     expect(r1.first_design).toBe(true);
 
     const second = await submitted();
     const r2 = await quote(second, "C");
-    expect(r2.price_total).toBe(5500); // a C job defaults to $55
+    expect(r2.price_total).toBe(3500); // a C job defaults to $35 (0063)
     expect(r2.first_design).toBe(false);
   });
 

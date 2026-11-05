@@ -11,7 +11,7 @@ import { act, refused, settled, signedIn } from "./helpers";
  *   every page loads with UTM tags on; a new jeweler who arrived by an
  *   email campaign signs up, must say how they heard about us, and the
  *   campaign is saved with that answer; their first design is quoted at
- *   $49, once, and the next at $55.
+ *   $35 (0063: the first design is the same $35 as the next).
  *
  * The new jeweler is a new Clerk user made by Clerk's API (Clerk's own
  * sign-up form, with its bot check and email code, is Clerk's to test),
@@ -96,7 +96,7 @@ test("a new jeweler signs up from a campaign and must say how they heard about u
   await page.context().close();
 });
 
-test("the first design is $49, once; the next is $55", async ({ browser }) => {
+test("the first design and the next are both quoted $35", async ({ browser }) => {
   test.skip(!userId, "the sign-up step did not run");
   const [first, second] = await withDb(async (db) => [
     await submittedBrief(db, userId, "Nina first ring"),
@@ -104,8 +104,8 @@ test("the first design is $49, once; the next is $55", async ({ browser }) => {
   ]);
   const admin = await signedIn(browser, "admin");
   for (const [orderId, price] of [
-    [first, "$49.00"],
-    [second, "$55.00"],
+    [first, "$35.00"],
+    [second, "$35.00"],
   ] as const) {
     await admin.goto(`/orders/${orderId}`);
     await act(admin, admin.getByRole("button", { name: "Set quote" }));

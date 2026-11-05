@@ -13,7 +13,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
  */
 export interface Standing {
   master: { body: string; updatedAt: string } | null;
-  certificates: { id: string; url: string }[];
+  certificates: { id: string; url: string; isPdf: boolean }[];
 }
 
 export async function loadStanding(supabase: SupabaseClient, orderId: string): Promise<Standing> {
@@ -22,18 +22,24 @@ export async function loadStanding(supabase: SupabaseClient, orderId: string): P
     supabase.rpc("order_stone_certificates_for", { p_order_id: orderId }),
   ]);
   const m = masterRes.error ? null : (masterRes.data as { body: string; updated_at: string } | null);
-  const rows = (certRes.error ? [] : (certRes.data ?? [])) as { id: string; object_key: string }[];
+  const rows = (certRes.error ? [] : (certRes.data ?? [])) as CertRow[];
   const certificates = await signCertificates(rows);
   return { master: m ? { body: m.body, updatedAt: m.updated_at } : null, certificates };
 }
 
-export async function signCertificates(rows: { id: string; object_key: string }[]): Promise<{ id: string; url: string }[]> {
+export interface CertRow {
+  id: string;
+  object_key: string;
+  content_type: string;
+}
+
+export async function signCertificates(rows: CertRow[]): Promise<{ id: string; url: string; isPdf: boolean }[]> {
   if (rows.length === 0) return [];
   const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
-  const out: { id: string; url: string }[] = [];
+  const out: { id: string; url: string; isPdf: boolean }[] = [];
   for (const r of rows) {
     const { data } = await storage.createSignedUrl(r.object_key, 60 * 30);
-    if (data?.signedUrl) out.push({ id: r.id, url: data.signedUrl });
+    if (data?.signedUrl) out.push({ id: r.id, url: data.signedUrl, isPdf: r.content_type === "application/pdf" });
   }
   return out;
 }
