@@ -2,10 +2,10 @@
 
 | Route | Words |
 | --- | ---: |
-| `/home` | 102 |
-| `/orders` | 127 |
-| `/orders/HRHWftSRafpBj5CLkmLvS` | 70 |
-| `/orders/HRHWftSRafpBj5CLkmLvS/pay` | 124 |
+| `/home` | 100 |
+| `/orders` | 84 |
+| `/orders/zDtgw82y7s3pwHV266HUr` | 70 |
+| `/orders/zDtgw82y7s3pwHV266HUr/pay` | 124 |
 | `/wallet` | 99 |
-| `/orders/hprkeDXUcKwGgpvEtrS8w/brief` | 41 |
-| `/orders/hprkeDXUcKwGgpvEtrS8w/brief/review` | 19 |
+| `/orders/bxBsNWze8ke9TLjHw47VC/brief` | 41 |
+| `/orders/bxBsNWze8ke9TLjHw47VC/brief/review` | 19 |
