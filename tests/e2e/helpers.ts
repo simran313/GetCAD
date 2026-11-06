@@ -1,12 +1,12 @@
 import { clerk } from "@clerk/testing/playwright";
-import { expect, type Browser, type Locator, type Page } from "@playwright/test";
+import { expect, type Browser, type BrowserContextOptions, type Locator, type Page } from "@playwright/test";
 
 import { slotFile } from "./files";
 import { PERSONAS, type Persona } from "./state";
 
 /** A fresh browser context signed in as one persona (Clerk sign-in token). */
-export async function signedIn(browser: Browser, persona: Persona): Promise<Page> {
-  const context = await browser.newContext();
+export async function signedIn(browser: Browser, persona: Persona, options?: BrowserContextOptions): Promise<Page> {
+  const context = await browser.newContext(options);
   const page = await context.newPage();
   // Browser-side errors go to the CI log: a page that throws in the browser
   // is otherwise invisible from here.
