@@ -12,8 +12,8 @@
 | `/faq` | 205 |
 | `/contact` | 47 |
 | `/apply-designer` | 133 |
-| `/privacy` | 504 |
-| `/terms` | 664 |
+| `/privacy` | 522 |
+| `/terms` | 670 |
 | `/sign-in` | 22 |
 | `/sign-up` | 30 |
 | `/p/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` | 21 |
