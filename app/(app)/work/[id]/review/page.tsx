@@ -109,7 +109,7 @@ export default async function FinalReviewPage({ params }: { params: Promise<{ id
 
   return (
     <div className="fixed inset-0 z-[45] flex flex-col bg-background">
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2">
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2 pt-[max(0.5rem,var(--safe-top))]">
         <Link href={`/work/${id}`} className="text-[length:var(--fs-2)] text-muted-foreground hover:text-foreground">
           ← Back to the job
         </Link>

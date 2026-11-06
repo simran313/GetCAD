@@ -32,7 +32,7 @@ export function StickySaveBar({
     <div
       inert={!dirty}
       className={cn(
-        "fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+72px)] z-40 px-3 transition-[transform,opacity] duration-[var(--dur-base)] ease-out md:bottom-6 md:left-[var(--sidebar-w,0px)] md:px-6",
+        "fixed inset-x-0 bottom-[calc(var(--chrome-bottom)+15px)] z-40 px-3 transition-[transform,opacity] duration-[var(--dur-base)] ease-out md:bottom-6 md:left-[var(--sidebar-w,0px)] md:px-6",
         dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
       )}
     >

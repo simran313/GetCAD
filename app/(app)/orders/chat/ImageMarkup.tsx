@@ -154,7 +154,7 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[70] bg-black" />
         <Dialog.Content className="fixed inset-0 z-[70] flex flex-col text-white outline-none" aria-describedby={undefined}>
-          <div className="flex items-center justify-between gap-3 p-3">
+          <div className="flex items-center justify-between gap-3 p-3 pt-[max(0.75rem,var(--safe-top))]">
             <Dialog.Close aria-label="Cancel" className="inline-flex h-[var(--ctl-icon)] w-[var(--ctl-icon)] items-center justify-center rounded-[var(--r-sm)] hover:bg-white/10">
               <X className="h-5 w-5" />
             </Dialog.Close>
@@ -181,7 +181,7 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 p-3 pb-[max(var(--s-3),env(safe-area-inset-bottom))]">
+          <div className="flex flex-wrap items-center justify-center gap-2 p-3 pb-[max(var(--s-3),var(--safe-bottom))]">
             {toolButton("pen", "Draw", <PenLine className="h-4 w-4" aria-hidden />)}
             {toolButton("pin", "Pin", <MapPin className="h-4 w-4" aria-hidden />)}
             <button

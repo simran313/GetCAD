@@ -688,7 +688,7 @@ export function BriefWizard({
         {!isRender && <input type="hidden" name="render_views" value={form.render_views} />}
       </Pane>
 
-      <div className="sticky bottom-[calc(57px+env(safe-area-inset-bottom))] z-10 -mx-[var(--s-4)] mt-6 flex items-center gap-2 border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:bottom-0 md:mx-0 md:px-0">
+      <div className="sticky bottom-[var(--chrome-bottom)] z-10 -mx-[var(--s-4)] mt-6 flex items-center gap-2 border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:bottom-0 md:mx-0 md:px-0">
         <button
           type="button"
           aria-label="Back"
@@ -741,7 +741,7 @@ function stepForField(field: string): number {
 function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]; onPick: (n: number) => void }) {
   // One line and a thin bar, kept in view under the top bar while scrolling.
   return (
-    <div className="sticky top-[57px] z-20 -mx-[var(--s-4)] mb-3 bg-background/95 px-[var(--s-4)] pb-1 pt-2 backdrop-blur md:hidden">
+    <div className="sticky top-[var(--chrome-top)] z-20 -mx-[var(--s-4)] mb-3 bg-background/95 px-[var(--s-4)] pb-1 pt-2 backdrop-blur md:hidden">
       <p className="flex items-baseline gap-2 text-[length:var(--fs-3)]">
         <span className="tabular text-muted-foreground">
           {step + 1}/{STEPS.length}

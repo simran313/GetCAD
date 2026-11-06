@@ -69,8 +69,8 @@ export function ActionBar({
         // Sticky and safe-area aware: on a phone this sits above the home
         // indicator, and the primary action must never be the thing below the
         // fold on a screen whose whole purpose is to take an action.
-        "sticky bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur",
-        "px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3",
+        "sticky bottom-[var(--chrome-bottom)] z-30 border-t border-border bg-background/95 backdrop-blur md:bottom-0",
+        "px-4 pb-4 pt-3 md:pb-[max(1rem,var(--safe-bottom))]",
         className,
       )}
     >

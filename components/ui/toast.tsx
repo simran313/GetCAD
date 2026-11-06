@@ -42,7 +42,7 @@ export function Toaster({ initial }: { initial?: string | null }) {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+84px)] z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6 md:right-6 md:left-auto md:items-end"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--chrome-bottom)+27px)] z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6 md:right-6 md:left-auto md:items-end"
     >
       {list.map((t) => (
         <div
