@@ -82,7 +82,7 @@ carries **"what's on top"**. Type carries **"what to read first"**.
 - **Black stays the primary action.** One per view, as today.
 - **One accent, used sparingly:** unread dots and counts, live indicators, the selected tab, progress, links inside text, focus. It is never used for a large fill or a primary button. Recommended: **Cobalt** `#2346F5`, with text-safe `#1B36C4` at 7:1 on white. It reads as precise and technical, and it does not compete with the jewellery photography in references and renders.
   - Alternative: **Champagne** `#9A7B4F` (text `#7A5F38`). Warmer and more "jewellery", but it is near the amber "SLA risk" tone and reads as decoration.
-  - Owner to choose; the plan assumes cobalt.
+  - Owner to choose; R2 ships with cobalt (one token pair to change).
 - **Status tones stay semantic:** neutral, info (now the accent hue), success, warning (SLA only), danger. Each pill gets 14 px minimum text and a 6 px dot.
 
 ### 2.2 Surfaces and depth (three levels)
@@ -134,8 +134,8 @@ Role specifics:
 
 | Phase | Scope | Status |
 |---|---|---|
-| **R1 — iPhone chrome** | Status bar style; safe-area and chrome tokens (`--chrome-top`/`--chrome-bottom`); all bars on the tokens; full-screen views clear the notch; order-page spacer; Pods overflow; a CI test that forbids pixel offsets; a browser test that simulates the iPhone 15/16 Pro notch on every role's pages. Fixes A1–A7. | **This PR** |
-| **R2 — Design system v2** | Accent tokens, 3-level surfaces + glass bars, type scale and lead line, the "focus card", status pills at 14 px, button press and pending states, title said once. `/design-preview` updated first for sign-off, then rolled out through the shared components, so every page changes at once. Fixes B1–B7 and C3. | Next (needs the accent choice) |
+| **R1 — iPhone chrome** (merged) | Status bar style; safe-area and chrome tokens (`--chrome-top`/`--chrome-bottom`); all bars on the tokens; full-screen views clear the notch; order-page spacer; Pods overflow; a CI test that forbids pixel offsets; a browser test that simulates the iPhone 15/16 Pro notch on every role's pages. Fixes A1–A7. | Merged |
+| **R2 — Design system v2** | Accent tokens, 3-level surfaces + glass bars, type scale and lead line, the "focus card", status pills at 14 px, button press and pending states, title said once. `/design-preview` updated first for sign-off, then rolled out through the shared components, so every page changes at once. Fixes B1–B7 and C3. | **In progress**: tokens, cards, buttons, navigation, top bar, the next-step card on the client order, client home, designer job and team order pages. Lists and homes follow in R5. |
 | **R3 — Live** | In-app notification centre (bell + sheet) from the existing `notifications` table; unread counts on the Messages tab and the bell; live toasts when a message or status arrives (from the existing change stamp); row highlight on change; page transitions. Fixes C1, C2, C4. | |
 | **R4 — Order pages** | "Now / Next / Recent / Then" for the client order page, designer job, QC review and team order page. Fixes D1–D4. | |
 | **R5 — Homes and lists** | Orders list rows (name, state, what it waits on; no "—" grid), role homes (one "needs you" block, quiet empty states, stat strips that hide zeros), designer jobs list with clocks. Fixes B4, B5. | |

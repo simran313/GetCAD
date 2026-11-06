@@ -79,8 +79,9 @@ export async function ClientHome({
               Needs your action
             </h2>
             {needs.length === 0 && !draft ? (
-              <p className={`${CARD} flex items-center gap-3 p-[var(--s-4)] text-[length:var(--fs-3)] text-muted-foreground`}>
-                <CircleCheck className="h-5 w-5 shrink-0" aria-hidden /> You&apos;re all caught up
+              // Nothing owed: a quiet line, not a box competing with real work (R2).
+              <p className="flex items-center gap-3 rounded-[var(--r-lg)] border border-dashed border-[color:var(--border-strong)] px-[var(--s-4)] py-[var(--s-3)] text-[length:var(--fs-3)] text-muted-foreground">
+                <CircleCheck className="h-5 w-5 shrink-0 text-[color:var(--tone-success-fg)]" aria-hidden /> You&apos;re all caught up
               </p>
             ) : (
               <ul className="space-y-3">
@@ -88,7 +89,11 @@ export async function ClientHome({
                   const price = o.price_total ? formatMoney(o.price_total, o.currency ?? "USD") : null;
                   const step = clientNextStep(o.id, o.status, { price, service: o.service });
                   return (
-                    <li key={o.id} className={`${CARD} flex flex-col gap-4 p-[var(--s-5)] sm:flex-row sm:items-center`}>
+                    // Each one waits on the client: lifted, with the cobalt rail (R2).
+                    <li
+                      key={o.id}
+                      className={`${CARD} relative flex flex-col gap-4 border-foreground/80 p-[var(--s-5)] shadow-[var(--e-focus)] before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[color:var(--brand-accent)] before:content-[''] sm:flex-row sm:items-center`}
+                    >
                       <div className="min-w-0 flex-1">
                         <p className="text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">{step.headline}</p>
                         <p className="mt-0.5 truncate text-[length:var(--fs-3)] text-muted-foreground">{o.title}</p>

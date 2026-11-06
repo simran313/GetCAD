@@ -16,13 +16,13 @@ const buttonVariants = cva(
     "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-sm)] font-medium",
     "transition-[background-color,border-color,color,box-shadow,transform] duration-[var(--dur-fast)] ease-out",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    "active:translate-y-px disabled:pointer-events-none disabled:opacity-45",
+    "active:scale-[0.98] motion-reduce:active:scale-100 disabled:pointer-events-none disabled:opacity-45",
     "[&_svg]:h-[1.1em] [&_svg]:w-[1.1em] [&_svg]:shrink-0",
   ].join(" "),
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[var(--e-1)] hover:bg-primary/88",
+        default: "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.14),var(--e-1)] hover:bg-primary/88",
         secondary: "border border-[color:var(--border-strong)] bg-background text-foreground hover:bg-accent",
         outline: "border border-[color:var(--border-strong)] bg-background text-foreground hover:bg-accent",
         ghost: "text-foreground hover:bg-accent",

@@ -380,7 +380,7 @@ export default async function OrderPage({
       />
     );
     const teamTop = (
-      <Card as="section">
+      <Card as="section" variant="focus">
         <CardHeader>
           <CardTitle>Next</CardTitle>
           <StatusBadge status={order.status} />

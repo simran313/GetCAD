@@ -211,6 +211,8 @@ interface FnRow {
   args: string;
   argtypes: string[];
   required: number;
+  /** provolatile = 'i': the answer depends on the arguments alone. */
+  immutable: boolean;
 }
 
 async function selectableColumns(): Promise<Map<string, string[]>> {
@@ -229,7 +231,8 @@ async function executableFunctions(): Promise<FnRow[]> {
            pg_get_function_identity_arguments(p.oid) AS args,
            coalesce((SELECT array_agg(format_type(t, NULL) ORDER BY i)
                      FROM unnest(p.proargtypes) WITH ORDINALITY AS a(t, i)), '{}') AS argtypes,
-           p.pronargs - p.pronargdefaults AS required
+           p.pronargs - p.pronargdefaults AS required,
+           p.provolatile = 'i' AS immutable
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname IN ('public', 'app', 'audit')
@@ -318,6 +321,12 @@ describe("Phase 1 must-fix — a designer cannot identify or link a client", () 
         const rows = await callAsDesigner(fn, c);
         if (!rows) continue;
         collect(rows, everything);
+        // An IMMUTABLE function reads no stored data: its answer is a function
+        // of the argument alone (app.code_prefix("<order id>") is two letters
+        // of the id). Two random ids can share those letters, which links
+        // nothing, so these answers stay out of the per-order comparison.
+        // They are still checked for leaks above, with everything else.
+        if (fn.immutable) continue;
         if (c === orderA) collect(rows, perOrder.a);
         if (c === orderB) collect(rows, perOrder.b);
       }

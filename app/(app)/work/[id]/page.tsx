@@ -144,7 +144,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
       </div>
 
       {(job.status === "ASSIGNED" || job.status === "REVISION_REQUESTED") && (
-        <Card>
+        <Card variant="action">
           <CardBody className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[length:var(--fs-3)]">
               {job.status === "ASSIGNED"

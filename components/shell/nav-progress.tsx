@@ -44,7 +44,7 @@ export function NavProgress() {
       aria-hidden
       className={`pointer-events-none fixed inset-x-0 top-0 z-[80] h-0.5 overflow-hidden transition-opacity duration-200 ${active ? "opacity-100" : "opacity-0"}`}
     >
-      <div className="h-full w-1/3 animate-nav-progress bg-primary motion-reduce:w-full motion-reduce:animate-none" />
+      <div className="h-full w-1/3 animate-nav-progress bg-[color:var(--brand-accent)] motion-reduce:w-full motion-reduce:animate-none" />
     </div>
   );
 }

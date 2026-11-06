@@ -22,14 +22,31 @@ import { cn } from "@/lib/utils";
  */
 type CardProps = React.HTMLAttributes<HTMLElement> & {
   as?: "div" | "section" | "article" | "aside";
+  /**
+   * Revamp R2. `focus`: the card that holds the next step on a screen (black
+   * edge, lifted). `action`: the same, when the next step is the viewer's
+   * own; a cobalt rail marks it. At most one per screen. `quiet`: secondary
+   * groups (no shadow, on the ground).
+   */
+  variant?: "default" | "focus" | "action" | "quiet";
+};
+
+const VARIANT: Record<NonNullable<CardProps["variant"]>, string> = {
+  default: "",
+  focus: "border-foreground/80 shadow-[var(--e-focus)]",
+  action:
+    "relative border-foreground/80 shadow-[var(--e-focus)] before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[color:var(--brand-accent)] before:content-['']",
+  quiet: "bg-transparent shadow-none",
 };
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, as: Tag = "div", ...props }, ref) => (
+  ({ className, as: Tag = "div", variant = "default", ...props }, ref) => (
     <Tag
       ref={ref as React.Ref<HTMLDivElement>}
+      data-variant={variant === "default" ? undefined : variant}
       className={cn(
         "rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]",
+        VARIANT[variant],
         className,
       )}
       {...props}

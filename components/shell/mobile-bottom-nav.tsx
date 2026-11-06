@@ -26,8 +26,11 @@ export function MobileBottomNav({
   const cell = (item: NavItem) => {
     const active = item.key === activeKey;
     const cls = cn(
-      "flex h-14 w-full flex-col items-center justify-center gap-0.5 text-[12px] font-medium [&_svg]:h-[22px] [&_svg]:w-[22px]",
-      active ? "text-foreground" : "text-muted-foreground",
+      "relative flex h-14 w-full flex-col items-center justify-center gap-0.5 text-[13px] font-medium transition-colors duration-[var(--dur-fast)] [&_svg]:h-[22px] [&_svg]:w-[22px] active:opacity-70",
+      // The active tab: black label and a short cobalt mark above the icon (R2).
+      active
+        ? "text-foreground before:absolute before:top-0 before:h-[3px] before:w-6 before:rounded-b-full before:bg-[color:var(--brand-accent)] before:content-['']"
+        : "text-muted-foreground",
     );
     if (item.render) return <li key={item.key} className="flex-1">{item.render(cls)}</li>;
     return (
@@ -47,7 +50,7 @@ export function MobileBottomNav({
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[var(--safe-bottom)] pl-[var(--safe-left)] pr-[var(--safe-right)] backdrop-blur-md backdrop-saturate-150 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[color:var(--glass)] pb-[var(--safe-bottom)] pl-[var(--safe-left)] pr-[var(--safe-right)] shadow-[var(--e-bar)] backdrop-blur-xl backdrop-saturate-150 md:hidden"
     >
       <ul className="mx-auto flex max-w-lg items-stretch">
         {left.map(cell)}
