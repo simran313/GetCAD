@@ -63,16 +63,22 @@ export async function ClientOrders({ orders, unread, tab }: { orders: ClientOrde
           <span className="tabular block text-[length:var(--fs-2)] font-normal text-muted-foreground">
             {[o.display_ref ?? "Draft", o.source && VIA[o.source]].filter(Boolean).join(" · ")}
           </span>
+          {/* Phone (R5): when and how much in one line, instead of a grid of
+              labels and dashes; the table at desk width keeps its columns. */}
+          <span className="tabular mt-1 block text-[length:var(--fs-2)] font-normal md:hidden">
+            {[when(o, tz), o.price_total ? formatMoney(o.price_total, o.currency ?? "USD") : null].filter(Boolean).join(" · ")}
+          </span>
         </span>
       ),
     },
     { key: "status", header: "Status", card: "badge", className: "whitespace-nowrap", cell: (o) => <StatusBadge status={o.status} /> },
-    { key: "service", header: "Service", className: "text-[length:var(--fs-2)]", cell: (o) => serviceWord(o.service) },
-    { key: "po", header: "Your PO", className: "text-[length:var(--fs-2)]", cell: (o) => o.client_po ?? "—" },
-    { key: "date", header: "Date", className: "whitespace-nowrap text-[length:var(--fs-2)]", cell: (o) => when(o, tz) },
+    { key: "service", header: "Service", card: "hidden", className: "text-[length:var(--fs-2)]", cell: (o) => serviceWord(o.service) },
+    { key: "po", header: "Your PO", card: "hidden", className: "text-[length:var(--fs-2)]", cell: (o) => o.client_po ?? "—" },
+    { key: "date", header: "Date", card: "hidden", className: "whitespace-nowrap text-[length:var(--fs-2)]", cell: (o) => when(o, tz) },
     {
       key: "price",
       header: "Price",
+      card: "hidden",
       align: "right",
       className: "tabular whitespace-nowrap text-[length:var(--fs-2)]",
       cell: (o) => (o.price_total ? formatMoney(o.price_total, o.currency ?? "USD") : "—"),

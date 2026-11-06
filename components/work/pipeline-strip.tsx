@@ -15,8 +15,43 @@ export interface Stage {
 }
 
 export function PipelineStrip({ stages, active }: { stages: Stage[]; active?: string | null }) {
+  // Phone (R5): no sideways scrolling. Only the stages with orders in them
+  // (and the one selected), as chips that wrap; the empty ones say so once.
+  const live = stages.filter((s) => s.count > 0 || s.key === active);
+  const empty = stages.length - live.length;
   return (
-    <nav aria-label="Pipeline" className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+    <>
+      <nav aria-label="Pipeline" className="md:hidden">
+        <ul className="flex flex-wrap gap-2">
+          {live.map((s) => {
+            const on = s.key === active;
+            return (
+              <li key={s.key}>
+                <Link
+                  href={s.href}
+                  aria-current={on ? "true" : undefined}
+                  className={cn(
+                    "inline-flex min-h-[var(--ctl-sm)] items-center gap-2 rounded-[var(--r-full)] border px-3.5 text-[length:var(--fs-2)] transition-colors duration-[var(--dur-fast)]",
+                    on ? "border-foreground bg-foreground text-background" : "border-[color:var(--border-strong)] bg-card hover:bg-subtle",
+                  )}
+                >
+                  <span className="tabular font-semibold">{s.count}</span>
+                  {s.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        {empty > 0 && <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">{empty} other stages are empty.</p>}
+      </nav>
+      <PipelineTable stages={stages} active={active} />
+    </>
+  );
+}
+
+function PipelineTable({ stages, active }: { stages: Stage[]; active?: string | null }) {
+  return (
+    <nav aria-label="Pipeline stages" className="hidden md:block">
       <ol className="flex min-w-max lg:min-w-0 divide-x divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {stages.map((s) => {
           const on = s.key === active;

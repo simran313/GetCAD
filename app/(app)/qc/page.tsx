@@ -9,9 +9,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ListRow } from "@/components/ui/list-row";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
 import { SlaCountdown } from "@/components/ui/sla-countdown";
-import { ClaimsQueue, type ClaimQueueRow } from "@/components/work/claims-queue";
+import {
+  ClaimsQueue,
+  type ClaimQueueRow,
+} from "@/components/work/claims-queue";
 import { SectionLabel, Stats } from "@/components/work/stats";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadEarnings, loadPodJobs, type PodJob } from "@/lib/work/load";
@@ -34,22 +36,32 @@ export default async function QcQueuePage() {
 
   let jobs: PodJob[];
   let earned = 0;
-  const claims = ((await supabase.rpc("claims_queue")).data ?? []) as ClaimQueueRow[];
+  const claims = ((await supabase.rpc("claims_queue")).data ??
+    []) as ClaimQueueRow[];
   try {
-    const [all, earnings] = await Promise.all([loadPodJobs(supabase), loadEarnings(supabase)]);
+    const [all, earnings] = await Promise.all([
+      loadPodJobs(supabase),
+      loadEarnings(supabase),
+    ]);
     jobs = all;
     const month = new Date().toISOString().slice(0, 7);
-    earned = earnings.filter((e) => e.party === "QC" && e.created_at.startsWith(month)).reduce((s, e) => s + e.amount_paise, 0);
+    earned = earnings
+      .filter((e) => e.party === "QC" && e.created_at.startsWith(month))
+      .reduce((s, e) => s + e.amount_paise, 0);
   } catch (e) {
     return (
       <Page>
-        <ErrorPanel title="Couldn't load the QC queue" message={`${(e as Error).message} — reload the page to try again.`} />
+        <ErrorPanel
+          title="Couldn't load the QC queue"
+          message={`${(e as Error).message} — reload the page to try again.`}
+        />
       </Page>
     );
   }
 
   const inQc = jobs.filter((j) => j.status === "QC_REVIEW");
-  const oldest = (a: PodJob, b: PodJob) => (a.submitted_at ?? "").localeCompare(b.submitted_at ?? "");
+  const oldest = (a: PodJob, b: PodJob) =>
+    (a.submitted_at ?? "").localeCompare(b.submitted_at ?? "");
   const waiting = inQc.filter((j) => j.qc_ticks === 0).sort(oldest);
   const reviewing = inQc.filter((j) => j.qc_ticks > 0).sort(oldest);
   const soonest = inQc
@@ -64,7 +76,10 @@ export default async function QcQueuePage() {
         title="QC queue"
         description={`${[...new Set(jobs.map((j) => j.pod_name).filter(Boolean))].join(", ") || "Your pod"}. You see only what needs a check.`}
         actions={
-          <Link href="/admin/new-order" className={buttonVariants({ variant: "secondary" })}>
+          <Link
+            href="/admin/new-order"
+            className={buttonVariants({ variant: "secondary" })}
+          >
             Create order
           </Link>
         }
@@ -84,24 +99,51 @@ export default async function QcQueuePage() {
       )}
 
       <ClaimsQueue rows={claims} />
-      <Queue title="Awaiting QC · oldest first" rows={waiting} action="Start review" empty="Nothing waiting for a check." />
-      <Queue title="In your review" rows={reviewing} action="Continue" empty="No reviews in progress." />
+      <Queue
+        title="Awaiting QC · oldest first"
+        rows={waiting}
+        action="Start review"
+        empty="Nothing waiting for a check."
+      />
+      <Queue
+        title="In your review"
+        rows={reviewing}
+        action="Continue"
+        empty="No reviews in progress."
+      />
     </Page>
   );
 }
 
-async function Queue({ title, rows, action, empty }: { title: string; rows: PodJob[]; action: string; empty: string }) {
+async function Queue({
+  title,
+  rows,
+  action,
+  empty,
+}: {
+  title: string;
+  rows: PodJob[];
+  action: string;
+  empty: string;
+}) {
   const tz = await viewerZone();
   return (
     <section className="space-y-3">
       <SectionLabel>
         {title} · {rows.length}
       </SectionLabel>
-      <Card>
-        {rows.length === 0 ? (
-          <EmptyState icon={<CircleCheck />} title={empty} className="py-8" />
-        ) : (
-          rows.map((j) => (
+      {rows.length === 0 ? (
+        // Nothing here: a quiet line, not a box as big as real work (R5).
+        <p className="flex items-center gap-3 rounded-[var(--r-lg)] border border-dashed border-[color:var(--border-strong)] px-[var(--s-4)] py-[var(--s-3)] text-[length:var(--fs-3)] text-muted-foreground">
+          <CircleCheck
+            className="h-5 w-5 shrink-0 text-[color:var(--tone-success-fg)]"
+            aria-hidden
+          />{" "}
+          {empty}
+        </p>
+      ) : (
+        <Card>
+          {rows.map((j) => (
             <ListRow
               key={j.order_id}
               href={`/qc/${j.order_id}`}
@@ -112,14 +154,23 @@ async function Queue({ title, rows, action, empty }: { title: string; rows: PodJ
               }`}
               trailing={
                 <>
-                  {j.sla_due_at && <SlaCountdown dueAt={j.sla_due_at} label="Client sees it" />}
-                  <span className={buttonVariants({ variant: "secondary", size: "sm" })}>{action}</span>
+                  {j.sla_due_at && (
+                    <SlaCountdown dueAt={j.sla_due_at} label="Client sees it" />
+                  )}
+                  <span
+                    className={buttonVariants({
+                      variant: "secondary",
+                      size: "sm",
+                    })}
+                  >
+                    {action}
+                  </span>
                 </>
               }
             />
-          ))
-        )}
-      </Card>
+          ))}
+        </Card>
+      )}
     </section>
   );
 }

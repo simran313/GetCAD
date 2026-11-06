@@ -13,10 +13,12 @@ export function Stats({ items }: { items: [string, string][] }) {
         items.length >= 5 ? "sm:grid-cols-5" : items.length >= 4 ? "sm:grid-cols-4" : "sm:grid-cols-3",
       )}
     >
-      {items.map(([value, label]) => {
+      {items.map(([value, label], i) => {
         const zero = /^[^1-9]*$/.test(value);
+        // An odd count on a phone: the last one takes the row, no empty grey cell (R5).
+        const spans = i === items.length - 1 && items.length % 2 === 1;
         return (
-          <div key={label} className="flex flex-col gap-0.5 bg-card px-4 py-3">
+          <div key={label} className={cn("flex flex-col gap-0.5 bg-card px-4 py-3", spans && "col-span-2 sm:col-span-1")}>
             <dt className="order-2 text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">{label}</dt>
             <dd className={cn("tabular text-[24px] leading-8 tracking-[-0.02em]", zero ? "font-normal text-muted-foreground" : "font-semibold")}>
               {value}
