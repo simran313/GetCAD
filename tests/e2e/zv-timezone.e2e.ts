@@ -40,7 +40,7 @@ function where(stack: string): string[] {
     if (!maps.has(file)) maps.set(file, existsSync(file) ? new TraceMap(readFileSync(file, "utf8")) : null);
     const map = maps.get(file);
     const pos = map ? originalPositionFor(map, { line: Number(m[2]), column: Number(m[3]) - 1 }) : null;
-    out.push(pos?.source ? `${pos.source.replace(/^.*?\/(app|components|lib|core)\//, "$1/")}:${pos.line} ${pos.name ?? ""}`.trim() : `${m[1]}:${m[2]}`);
+    out.push(pos?.source ? `${pos.source.replace(/^.*?\/(?=(node_modules|app|components|lib|core)\/)/, "")}:${pos.line} ${pos.name ?? ""}`.trim() : `${m[1]}:${m[2]}`);
   }
   return out.filter((l) => !/node_modules|next\/dist|react-dom/.test(l)).slice(0, 6);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
 import { DEFAULT_TIME_ZONE, formatTime, TIME_ZONE_CHOICES, TIME_ZONE_COOKIE, TIME_ZONE_MANUAL_COOKIE } from "@/core";
@@ -38,13 +38,21 @@ export function TimeZoneProvider({ zone, children }: { zone: string; children: R
 
 function TimeZoneSync({ zone }: { zone: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   useEffect(() => {
     if (chosenByHand()) return;
     const device = deviceZone();
     if (!device || device === zone) return;
     setCookie(TIME_ZONE_COOKIE, device);
-    router.refresh();
-  }, [zone, router]);
+    // Re-read once the address has settled, not at once. On a first visit a
+    // page may still be redirecting (a team member's /home sends them to
+    // /admin or /qc from the browser), and a refresh in the same moment broke
+    // Next's router: React error #310 for every admin and pod lead outside
+    // UTC (tests/e2e/zv-timezone.e2e.ts). A new address restarts the wait;
+    // a page that arrives already in the device's zone needs no re-read.
+    const t = window.setTimeout(() => router.refresh(), 500);
+    return () => window.clearTimeout(t);
+  }, [zone, router, pathname]);
   return null;
 }
 
