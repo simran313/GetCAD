@@ -92,7 +92,7 @@ export async function ClientHome({
                     // Each one waits on the client: lifted, with the cobalt rail (R2).
                     <li
                       key={o.id}
-                      className={`${CARD} relative flex flex-col gap-4 border-foreground/80 p-[var(--s-5)] shadow-[var(--e-focus)] before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[color:var(--brand-accent)] before:content-[''] sm:flex-row sm:items-center`}
+                      className={`${CARD} relative flex flex-col gap-4 border-foreground/80 p-[var(--s-5)] shadow-[var(--e-focus)] before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[image:var(--brand-rail)] before:content-[''] sm:flex-row sm:items-center`}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">{step.headline}</p>

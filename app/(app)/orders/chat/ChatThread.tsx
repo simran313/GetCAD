@@ -243,7 +243,7 @@ export function ChatThread({
             return (
               <div key={p.id} className="flex flex-col items-end">
                 {sep}
-                <div className="max-w-[80%] rounded-[var(--r-lg)] rounded-br-[var(--r-xs)] bg-primary px-3 py-2 text-[length:var(--fs-3)] text-primary-foreground">
+                <div className="max-w-[80%] rounded-[var(--r-lg)] rounded-br-[var(--r-xs)] bg-[color:var(--bubble-mine)] px-3 py-2 text-[length:var(--fs-3)] text-foreground">
                   {p.body && <p className="whitespace-pre-wrap break-words">{p.body}</p>}
                   {p.fileName && <PendingFile pending={p} />}
                 </div>
@@ -286,7 +286,8 @@ export function ChatThread({
                 <div
                   className={cn(
                     "max-w-[80%] space-y-1.5 rounded-[var(--r-lg)] px-3 py-2 text-[length:var(--fs-3)]",
-                    m.is_mine ? "rounded-br-[var(--r-xs)] bg-primary text-primary-foreground" : "rounded-bl-[var(--r-xs)] border border-border bg-card",
+                    // Your own messages: soft grey, easy on the eyes (owner, 6 Nov 2026).
+                    m.is_mine ? "rounded-br-[var(--r-xs)] bg-[color:var(--bubble-mine)] text-foreground" : "rounded-bl-[var(--r-xs)] border border-border bg-card",
                   )}
                 >
                   {files.map((f) =>
@@ -310,7 +311,7 @@ export function ChatThread({
                         href={`/api/thread-files/${f.id}`}
                         className={cn(
                           "flex min-h-[var(--ctl)] items-center gap-2 rounded-[var(--r-md)] px-2 py-1.5",
-                          m.is_mine ? "bg-primary-foreground/15" : "bg-subtle",
+                          m.is_mine ? "bg-background/70" : "bg-subtle",
                         )}
                       >
                         <FileBox className="h-5 w-5 shrink-0" aria-hidden />

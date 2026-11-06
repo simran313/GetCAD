@@ -82,7 +82,7 @@ carries **"what's on top"**. Type carries **"what to read first"**.
 - **Black stays the primary action.** One per view, as today.
 - **One accent, used sparingly:** unread dots and counts, live indicators, the selected tab, progress, links inside text, focus. It is never used for a large fill or a primary button. Recommended: **Cobalt** `#2346F5`, with text-safe `#1B36C4` at 7:1 on white. It reads as precise and technical, and it does not compete with the jewellery photography in references and renders.
   - Alternative: **Champagne** `#9A7B4F` (text `#7A5F38`). Warmer and more "jewellery", but it is near the amber "SLA risk" tone and reads as decoration.
-  - Owner to choose; R2 ships with cobalt (one token pair to change).
+  - Owner to choose; R2 shipped with cobalt. 6 Nov 2026, owner: too abrupt. Replaced by a monochrome accent: near-black marks, a black-to-graphite rail, slate for in progress; own chat messages on light grey.
 - **Status tones stay semantic:** neutral, info (now the accent hue), success, warning (SLA only), danger. Each pill gets 14 px minimum text and a 6 px dot.
 
 ### 2.2 Surfaces and depth (three levels)
