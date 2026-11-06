@@ -150,9 +150,10 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
     const assign = admin.getByRole("button", { name: "Assign", exact: true });
     await act(admin, assign);
     // The panel stays (an order can be reassigned until work starts): the
-    // timeline is the proof.
+    // timeline is the proof. The event shows twice since R4 (under "Latest"
+    // and in the timeline), so the first is enough.
     await settled(admin, "assigned", (timeout) =>
-      expect(admin.getByText("Assigned to a designer", { exact: true })).toBeVisible({ timeout }),
+      expect(admin.getByText("Assigned to a designer", { exact: true }).first()).toBeVisible({ timeout }),
     );
     const reason = await withDb(async (db) => (await db.query("SELECT override_reason FROM job_assignments WHERE order_id = $1", [orderId])).rows[0]?.override_reason);
     expect(reason).toMatch(/Rush for a regular client/);
