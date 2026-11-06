@@ -170,6 +170,30 @@ export function activeTabKey(pathname: string, tabs: Tab[]): string | null {
   return best?.key ?? null;
 }
 
+/**
+ * Pages with no tab of their own. Without these the phone's top bar named the
+ * nearest tab instead (R6 QA, 6 Nov 2026): Payouts and Credits said "Queue",
+ * a team order page and the designer's bank details said "The CAD Pillar".
+ */
+const UNTABBED: [prefix: string, label: string][] = [
+  ["/admin/payouts", "Payouts"],
+  ["/admin/credits", "Credits"],
+  ["/admin/emails", "Emails"],
+  ["/settings/payouts", "Payout account"],
+  ["/onboarding", "Become a designer"],
+  ["/orders/", "Order"],
+];
+
+/** What the phone's top bar calls the page: its tab, or its own name when it has no tab. */
+export function pageTitle(pathname: string, tabs: Tab[]): string {
+  const own = UNTABBED.find(([p]) => pathname === p || pathname.startsWith(p.endsWith("/") ? p : `${p}/`));
+  const key = activeTabKey(pathname, tabs);
+  const tab = tabs.find((t) => t.key === key);
+  // The queue's /admin prefix catches every admin page; it is not their name.
+  if (own && (!tab || tab.href === "/admin")) return own[1];
+  return tab?.label ?? "The CAD Pillar";
+}
+
 /** The tabs the phone's bottom bar shows. */
 export function mobileTabs(tabs: Tab[]): Tab[] {
   return tabs.filter((t) => t.mobile !== false);

@@ -8,12 +8,14 @@ import { cn } from "@/lib/utils";
  */
 export function Page({ children, className, form = false }: { children: React.ReactNode; className?: string; form?: boolean }) {
   return (
-    // R3: a new page arrives with a short fade and rise (200 ms), so a tap
-    // visibly lands somewhere. Off under reduced motion (app/globals.css).
+    // R3: a new page arrives with a short rise (200 ms), so a tap visibly
+    // lands somewhere. No fade: starting at opacity 0 held back the first
+    // paint of the page's main content by about 250 ms (R6 speed check,
+    // tests/e2e/zz-speed.e2e.ts). Off under reduced motion.
     <main
       className={cn(
         "w-full max-w-page space-y-6 px-4 py-6 md:px-8 md:py-8",
-        "animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out motion-reduce:animate-none",
+        "animate-in slide-in-from-bottom-1 duration-200 ease-out motion-reduce:animate-none",
         form && "[&>*:not(header)]:max-w-2xl",
         className,
       )}

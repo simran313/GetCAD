@@ -17,7 +17,7 @@ export { availableTransitions } from "./orders/availableTransitions";
 export type { TransitionRow, ActorContext } from "./orders/availableTransitions";
 export { installAdvice, isIos, isIosSafari } from "./pwa/install";
 export type { InstallAdvice, InstallContext } from "./pwa/install";
-export { tabsForRole, activeTabKey, workspaceFor, mobileTabs } from "./nav/tabs";
+export { tabsForRole, activeTabKey, pageTitle, workspaceFor, mobileTabs } from "./nav/tabs";
 export type { Tab, Workspace } from "./nav/tabs";
 export { orderActions, primaryAction } from "./orders/actions";
 export type { OrderAction, ActionIntent } from "./orders/actions";

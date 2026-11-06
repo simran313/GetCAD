@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { activeTabKey, mobileTabs, tabsForRole, workspaceFor } from "./tabs";
+import { activeTabKey, mobileTabs, pageTitle, tabsForRole, workspaceFor } from "./tabs";
 
 const hrefs = (role: string) => tabsForRole(role).map((t) => t.href);
 
@@ -158,5 +158,32 @@ describe("workspaceFor (Phase 5)", () => {
     // A designer keeps five (Materials is reached from More); a pod lead's phone bar drops Create order and Earnings.
     expect(mobileTabs(tabsForRole("DESIGNER")).map((t) => t.key)).toEqual(["home", "work", "messages", "earnings", "account"]);
     expect(mobileTabs(tabsForRole("QC")).map((t) => t.key)).toEqual(["qc", "board", "orders", "messages", "account"]);
+  });
+});
+
+// R6 QA (6 Nov 2026): the phone's top bar named the wrong page.
+describe("pageTitle", () => {
+  it("names untabbed admin pages, not the queue they sit under", () => {
+    const ops = tabsForRole("OPS");
+    expect(pageTitle("/admin", ops)).toBe("Queue");
+    expect(pageTitle("/admin/payouts", ops)).toBe("Payouts");
+    expect(pageTitle("/admin/credits", ops)).toBe("Credits");
+    expect(pageTitle("/admin/orders", ops)).toBe("All orders");
+    expect(pageTitle("/admin/access/pods", ops)).toBe("Access");
+    expect(pageTitle("/orders/ord_1", ops)).toBe("Order");
+  });
+
+  it("keeps a tab's own name for its detail pages", () => {
+    expect(pageTitle("/orders/ord_1", tabsForRole("CLIENT"))).toBe("Orders");
+    expect(pageTitle("/orders/new", tabsForRole("CLIENT"))).toBe("New order");
+    expect(pageTitle("/work/ord_1/review", tabsForRole("DESIGNER"))).toBe("Open jobs");
+    expect(pageTitle("/orders/ord_1", tabsForRole("QC"))).toBe("Order");
+    expect(pageTitle("/qc/ord_1", tabsForRole("QC"))).toBe("QC queue");
+  });
+
+  it("names the designer's pages that have no tab", () => {
+    expect(pageTitle("/settings/payouts", tabsForRole("DESIGNER"))).toBe("Payout account");
+    expect(pageTitle("/onboarding/designer", tabsForRole("DESIGNER"))).toBe("Become a designer");
+    expect(pageTitle("/nowhere", tabsForRole("DESIGNER"))).toBe("The CAD Pillar");
   });
 });

@@ -135,14 +135,35 @@ Role specifics:
 | Phase | Scope | Status |
 |---|---|---|
 | **R1 — iPhone chrome** (merged) | Status bar style; safe-area and chrome tokens (`--chrome-top`/`--chrome-bottom`); all bars on the tokens; full-screen views clear the notch; order-page spacer; Pods overflow; a CI test that forbids pixel offsets; a browser test that simulates the iPhone 15/16 Pro notch on every role's pages. Fixes A1–A7. | Merged |
-| **R2 — Design system v2** | Accent tokens, 3-level surfaces + glass bars, type scale and lead line, the "focus card", status pills at 14 px, button press and pending states, title said once. `/design-preview` updated first for sign-off, then rolled out through the shared components, so every page changes at once. Fixes B1–B7 and C3. | **In progress**: tokens, cards, buttons, navigation, top bar, the next-step card on the client order, client home, designer job and team order pages. Lists and homes follow in R5. |
-| **R3 — Live** | In-app notification centre (bell + sheet) from the existing `notifications` table; unread counts on the Messages tab and the bell; live toasts when a message or status arrives (from the existing change stamp); row highlight on change; page transitions. Fixes C1, C2, C4. | **In progress**: notifications API and bell (phone top bar; sidebar at desk), unread counts on the bell and the Messages tab, live toasts with Open plus a quiet page refresh within 20 s, page entrance fade. Row highlight is left for R5 (lists). |
-| **R4 — Order pages** | "Now / Next / Recent / Then" for the client order page, designer job, QC review and team order page. Fixes D1–D4. | |
-| **R5 — Homes and lists** | Orders list rows (name, state, what it waits on; no "—" grid), role homes (one "needs you" block, quiet empty states, stat strips that hide zeros), designer jobs list with clocks. Fixes B4, B5. | |
-| **R6 — QA** | Visual comparison before/after for every route and role; axe-clean; iPhone simulation green; Lighthouse and the speed budget unchanged or better. | |
+| **R2 — Design system v2** | Accent tokens, 3-level surfaces + glass bars, type scale and lead line, the "focus card", status pills at 14 px, button press and pending states, title said once. `/design-preview` updated first for sign-off, then rolled out through the shared components, so every page changes at once. Fixes B1–B7 and C3. | Merged (#114; accent made monochrome in #118) |
+| **R3 — Live** | In-app notification centre (bell + sheet) from the existing `notifications` table; unread counts on the Messages tab and the bell; live toasts when a message or status arrives (from the existing change stamp); row highlight on change; page transitions. Fixes C1, C2, C4. | Merged (#115). Row highlight not built. |
+| **R4 — Order pages** | "Now / Next / Recent / Then" for the client order page, designer job, QC review and team order page. Fixes D1–D4. | Merged (#116) |
+| **R5 — Homes and lists** | Orders list rows (name, state, what it waits on; no "—" grid), role homes (one "needs you" block, quiet empty states, stat strips that hide zeros), designer jobs list with clocks. Fixes B4, B5. | Merged (#117) |
+| **R6 — QA** | Visual comparison before/after for every route and role; axe-clean; iPhone simulation green; Lighthouse and the speed budget unchanged or better. | Done: section 4 |
 
 Guardrails for every phase:
 - No business logic, permission or data change.
 - No change to the chat's text size or layout.
 - Anonymity rules unchanged.
 - Each PR passes `npm run ci`, e2e and `[design-qa:after]`.
+
+---
+
+## 4. R6 — final QA (6 Nov 2026)
+
+**Compared:** design-qa `after/` at 6e184fc (4 Nov, before R1) against 82576c3
+(after R1–R5 and R2b). Every role, at 390 px, with the routes side by side.
+
+| Check | Result |
+|---|---|
+| axe, every route, every role, 390 / 768 / 1440 | No serious or critical findings: client, client2, designer, pod lead, admin, marketing, preview. |
+| iPhone 15/16 Pro simulation (`zw-iphone.e2e.ts`) | Green on every role: the top bar clears the island, the tab bar clears the home indicator, no bar overlaps another, and the end of every page scrolls clear. |
+| Website Lighthouse (mobile) | Home 84–87 and pricing 85–86, the same as before the revamp. The goal of 90 is not met; that predates the revamp (PERFORMANCE.md item 12). |
+| Portal speed: tab switches, sending a message | Unchanged: 20–55 ms to the first change; 85–95 ms for a message to be saved. |
+| Portal speed: largest paint | **Regressed in R3, fixed here.** New order, messages, account and the order and chat pages went from 230–350 ms to 470–600 ms. The page entrance started at opacity 0; it is now a 4 px rise with no fade. |
+| Portal speed: slowest tap in the chat (INP) | **Regressed in R3, fixed here.** It went from 40–56 ms to 112–136 ms. The live inbox re-rendered the whole shell on every 20 s look, even when nothing had changed, and again on focus. It now updates state only when the answer changes, looks once when focus and visibility arrive together, and makes its first look when the page is idle. |
+| Top-bar names on a phone | **Fixed.** Payouts and Credits were called "Queue"; a team order page, the designer's payout account and onboarding were called "The CAD Pillar"; the client's bar cut "Messages" to "Messa…". The fix adds `pageTitle()` (`core/nav/tabs.ts`, with tests) and a tighter icon gap on a phone. |
+
+Left as is:
+- The admin Clients table scrolls sideways inside its card on a phone. This is a staff screen, the same as before the revamp.
+- Info pills ("In progress") use slate. That is the one tint left; it is muted and blue-grey, not cobalt.

@@ -13,7 +13,7 @@ import { SupportStatus } from "@/components/support/support-status";
 import { WhatsAppButton } from "@/components/support/whatsapp";
 import { LiveCallButton } from "@/components/ui/live-call-button";
 import { Toaster } from "@/components/ui/toast";
-import { activeTabKey, type Tab } from "@/core";
+import { pageTitle, activeTabKey, type Tab } from "@/core";
 import { cn } from "@/lib/utils";
 
 import { CommandPalette, type PaletteItem } from "./command-palette";
@@ -78,7 +78,7 @@ export function AppShell({
   const rawBar = bottomBar(kind, tabs);
   const bar = { ...rawBar, visible: rawBar.visible.map(withBadge) };
   const home = tabs[0]?.href ?? "/home";
-  const title = tabs.find((t) => t.key === active)?.label ?? "The CAD Pillar";
+  const title = pageTitle(pathname, tabs);
   const onSignOut = useSignOut();
 
   const toggle = () => {
@@ -151,7 +151,7 @@ export function AppShell({
             immersive && "max-md:hidden",
           )}
         >
-          <div className="flex h-14 items-center gap-2 px-4 md:px-8">
+          <div className="flex h-14 items-center gap-1 px-4 sm:gap-2 md:px-8">
             {/* The mark, then the section in a quiet voice: the page's own title
                 below is the one heading (R2: a title is said once). */}
             <Link href={home} className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">

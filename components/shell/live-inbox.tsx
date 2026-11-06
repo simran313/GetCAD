@@ -33,9 +33,15 @@ export function useLiveInbox(designer: boolean) {
   const [items, setItems] = useState<InboxItem[]>([]);
   const [unread, setUnread] = useState(0);
   const seen = useRef<Set<string> | null>(null);
+  const lastLook = useRef(0);
+  const lastData = useRef("");
 
   const load = useCallback(async () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    // Focus and visibilitychange arrive together when the app comes back:
+    // one look is enough (R6).
+    if (Date.now() - lastLook.current < 2_000) return;
+    lastLook.current = Date.now();
     const res = await fetch("/api/notifications", { cache: "no-store" }).catch(() => null);
     if (!res?.ok) return;
     const data = (await res.json()) as { unread: number; items: InboxItem[] };
@@ -47,17 +53,28 @@ export function useLiveInbox(designer: boolean) {
       if (fresh.length > 0) router.refresh();
     }
     seen.current = new Set(data.items.map((i) => i.id));
+    // Most looks find nothing new. Re-rendering the shell for them anyway
+    // slowed taps in the chat (R6 speed check: INP 40-56 ms before R3,
+    // 112-136 ms after), so state changes only when the answer does.
+    const key = `${data.unread}|${data.items.map((i) => `${i.id}:${i.read_at ?? ""}`).join(",")}`;
+    if (key === lastData.current) return;
+    lastData.current = key;
     setItems(data.items);
     setUnread(data.unread);
   }, [designer, router]);
 
   useEffect(() => {
-    void load();
+    // The first look waits for the page to settle, so it never competes with
+    // the page's own first paint or a first tap.
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1));
+    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
+    const first = idle(() => void load(), { timeout: 2_000 });
     const timer = window.setInterval(() => void load(), POLL_MS);
     const onShow = () => void load();
     document.addEventListener("visibilitychange", onShow);
     window.addEventListener("focus", onShow);
     return () => {
+      cancelIdle(first);
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onShow);
       window.removeEventListener("focus", onShow);
