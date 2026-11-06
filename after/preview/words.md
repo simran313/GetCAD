@@ -2,7 +2,7 @@
 
 | Route | Words |
 | --- | ---: |
-| `/design-preview` | 551 |
+| `/design-preview` | 553 |
 | `/design-preview/frame?view=marketing` | 139 |
 | `/design-preview/frame?view=portal` | 127 |
 | `/design-preview/frame?view=client` | 60 |
