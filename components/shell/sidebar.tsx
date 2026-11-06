@@ -125,11 +125,11 @@ export function Sidebar({
                           : "text-muted-foreground hover:bg-foreground/[0.03] hover:text-foreground",
                       )}
                     >
-                      {active && <span aria-hidden className="absolute -left-3 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[color:var(--brand-accent)]" />}
+                      {active && <span aria-hidden className="absolute -left-3 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[image:var(--brand-rail)]" />}
                       {item.icon}
                       {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                       {!collapsed && item.badge ? (
-                        <span aria-hidden className="tabular rounded-[var(--r-full)] bg-[color:var(--brand-accent)] px-1.5 text-[12px] font-semibold leading-5 text-white">{item.badge}</span>
+                        <span aria-hidden className="tabular rounded-[var(--r-full)] bg-foreground px-1.5 text-[12px] font-semibold leading-5 text-background">{item.badge}</span>
                       ) : null}
                     </Link>
                     {item.badge ? (

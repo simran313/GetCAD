@@ -107,16 +107,16 @@ export function Preview() {
 
         <Section
           id="revamp"
-          title="Revamp R2 — accent, depth, the next step"
-          note="One accent, cobalt, for live / needs you / selected only: the active tab, unread dots, focus, progress and the rail on the card that waits on you. Primary buttons stay black. Three depths: resting cards, the next-step card (black edge, lifted), floating bars (frosted)."
+          title="Revamp R2 — ink accent, depth, the next step"
+          note="No hue: live / needs you / selected is marked in the brand's ink. Near-black marks, dots and counts; a black-to-graphite rail on the card that waits on you; slate for in progress. Three depths: resting cards, the next-step card (black edge, lifted), floating bars (frosted)."
         >
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <p className="text-[14px] font-medium">Accent</p>
               <div className="flex items-center gap-3">
-                <span className="h-10 w-10 rounded-[var(--r-md)] bg-[color:var(--brand-accent)]" aria-hidden />
+                <span className="h-10 w-10 rounded-[var(--r-md)] bg-[image:var(--brand-rail)]" aria-hidden />
                 <span className="h-10 w-10 rounded-[var(--r-md)] bg-[color:var(--brand-accent-soft)] ring-1 ring-[color:var(--brand-accent-line)]" aria-hidden />
-                <span className="text-[length:var(--fs-2)] font-medium text-[color:var(--brand-accent-ink)]">Cobalt text 9:1</span>
+                <span className="text-[length:var(--fs-2)] font-medium text-[color:var(--brand-accent-ink)]">Ink on soft grey</span>
               </div>
               <p className="flex items-center gap-2 text-[length:var(--fs-2)]">
                 <span className="h-2 w-2 rounded-full bg-[color:var(--brand-accent)]" aria-hidden /> 2 unread

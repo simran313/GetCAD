@@ -35,7 +35,7 @@ const VARIANT: Record<NonNullable<CardProps["variant"]>, string> = {
   default: "",
   focus: "border-foreground/80 shadow-[var(--e-focus)]",
   action:
-    "relative border-foreground/80 shadow-[var(--e-focus)] before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[color:var(--brand-accent)] before:content-['']",
+    "relative border-foreground/80 shadow-[var(--e-focus)] before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[image:var(--brand-rail)] before:content-['']",
   quiet: "bg-transparent shadow-none",
 };
 

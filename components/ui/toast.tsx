@@ -64,8 +64,8 @@ export function Toaster({ initial }: { initial?: string | null }) {
         >
           {t.tone === "live" ? (
             <span aria-hidden className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--brand-accent)] opacity-60 motion-reduce:hidden" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[color:var(--brand-accent)]" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-background opacity-60 motion-reduce:hidden" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-background" />
             </span>
           ) : t.tone === "success" ? (
             <Check className="h-4 w-4 shrink-0" />

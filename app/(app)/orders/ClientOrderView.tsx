@@ -169,7 +169,7 @@ export async function ClientOrderView({
         data-variant={step.action ? "action" : "focus"}
         className={`${CARD} relative space-y-3 border-foreground/80 p-[var(--s-5)] shadow-[var(--e-focus)] ${
           step.action
-            ? "before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[color:var(--brand-accent)] before:content-['']"
+            ? "before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[image:var(--brand-rail)] before:content-['']"
             : ""
         }`}
       >
