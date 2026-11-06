@@ -25,6 +25,8 @@ import { formatMoney } from "@/lib/money";
 import { viewerZone } from "@/lib/time/zone";
 
 import { fileSize, OrderFiles, visibleFiles, type FileVersionRow } from "../files/OrderFiles";
+import { LatestActivity } from "@/components/domain/latest-activity";
+
 import { HubTile } from "./HubTile";
 import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
 import { OrderMenu } from "./OrderMenu";
@@ -203,6 +205,17 @@ export async function ClientOrderView({
           </div>
         )}
       </section>
+
+      {/* Latest (R4): what changed, under the next step. */}
+      <LatestActivity
+        zone={tz}
+        items={[
+          ...steps.slice(-2).map((st) => ({ id: `t-${st.id}`, label: st.label, at: st.createdAt })),
+          ...(last
+            ? [{ id: `m-${last.id}`, label: `${last.is_mine ? "You" : "Your team"}: ${last.body}`, at: last.created_at, href: `/messages/${o.id}` }]
+            : []),
+        ]}
+      />
 
       {intake && <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />}
 
