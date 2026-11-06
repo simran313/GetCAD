@@ -17,6 +17,7 @@ import { activeTabKey, type Tab } from "@/core";
 import { cn } from "@/lib/utils";
 
 import { CommandPalette, type PaletteItem } from "./command-palette";
+import { InboxBell, useLiveInbox } from "./live-inbox";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { NavProgress } from "./nav-progress";
 import { paletteDataAction } from "./palette-actions";
@@ -69,8 +70,13 @@ export function AppShell({
   const active = activeTabKey(pathname, tabs);
   // An open conversation is a full screen on a phone (Phase 10c): no bars.
   const immersive = /^\/messages\/[^/]+$/.test(pathname);
-  const groups = sidebarGroups(kind, tabs);
-  const bar = bottomBar(kind, tabs);
+  // R3: the app notices news (toast + refresh) and counts what is unread.
+  const inbox = useLiveInbox(kind === "designer");
+  const withBadge = <T extends { key: string; badge?: number }>(item: T): T =>
+    item.key === "messages" && inbox.messagesUnread > 0 ? { ...item, badge: inbox.messagesUnread } : item;
+  const groups = sidebarGroups(kind, tabs).map((g) => ({ ...g, items: g.items.map(withBadge) }));
+  const rawBar = bottomBar(kind, tabs);
+  const bar = { ...rawBar, visible: rawBar.visible.map(withBadge) };
   const home = tabs[0]?.href ?? "/home";
   const title = tabs.find((t) => t.key === active)?.label ?? "The CAD Pillar";
   const onSignOut = useSignOut();
@@ -127,6 +133,7 @@ export function AppShell({
         workspace={ROLE_LABEL[kind]}
         user={{ name: user.name, role: user.detail, initials: user.initials }}
         onSearch={() => setPalette(true)}
+        bell={kind === "client" ? undefined : <InboxBell inbox={inbox} designer={kind === "designer"} />}
         onSignOut={onSignOut}
         collapsed={collapsed}
         onToggle={toggle}
@@ -161,6 +168,7 @@ export function AppShell({
                 <LiveCallButton phone={call.phone} hours={call.hours} compact className="md:hidden" />
               </>
             )}
+            <InboxBell inbox={inbox} designer={kind === "designer"} className={kind === "client" ? undefined : "md:hidden"} />
             <button
               type="button"
               onClick={() => setPalette(true)}
