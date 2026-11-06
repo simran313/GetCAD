@@ -39,11 +39,28 @@ export function MobileBottomNav({
           href={item.href}
           prefetch={prefetchTab(item.href)}
           aria-current={active ? "page" : undefined}
+          aria-describedby={item.badge ? `tab-badge-${item.key}` : undefined}
           className={cls}
         >
-          {item.icon}
+          <span className="relative">
+            {item.icon}
+            {item.badge ? (
+              // The link's name stays its label; the count is its description.
+              <span
+                aria-hidden
+                className="tabular absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[color:var(--brand-accent)] px-1 text-[11px] font-semibold leading-none text-white ring-2 ring-background"
+              >
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            ) : null}
+          </span>
           <span className="max-w-full truncate px-1">{item.label}</span>
         </Link>
+        {item.badge ? (
+          <span id={`tab-badge-${item.key}`} className="sr-only">
+            {item.badge} unread
+          </span>
+        ) : null}
       </li>
     );
   };

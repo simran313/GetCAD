@@ -34,6 +34,7 @@ export function Sidebar({
   workspace,
   user,
   onSearch,
+  bell,
   onSignOut,
   collapsed = false,
   onToggle,
@@ -44,6 +45,8 @@ export function Sidebar({
   workspace: string;
   user: { name: string; role: string; initials: string };
   onSearch?: () => void;
+  /** R3: the notifications bell, beside the collapse button. */
+  bell?: React.ReactNode;
   onSignOut?: () => void;
   collapsed?: boolean;
   onToggle?: () => void;
@@ -64,6 +67,7 @@ export function Sidebar({
             <span className="truncate text-[15px] font-semibold tracking-[-0.01em]">The CAD Pillar</span>
           </Link>
         )}
+        {!collapsed && bell}
         <button
           type="button"
           onClick={onToggle}
@@ -110,6 +114,7 @@ export function Sidebar({
                       href={item.href}
                       prefetch={prefetchTab(item.href)}
                       aria-current={active ? "page" : undefined}
+                      aria-describedby={item.badge ? `side-badge-${item.key}` : undefined}
                       title={collapsed ? item.label : undefined}
                       className={cn(
                         "group relative flex h-[var(--ctl-sm)] items-center gap-2.5 rounded-[var(--r-sm)] px-2.5 text-[15px] transition-colors duration-[var(--dur-fast)]",
@@ -124,9 +129,14 @@ export function Sidebar({
                       {item.icon}
                       {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                       {!collapsed && item.badge ? (
-                        <span className="tabular rounded-[var(--r-full)] bg-foreground px-1.5 text-[12px] font-medium leading-5 text-background">{item.badge}</span>
+                        <span aria-hidden className="tabular rounded-[var(--r-full)] bg-[color:var(--brand-accent)] px-1.5 text-[12px] font-semibold leading-5 text-white">{item.badge}</span>
                       ) : null}
                     </Link>
+                    {item.badge ? (
+                      <span id={`side-badge-${item.key}`} className="sr-only">
+                        {item.badge} unread
+                      </span>
+                    ) : null}
                   </li>
                 );
               })}
