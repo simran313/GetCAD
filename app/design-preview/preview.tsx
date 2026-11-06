@@ -105,6 +105,41 @@ export function Preview() {
           <p className="eyebrow mt-8">Eyebrow · 12px · uppercase only here</p>
         </Section>
 
+        <Section
+          id="revamp"
+          title="Revamp R2 — accent, depth, the next step"
+          note="One accent, cobalt, for live / needs you / selected only: the active tab, unread dots, focus, progress and the rail on the card that waits on you. Primary buttons stay black. Three depths: resting cards, the next-step card (black edge, lifted), floating bars (frosted)."
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <p className="text-[14px] font-medium">Accent</p>
+              <div className="flex items-center gap-3">
+                <span className="h-10 w-10 rounded-[var(--r-md)] bg-[color:var(--brand-accent)]" aria-hidden />
+                <span className="h-10 w-10 rounded-[var(--r-md)] bg-[color:var(--brand-accent-soft)] ring-1 ring-[color:var(--brand-accent-line)]" aria-hidden />
+                <span className="text-[length:var(--fs-2)] font-medium text-[color:var(--brand-accent-ink)]">Cobalt text 9:1</span>
+              </div>
+              <p className="flex items-center gap-2 text-[length:var(--fs-2)]">
+                <span className="h-2 w-2 rounded-full bg-[color:var(--brand-accent)]" aria-hidden /> 2 unread
+              </p>
+            </div>
+            <Card className="p-[var(--s-5)]">
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">Resting card</p>
+              <p className="mt-1 text-[length:var(--fs-4)] font-semibold">Brief · Ring · 18K</p>
+            </Card>
+            <Card variant="action" className="space-y-3 p-[var(--s-5)]">
+              <p className="text-[length:var(--fs-2)] text-muted-foreground">Waits on you</p>
+              <p className="text-[length:var(--fs-4)] font-semibold">Your price is ready: $35.00</p>
+              <Button className="w-full">Pay $35.00 &amp; start</Button>
+            </Card>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button>Primary (press it)</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="ghost">Ghost</Button>
+            <StatusPill tone="info">In progress</StatusPill>
+          </div>
+        </Section>
+
         <Section id="colour" title="Colour" note="Black on white with pure neutral greys. Colour only carries meaning: six status tones, amber only for SLA risk, red only for errors and destructive confirmation.">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
             {SWATCHES.map(([name, token, note]) => (

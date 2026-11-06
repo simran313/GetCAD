@@ -15,7 +15,7 @@ export function StandingInstructions({ standing, footer }: { standing: Standing;
     <Card as="section" aria-labelledby="standing-title" className="border-[color:var(--border-strong)]">
       <CardHeader>
         <CardTitle id="standing-title" className="flex items-center gap-2">
-          <ClipboardList className="h-4 w-4 text-muted-foreground" aria-hidden />
+          <ClipboardList className="h-4 w-4 text-[color:var(--brand-accent-ink)]" aria-hidden />
           Master instructions
         </CardTitle>
         <span className="text-[length:var(--fs-2)] text-muted-foreground">Follow on every order</span>

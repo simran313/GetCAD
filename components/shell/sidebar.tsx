@@ -120,7 +120,7 @@ export function Sidebar({
                           : "text-muted-foreground hover:bg-foreground/[0.03] hover:text-foreground",
                       )}
                     >
-                      {active && <span aria-hidden className="absolute -left-3 top-1.5 bottom-1.5 w-0.5 rounded-full bg-foreground" />}
+                      {active && <span aria-hidden className="absolute -left-3 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[color:var(--brand-accent)]" />}
                       {item.icon}
                       {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                       {!collapsed && item.badge ? (

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { useSignOut } from "@/components/auth/sign-out";
+import { PillarMark } from "@/components/brand/pillar-mark";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SupportStatus } from "@/components/support/support-status";
 import { WhatsAppButton } from "@/components/support/whatsapp";
@@ -132,20 +133,23 @@ export function AppShell({
         homeHref={home}
       />
 
-      <div className="min-h-screen bg-[color:var(--app-ground)] transition-[padding] duration-[var(--dur-base)] ease-out md:pl-[var(--sidebar-w)]">
+      <div className="min-h-screen bg-[color:var(--app-ground)] bg-[image:var(--app-ground-image)] bg-no-repeat transition-[padding] duration-[var(--dur-base)] ease-out md:pl-[var(--sidebar-w)]">
         {/* Phone: a compact top bar. Desk: only for clients, carrying live support (call and WhatsApp). */}
         <header
           className={cn(
             // The status bar and Dynamic Island sit above the row, never on it
             // (--safe-top); landscape notches pad the sides.
-            "sticky top-0 z-30 border-b border-border bg-background/95 pt-[var(--safe-top)] pl-[var(--safe-left)] pr-[var(--safe-right)] backdrop-blur-md backdrop-saturate-150",
+            "sticky top-0 z-30 border-b border-border bg-[color:var(--glass)] pt-[var(--safe-top)] pl-[var(--safe-left)] pr-[var(--safe-right)] backdrop-blur-xl backdrop-saturate-150",
             kind !== "client" && "md:hidden",
             immersive && "max-md:hidden",
           )}
         >
           <div className="flex h-14 items-center gap-2 px-4 md:px-8">
-            <Link href={home} className="min-w-0 flex-1 truncate text-[17px] font-semibold tracking-[-0.02em] md:hidden">
-              {title}
+            {/* The mark, then the section in a quiet voice: the page's own title
+                below is the one heading (R2: a title is said once). */}
+            <Link href={home} className="flex min-w-0 flex-1 items-center gap-2.5 md:hidden">
+              <PillarMark className="h-6 w-6" />
+              <span className="truncate text-[15px] font-medium text-muted-foreground">{title}</span>
             </Link>
             <div className="hidden flex-1 md:block" />
             {kind === "client" && (

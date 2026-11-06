@@ -130,6 +130,15 @@ describe.each(["light"] as const)("%s theme", (theme) => {
     ).toBeGreaterThanOrEqual(floor);
   };
 
+  // Revamp R2: the cobalt accent. Its ink carries text (AAA); the accent
+  // itself marks things (the active tab, rails, dots, focus) at 3:1 or more.
+  it("keeps the accent legible", () => {
+    check("--brand-accent-ink", "--background", 7);
+    check("--brand-accent-ink", "--brand-accent-soft", 7);
+    check("--brand-accent", "--background", 3);
+    check("--brand-accent", "--app-ground", 3);
+  });
+
   it("sets body text at AAA", () => {
     check("--foreground", "--background", 7);
     check("--card-foreground", "--card", 7);

@@ -12,6 +12,11 @@
  * pure neutral greys. Colour only ever carries meaning: the status tints,
  * amber for SLA risk, red for errors and destructive confirmation.
  *
+ * Revamp R2 (Nov 2026, docs/redesign/REVAMP-NOV-2026.md): ONE accent, cobalt,
+ * for "live / needs you / selected" only — unread dots, the active tab, focus,
+ * progress, the rail on the card that waits on you. Never a large fill and
+ * never the primary button (that stays black).
+ *
  * Contrast floors are computed from this file by
  * tests/config/color-contrast.test.ts (7:1 for body and secondary text, 4.5:1
  * for text on tints, 3:1 for control edges).
@@ -44,10 +49,18 @@
     --border-subtle: rgba(10, 10, 10, 0.08);
     --border-strong: #d4d4d4;
 
+    /* The accent (R2): cobalt. --brand-accent for marks, dots, rails and focus
+     * (6.4:1 on white); --brand-accent-ink for accent text (9.2:1); -soft
+     * behind it. */
+    --brand-accent: hsl(230 91% 55%);         /* #2447F5 */
+    --brand-accent-ink: hsl(230 76% 42%);     /* #1A35BC */
+    --brand-accent-soft: hsl(230 100% 96.5%); /* #EDF0FF */
+    --brand-accent-line: hsl(230 91% 55% / 0.28);
+
     /* The primary action is black. One per view. */
     --primary: 0 0% 3.9%;
     --primary-foreground: 0 0% 100%;
-    --ring: 0 0% 3.9%;
+    --ring: 230 91% 55%;              /* focus is the accent: seen on black and on white */
 
     --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
@@ -55,6 +68,11 @@
     /* The app shell's ground: a 2% tint so white cards read as raised. The
      * marketing site keeps a white page. */
     --app-ground: hsl(0 0% 98%);      /* #FAFAFA */
+    /* R2: a faint cobalt light at the top of the ground, so the page has a
+     * source of light rather than a flat grey. Under 4% at its strongest. */
+    --app-ground-image: radial-gradient(1100px 380px at 50% -160px, hsl(230 91% 55% / 0.07), transparent 70%);
+    /* Floating bars (top bar, tab bar, action bars): frosted white. */
+    --glass: rgba(255, 255, 255, 0.84);
 
     /* -------------------------------------------------------------- status --
      * Six families, each fg / bg / line. Information, never mood; colour is
@@ -70,9 +88,10 @@
     --tone-neutral-bg: hsl(0 0% 95%);
     --tone-neutral-line: hsl(0 0% 32% / 0.2);
 
-    --tone-info-fg: hsl(221 72% 38%);
-    --tone-info-bg: hsl(221 85% 96.5%);
-    --tone-info-line: hsl(221 72% 38% / 0.22);
+    /* Info ("in flight") is the accent's hue (R2). */
+    --tone-info-fg: hsl(230 76% 42%);
+    --tone-info-bg: hsl(230 100% 96.5%);
+    --tone-info-line: hsl(230 76% 42% / 0.22);
 
     --tone-attention-fg: hsl(0 0% 3.9%);
     --tone-attention-bg: hsl(0 0% 93%);
@@ -124,7 +143,7 @@
     --fs-3: 18px;  --lh-3: 27px;  --ls-3: -0.005em;
     --fs-4: 20px;  --lh-4: 28px;  --ls-4: -0.01em;
     --fs-5: 24px;  --lh-5: 30px;  --ls-5: -0.02em;
-    --fs-6: 32px;  --lh-6: 36px;  --ls-6: -0.02em;
+    --fs-6: 28px;  --lh-6: 34px;  --ls-6: -0.022em;
     --fs-b: 18px;  --lh-b: 27px;
     --fs-l: 18px;  --lh-l: 26px;
     --fs-display: 32px; --lh-display: 36px;
@@ -151,11 +170,14 @@
     --ctl-lg: 56px;
     --ctl-icon: 44px;
 
-    /* Two shadow levels only: resting and lifted (menus, sheets, dialogs). */
+    /* Depth (R2): resting cards, the card that holds the next step, things
+     * lifted above the page (menus, sheets, dialogs), and floating bars. */
     --e-0: none;
-    --e-1: 0 1px 2px rgba(10, 10, 10, 0.04);
+    --e-1: 0 1px 2px rgba(10, 10, 10, 0.05), 0 1px 1px rgba(10, 10, 10, 0.02);
+    --e-focus: 0 1px 2px rgba(10, 10, 10, 0.06), 0 10px 28px -14px rgba(10, 10, 10, 0.22);
     --e-2: 0 12px 32px -12px rgba(10, 10, 10, 0.18), 0 2px 6px rgba(10, 10, 10, 0.04);
-    --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #0a0a0a;
+    --e-bar: 0 -8px 24px -18px rgba(10, 10, 10, 0.18);
+    --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px hsl(230 91% 55%);
 
     /* ------------------------------------------------------------- motion --
      * 150–250ms, ease-out. Zeroed under prefers-reduced-motion (below). */
@@ -193,6 +215,7 @@
   @media (min-width: 640px) {
     :root {
       --fs-display: 40px; --lh-display: 44px;
+      --fs-6: 32px; --lh-6: 36px;
     }
   }
 

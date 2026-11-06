@@ -160,7 +160,17 @@ export async function ClientOrderView({
 
       {done !== null && <Stepper layout="fit" steps={CLIENT_STEPS.map((label) => ({ label }))} current={done} />}
 
-      <section aria-labelledby="next-title" className={`${CARD} space-y-3 p-[var(--s-5)]`}>
+      {/* The next step leads the page (R2): lifted with a black edge, and a
+          cobalt rail when the step is the client's own to take. */}
+      <section
+        aria-labelledby="next-title"
+        data-variant={step.action ? "action" : "focus"}
+        className={`${CARD} relative space-y-3 border-foreground/80 p-[var(--s-5)] shadow-[var(--e-focus)] ${
+          step.action
+            ? "before:absolute before:-inset-y-px before:-left-px before:w-1 before:rounded-l-[var(--r-lg)] before:bg-[color:var(--brand-accent)] before:content-['']"
+            : ""
+        }`}
+      >
         <h2 id="next-title" className="text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)]">
           {step.headline}
         </h2>
