@@ -119,42 +119,61 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         eyebrow={`Job · ${job.job_code ?? ""} · ${state.word}${job.work_version > 1 ? ` · version ${job.work_version}` : ""}`}
         title={jobTitle(job)}
         actions={
-          <Link href={`/messages/${id}`} className={buttonVariants({ variant: "outline" })}>
+          <Link href={`/messages/${id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
             Ask pod lead
           </Link>
         }
       />
-      <div className="flex flex-wrap items-center gap-3">
-        <CategoryBadge letter={job.category} />
-        <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
-        <StatusTag kind={state.kind}>{state.word}</StatusTag>
-        {clock && working && !paused && <Timer dueAt={clock} label="Your time left" />}
-        {paused && (
-          <StatusTag kind="needs">
-            Paused · {pausedLeftMs != null && pausedLeftMs > 0 ? `${durationWord(pausedLeftMs)} left` : "over time"}
-          </StatusTag>
-        )}
-        {times?.active_seconds != null && (
-          <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">Active {durationWord(times.active_seconds * 1000)}</span>
-        )}
-        {working && <PauseButton orderId={id} paused={paused} />}
-        {job.designer_due_at && ["ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(job.status) && (
-          <Timer dueAt={job.designer_due_at} label="Due to QC" />
-        )}
-      </div>
 
-      {(job.status === "ASSIGNED" || job.status === "REVISION_REQUESTED") && (
-        <Card variant="action">
-          <CardBody className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[length:var(--fs-3)]">
-              {job.status === "ASSIGNED"
-                ? `Read the brief, then press Start work. Your ${minutesLabel(job.minutes)} starts then.`
-                : "This version needs changes. Read the notes, then press Start work."}
-            </p>
-            <StartWorkButton orderId={id} size="default" />
-          </CardBody>
-        </Card>
-      )}
+      {/* Now (R4): the one thing a designer watches — the clock — large, with
+          the one control beside it (Start work, or Pause / Resume), and the
+          rest as a quiet line under it. Cobalt rail while the job is theirs to move. */}
+      <Card as="section" aria-label="Now" variant={working || job.status === "ASSIGNED" || job.status === "REVISION_REQUESTED" ? "action" : "focus"}>
+        <CardBody className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0">
+              {clock && working && !paused ? (
+                <Timer dueAt={clock} label="Your time left" size="lg" />
+              ) : paused ? (
+                <div>
+                  <p className="text-[length:var(--fs-2)] text-muted-foreground">Paused</p>
+                  <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">
+                    {pausedLeftMs != null && pausedLeftMs > 0 ? `${durationWord(pausedLeftMs)} left` : "Over time"}
+                  </p>
+                </div>
+              ) : job.status === "ASSIGNED" || job.status === "REVISION_REQUESTED" ? (
+                <div>
+                  <p className="text-[length:var(--fs-2)] text-muted-foreground">
+                    {job.status === "ASSIGNED" ? "Read the brief, then start" : "Changes asked: read the notes, then start"}
+                  </p>
+                  <p className="tabular text-[length:var(--fs-display)] font-semibold leading-[var(--lh-display)] tracking-[-0.02em]">
+                    {minutesLabel(job.minutes)}
+                  </p>
+                  <p className="text-[length:var(--fs-2)] text-muted-foreground">Your time starts when you press Start work.</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-[length:var(--fs-2)] text-muted-foreground">Status</p>
+                  <p className="text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)]">{state.word}</p>
+                </div>
+              )}
+            </div>
+            {(job.status === "ASSIGNED" || job.status === "REVISION_REQUESTED") && <StartWorkButton orderId={id} size="default" />}
+            {working && <PauseButton orderId={id} paused={paused} />}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3">
+            <CategoryBadge letter={job.category} />
+            <span className="text-[length:var(--fs-2)] text-muted-foreground">{minutesLabel(job.minutes)}</span>
+            <StatusTag kind={state.kind}>{state.word}</StatusTag>
+            {times?.active_seconds != null && (
+              <span className="tabular text-[length:var(--fs-2)] text-muted-foreground">Active {durationWord(times.active_seconds * 1000)}</span>
+            )}
+            {job.designer_due_at && ["ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(job.status) && (
+              <Timer dueAt={job.designer_due_at} label="Due to QC" />
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-6">

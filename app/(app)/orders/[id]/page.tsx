@@ -2,7 +2,9 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { escrowSign, staffNext, type TimelineRawRow, type TransitionRow } from "@/core";
+import { buildTimeline, escrowSign, staffNext, type TimelineRawRow, type TransitionRow } from "@/core";
+import { LatestActivity } from "@/components/domain/latest-activity";
+import { viewerZone } from "@/lib/time/zone";
 import { ErrorPanel } from "@/components/error-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { TrustLine } from "@/components/trust-line";
@@ -457,6 +459,21 @@ export default async function OrderPage({
             <>
               {teamTop}
               {standingCard}
+              {/* Latest (R4): the last moves and the last message, under Next. */}
+              <LatestActivity
+                zone={await viewerZone()}
+                items={[
+                  ...buildTimeline((timelineRes.data ?? []) as TimelineRawRow[])
+                    .slice(-2)
+                    .map((st) => ({ id: `t-${st.id}`, label: st.label, at: st.createdAt })),
+                  ...messages.slice(-1).map((m) => ({
+                    id: `m-${m.id}`,
+                    label: `${m.is_mine ? "You" : m.sender_alias}: ${m.body}`,
+                    at: m.created_at,
+                    href: `/messages/${order.id}`,
+                  })),
+                ]}
+              />
               {teamClaims.length > 0 && <TeamClaims orderId={order.id} claims={teamClaims} isAdmin={order.relation === "ADMIN"} />}
             </>
           }
