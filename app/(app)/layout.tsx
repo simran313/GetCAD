@@ -66,7 +66,7 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
   if (!userId) {
     return (
       <div className="min-h-screen bg-[color:var(--app-ground)]">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/95 pt-[var(--safe-top)] backdrop-blur-md">
           <div className="container flex h-14 items-center justify-between">
             <Link href="/" aria-label="The CAD Pillar — home">
               <Wordmark />
@@ -88,7 +88,7 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
         </header>
-        <ConnectionStatus className="top-14" />
+        <ConnectionStatus className="top-[var(--chrome-top)]" />
         {children}
       </div>
     );
@@ -136,7 +136,7 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
     >
       {/* Above everything else, so the answer to "did that save?" is on
           screen before the question is asked. */}
-      <ConnectionStatus className="top-14 md:top-0" />
+      <ConnectionStatus />
       {children}
     </AppShell>
   );

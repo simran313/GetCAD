@@ -14,7 +14,11 @@ import { identitiesFor } from "@/lib/clerk/identities";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { loadPodLoad, type PodDesignerLoad } from "@/lib/work/load";
 
-import { createPodAction, removePodMemberAction, setPodMemberAction } from "../../actions";
+import {
+  createPodAction,
+  removePodMemberAction,
+  setPodMemberAction,
+} from "../../actions";
 import { createLeadPodAction } from "../actions";
 import { Page } from "@/components/ui/page";
 
@@ -53,7 +57,11 @@ export default async function PodsPage() {
     return (
       <Page>
         <PageHeader title="Pods" />
-        <ErrorPanel title="Not available to your role" message={podsRes.error.message} className="mt-4" />
+        <ErrorPanel
+          title="Not available to your role"
+          message={podsRes.error.message}
+          className="mt-4"
+        />
       </Page>
     );
   }
@@ -66,7 +74,11 @@ export default async function PodsPage() {
     supabase.from("staff_profiles").select("user_id, first_name"),
   ]);
   const designers = (designersRes.data ?? []) as Account[];
-  const names = new Map(((namesRes.data ?? []) as { user_id: string; first_name: string }[]).map((n) => [n.user_id, n.first_name]));
+  const names = new Map(
+    ((namesRes.data ?? []) as { user_id: string; first_name: string }[]).map(
+      (n) => [n.user_id, n.first_name],
+    ),
+  );
   const leadIds = [
     ...new Set([
       ...((qcRes.data ?? []) as Account[]).map((a) => a.id),
@@ -79,15 +91,24 @@ export default async function PodsPage() {
   // staff first name where set, else the sign-in account's name or email,
   // read after the audited identity lookup (0038).
   const people = [...new Set([...leadIds, ...designers.map((d) => d.id)])];
-  const { error: lookupError } = await supabase.rpc("record_identity_lookup", { p_user_ids: people, p_purpose: "pods screen" });
-  const who = lookupError ? new Map<string, { name: string | null; email: string | null }>() : await identitiesFor(people).catch(() => new Map());
-  const nameOf = (id: string) => names.get(id) ?? who.get(id)?.name ?? who.get(id)?.email ?? id;
+  const { error: lookupError } = await supabase.rpc("record_identity_lookup", {
+    p_user_ids: people,
+    p_purpose: "pods screen",
+  });
+  const who = lookupError
+    ? new Map<string, { name: string | null; email: string | null }>()
+    : await identitiesFor(people).catch(() => new Map());
+  const nameOf = (id: string) =>
+    names.get(id) ?? who.get(id)?.name ?? who.get(id)?.email ?? id;
   const leading = new Set(pods.map((p) => p.lead_id).filter(Boolean));
   const leadsWithoutPod = leadIds.filter((id) => !leading.has(id));
 
   return (
     <Page>
-      <Link href="/admin/access" className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground">
+      <Link
+        href="/admin/access"
+        className="text-[length:var(--fs-3)] text-muted-foreground hover:text-foreground"
+      >
         ← Access
       </Link>
       <PageHeader
@@ -107,12 +128,18 @@ export default async function PodsPage() {
           </CardHeader>
           <CardBody className="space-y-3">
             <p className="text-[length:var(--fs-2)] text-muted-foreground">
-              They hold the pod lead role but lead no pod, so no order can go to them yet. Create their pod, then add their designers.
+              They hold the pod lead role but lead no pod, so no order can go to
+              them yet. Create their pod, then add their designers.
             </p>
             <ul className="divide-y divide-border rounded-[var(--r-sm)] border border-border">
               {leadsWithoutPod.map((id) => (
-                <li key={id} className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
-                  <span className="text-[length:var(--fs-3)] font-medium">{nameOf(id)}</span>
+                <li
+                  key={id}
+                  className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]"
+                >
+                  <span className="text-[length:var(--fs-3)] font-medium">
+                    {nameOf(id)}
+                  </span>
                   <form action={createLeadPodAction}>
                     <input type="hidden" name="user_id" value={id} />
                     <Button type="submit" size="sm">
@@ -127,7 +154,9 @@ export default async function PodsPage() {
       )}
 
       {pods.length === 0 && (
-        <Card className="p-[var(--s-6)] text-[length:var(--fs-3)] text-muted-foreground">No pods yet. Create the first one below.</Card>
+        <Card className="p-[var(--s-6)] text-[length:var(--fs-3)] text-muted-foreground">
+          No pods yet. Create the first one below.
+        </Card>
       )}
 
       {pods.map((p) => {
@@ -137,7 +166,8 @@ export default async function PodsPage() {
             <CardHeader>
               <CardTitle>{p.name}</CardTitle>
               <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
-                {p.designers} designer{p.designers === 1 ? "" : "s"} · {p.open_orders} open order{p.open_orders === 1 ? "" : "s"}
+                {p.designers} designer{p.designers === 1 ? "" : "s"} ·{" "}
+                {p.open_orders} open order{p.open_orders === 1 ? "" : "s"}
               </span>
             </CardHeader>
             <CardBody className="space-y-4">
@@ -145,15 +175,26 @@ export default async function PodsPage() {
                 <p className="text-[length:var(--fs-3)]">
                   Pod lead:{" "}
                   {p.lead_id ? (
-                    <span className="font-medium">{p.lead_name ?? (p.lead_id ? nameOf(p.lead_id) : "")}</span>
+                    <span className="font-medium">
+                      {p.lead_name ?? (p.lead_id ? nameOf(p.lead_id) : "")}
+                    </span>
                   ) : (
                     <StatusTag kind="needs">None</StatusTag>
                   )}
                 </p>
-                <form action={setPodMemberAction} className="flex items-center gap-2">
+                <form
+                  action={setPodMemberAction}
+                  className="flex items-center gap-2"
+                >
                   <input type="hidden" name="pod_id" value={p.pod_id} />
                   <input type="hidden" name="member_role" value="POD_LEAD" />
-                  <Select name="user_id" required defaultValue="" aria-label={`Pod lead for ${p.name}`} className="w-auto">
+                  <Select
+                    name="user_id"
+                    required
+                    defaultValue=""
+                    aria-label={`Pod lead for ${p.name}`}
+                    className="w-auto"
+                  >
                     <option value="" disabled>
                       {p.lead_id ? "Change pod lead…" : "Choose a pod lead…"}
                     </option>
@@ -170,19 +211,35 @@ export default async function PodsPage() {
               </div>
 
               <ul className="divide-y divide-border rounded-[var(--r-sm)] border border-border">
-                {team.length === 0 && <li className="p-[var(--s-3)] text-[length:var(--fs-2)] text-muted-foreground">No designers yet.</li>}
+                {team.length === 0 && (
+                  <li className="p-[var(--s-3)] text-[length:var(--fs-2)] text-muted-foreground">
+                    No designers yet.
+                  </li>
+                )}
                 {team.map((d) => (
-                  <li key={d.designer_id} className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]">
+                  <li
+                    key={d.designer_id}
+                    className="flex flex-wrap items-center justify-between gap-3 px-[var(--s-3)] py-[var(--s-2)]"
+                  >
                     <span className="min-w-0">
-                      <span className="block text-[length:var(--fs-3)] font-medium">{d.name ?? d.designer_ref ?? d.designer_id}</span>
+                      <span className="block text-[length:var(--fs-3)] font-medium">
+                        {d.name ?? d.designer_ref ?? d.designer_id}
+                      </span>
                       <span className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
-                        {d.designer_ref ?? "No profile"} · {loadWord(d.open_minutes, d.shift_minutes)}
+                        {d.designer_ref ?? "No profile"} ·{" "}
+                        {loadWord(d.open_minutes, d.shift_minutes)}
                       </span>
                     </span>
                     <span className="flex items-center gap-2">
-                      {!d.assignable && <StatusTag kind="muted">Not signed</StatusTag>}
+                      {!d.assignable && (
+                        <StatusTag kind="muted">Not signed</StatusTag>
+                      )}
                       <form action={removePodMemberAction}>
-                        <input type="hidden" name="user_id" value={d.designer_id} />
+                        <input
+                          type="hidden"
+                          name="user_id"
+                          value={d.designer_id}
+                        />
                         <Button type="submit" size="sm" variant="ghost">
                           Remove
                         </Button>
@@ -192,22 +249,36 @@ export default async function PodsPage() {
                 ))}
               </ul>
 
-              <form action={setPodMemberAction} className="flex flex-wrap items-center gap-2">
+              <form
+                action={setPodMemberAction}
+                className="flex flex-wrap items-center gap-2"
+              >
                 <input type="hidden" name="pod_id" value={p.pod_id} />
                 <input type="hidden" name="member_role" value="DESIGNER" />
-                <Select name="user_id" required defaultValue="" aria-label={`Add a designer to ${p.name}`} className="w-auto min-w-0">
-                  <option value="" disabled>
-                    Add a designer…
-                  </option>
-                  {designers.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {nameOf(d.id)}
-                      {d.reference ? ` · ${d.reference}` : ""}
-                      {inPod.has(d.id) ? " · moves from another pod" : ""}
-                      {d.status !== "ACTIVE" ? ` · ${d.status.toLowerCase()}` : ""}
+                {/* Fills the row and never wider than it: long names on a phone (pre-launch pass, 5 Nov 2026). */}
+                <div className="min-w-0 flex-1">
+                  <Select
+                    name="user_id"
+                    required
+                    defaultValue=""
+                    aria-label={`Add a designer to ${p.name}`}
+                    className="w-full min-w-0"
+                  >
+                    <option value="" disabled>
+                      Add a designer…
                     </option>
-                  ))}
-                </Select>
+                    {designers.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {nameOf(d.id)}
+                        {d.reference ? ` · ${d.reference}` : ""}
+                        {inPod.has(d.id) ? " · moves from another pod" : ""}
+                        {d.status !== "ACTIVE"
+                          ? ` · ${d.status.toLowerCase()}`
+                          : ""}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
                 <Button type="submit" size="sm" variant="secondary">
                   Add
                 </Button>
@@ -222,14 +293,25 @@ export default async function PodsPage() {
           <CardTitle>New pod</CardTitle>
         </CardHeader>
         <CardBody>
-          <form action={createPodAction} className="flex flex-wrap items-center gap-2">
-            <Input name="name" required maxLength={60} placeholder="Pod name, e.g. Rhino pod" aria-label="Pod name" className="max-w-xs" />
+          <form
+            action={createPodAction}
+            className="flex flex-wrap items-center gap-2"
+          >
+            <Input
+              name="name"
+              required
+              maxLength={60}
+              placeholder="Pod name, e.g. Rhino pod"
+              aria-label="Pod name"
+              className="max-w-xs"
+            />
             <Button type="submit" size="sm">
               Create pod
             </Button>
           </form>
           <p className="mt-2 text-[length:var(--fs-2)] text-muted-foreground">
-            A designer must apply and sign the agreement before they can be assigned work; until then they show as &quot;Not signed&quot;.
+            A designer must apply and sign the agreement before they can be
+            assigned work; until then they show as &quot;Not signed&quot;.
           </p>
         </CardBody>
       </Card>

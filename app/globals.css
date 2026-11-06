@@ -167,6 +167,23 @@
     --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
 
+    /* ------------------------------------------------------- app chrome --
+     * Where the fixed and sticky bars are, in one place (revamp R1, Nov 2026).
+     * Every bar that sits under the top bar or above the tab bar reads these,
+     * never a pixel number: the iPhone status bar, Dynamic Island and home
+     * indicator are added here once (env() is 0 on a desk screen).
+     *   --chrome-top     bottom edge of the top bar (status bar included)
+     *   --chrome-bottom  top edge of the tab bar (home indicator included)
+     */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --topbar-h: 57px;   /* 56px row + its hairline */
+    --tabbar-h: 57px;   /* 56px row + its hairline, above the home indicator */
+    --chrome-top: calc(var(--topbar-h) + var(--safe-top));
+    --chrome-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+
     /* Kept for screens written before the redesign; same meaning. */
     --accent-quiet: #f5f5f5;
     --accent-quiet-hover: #ebebeb;
@@ -182,6 +199,24 @@
   @media (min-width: 1024px) {
     :root {
       --section-y: 112px;
+    }
+  }
+
+  /* Desk width: no tab bar; the top bar is a client's only (live support). */
+  @media (min-width: 768px) {
+    :root {
+      --chrome-bottom: 0px;
+    }
+    [data-shell]:not([data-shell="client"]) {
+      --chrome-top: 0px;
+    }
+  }
+
+  /* A full-screen conversation hides both bars on a phone. */
+  @media (max-width: 767px) {
+    [data-immersive] {
+      --chrome-top: var(--safe-top);
+      --chrome-bottom: var(--safe-bottom);
     }
   }
 

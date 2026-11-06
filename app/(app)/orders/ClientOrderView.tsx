@@ -185,7 +185,7 @@ export async function ClientOrderView({
           )
         )}
         {step.action && (
-          <div className="fixed inset-x-0 bottom-[calc(57px+env(safe-area-inset-bottom))] z-10 border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0">
+          <div className="fixed inset-x-0 bottom-[var(--chrome-bottom)] z-10 border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0">
             <Link href={step.href} className={buttonVariants({ size: "lg", className: "w-full md:w-auto" })}>
               {actionLabel}
             </Link>
@@ -285,7 +285,7 @@ export async function ClientOrderView({
 
       {afterDelivery}
 
-      {step.action && <div className="h-20 md:hidden" aria-hidden />}
+      {step.action && <div className="h-24 md:hidden" aria-hidden />}
     </Page>
   );
 }

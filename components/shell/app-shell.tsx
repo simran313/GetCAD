@@ -112,7 +112,7 @@ export function AppShell({
   ];
 
   return (
-    <div style={{ ["--sidebar-w" as string]: collapsed ? "64px" : "240px" }}>
+    <div data-shell={kind} data-immersive={immersive ? "" : undefined} style={{ ["--sidebar-w" as string]: collapsed ? "64px" : "240px" }}>
       {/* Keyboard users jump past the navigation straight to the page. */}
       <a
         href="#content"
@@ -136,7 +136,9 @@ export function AppShell({
         {/* Phone: a compact top bar. Desk: only for clients, carrying live support (call and WhatsApp). */}
         <header
           className={cn(
-            "sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur",
+            // The status bar and Dynamic Island sit above the row, never on it
+            // (--safe-top); landscape notches pad the sides.
+            "sticky top-0 z-30 border-b border-border bg-background/95 pt-[var(--safe-top)] pl-[var(--safe-left)] pr-[var(--safe-right)] backdrop-blur-md backdrop-saturate-150",
             kind !== "client" && "md:hidden",
             immersive && "max-md:hidden",
           )}
@@ -193,7 +195,7 @@ export function AppShell({
           </div>
         </header>
 
-        <div id="content" tabIndex={-1} className={cn("outline-none md:pb-0", !immersive && "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
+        <div id="content" tabIndex={-1} className={cn("outline-none md:pb-0", !immersive && "pb-[calc(var(--chrome-bottom)+32px)]")}>
           {children}
         </div>
       </div>

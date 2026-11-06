@@ -61,7 +61,7 @@ export function ConnectionStatus({ className }: { className?: string }) {
       className={cn(
         "sticky z-20 border-b border-border bg-muted px-4 py-2 text-center",
         "text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground",
-        className ?? "top-14",
+        className ?? "top-[var(--chrome-top)]",
       )}
     >
       You&apos;re offline. Nothing will save until you&apos;re back — anything

@@ -64,7 +64,7 @@ export function SheetContent({
         {/* Focusable so a keyboard can scroll it when nothing inside takes focus (a read-only timeline). */}
         <div
           tabIndex={0}
-          className="min-h-0 flex-1 overflow-y-auto px-[var(--s-5)] py-[var(--s-5)] pb-[max(var(--s-5),env(safe-area-inset-bottom))] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          className="min-h-0 flex-1 overflow-y-auto px-[var(--s-5)] py-[var(--s-5)] pb-[max(var(--s-5),var(--safe-bottom))] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           {children}
         </div>

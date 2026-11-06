@@ -40,7 +40,11 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "CAD Pillar",
-    statusBarStyle: "black-translucent",
+    // "default" (owner report, 6 Nov 2026): a dark status bar text on its
+    // own white band. "black-translucent" drew the page under the status
+    // bar with white text, so on our white app the clock and battery were
+    // invisible and the top bar's buttons sat under the Dynamic Island.
+    statusBarStyle: "default",
   },
   // The black pillar icons (2 Nov 2026) have new file names on purpose:
   // browsers and phones keep a favicon or app icon cached by its address, so

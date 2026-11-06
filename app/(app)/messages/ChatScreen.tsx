@@ -82,7 +82,7 @@ export function ChatScreen({
         aria-label={`Conversation: ${open.title}`}
         className="fixed inset-x-0 top-0 z-40 flex h-[100dvh] min-w-0 flex-1 flex-col bg-background md:static md:z-auto md:h-[calc(100dvh-180px)] md:min-h-[480px] md:overflow-hidden md:rounded-[var(--r-lg)] md:border md:border-border md:shadow-[var(--e-1)]"
       >
-        <header className="flex items-center gap-2 border-b border-border px-2 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:px-[var(--s-4)]">
+        <header className="flex items-center gap-2 border-b border-border px-2 py-2 pt-[max(0.5rem,var(--safe-top))] md:px-[var(--s-4)]">
           <Link
             href="/messages"
             aria-label="All conversations"

@@ -88,7 +88,7 @@ export default async function ReviewBriefPage({ params }: { params: Promise<{ id
 
       <form
         action={sendBriefAction}
-        className="sticky bottom-[calc(57px+env(safe-area-inset-bottom))] z-10 -mx-[var(--s-4)] border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0"
+        className="sticky bottom-[var(--chrome-bottom)] z-10 -mx-[var(--s-4)] border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0"
       >
         <input type="hidden" name="order_id" value={id} />
         <Button type="submit" size="lg" disabled={missing.size > 0} className="w-full md:w-auto">

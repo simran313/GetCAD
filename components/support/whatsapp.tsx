@@ -48,7 +48,7 @@ export function WhatsAppButton({
         {...common}
         aria-label="Chat with us on WhatsApp"
         className={cn(
-          "fixed bottom-[max(20px,env(safe-area-inset-bottom))] right-5 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-[var(--e-2)] transition-transform duration-[var(--dur-fast)] hover:scale-105",
+          "fixed bottom-[max(20px,var(--safe-bottom))] right-5 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#128C7E] text-white shadow-[var(--e-2)] transition-transform duration-[var(--dur-fast)] hover:scale-105",
           className,
         )}
       >

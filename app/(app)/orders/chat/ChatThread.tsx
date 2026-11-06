@@ -351,7 +351,7 @@ export function ChatThread({
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/90" />
           <Dialog.Content className="fixed inset-0 z-[60] flex flex-col outline-none">
-            <div className="flex items-center justify-between gap-3 p-3 text-white">
+            <div className="flex items-center justify-between gap-3 p-3 pt-[max(0.75rem,var(--safe-top))] text-white">
               <Dialog.Title className="min-w-0 truncate text-[length:var(--fs-3)]">{viewing?.file_name}</Dialog.Title>
               <Dialog.Description className="sr-only">Picture sent in the conversation</Dialog.Description>
               <div className="flex items-center gap-1">
@@ -543,7 +543,7 @@ function Composer({
         e.preventDefault();
         submit();
       }}
-      className="border-t border-border bg-background px-[var(--s-3)] pb-[max(var(--s-3),env(safe-area-inset-bottom))] pt-[var(--s-3)]"
+      className="border-t border-border bg-background px-[var(--s-3)] pb-[max(var(--s-3),var(--safe-bottom))] pt-[var(--s-3)]"
     >
       {(file || preparing) && (
         <div className="mb-2 flex items-center gap-2 rounded-[var(--r-md)] bg-subtle p-1.5 text-[length:var(--fs-2)]">
