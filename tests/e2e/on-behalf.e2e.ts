@@ -215,7 +215,7 @@ test("a photo is marked up and sent from the chat, and the message box keeps its
   await expect(log.getByText("Two changes, see the picture.")).toBeVisible();
   await expect(box).toBeFocused();
 
-  // Photos: any picture; mark it up with the pen and a numbered pin.
+  // Photos: any picture; circle an area (the default tool, owner 7 Nov 2026) and drop a numbered pin.
   const pictures = log.locator('img[src^="/api/thread-files/"]');
   const before = await pictures.count();
   await client.locator('input[type="file"][accept="image/*"]:not([capture])').setInputFiles({ name: "IMG_2041.png", mimeType: "image/png", buffer: png([200, 180, 120], 64) });
@@ -224,6 +224,7 @@ test("a photo is marked up and sent from the chat, and the message box keeps its
   const canvas = editor.locator("canvas");
   await expect(canvas).toBeVisible();
   const area = (await canvas.boundingBox())!;
+  await expect(editor.getByRole("button", { name: "Circle" })).toHaveAttribute("aria-pressed", "true");
   await client.mouse.move(area.x + area.width * 0.2, area.y + area.height * 0.2);
   await client.mouse.down();
   await client.mouse.move(area.x + area.width * 0.6, area.y + area.height * 0.5, { steps: 5 });

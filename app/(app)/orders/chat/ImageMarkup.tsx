@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, MapPin, PenLine, Trash2, Undo2, X } from "lucide-react";
+import { Check, Circle, MapPin, PenLine, Trash2, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { toast } from "@/components/ui/toast";
@@ -9,13 +9,17 @@ import { canvasToJpeg, decodeImage, fitSize } from "@/lib/client/images";
 import { cn } from "@/lib/utils";
 
 /**
- * Mark up a picture before sending it (Phase 15): draw on it with a pen, or
- * drop numbered pins on the spots that need changing ("1: thinner shank",
- * "2: raise the halo"), then send the marked-up copy. Works with a finger or a
- * mouse. The original is never changed; the result is a new JPEG.
+ * Mark up a picture before sending it (Phase 15): circle the areas to change
+ * (drag around them; owner, 7 Nov 2026: "encircle certain areas"), draw with
+ * a pen, or drop numbered pins ("1: thinner shank", "2: raise the halo"),
+ * then send the marked-up copy. Works with a finger or a mouse. The original
+ * is never changed; the result is a new JPEG.
  */
-type Mark = { kind: "pen"; points: [number, number][] } | { kind: "pin"; x: number; y: number };
-type Tool = "pen" | "pin";
+type Mark =
+  | { kind: "pen"; points: [number, number][] }
+  | { kind: "pin"; x: number; y: number }
+  | { kind: "ring"; from: [number, number]; to: [number, number] };
+type Tool = "ring" | "pen" | "pin";
 
 const INK = "#e11d48";
 
@@ -23,7 +27,7 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
   const canvas = useRef<HTMLCanvasElement>(null);
   const [image, setImage] = useState<(CanvasImageSource & { width: number; height: number }) | null>(null);
   const [marks, setMarks] = useState<Mark[]>([]);
-  const [tool, setTool] = useState<Tool>("pen");
+  const [tool, setTool] = useState<Tool>("ring");
   const drawing = useRef<Mark | null>(null);
   const cancel = useRef(onCancel);
   cancel.current = onCancel;
@@ -63,6 +67,25 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
           ctx.beginPath();
           m.points.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
           if (m.points.length === 1) ctx.lineTo(m.points[0]![0] + 0.1, m.points[0]![1]);
+          ctx.stroke();
+        } else if (m.kind === "ring") {
+          // The ellipse inside the dragged box; a tap rings a small area around it.
+          const [x0, y0] = m.from;
+          const [x1, y1] = m.to;
+          const min = el.width / 18;
+          const rx = Math.max(min, Math.abs(x1 - x0) / 2);
+          const ry = Math.max(min, Math.abs(y1 - y0) / 2);
+          const cx = Math.abs(x1 - x0) / 2 >= min ? (x0 + x1) / 2 : x0;
+          const cy = Math.abs(y1 - y0) / 2 >= min ? (y0 + y1) / 2 : y0;
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = line + Math.max(2, line / 2);
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = line;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
           ctx.stroke();
         } else {
           n += 1;
@@ -108,13 +131,15 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
       return;
     }
     e.currentTarget.setPointerCapture(e.pointerId);
-    drawing.current = { kind: "pen", points: [[x, y]] };
+    drawing.current = tool === "ring" ? { kind: "ring", from: [x, y], to: [x, y] } : { kind: "pen", points: [[x, y]] };
     paint([...marks, drawing.current]);
   };
   const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const d = drawing.current;
-    if (!d || d.kind !== "pen") return;
-    d.points.push(at(e));
+    if (!d) return;
+    if (d.kind === "pen") d.points.push(at(e));
+    else if (d.kind === "ring") d.to = at(e);
+    else return;
     paint([...marks, d]);
   };
   const up = () => {
@@ -172,7 +197,13 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
           <div className="flex min-h-0 flex-1 items-center justify-center p-3">
             <canvas
               ref={canvas}
-              aria-label={tool === "pin" ? "Picture: tap to drop a numbered pin" : "Picture: draw with your finger or mouse"}
+              aria-label={
+                tool === "pin"
+                  ? "Picture: tap to drop a numbered pin"
+                  : tool === "ring"
+                    ? "Picture: drag around an area to circle it"
+                    : "Picture: draw with your finger or mouse"
+              }
               className="max-h-full max-w-full touch-none select-none rounded-[var(--r-md)]"
               onPointerDown={down}
               onPointerMove={move}
@@ -182,6 +213,7 @@ export function ImageMarkup({ source, onCancel, onDone }: { source: Blob | null;
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 p-3 pb-[max(var(--s-3),var(--safe-bottom))]">
+            {toolButton("ring", "Circle", <Circle className="h-4 w-4" aria-hidden />)}
             {toolButton("pen", "Draw", <PenLine className="h-4 w-4" aria-hidden />)}
             {toolButton("pin", "Pin", <MapPin className="h-4 w-4" aria-hidden />)}
             <button

@@ -82,6 +82,9 @@ export function BriefCard({
             ))}
           </div>
         )}
+        {brief.images.length > 0 && onMarkup && (
+          <p className="text-[length:var(--fs-1)] text-muted-foreground">Tap a picture, then Mark up to circle what to change and send it here.</p>
+        )}
 
         {lines.length > 0 && (
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-[length:var(--fs-2)] leading-[var(--lh-2)]">
