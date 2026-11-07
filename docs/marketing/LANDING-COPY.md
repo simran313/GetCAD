@@ -26,9 +26,9 @@ Phone: The CAD Pillar · Start a design · ☰ (menu: every page, Contact, Sign 
 - 2 QC stages on every file · Designer check, then QC manager check (owner, 1 Nov 2026)
 - 6h first look · Or the order is free
 
-### d. How it works — "Three steps. The first takes two minutes."
-Lead: Brief from your phone, approve a first look, download files your caster can use the same day.
-1. **Send the brief** — A sketch or photo, size, metal and stones. You get a fixed price within the hour.
+### d. How it works — "From brief to castable file." (owner, 7 Nov 2026: the 3 quick steps are placing the order, not the whole order; was "Three steps. The first takes two minutes.")
+Lead: Place your order from your phone in about two minutes, approve a first look, download files your caster can use the same day.
+1. **Place your order in 3 quick steps** — The piece and a photo, the stones, then size and metal. You get a fixed price within the hour.
 2. **Approve the first look** — Within 6 hours of confirmation. 2 revision rounds within 14 days included.
 3. **Download and cast** — 3DM, STL, renders, a signed spec sheet and a weight sheet.
 

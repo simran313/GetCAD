@@ -1,3 +1,4 @@
+import { clerk } from "@clerk/testing/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 import { signedIn } from "./helpers";
@@ -123,10 +124,14 @@ test("nothing the designer can reach names or links a client", async ({ browser 
   expect(seen.size).toBeGreaterThan(5);
   // The designer's own notifications, as the bell reads them: checked for
   // leaks like any page (not compared between jobs: it is the same on every page).
-  // Fetched from inside the page: Clerk keeps its short-lived session fresh
-  // there, while a request outside the page carries a stale one (401).
+  // Clerk's session token lives 60 s and the crawl takes longer, so ask
+  // Clerk for a fresh one first (it rewrites the session cookie), then read
+  // the list as the bell does. A stale token answers 401.
   await page.goto("/work");
+  await clerk.loaded({ page });
   const notifications = await page.evaluate(async () => {
+    const w = window as unknown as { Clerk?: { session?: { getToken: (o?: { skipCache?: boolean }) => Promise<string | null> } } };
+    await w.Clerk?.session?.getToken({ skipCache: true });
     const r = await fetch("/api/notifications", { cache: "no-store" });
     return { status: r.status, body: await r.text() };
   });
