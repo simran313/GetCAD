@@ -1,6 +1,6 @@
 import { availableTransitions, fileGrantFor, grantExplanation, type FileKind, type TimelineRawRow, type TransitionRow, formatDateTime } from "@/core";
 import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { FilePicker } from "@/components/ui/file-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,24 @@ const FILE_KIND_LABELS: Record<string, string> = {
  */
 const CATEGORIES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
+/** What the team page knows that this component does not load itself. */
+export interface TeamContext {
+  /** staffNext().why: the next move in a sentence. */
+  why: string;
+  /** "Pod One · Priya", or null before a pod is chosen. */
+  pod: string | null;
+  designerRef: string | null;
+  clientCode: string | null;
+  /** The pod picker (admin), or null when the pod can no longer move. */
+  podPicker: React.ReactNode | null;
+  /** The brief as rows, shown first in the main column. */
+  brief: React.ReactNode;
+  /** Documents, the work line and "Issue certificate", in the facts card. */
+  extras: React.ReactNode;
+  /** The QC review link for the pod lead while the job is in QC. */
+  qcHref: string | null;
+}
+
 
 const rupees = (paise: number) => `₹${(paise / 100).toLocaleString("en-IN")}`;
 
@@ -141,6 +159,7 @@ export async function OrderDetail({
   timelineError,
   layout = "stack",
   teamTop = null,
+  team = null,
 }: {
   order: OrderRow;
   role: string;
@@ -170,8 +189,10 @@ export async function OrderDetail({
   timelineError?: string | null;
   /** "team": the two-column admin / pod lead layout (A3, Phase 5d). */
   layout?: "stack" | "team";
-  /** The team layout's first card: the next move, pod and refs. */
+  /** The team layout's side cards under the order facts (instructions, latest, claims). */
   teamTop?: React.ReactNode;
+  /** The team layout's next step and facts (owner, 7 Nov 2026: one next action, one place). */
+  team?: TeamContext | null;
 }) {
   const tz = await viewerZone();
   const isOrderClient = o.relation === "CLIENT";
@@ -728,29 +749,227 @@ export async function OrderDetail({
     </>
   );
 
-  // The team's layout (A3, Phase 5d): the work and the conversation on the
-  // left; moving the work, the price and the money on the right, as the
-  // design groups them by the role that acts (Ops, Sales, Finance).
-  if (layout === "team") {
-    return (
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="min-w-0 space-y-4">
-          {intakeEl}
-          {revisionsEl}
-          {threadsEl}
-          {filesEl}
-          {timelineEl}
+  // The team's layout (A3; owner, 7 Nov 2026): one next step at the top,
+  // with the one action it needs in the card; everything else this role may
+  // do folded under "Other actions"; the order's facts in one card; the brief
+  // and the conversations in the main column. Same actions, same rules.
+  if (layout === "team" && team) {
+    const forward = actions.find((to) => to === "DELIVERED" || to === "CLOSED") ?? null;
+    const choosePod = o.status === "PAYMENT_HELD" && !team.pod && !!team.podPicker;
+    const confirmNow = canConfirm && o.status === "PAYMENT_HELD" && !!team.pod;
+    // Assigning is the next step once paid and confirmed; once assigned, moving it is an other action.
+    const assignNow = !!designers && !isAdmin && !confirmNow && o.status === "PAYMENT_HELD";
+    const field = "text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground";
+
+    const quoteForm = (
+      <form action={quoteAction} className="space-y-3">
+        <input type="hidden" name="order_id" value={o.id} />
+        <div className="grid grid-cols-3 gap-2">
+          <label className={field}>
+            Category
+            <Select name="category" defaultValue={o.category ?? "C"} className="mt-1">
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label className={field}>
+            Price $ (optional)
+            <Input name="price_usd" type="number" min="1" step="0.01" className="mt-1" />
+          </label>
+          <label className={field}>
+            Deadline h (G–L)
+            <Input name="deadline_hours" type="number" min="1" step="1" className="mt-1" />
+          </label>
         </div>
-        <aside className="min-w-0 space-y-4">
-          {teamTop}
-          {disputeEl}
-          {slaEl}
-          {assignEl}
-          {qcEl}
-          {orderEl}
-          {moneyEl}
-          {payoutsEl}
-        </aside>
+        <Button type="submit" size="lg" className="w-full sm:w-auto">
+          Set quote
+        </Button>
+        <p className={field}>Price empty = the band: A–C $35, D–F $85, G–L from $120. Designer and QC pay follow the category.</p>
+      </form>
+    );
+    const markPaidForm = (
+      <form action={markPaidAction} className="space-y-3">
+        <input type="hidden" name="order_id" value={o.id} />
+        <div className="grid grid-cols-2 gap-2">
+          <label className={field}>
+            Paid by
+            <Select name="method" defaultValue="wise" className="mt-1">
+              <option value="wise">Wise transfer</option>
+              <option value="bank">Bank transfer</option>
+              <option value="paypal">PayPal</option>
+              <option value="manual">Other</option>
+            </Select>
+          </label>
+          <label className={field}>
+            Reference
+            <Input name="reference" maxLength={120} className="mt-1" />
+          </label>
+        </div>
+        <Button type="submit" size="lg" className="w-full sm:w-auto">
+          Mark paid
+        </Button>
+      </form>
+    );
+    const confirmForm = (secondary: boolean) => (
+      <form action={confirmOrderAction} className="space-y-2">
+        <input type="hidden" name="order_id" value={o.id} />
+        <Button type="submit" size={secondary ? "sm" : "lg"} variant={secondary ? "outline" : "default"} className={secondary ? undefined : "w-full sm:w-auto"}>
+          Confirm order
+        </Button>
+        <p className={field}>Starts the first-look clock. Press once the brief is complete and open questions are answered.</p>
+      </form>
+    );
+    const transitionForm = (to: string, primary: boolean) => (
+      <form key={to} action={transitionAction}>
+        <input type="hidden" name="order_id" value={o.id} />
+        <input type="hidden" name="to_status" value={to} />
+        <Button type="submit" size={primary ? "lg" : "sm"} variant={primary ? "default" : "outline"} className={primary ? "w-full sm:w-auto" : undefined}>
+          <StatusBadge status={to} className={primary ? "border-0 bg-transparent px-0 text-inherit" : "border-0 bg-transparent px-0"} />
+        </Button>
+      </form>
+    );
+
+    // The one thing to do now, in priority order.
+    const primary: React.ReactNode = canQuote ? (
+      quoteForm
+    ) : canMarkPaid ? (
+      markPaidForm
+    ) : choosePod ? (
+      team.podPicker
+    ) : confirmNow ? (
+      confirmForm(false)
+    ) : assignNow ? (
+      <AssignPanel orderId={o.id} designers={designers!} />
+    ) : team.qcHref && isQcDecision ? (
+      <a href={team.qcHref} className={buttonVariants({ size: "lg", className: "w-full sm:w-auto" })}>
+        Open the QC review
+      </a>
+    ) : forward ? (
+      transitionForm(forward, true)
+    ) : canRelease ? (
+      <form action={releaseEscrowAction}>
+        <input type="hidden" name="order_id" value={o.id} />
+        <Button type="submit" size="lg">
+          Release payout
+        </Button>
+      </form>
+    ) : null;
+
+    const others: React.ReactNode[] = [
+      ...actions.filter((to) => to !== forward).map((to) => transitionForm(to, false)),
+      ...(canConfirm && !confirmNow ? [<div key="confirm">{confirmForm(true)}</div>] : []),
+      ...(team.podPicker && !choosePod
+        ? [
+            <div key="pod" className="space-y-1">
+              <p className={field}>{team.pod ? "Move to another pod" : "Choose a pod"}</p>
+              {team.podPicker}
+            </div>,
+          ]
+        : []),
+      // Not before the order is confirmed: confirming comes first.
+      ...(designers && !assignNow && !confirmNow
+        ? [
+            <div key="assign" className="space-y-1">
+              <p className={field}>{isAdmin ? "Exception: assign a designer yourself · normally the pod lead does this" : "Give it to another designer"}</p>
+              <AssignPanel orderId={o.id} designers={designers} />
+            </div>,
+          ]
+        : []),
+      ...(canRefund
+        ? [
+            <form key="refund" action={refundEscrowAction}>
+              <input type="hidden" name="order_id" value={o.id} />
+              <Button type="submit" size="sm" variant="outline">
+                Refund client
+              </Button>
+            </form>,
+          ]
+        : []),
+    ];
+
+    const why = team.why.charAt(0).toUpperCase() + team.why.slice(1);
+    const nextEl = openDispute ? (
+      disputeEl
+    ) : (
+      <Card as="section" variant={primary ? "action" : "focus"} aria-labelledby="next-step">
+        <CardHeader>
+          <CardTitle id="next-step">Next step</CardTitle>
+          <StatusBadge status={o.status} />
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <div>
+            <p className="text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)]">{why}</p>
+            {showSla && <p className={`mt-1 ${field}`}>{slaLine(o, tz)}</p>}
+          </div>
+          {primary}
+          {others.length > 0 && (
+            <details className="group border-t border-border pt-3">
+              <summary className="cursor-pointer list-none text-[length:var(--fs-3)] font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                Other actions <span aria-hidden className="inline-block transition-transform group-open:rotate-90">›</span>
+              </summary>
+              <div className="mt-3 flex flex-wrap items-start gap-3">{others}</div>
+            </details>
+          )}
+        </CardBody>
+      </Card>
+    );
+
+    const fact = (label: string, value: React.ReactNode) => (
+      <div key={label} className="flex items-baseline justify-between gap-4 py-1.5">
+        <dt className="text-muted-foreground">{label}</dt>
+        <dd className="min-w-0 text-right">{value}</dd>
+      </div>
+    );
+    const factsEl = (
+      <Panel title="Order" aside={<StatusBadge status={o.status} />}>
+        <dl className="divide-y divide-border text-[length:var(--fs-3)] leading-[var(--lh-3)]">
+          {fact("Pod", team.pod ?? "Not chosen")}
+          {fact("Designer", team.designerRef ?? "Not assigned")}
+          {team.clientCode && fact("Client", <span className="tabular font-mono">{team.clientCode}</span>)}
+          {o.category && fact("Category", `${o.category} · ${o.tier === "complex" ? `complex, ${o.complex_deadline_hours ?? "—"} h` : "standard, 6 h"}`)}
+          {price > 0 && fact("Price", <span className="tabular font-mono">{formatMoney(price, currency)}</span>)}
+          {o.designer_payout_paise != null && fact("Designer pay", <span className="tabular font-mono">{rupees(o.designer_payout_paise)}</span>)}
+          {o.qc_payout_paise != null && fact("QC pay", <span className="tabular font-mono">{rupees(o.qc_payout_paise)}</span>)}
+          {held > 0 && fact("Held in escrow", <span className="tabular font-mono font-medium">{formatMoney(held, currency)}</span>)}
+        </dl>
+        {sharePct != null && (
+          <p className={`mt-2 text-[length:var(--fs-2)] leading-[var(--lh-2)] ${payoutShare && sharePct > payoutShare.warnPct ? "text-destructive" : "text-muted-foreground"}`}>
+            Payouts are {sharePct}% of the price
+            {payoutShare && sharePct > payoutShare.warnPct ? ` — above the ${payoutShare.warnPct}% limit.` : "."}
+          </p>
+        )}
+        {o.status === "PAYOUT_RELEASED" && <p className={`mt-2 text-[length:var(--fs-3)] ${TONE_TEXT.success}`}>Funds released to the payout legs.</p>}
+        {o.status === "REFUNDED" && <p className="mt-2 text-[length:var(--fs-3)] text-muted-foreground">Funds refunded to the client.</p>}
+        <div className="mt-3 space-y-2 border-t border-border pt-3 text-[length:var(--fs-2)]">
+          {team.extras}
+          <p className="tabular truncate font-mono text-muted-foreground" title={o.id}>
+            {o.id}
+          </p>
+        </div>
+      </Panel>
+    );
+
+    return (
+      <div className="space-y-6">
+        {nextEl}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="order-2 min-w-0 space-y-4 lg:order-1">
+            {team.brief}
+            {intakeEl}
+            {revisionsEl}
+            {threadsEl}
+            {filesEl}
+            {timelineEl}
+          </div>
+          <aside className="order-1 min-w-0 space-y-4 lg:order-2">
+            {factsEl}
+            {teamTop}
+            {payoutsEl}
+          </aside>
+        </div>
       </div>
     );
   }
