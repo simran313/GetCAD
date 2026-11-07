@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 import { ChatThread } from "./chat/ChatThread";
 import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
@@ -37,6 +40,9 @@ function titleFor(kind: ThreadRow["kind"], relation: OrderRow["relation"]): { ti
 
 const ORDER: ThreadRow["kind"][] = ["client_team", "internal", "legacy"];
 
+/** The team's tab names: who is on the other side. */
+const TAB: Record<ThreadRow["kind"], string> = { client_team: "Client", internal: "Designer", legacy: "Old messages" };
+
 export function ThreadsPanel({
   orderId,
   relation,
@@ -53,12 +59,71 @@ export function ThreadsPanel({
   /** How far the other side has read each thread (the ticks). */
   reads?: ThreadReads;
 }) {
-  const sorted = [...threads].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+  const sorted = [...threads]
+    .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind))
+    .filter((t) => t.kind !== "legacy" || messages.some((m) => m.thread_id === t.id));
+  // The team reads two conversations: one card with a tab for each, opened
+  // on the one that moved last (owner, 7 Nov 2026: not two chat boxes).
+  const latest = [...messages].sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  const [open, setOpen] = useState<string | null>(null);
+  const tabbed = relation !== "CLIENT" && relation !== "DESIGNER" && sorted.length > 1;
+
+  const thread = (t: ThreadRow) => {
+    const rows = messages.filter((m) => m.thread_id === t.id);
+    const { title } = titleFor(t.kind, relation);
+    return (
+      <ChatThread
+        key={t.id}
+        orderId={orderId}
+        thread={t}
+        messages={rows}
+        attachments={attachments.filter((a) => a.thread_id === t.id)}
+        client={relation === "CLIENT"}
+        othersReadAt={reads[t.id] ?? null}
+        label={`Message in ${title}`}
+      />
+    );
+  };
+
+  if (tabbed) {
+    const current = sorted.find((t) => t.id === open) ?? sorted.find((t) => t.id === latest?.thread_id) ?? sorted[0]!;
+    const { aside } = titleFor(current.kind, relation);
+    return (
+      <Card as="section" className="overflow-hidden">
+        <CardHeader>
+          <CardTitle>Conversations</CardTitle>
+          <span className={small}>{aside}</span>
+        </CardHeader>
+        <div role="tablist" aria-label="Conversations" className="flex gap-1 border-b border-border px-[var(--s-4)]">
+          {sorted.map((t) => {
+            const count = messages.filter((m) => m.thread_id === t.id).length;
+            const on = t.id === current.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => setOpen(t.id)}
+                className={cn(
+                  "-mb-px min-h-[var(--ctl-sm)] border-b-2 px-3 text-[length:var(--fs-3)] font-medium",
+                  on ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {TAB[t.kind]}
+                {count > 0 && <span className="ml-1.5 tabular text-muted-foreground">{count}</span>}
+              </button>
+            );
+          })}
+        </div>
+        {thread(current)}
+      </Card>
+    );
+  }
+
   return (
     <>
       {sorted.map((t) => {
-        const rows = messages.filter((m) => m.thread_id === t.id);
-        if (t.kind === "legacy" && rows.length === 0) return null;
         const { title, aside } = titleFor(t.kind, relation);
         return (
           <Card as="section" key={t.id} className="overflow-hidden">
@@ -66,15 +131,7 @@ export function ThreadsPanel({
               <CardTitle>{title}</CardTitle>
               <span className={small}>{aside}</span>
             </CardHeader>
-            <ChatThread
-              orderId={orderId}
-              thread={t}
-              messages={rows}
-              attachments={attachments.filter((a) => a.thread_id === t.id)}
-              client={relation === "CLIENT"}
-              othersReadAt={reads[t.id] ?? null}
-              label={`Message in ${title}`}
-            />
+            {thread(t)}
           </Card>
         );
       })}

@@ -144,8 +144,10 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
     await lead.context().close();
 
     await admin.goto(`/orders/${orderId}`);
-    // For an admin, assigning is the folded exception (owner, 4 Nov 2026).
-    await admin.getByText("Exception: assign a designer yourself").click();
+    // For an admin, assigning is the folded exception (owner, 4 Nov 2026),
+    // under the next step's "Other actions" (7 Nov 2026).
+    await admin.getByText("Other actions").click();
+    await expect(admin.getByText("Exception: assign a designer yourself")).toBeVisible();
     await admin.getByLabel("Over-capacity reason (admin)").fill("Rush for a regular client; Rohan agreed to stay late.");
     const assign = admin.getByRole("button", { name: "Assign", exact: true });
     await act(admin, assign);
