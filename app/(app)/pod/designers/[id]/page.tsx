@@ -59,7 +59,12 @@ export default async function DesignerPage({ params, searchParams }: { params: P
   const { id } = await params;
   const sp = await searchParams;
   const tz = await viewerZone();
-  const r = await loadPodReport(supabase, { period: periodKey(sp.period), from: sp.from, to: sp.to, zone: tz, filters: {} });
+  const [r, rates] = await Promise.all([
+    loadPodReport(supabase, { period: periodKey(sp.period), from: sp.from, to: sp.to, zone: tz, filters: {} }),
+    supabase.rpc("team_designer_rates"),
+  ]);
+  // 0065: the pod lead sees the rate and cannot change it (an admin sets it).
+  const rate = ((rates.data ?? []) as { designer_id: string; paise_per_minute: number; is_custom: boolean }[]).find((x) => x.designer_id === id);
   const d = r.allDesigners.find((x) => x.designer_id === id);
   if (!d) {
     return (
@@ -147,7 +152,13 @@ export default async function DesignerPage({ params, searchParams }: { params: P
         ← Performance
       </Link>
       <PageHeader
-        eyebrow={[d.designer_ref, d.pod_name].filter(Boolean).join(" · ")}
+        eyebrow={[
+          d.designer_ref,
+          d.pod_name,
+          rate ? `₹${(rate.paise_per_minute / 100).toFixed(2)} a minute${rate.is_custom ? " (own rate, set by an admin)" : ""}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
         title={designerName(d)}
         description={
           live

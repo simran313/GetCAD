@@ -16,7 +16,6 @@ import type { VersionSpec } from "@/lib/work/spec";
 import { Timer } from "@/components/ui/timer";
 import { Checklist, countWord, stageCount } from "@/components/work/checklist";
 import { References } from "@/components/work/references";
-import { formatMoney } from "@/lib/money";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { viewerZone } from "@/lib/time/zone";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
@@ -222,8 +221,7 @@ export default async function QcReviewPage({
                 <CardTitle>Decision</CardTitle>
                 <span className="font-mono text-[length:var(--fs-2)] text-muted-foreground">
                   Approve needs every QC manager line passed{isCad ? " + measurements" : ""}
-                  {job.qc_payout_paise ? ` · your QC payout ${rupeesWord(job.qc_payout_paise)}` : ""}
-                  {job.price_total ? ` (${formatMoney(job.price_total, job.currency ?? "USD")} order)` : ""}
+                  {job.qc_payout_paise ? ` · your pod pay ${rupeesWord(job.qc_payout_paise)}` : ""}
                 </span>
               </CardHeader>
               <CardBody className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">

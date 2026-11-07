@@ -165,7 +165,7 @@ describe("spec claims (A6)", () => {
       "SELECT status, price_total, designer_payout_paise, qc_payout_paise, category, sla_status, client_id, pod_id FROM orders WHERE id=$1",
       [fix],
     )).rows[0];
-    expect(fo).toMatchObject({ status: "PAYMENT_HELD", price_total: 0, designer_payout_paise: 0, qc_payout_paise: 140000, category: "D", sla_status: "running", client_id: client });
+    expect(fo).toMatchObject({ status: "PAYMENT_HELD", price_total: 0, designer_payout_paise: 0, qc_payout_paise: 30000, category: "D", sla_status: "running", client_id: client });
     const credit = (await db.query("SELECT kind, amount_cents, status FROM client_credits WHERE order_id=$1", [id])).rows;
     expect(credit).toEqual([{ kind: "claim_credit", amount_cents: 8500, status: "apply_next" }]);
 

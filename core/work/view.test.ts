@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { designerBucket, isOpenJob, jobClock, jobClockDue, jobState, jobTab, loadWord, minutesWord, qcPayoutPaise, rupeesWord } from "./view";
+import { designerBucket, isOpenJob, jobClock, jobClockDue, jobState, jobTab, loadWord, minutesWord, podPayPaise, rupeesWord } from "./view";
 
 describe("jobTab / jobState", () => {
   it("sorts statuses into the designer's three tabs", () => {
@@ -31,13 +31,17 @@ describe("minutesWord / jobClockDue", () => {
   });
 });
 
-describe("qcPayoutPaise (DECISIONS §5)", () => {
-  it("matches the worked examples", () => {
-    expect([3000, 5500, 6000, 8500, 18000].map((c) => qcPayoutPaise(c) / 100)).toEqual([500, 900, 1000, 1400, 3000]);
-    expect(qcPayoutPaise(32000) / 100).toBe(5350);
-    expect(qcPayoutPaise(1000) / 100).toBe(500);
+describe("podPayPaise (DECISIONS §5, 0065)", () => {
+  it("is half the designer's pay, at least ₹300, by default", () => {
+    expect([12000, 48000, 96000, 384000].map((d) => podPayPaise(d) / 100)).toEqual([300, 300, 480, 1920]);
   });
+  it("follows the admin's share and floor", () => {
+    expect(podPayPaise(96000, 60, 50000) / 100).toBe(576);
+    expect(podPayPaise(12000, 60, 50000) / 100).toBe(500);
+  });
+});
 
+describe("rupeesWord and loadWord", () => {
   it("formats rupees and load", () => {
     expect(rupeesWord(150000)).toBe("₹1,500");
     expect(loadWord(0, 480)).toBe("FREE · 0 / 480 MIN");

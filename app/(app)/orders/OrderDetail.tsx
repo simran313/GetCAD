@@ -474,7 +474,7 @@ export async function OrderDetail({
                 [
                   ["Price", formatMoney(price, currency)],
                   ...(o.designer_payout_paise != null ? [["Designer pay", rupees(o.designer_payout_paise)]] : []),
-                  ...(o.qc_payout_paise != null ? [["QC pay", rupees(o.qc_payout_paise)]] : []),
+                  ...(o.qc_payout_paise != null ? [["Pod pay", rupees(o.qc_payout_paise)]] : []),
                 ] as [string, string][]
               ).map(([label, value]) => (
                 <div key={label}>
@@ -541,7 +541,7 @@ export async function OrderDetail({
                 </Button>
                 <span className="w-full text-[length:var(--fs-2)] leading-[var(--lh-2)] text-muted-foreground">
                   Leave the price empty for the band: A–C $35, D–F $85, G–L from $120.
-                  Designer and QC pay are locked from the category.
+                  Designer pay is the category minutes × the designer&apos;s rate; pod pay follows it.
                 </span>
               </form>
             )}
@@ -787,7 +787,7 @@ export async function OrderDetail({
         <Button type="submit" size="lg" className="w-full sm:w-auto">
           Set quote
         </Button>
-        <p className={field}>Price empty = the band: A–C $35, D–F $85, G–L from $120. Designer and QC pay follow the category.</p>
+        <p className={field}>Price empty = the band: A–C $35, D–F $85, G–L from $120. Designer and pod pay follow the category.</p>
       </form>
     );
     const markPaidForm = (
@@ -932,7 +932,7 @@ export async function OrderDetail({
           {o.category && fact("Category", `${o.category} · ${o.tier === "complex" ? `complex, ${o.complex_deadline_hours ?? "—"} h` : "standard, 6 h"}`)}
           {price > 0 && fact("Price", <span className="tabular font-mono">{formatMoney(price, currency)}</span>)}
           {o.designer_payout_paise != null && fact("Designer pay", <span className="tabular font-mono">{rupees(o.designer_payout_paise)}</span>)}
-          {o.qc_payout_paise != null && fact("QC pay", <span className="tabular font-mono">{rupees(o.qc_payout_paise)}</span>)}
+          {o.qc_payout_paise != null && fact("Pod pay", <span className="tabular font-mono">{rupees(o.qc_payout_paise)}</span>)}
           {held > 0 && fact("Held in escrow", <span className="tabular font-mono font-medium">{formatMoney(held, currency)}</span>)}
         </dl>
         {sharePct != null && (

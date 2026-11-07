@@ -65,14 +65,13 @@ export function jobClockDue(startedAt: string | null | undefined, minutes: numbe
 }
 
 /**
- * QC / pod lead pay for an order (DECISIONS §5):
- * max(₹500, round to nearest ₹50 of order USD × 1000 / 60), in paise.
- * The database locks the real amount at quote; this is for the rate table.
+ * Pod pay for a job (DECISIONS §5, 0065): a share of the designer's pay, never
+ * less than the floor, in paise; the same sum as app.pod_pay_paise. Never from
+ * the order's price, which the pod lead does not see. The database sets the
+ * real amount; this is for the rate table.
  */
-export function qcPayoutPaise(orderUsdCents: number): number {
-  const rupees = (orderUsdCents / 100) * (1000 / 60);
-  const rounded = Math.round(rupees / 50) * 50;
-  return Math.max(500, rounded) * 100;
+export function podPayPaise(designerPaise: number, sharePct = 50, minPaise = 30000): number {
+  return Math.max(minPaise, Math.round((designerPaise * sharePct) / 100));
 }
 
 /** "₹1,500" from paise. */
