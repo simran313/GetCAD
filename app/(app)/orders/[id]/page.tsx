@@ -455,7 +455,11 @@ export default async function OrderPage({
       </Card>
     );
     const team = {
-      why: next.why,
+      // Assigning is the pod lead's move (owner, 4 Nov 2026): an admin is told who has it, not asked to do it.
+      why:
+        order.relation === "ADMIN" && next.stage === "assign" && job?.pod_id && order.confirmed_at
+          ? "Paid and confirmed · the pod lead assigns a designer"
+          : next.why,
       pod: job?.pod_name ? `${job.pod_name}${job.pod_lead_name ? ` · ${job.pod_lead_name}` : ""}` : null,
       designerRef: job?.designer_ref ?? null,
       clientCode: job?.client_code ?? null,
