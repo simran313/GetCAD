@@ -132,7 +132,7 @@ function Snippet({ children }: { children: React.ReactNode }) {
 
 export function HowItWorks() {
   return (
-    <Section id="how" eyebrow="How it works" title="Order in 3 quick steps." lead="Brief from your phone in about two minutes, approve a first look, download files your caster can use the same day.">
+    <Section id="how" eyebrow="How it works" title="From brief to castable file." lead="Place your order from your phone in about two minutes, approve a first look, download files your caster can use the same day.">
       <ol className="grid gap-8 md:grid-cols-3">
         <li>
           <Snippet>
@@ -145,8 +145,8 @@ export function HowItWorks() {
             <p className="mt-3 flex items-center gap-1.5 text-[13px] text-muted-foreground"><Upload className="h-3.5 w-3.5" /> sketch.jpg added</p>
           </Snippet>
           <p className="mt-5 text-[14px] font-medium text-muted-foreground tabular">01</p>
-          <h3 className="mt-1 text-[20px] tracking-[-0.02em]">Send the brief</h3>
-          <p className="mt-1.5 text-[16px] text-muted-foreground">Three short screens: the piece, the stones, then size and metal. Add a sketch or photo. You get a fixed price within the hour.</p>
+          <h3 className="mt-1 text-[20px] tracking-[-0.02em]">Place your order in 3 quick steps</h3>
+          <p className="mt-1.5 text-[16px] text-muted-foreground">The piece and a photo, the stones, then size and metal. You get a fixed price within the hour.</p>
         </li>
         <li>
           <Snippet>
