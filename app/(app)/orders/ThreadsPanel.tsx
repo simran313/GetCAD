@@ -85,6 +85,7 @@ export function ThreadsPanel({
         othersReadAt={reads[t.id] ?? null}
         label={`Message in ${title}`}
         brief={t.kind === "legacy" ? null : brief}
+        forwardTo={tabbed ? (t.kind === "client_team" ? "designer" : t.kind === "internal" ? "client" : null) : null}
       />
     );
   };

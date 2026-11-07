@@ -24,6 +24,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ imageId: s
   const signed = await createAdminSupabaseClient()
     .storage.from(ORDER_FILES_BUCKET)
     .createSignedUrl((data as { object_key: string }).object_key, SIGNED_URL_TTL_SECONDS);
-  if (signed.error || !signed.data) return NextResponse.json({ error: "could not sign url" }, { status: 500 });
+  // A record whose picture is not in storage reads as not found.
+  if (signed.error || !signed.data) return notFound;
   return NextResponse.redirect(signed.data.signedUrl);
 }

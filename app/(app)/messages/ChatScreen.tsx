@@ -185,6 +185,15 @@ export function ChatScreen({
               unreadSince={unreadSince}
               othersReadAt={open.reads[thread.id] ?? null}
               brief={open.chatBrief}
+              forwardTo={
+                !client && !designer && open.threads.length > 1
+                  ? thread.kind === "client_team"
+                    ? "designer"
+                    : thread.kind === "internal"
+                      ? "client"
+                      : null
+                  : null
+              }
               fill
             />
           </div>
