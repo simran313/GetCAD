@@ -66,6 +66,7 @@
     "@axe-core/playwright": "4.13.0",
     "@clerk/backend": "^2.33.5",
     "@clerk/testing": "^2.2.50",
+    "@jridgewell/trace-mapping": "0.3.31",
     "@playwright/test": "1.63.0",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",

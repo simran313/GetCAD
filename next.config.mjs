@@ -27,6 +27,9 @@ const extraOrigins = (process.env.NEXT_SERVER_ACTION_ALLOWED_ORIGINS ?? "")
 
 const nextConfig = {
   reactStrictMode: true,
+  // Only the e2e build (tests/e2e/stack/build.mjs): maps a browser error in a
+  // test back to its component. Never set for a deployment.
+  productionBrowserSourceMaps: process.env.E2E_SOURCE_MAPS === "1",
   // 3DM uploads are cleaned with rhino3dm (lib/files/strip3dm.ts), which loads
   // a WebAssembly file from its own folder at runtime. Left to the bundler,
   // that file would not be found; kept external, it is required from
