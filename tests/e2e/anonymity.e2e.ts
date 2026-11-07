@@ -123,9 +123,15 @@ test("nothing the designer can reach names or links a client", async ({ browser 
   expect(seen.size).toBeGreaterThan(5);
   // The designer's own notifications, as the bell reads them: checked for
   // leaks like any page (not compared between jobs: it is the same on every page).
-  const notifications = await page.request.get("/api/notifications");
-  expect(notifications.ok(), "the bell's notifications load").toBe(true);
-  seen.set("/api/notifications", await notifications.text());
+  // Fetched from inside the page: Clerk keeps its short-lived session fresh
+  // there, while a request outside the page carries a stale one (401).
+  await page.goto("/work");
+  const notifications = await page.evaluate(async () => {
+    const r = await fetch("/api/notifications", { cache: "no-store" });
+    return { status: r.status, body: await r.text() };
+  });
+  expect(notifications.status, "the bell's notifications load").toBe(200);
+  seen.set("/api/notifications", notifications.body);
 
   // Whole-word matches: a client code like "MJ1" must not be found inside
   // a random build hash.
