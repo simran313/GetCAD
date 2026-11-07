@@ -72,3 +72,21 @@ describe("clientStepsDone (five stages)", () => {
     expect(clientStepsDone("REFUNDED")).toBeNull();
   });
 });
+
+// Owner, 7 Nov 2026: the next step says what happens next, not the state's name.
+describe("clientNextStep wording", () => {
+  it("tells a paid client whether the brief is confirmed yet", () => {
+    expect(clientNextStep("o1", "PAYMENT_HELD")).toMatchObject({
+      headline: "Paid · we're checking your brief",
+      detail: "Your first look is due 6 h after we confirm it.",
+    });
+    expect(clientNextStep("o1", "PAYMENT_HELD", { firstLookBy: "Sat, Nov 7, 5:37 PM" })).toMatchObject({
+      headline: "Confirmed · your designer starts shortly",
+      detail: "First look by Sat, Nov 7, 5:37 PM",
+    });
+  });
+  it("names who has it while the team works", () => {
+    expect(clientNextStep("o1", "IN_PROGRESS").headline).toBe("Your designer is working on it");
+    expect(clientNextStep("o1", "QC_REVIEW").headline).toBe("We're checking the design");
+  });
+});

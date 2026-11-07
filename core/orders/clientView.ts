@@ -83,8 +83,11 @@ export function clientNextStep(orderId: string, status: string, ctx: ClientStepC
         action: "Pay & start",
         href: `${o}/pay`,
       };
+    // Said once, as what happens next (owner, 7 Nov 2026), not the state's name.
     case "PAYMENT_HELD":
-      return { headline: "Paid", detail: "The clock starts when we confirm your brief.", action: null, href: o };
+      return by
+        ? { headline: "Confirmed · your designer starts shortly", detail: by, action: null, href: o }
+        : { headline: "Paid · we're checking your brief", detail: `Your first look is due ${hours ?? 6} h after we confirm it.`, action: null, href: o };
     case "CLIENT_PREVIEW":
       return {
         headline: (ctx.roundsUsed ?? 0) > 0 ? "A new version is ready" : ctx.service === "render" ? "Your renders are ready" : "Your design is ready",
@@ -107,9 +110,9 @@ export function clientNextStep(orderId: string, status: string, ctx: ClientStepC
       return { headline: "Refunded", detail: null, action: null, href: o };
     case "QC_REVIEW":
     case "DESIGNER_SUBMITTED":
-      return { headline: "In quality check", detail: by, action: null, href: o };
+      return { headline: "We're checking the design", detail: by, action: null, href: o };
     default:
-      return { headline: "In design", detail: by, action: null, href: o };
+      return { headline: "Your designer is working on it", detail: by, action: null, href: o };
   }
 }
 
