@@ -39,6 +39,8 @@ function forbidden(): string[] {
   ].filter(Boolean);
 }
 
+const LIVE = ["/api/notifications", "/api/inbox/stamp"];
+
 /** Everything the server sent for a page: its HTML and its RSC/JSON fetches. */
 async function capture(page: Page, path: string): Promise<string> {
   const bodies: Promise<string>[] = [];
@@ -53,6 +55,12 @@ async function capture(page: Page, path: string): Promise<string> {
     if (req["next-router-prefetch"] || req["next-router-segment-prefetch"]) return;
     const type = r.headers()["content-type"] ?? "";
     if (type.includes("text/x-component") && new URL(r.url()).pathname !== new URL(path, "http://x").pathname) return;
+    // The app-wide live checks (the bell's notifications, the inbox stamp)
+    // are not this page's data. They arrive when the browser is idle, so in
+    // some captures and not others, and their keys ("unread", "items") read
+    // as a link between two jobs. The notifications are checked for leaks
+    // once, on their own, after the crawl.
+    if (LIVE.includes(new URL(r.url()).pathname)) return;
     if (r.url().startsWith("http://127.0.0.1:3100") && /text\/x-component|application\/json|text\/html/.test(type)) {
       // A body still streaming after 5 s is not waited for.
       bodies.push(Promise.race([r.text().catch(() => ""), new Promise<string>((ok) => setTimeout(() => ok(""), 5_000))]));
@@ -113,6 +121,17 @@ test("nothing the designer can reach names or links a client", async ({ browser 
   }
   console.log(`crawled ${seen.size} pages in ${Math.round((Date.now() - started) / 1000)} s`);
   expect(seen.size).toBeGreaterThan(5);
+  // The designer's own notifications, as the bell reads them: checked for
+  // leaks like any page (not compared between jobs: it is the same on every page).
+  // Fetched from inside the page: Clerk keeps its short-lived session fresh
+  // there, while a request outside the page carries a stale one (401).
+  await page.goto("/work");
+  const notifications = await page.evaluate(async () => {
+    const r = await fetch("/api/notifications", { cache: "no-store" });
+    return { status: r.status, body: await r.text() };
+  });
+  expect(notifications.status, "the bell's notifications load").toBe(200);
+  seen.set("/api/notifications", notifications.body);
 
   // Whole-word matches: a client code like "MJ1" must not be found inside
   // a random build hash.

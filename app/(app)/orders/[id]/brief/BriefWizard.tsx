@@ -302,6 +302,18 @@ export function BriefWizard({
     window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
   };
 
+  // The centre-stone question counts as missing until it is answered.
+  const shownQuality: ReturnType<typeof gradeBrief> = centreGap
+    ? {
+        ...quality,
+        blockingCount: quality.blockingCount + 1,
+        gaps: [
+          { severity: "blocking", field: "centre_choice", what: "Whether there is a centre stone", why: "The head and the band are built around it." },
+          ...quality.gaps,
+        ],
+      }
+    : quality;
+
   if (readOnly) {
     return (
       <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-5)]">
@@ -324,22 +336,10 @@ export function BriefWizard({
 
       <input type="hidden" name="ring_size" value={ringSizeText} />
       <input type="hidden" name="notes" value={notesText} />
-      <StepBar step={step} steps={STEPS} onPick={setStep} />
-      <QualityChip
-        quality={
-          centreGap
-            ? {
-                ...quality,
-                blockingCount: quality.blockingCount + 1,
-                gaps: [
-                  { severity: "blocking", field: "centre_choice", what: "Whether there is a centre stone", why: "The head and the band are built around it." },
-                  ...quality.gaps,
-                ],
-              }
-            : quality
-        }
-        onJump={jump}
-      />
+      {/* On a phone one sticky row: the step and what is still missing, then
+          the step tabs. At desk width the meter and chip sit above the form. */}
+      <StepBar step={step} steps={STEPS} onPick={setStep} aside={<QualityChip quality={shownQuality} onJump={jump} compact />} />
+      <QualityChip quality={shownQuality} onJump={jump} className="max-md:hidden" />
 
       <Pane show={step === 0} title={STEPS[0]!}>
         <Field id="reference_name" label="Name this job">
@@ -738,16 +738,20 @@ function stepForField(field: string): number {
   return 2;
 }
 
-function StepBar({ step, steps: STEPS, onPick }: { step: number; steps: string[]; onPick: (n: number) => void }) {
-  // One line and a thin bar, kept in view under the top bar while scrolling.
+function StepBar({ step, steps: STEPS, onPick, aside }: { step: number; steps: string[]; onPick: (n: number) => void; aside?: React.ReactNode }) {
+  // One line (the step, and what is still missing) and a thin bar, kept in
+  // view under the top bar while scrolling.
   return (
     <div className="sticky top-[var(--chrome-top)] z-20 -mx-[var(--s-4)] mb-3 bg-background/95 px-[var(--s-4)] pb-1 pt-2 backdrop-blur md:hidden">
-      <p className="flex items-baseline gap-2 text-[length:var(--fs-3)]">
-        <span className="tabular text-muted-foreground">
-          {step + 1}/{STEPS.length}
-        </span>
-        <span className="font-semibold">{STEPS[step]}</span>
-      </p>
+      <div className="flex min-h-[var(--ctl-sm)] items-center justify-between gap-2">
+        <p className="flex shrink-0 items-baseline gap-2 text-[length:var(--fs-3)]">
+          <span className="tabular text-muted-foreground">
+            {step + 1}/{STEPS.length}
+          </span>
+          <span className="font-semibold">{STEPS[step]}</span>
+        </p>
+        {aside}
+      </div>
       <div className="mt-1 flex gap-1" role="tablist" aria-label="Brief steps">
         {STEPS.map((s, i) => (
           <button
@@ -915,38 +919,57 @@ function SelectField({
  * since 10a it applies review's minimum, so it never reads "Ready" while
  * review would refuse the brief.
  */
-function QualityChip({ quality, onJump }: { quality: ReturnType<typeof gradeBrief>; onJump: (field: string) => void }) {
+function QualityChip({
+  quality,
+  onJump,
+  compact = false,
+  className,
+}: {
+  quality: ReturnType<typeof gradeBrief>;
+  onJump: (field: string) => void;
+  /** On the phone's step row: the chip alone; the step tabs already show progress. */
+  compact?: boolean;
+  className?: string;
+}) {
   // Earliest step first: on step 1 the chip asks for the photo, not the size.
   const byStep = (a: BriefGap, b: BriefGap) => stepForField(a.field) - stepForField(b.field);
   const blocking = quality.gaps.filter((g) => g.severity === "blocking").sort(byStep);
   const first: BriefGap | undefined = blocking[0] ?? [...quality.gaps].sort(byStep)[0];
   const count = blocking.length || quality.gaps.length;
+  // "A reference photo" → "a reference photo"; beside the step on a phone,
+  // "reference photo", so the whole label fits a 390 px screen.
+  const what = first ? first.what.charAt(0).toLowerCase() + first.what.slice(1) : "";
+  const label = compact ? what.replace(/^(a|an|the) /, "") : what;
+  const chip = first ? (
+    <button
+      type="button"
+      onClick={() => onJump(first.field)}
+      className={cn(
+        "inline-flex min-h-[var(--ctl-sm)] min-w-0 items-center gap-1 truncate rounded-[var(--r-full)] border text-[length:var(--fs-2)] font-medium",
+        // Beside the step on a phone it takes what the row has left.
+        compact ? "px-2.5" : "max-w-[70%] px-3",
+        blocking.length ? "border-[color:var(--tone-danger-fg)] text-[color:var(--tone-danger-fg)]" : "border-border text-muted-foreground",
+      )}
+    >
+      <span className="truncate">
+        {count} {blocking.length ? "missing" : "to check"}: {label}
+      </span>
+    </button>
+  ) : (
+    <span className={cn("inline-flex shrink-0 items-center gap-1 text-[length:var(--fs-2)] font-medium", TONE_TEXT.success)}>
+      <Check className="h-4 w-4" aria-hidden /> Ready
+    </span>
+  );
+  if (compact) return chip;
   return (
-    <div className="mb-4 flex items-center gap-3">
+    <div className={cn("mb-4 flex items-center gap-3", className)}>
       <div className="h-1 flex-1 overflow-hidden rounded-[var(--r-full)] bg-muted" role="meter" aria-label="Brief quality" aria-valuemin={0} aria-valuemax={100} aria-valuenow={quality.score}>
         <div
           className={cn("h-full transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out)]", blocking.length ? "bg-[color:var(--tone-danger-fg)]" : "bg-primary")}
           style={{ width: `${quality.score}%` }}
         />
       </div>
-      {first ? (
-        <button
-          type="button"
-          onClick={() => onJump(first.field)}
-          className={cn(
-            "inline-flex min-h-[var(--ctl-sm)] max-w-[70%] items-center gap-1 truncate rounded-[var(--r-full)] border px-3 text-[length:var(--fs-2)] font-medium",
-            blocking.length ? "border-[color:var(--tone-danger-fg)] text-[color:var(--tone-danger-fg)]" : "border-border text-muted-foreground",
-          )}
-        >
-          <span className="truncate">
-            {count} {blocking.length ? "missing" : "to check"}: {first.what.charAt(0).toLowerCase() + first.what.slice(1)}
-          </span>
-        </button>
-      ) : (
-        <span className={cn("inline-flex items-center gap-1 text-[length:var(--fs-2)] font-medium", TONE_TEXT.success)}>
-          <Check className="h-4 w-4" aria-hidden /> Ready
-        </span>
-      )}
+      {chip}
     </div>
   );
 }
