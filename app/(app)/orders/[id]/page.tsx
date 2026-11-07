@@ -293,16 +293,17 @@ export default async function OrderPage({
     const newLink = (await searchParams).link;
     const afterDelivery = shareable ? (
       <>
+        {/* The guarantee first; sharing a preview is the extra (owner, 7 Nov 2026). */}
+        <ClaimsCard
+          orderId={order.id}
+          claims={(claimsRes.data as ClaimRow[] | null) ?? []}
+          claimWindow={(windowRes.data as { open: boolean; closes_at: string | null } | null) ?? null}
+        />
         <ShareCard
           orderId={order.id}
           links={(linksRes.data as PreviewLinkRow[] | null) ?? []}
           newLink={newLink && /^[A-Za-z0-9_-]{32}$/.test(newLink) ? newLink : null}
           siteUrl={SITE_URL}
-        />
-        <ClaimsCard
-          orderId={order.id}
-          claims={(claimsRes.data as ClaimRow[] | null) ?? []}
-          claimWindow={(windowRes.data as { open: boolean; closes_at: string | null } | null) ?? null}
         />
       </>
     ) : null;
