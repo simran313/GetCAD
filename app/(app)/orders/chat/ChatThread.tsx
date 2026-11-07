@@ -13,10 +13,11 @@ import { cn } from "@/lib/utils";
 
 import { postThreadAction } from "../fileActions";
 import { sendChatMessageAction } from "./actions";
-import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
+import type { AttachmentRow, ChatBrief, MessageRow, ThreadRow } from "../types";
 import { refusalReason } from "@/lib/refusal";
 import { isPicture, preparePhoto } from "@/lib/client/images";
 
+import { BriefCard } from "./BriefCard";
 import { ImageMarkup } from "./ImageMarkup";
 import { clock, useVoiceRecorder, voiceSupported } from "./useVoiceRecorder";
 
@@ -90,6 +91,7 @@ export function ChatThread({
   othersReadAt = null,
   fill = false,
   label = "Message",
+  brief = null,
 }: {
   orderId: string;
   thread: ThreadRow;
@@ -105,6 +107,8 @@ export function ChatThread({
   /** Fill the parent's height (the chat screen); otherwise a bounded panel. */
   fill?: boolean;
   label?: string;
+  /** The brief, shown as the conversation's first message (owner, 7 Nov 2026). */
+  brief?: ChatBrief | null;
 }) {
   const tz = useTimeZone();
   const router = useRouter();
@@ -214,7 +218,10 @@ export function ChatThread({
         tabIndex={0}
         className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-[var(--s-4)] py-[var(--s-4)] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
-        {items.length === 0 && <p className="py-8 text-center text-[length:var(--fs-3)] text-muted-foreground">No messages yet</p>}
+        {brief && <BriefCard brief={brief} mine={client} onMarkup={thread.can_post ? (b) => setMarkup(b) : undefined} />}
+        {items.length === 0 && (
+          <p className="py-8 text-center text-[length:var(--fs-3)] text-muted-foreground">{brief ? "Ask about the design here" : "No messages yet"}</p>
+        )}
         {items.map((item) => {
           const day = dayKey(item.at, tz);
           const sep =

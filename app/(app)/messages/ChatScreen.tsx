@@ -184,6 +184,7 @@ export function ChatScreen({
               client={client}
               unreadSince={unreadSince}
               othersReadAt={open.reads[thread.id] ?? null}
+              brief={open.chatBrief}
               fill
             />
           </div>

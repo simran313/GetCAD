@@ -5,6 +5,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
+import type { ChatBrief } from "../orders/types";
+
 import { AutoRefresh } from "../orders/AutoRefresh";
 import { c as claim } from "@/content/claims";
 
@@ -58,6 +60,8 @@ export interface OpenConversation {
   events: { id: string; label: string; at: string }[];
   /** Brief rows for the details panel (client and team only). */
   brief: { label: string; value: string }[];
+  /** The brief as the conversation's first message (owner, 7 Nov 2026). */
+  chatBrief: ChatBrief | null;
   /** The client's one next step, for the banner and the panel. */
   next: ClientStep | null;
 }

@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { ChatThread } from "./chat/ChatThread";
-import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
+import type { AttachmentRow, ChatBrief, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
 
 /**
  * The order's conversations (DECISIONS §11, Phase 4a).
@@ -50,6 +50,7 @@ export function ThreadsPanel({
   messages,
   attachments,
   reads = {},
+  brief = null,
 }: {
   orderId: string;
   relation: OrderRow["relation"];
@@ -58,6 +59,8 @@ export function ThreadsPanel({
   attachments: AttachmentRow[];
   /** How far the other side has read each thread (the ticks). */
   reads?: ThreadReads;
+  /** The brief, as the first message of each conversation (owner, 7 Nov 2026). */
+  brief?: ChatBrief | null;
 }) {
   const sorted = [...threads]
     .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind))
@@ -81,6 +84,7 @@ export function ThreadsPanel({
         client={relation === "CLIENT"}
         othersReadAt={reads[t.id] ?? null}
         label={`Message in ${title}`}
+        brief={t.kind === "legacy" ? null : brief}
       />
     );
   };

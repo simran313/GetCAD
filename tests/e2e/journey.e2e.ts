@@ -123,6 +123,10 @@ test("the designer does version 1 and the pod lead sends it back", async ({ brow
   await designer.goto(`/work/${orderId}`);
   // The client's master instructions sit on the job (0062).
   await expect(designer.getByRole("region", { name: "Master instructions" })).toContainText("Shank at least 1.8 mm. Sprue inside the shank.");
+  // The brief is the first message of the designer's chat, with its reference picture (owner, 7 Nov 2026).
+  const briefCard = designer.getByRole("article", { name: "The order brief" });
+  await expect(briefCard).toBeVisible();
+  await expect(briefCard.getByRole("button", { name: /^Open reference picture 1$/ })).toBeVisible();
   // The "Pod lead notes" card lists it as one item (the thread carries the raw message too).
   await expect(designer.getByRole("listitem").filter({ hasText: /^All measurements — Shank 1\.0 mm at the base — Thicken to 1\.2 mm$/ })).toBeVisible();
 
