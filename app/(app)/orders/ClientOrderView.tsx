@@ -339,11 +339,16 @@ export async function ClientOrderView({
           card that matters at this stage leads, full width on a phone, with
           a black edge; each opens its details in a sheet. */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        {cards.map((c, i) => (
-          <div key={c.key} className={i === 0 && c.emphasis ? "col-span-2 lg:col-span-1" : undefined}>
-            {c.el}
-          </div>
-        ))}
+        {cards.map((c, i) => {
+          // On a phone: the leading card takes the row, and so does a last card left on its own.
+          const lead = i === 0 && !!c.emphasis;
+          const alone = i === cards.length - 1 && (cards.length - (cards[0]?.emphasis ? 1 : 0)) % 2 === 1;
+          return (
+            <div key={c.key} className={lead || alone ? "col-span-2 lg:col-span-1" : undefined}>
+              {c.el}
+            </div>
+          );
+        })}
       </div>
 
       {intake && <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />}
