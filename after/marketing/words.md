@@ -2,7 +2,7 @@
 
 | Route | Words |
 | --- | ---: |
-| `/` | 978 |
+| `/` | 988 |
 | `/how-it-works` | 174 |
 | `/pricing` | 164 |
 | `/quality` | 139 |
