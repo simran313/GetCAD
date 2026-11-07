@@ -62,6 +62,15 @@ describe("the app chrome on a phone", () => {
     expect(offenders, "use --chrome-top / --chrome-bottom (app/globals.css)").toEqual([]);
   });
 
+  // R6: a transform on the page frame makes it the frame for every fixed bar
+  // inside it, so the bars ride mid-page until the animation ends and then
+  // jump (layout shift 0.096 on the phone order page).
+  it("the page frame never animates or transforms (the fixed bars inside it would ride along)", () => {
+    const page = read("components/ui/page.tsx");
+    const main = page.slice(page.indexOf("<main"), page.indexOf("</main>"));
+    expect(main).not.toMatch(/animate-in|slide-in-from|translate-|transform|will-change/);
+  });
+
   it("safe areas are read through the tokens, not env() in a class", () => {
     const offenders = files.filter((f) => /env\(safe-area-inset/.test(read(f)));
     expect(offenders).toEqual([]);

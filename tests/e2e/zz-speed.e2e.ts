@@ -45,22 +45,41 @@ async function serverTime(page: Page, path: string): Promise<number> {
 async function loadTimes(page: Page, path: string): Promise<{ server: number; lcp: number; cls: number }> {
   await page.goto(path, { waitUntil: "load" });
   await page.waitForTimeout(300);
-  return page.evaluate(
+  const t = await page.evaluate(
     () =>
-      new Promise<{ server: number; lcp: number; cls: number }>((done) => {
+      new Promise<{ server: number; lcp: number; cls: number; moved: string[] }>((done) => {
         const n = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
         let lcp = 0;
         let cls = 0;
+        const moved: string[] = [];
+        // What moved, so a layout shift can be fixed rather than only counted.
+        const describe = (el: Node | null) => {
+          if (!(el instanceof Element)) return el?.nodeName ?? "?";
+          const cls = (el.getAttribute("class") ?? "").split(/\s+/).slice(0, 4).join(".");
+          return `${el.tagName.toLowerCase()}${cls ? `.${cls}` : ""} "${(el.textContent ?? "").trim().slice(0, 40)}"`;
+        };
         new PerformanceObserver((l) => l.getEntries().forEach((e) => (lcp = Math.max(lcp, e.startTime)))).observe({ type: "largest-contentful-paint", buffered: true });
         new PerformanceObserver((l) =>
           l.getEntries().forEach((e) => {
-            const shift = e as PerformanceEntry & { value: number; hadRecentInput: boolean };
-            if (!shift.hadRecentInput) cls += shift.value;
+            const shift = e as PerformanceEntry & {
+              value: number;
+              hadRecentInput: boolean;
+              sources?: { node: Node | null; previousRect: DOMRectReadOnly; currentRect: DOMRectReadOnly }[];
+            };
+            if (shift.hadRecentInput) return;
+            cls += shift.value;
+            for (const src of shift.sources ?? []) {
+              const a = src.previousRect;
+              const b = src.currentRect;
+              moved.push(`${shift.value.toFixed(3)} at ${Math.round(shift.startTime)} ms: ${describe(src.node)} y ${Math.round(a.y)}→${Math.round(b.y)}, h ${Math.round(a.height)}→${Math.round(b.height)}`);
+            }
           }),
         ).observe({ type: "layout-shift", buffered: true });
-        setTimeout(() => done({ server: Math.round(n.responseStart - n.requestStart), lcp: Math.round(lcp), cls: Math.round(cls * 1000) / 1000 }), 50);
+        setTimeout(() => done({ server: Math.round(n.responseStart - n.requestStart), lcp: Math.round(lcp), cls: Math.round(cls * 1000) / 1000, moved }), 50);
       }),
   );
+  if (t.cls > 0.01) details.push(`layout shift ${t.cls} on ${path} (${page.viewportSize()?.width ?? "?"} px):\n  - ${t.moved.join("\n  - ")}`);
+  return { server: t.server, lcp: t.lcp, cls: t.cls };
 }
 
 /**
