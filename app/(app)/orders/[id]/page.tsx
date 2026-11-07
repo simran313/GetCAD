@@ -328,6 +328,8 @@ export default async function OrderPage({
           unread={unreadRes.count ?? 0}
           intake={intake}
           timelineRows={(timelineRes.data ?? []) as TimelineRawRow[]}
+          threads={(threadsRes.data as ThreadRow[] | null) ?? []}
+          reads={toThreadReads(readsRes.data)}
         />
         <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
       </>

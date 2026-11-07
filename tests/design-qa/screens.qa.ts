@@ -95,7 +95,11 @@ function writeAxeReport(who: string) {
   return list.length;
 }
 
-/** "path::Name" opens the button called Name (a sheet on the order page) before the shot. */
+/**
+ * "path::Name" opens the thing called Name before the shot: a row that opens
+ * in place (the client order page's Details, since 7 Nov 2026), else a
+ * button that opens a sheet.
+ */
 async function shoot(page: Page, who: string, entry: string) {
   const [path, open] = entry.split("::") as [string, string | undefined];
   for (const [width, height] of WIDTHS) {
@@ -103,8 +107,13 @@ async function shoot(page: Page, who: string, entry: string) {
     const res = await page.goto(path, { waitUntil: "load" }).catch(() => null);
     await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
     if (open) {
-      await page.getByRole("button", { name: new RegExp(`^${open}`) }).first().click().catch((e) => console.log(`! ${who} ${entry}: ${e}`));
-      await page.getByRole("dialog").waitFor({ timeout: 5_000 }).catch(() => {});
+      const row = page.locator("summary", { hasText: new RegExp(`^${open}`) }).first();
+      if (await row.count()) {
+        await row.click({ timeout: 5_000 }).catch((e) => console.log(`! ${who} ${entry}: ${e}`));
+      } else {
+        await page.getByRole("button", { name: new RegExp(`^${open}`) }).first().click({ timeout: 5_000 }).catch((e) => console.log(`! ${who} ${entry}: ${e}`));
+        await page.getByRole("dialog").waitFor({ timeout: 5_000 }).catch(() => {});
+      }
     }
     // Let fonts and late layout settle; animations are frozen by the screenshot.
     await page.evaluate(() => document.fonts.ready).catch(() => {});

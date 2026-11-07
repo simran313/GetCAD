@@ -1,4 +1,4 @@
-import { ChevronDown, FileText, History, MessageSquare, RotateCcw } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -25,22 +25,22 @@ import { formatMoney } from "@/lib/money";
 import { viewerZone } from "@/lib/time/zone";
 
 import { fileSize, OrderFiles, visibleFiles, type FileVersionRow } from "../files/OrderFiles";
-import { LatestActivity } from "@/components/domain/latest-activity";
 
-import { HubTile } from "./HubTile";
 import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
 import { OrderMenu } from "./OrderMenu";
 import { OrderTimeline } from "./OrderTimeline";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
-import type { AttachmentRow, MessageRow, OrderRow } from "./types";
+import { ThreadsPanel } from "./ThreadsPanel";
+import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
 
 /**
- * The client's order page (order hub, Phase 10b). Where the order is (five
- * labelled stages), the one next step with its one button, then four tiles:
- * Chat (the conversation's own screen), Files, Revisions and Timeline (each
- * in a sheet). Brief and payment fold into rows; cancel and "raise a
- * problem" sit in the overflow. Every action is the same server action as
- * before; only the arrangement is new. The team is only ever "Your team".
+ * The client's order page (order hub, Phase 10b; owner, 7 Nov 2026). Where
+ * the order is (five labelled stages), the next step in a sentence with its
+ * one button, the conversation with the team on the page, and one Details
+ * card whose rows open in place: brief, payment, files, revisions, timeline.
+ * Cancel and "raise a problem" sit in the overflow. Every action is the same
+ * server action as before; only the arrangement is new. The team is only
+ * ever "Your team".
  */
 export interface BriefLine {
   key: string;
@@ -54,7 +54,7 @@ const SUMMARY =
 
 function Fold({ label, value, children }: { label: string; value: React.ReactNode; children: React.ReactNode }) {
   return (
-    <details className={`${CARD} group`}>
+    <details className="group">
       <summary className={SUMMARY}>
         <span className="w-20 shrink-0 font-medium">{label}</span>
         <span className="min-w-0 flex-1 truncate text-[length:var(--fs-3)] text-muted-foreground">{value}</span>
@@ -93,6 +93,8 @@ export async function ClientOrderView({
   unread,
   intake,
   timelineRows,
+  threads = [],
+  reads = {},
   afterDelivery = null,
 }: {
   order: OrderRow & { service?: string; created_at?: string };
@@ -110,6 +112,9 @@ export async function ClientOrderView({
   unread: number;
   intake: { screenshots: Screenshot[]; contact: ClientContact | null; orderUrl: string | null } | null;
   timelineRows: TimelineRawRow[];
+  /** The client's thread with the team (order_threads gives a client only that one). */
+  threads?: ThreadRow[];
+  reads?: ThreadReads;
   /** Phase 7b: the share-a-preview card and spec claims, once approved. */
   afterDelivery?: React.ReactNode;
 }) {
@@ -147,6 +152,18 @@ export async function ClientOrderView({
     .map((l) => l.value)
     .join(" · ");
 
+  const firstLook = running ? (
+    <SlaCountdown dueAt={o.sla_due_at!} />
+  ) : o.sla_status === "met" ? (
+    <StatusPill tone="success">Done on time</StatusPill>
+  ) : o.sla_status === "breached" || o.sla_status === "breached_credited" ? (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <StatusPill tone="danger">Missed</StatusPill> The full amount comes back as credit.
+    </span>
+  ) : (
+    <span className="text-muted-foreground">Starts once you pay and we confirm the brief.</span>
+  );
+
   return (
     <Page>
       <PageHeader
@@ -154,7 +171,8 @@ export async function ClientOrderView({
         title={title}
         actions={
           <>
-            <StatusBadge status={o.status} />
+            {/* The stages and the next step say where it is; the badge only when there is no journey (cancelled, refunded). */}
+            {done === null && <StatusBadge status={o.status} />}
             <OrderMenu orderId={o.id} name={title} cancel={cancel} problem={problem} />
           </>
         }
@@ -162,8 +180,8 @@ export async function ClientOrderView({
 
       {done !== null && <Stepper layout="fit" steps={CLIENT_STEPS.map((label) => ({ label }))} current={done} />}
 
-      {/* The next step leads the page (R2): lifted with a black edge, and a
-          cobalt rail when the step is the client's own to take. */}
+      {/* The next step leads the page: what happens next, when, and the one
+          thing to press when it is the client's turn (black rail). */}
       <section
         aria-labelledby="next-title"
         data-variant={step.action ? "action" : "focus"}
@@ -206,107 +224,84 @@ export async function ClientOrderView({
         )}
       </section>
 
-      {/* Latest (R4): what changed, under the next step. */}
-      <LatestActivity
-        zone={tz}
-        items={[
-          ...steps.slice(-2).map((st) => ({ id: `t-${st.id}`, label: st.label, at: st.createdAt })),
-          ...(last
-            ? [{ id: `m-${last.id}`, label: `${last.is_mine ? "You" : "Your team"}: ${last.body}`, at: last.created_at, href: `/messages/${o.id}` }]
-            : []),
-        ]}
-      />
-
-      {intake && <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />}
-
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <HubTile
-          icon={<MessageSquare />}
-          label="Chat"
-          href={`/messages/${o.id}`}
-          badge={unread}
-          line={last ? `${last.is_mine ? "You" : "Your team"}: ${last.body}` : "Ask your team"}
-        />
-        <HubTile icon={<FileText />} label="Files" line={fileCount === 0 ? "None yet" : `${fileCount} ${fileCount === 1 ? "file" : "files"}`}>
-          <OrderFiles order={{ id: o.id, status: o.status, service }} files={files} role="CLIENT" names={fileNames} shas={fileShas} />
-          {shared.length > 0 && (
-            <section className="mt-5 space-y-1">
-              <h3 className="text-[length:var(--fs-3)] font-medium">In chat</h3>
-              <ul className="divide-y divide-border">
-                {shared.map((a) => (
-                  <li key={a.id}>
-                    <a href={`/api/thread-files/${a.id}`} className="flex min-h-[var(--ctl)] items-center justify-between gap-3 text-[length:var(--fs-3)] hover:underline">
-                      <span className="min-w-0 truncate">{a.file_name}</span>
-                      <span className="shrink-0 text-[length:var(--fs-2)] text-muted-foreground">{fileSize(a.size_bytes)}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-4">
+          {intake && <IntakePanel order={o} screenshots={intake.screenshots} contact={intake.contact} orderUrl={intake.orderUrl} />}
+          {/* The conversation with the team, on the page (owner, 7 Nov 2026). */}
+          {threads.length > 0 && (
+            <ThreadsPanel orderId={o.id} relation="CLIENT" threads={threads} messages={messages} attachments={attachments} reads={reads} />
           )}
-          <Link href="/files" className="mt-5 inline-flex min-h-[var(--ctl)] items-center text-[length:var(--fs-3)] underline underline-offset-4">
-            All your files
-          </Link>
-        </HubTile>
-        <HubTile
-          icon={<RotateCcw />}
-          label="Revisions"
-          line={allowance ? `${allowance.used} of ${allowance.included} used` : rounds.length > 0 ? `${rounds.length} rounds` : "2 included"}
-        >
-          <RevisionsPanel orderId={o.id} status={o.status} isActingAsClient data={revisions} bare />
-        </HubTile>
-        <HubTile icon={<History />} label="Timeline" line={latest ? `${latest.label} · ${formatRelative(latest.createdAt, tz)}` : "No events yet"}>
-          <div className="mb-5 space-y-1 text-[length:var(--fs-2)]">
-            <p className="flex flex-wrap items-center gap-2 text-[length:var(--fs-3)] font-medium">
-              First look <CategoryBadge letter={o.category} />
-            </p>
-            {running ? (
-              <SlaCountdown dueAt={o.sla_due_at!} />
-            ) : o.sla_status === "met" ? (
-              <StatusPill tone="success">Done on time</StatusPill>
-            ) : o.sla_status === "breached" || o.sla_status === "breached_credited" ? (
-              <p className="flex flex-wrap items-center gap-2">
-                <StatusPill tone="danger">Missed</StatusPill> The full amount comes back as credit.
-              </p>
-            ) : (
-              <p className="text-muted-foreground">Starts once you pay and we confirm the brief.</p>
-            )}
-            <p className="text-muted-foreground">
-              {o.tier === "complex" ? `Complex piece · ${o.complex_deadline_hours ?? "—"} h deadline` : "Within 6 h of confirmation"}
-            </p>
-          </div>
-          <OrderTimeline rows={timelineRows} currency={currency} />
-        </HubTile>
-      </div>
+          {afterDelivery}
+        </div>
 
-      <div className="space-y-2">
-        <Fold label="Brief" value={briefValue || "Not started"}>
-          {briefLines.length > 0 && <Rows rows={briefLines} />}
-          <Link
-            href={`/orders/${o.id}/brief`}
-            className="flex min-h-[var(--ctl)] items-center border-t border-border px-[var(--s-4)] text-[length:var(--fs-3)] underline underline-offset-4"
-          >
-            {o.status === "DRAFT" || o.status === "SUBMITTED" ? "Edit the brief" : "Open the brief"}
-          </Link>
-        </Fold>
-        <Fold label="Payment" value={price ? `${price}${held > 0 ? " · paid" : ""}` : "Price coming"}>
-          <Rows
-            rows={[
-              { label: "Price", value: price ?? "Price coming" },
-              ...(held > 0 ? [{ label: "Paid", value: formatMoney(held, currency) }] : []),
-              ...(o.category ? [{ label: "Category", value: <CategoryBadge letter={o.category} /> }] : []),
-            ]}
-          />
-          <Link
-            href="/wallet/invoices"
-            className="flex min-h-[var(--ctl)] items-center border-t border-border px-[var(--s-4)] text-[length:var(--fs-3)] underline underline-offset-4"
-          >
-            Invoices
-          </Link>
-        </Fold>
+        {/* Everything else about the order, one row each, opening in place. */}
+        <aside className="min-w-0">
+          <section aria-label="Order details" className={`${CARD} divide-y divide-border overflow-hidden`}>
+            <h2 className="px-[var(--s-4)] py-[var(--s-3)] text-[length:var(--fs-4)] font-semibold">Details</h2>
+            <Fold label="Brief" value={briefValue || "Not started"}>
+              {briefLines.length > 0 && <Rows rows={briefLines} />}
+              <Link
+                href={`/orders/${o.id}/brief`}
+                className="flex min-h-[var(--ctl)] items-center border-t border-border px-[var(--s-4)] text-[length:var(--fs-3)] underline underline-offset-4"
+              >
+                {o.status === "DRAFT" || o.status === "SUBMITTED" ? "Edit the brief" : "Open the brief"}
+              </Link>
+            </Fold>
+            <Fold label="Payment" value={price ? `${price}${held > 0 ? " · paid" : ""}` : "Price coming"}>
+              <Rows
+                rows={[
+                  { label: "Price", value: price ?? "Price coming" },
+                  ...(held > 0 ? [{ label: "Paid", value: formatMoney(held, currency) }] : []),
+                  ...(o.category ? [{ label: "Category", value: <CategoryBadge letter={o.category} /> }] : []),
+                  { label: "First look", value: firstLook },
+                ]}
+              />
+              <Link
+                href="/wallet/invoices"
+                className="flex min-h-[var(--ctl)] items-center border-t border-border px-[var(--s-4)] text-[length:var(--fs-3)] underline underline-offset-4"
+              >
+                Invoices
+              </Link>
+            </Fold>
+            <Fold label="Files" value={fileCount === 0 ? "None yet" : `${fileCount} ${fileCount === 1 ? "file" : "files"}`}>
+              <div className="px-[var(--s-4)] py-[var(--s-3)]">
+                <OrderFiles order={{ id: o.id, status: o.status, service }} files={files} role="CLIENT" names={fileNames} shas={fileShas} />
+                {shared.length > 0 && (
+                  <section className="mt-5 space-y-1">
+                    <h3 className="text-[length:var(--fs-3)] font-medium">In chat</h3>
+                    <ul className="divide-y divide-border">
+                      {shared.map((a) => (
+                        <li key={a.id}>
+                          <a href={`/api/thread-files/${a.id}`} className="flex min-h-[var(--ctl)] items-center justify-between gap-3 text-[length:var(--fs-3)] hover:underline">
+                            <span className="min-w-0 truncate">{a.file_name}</span>
+                            <span className="shrink-0 text-[length:var(--fs-2)] text-muted-foreground">{fileSize(a.size_bytes)}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                <Link href="/files" className="mt-3 inline-flex min-h-[var(--ctl)] items-center text-[length:var(--fs-3)] underline underline-offset-4">
+                  All your files
+                </Link>
+              </div>
+            </Fold>
+            <Fold
+              label="Revisions"
+              value={allowance ? `${allowance.used} of ${allowance.included} used` : rounds.length > 0 ? `${rounds.length} rounds` : "2 included"}
+            >
+              <div className="px-[var(--s-4)] py-[var(--s-3)]">
+                <RevisionsPanel orderId={o.id} status={o.status} isActingAsClient data={revisions} bare />
+              </div>
+            </Fold>
+            <Fold label="Timeline" value={latest ? `${latest.label} · ${formatRelative(latest.createdAt, tz)}` : "No events yet"}>
+              <div className="px-[var(--s-4)] py-[var(--s-3)]">
+                <OrderTimeline rows={timelineRows} currency={currency} />
+              </div>
+            </Fold>
+          </section>
+        </aside>
       </div>
-
-      {afterDelivery}
 
       {step.action && <div className="h-24 md:hidden" aria-hidden />}
     </Page>
