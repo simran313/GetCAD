@@ -864,7 +864,7 @@ export async function OrderDetail({
       ...(team.podPicker && !choosePod
         ? [
             <div key="pod" className="space-y-1">
-              <p className={field}>Pod: {team.pod ?? "none yet"}</p>
+              <p className={field}>{team.pod ? "Move to another pod" : "Choose a pod"}</p>
               {team.podPicker}
             </div>,
           ]
