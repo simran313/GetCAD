@@ -16,10 +16,10 @@
 | `/admin/billing` | 115 |
 | `/admin/payouts` | 32 |
 | `/admin/users` | 213 |
-| `/admin/settings` | 334 |
+| `/admin/settings` | 393 |
 | `/dashboard` | 95 |
 | `/orders` | 77 |
-| `/orders/mW3fZwaTkWsH7NzDdMVkK` | 499 |
-| `/orders/3PNe4G2FsJzreupvcbfZu` | 116 |
+| `/orders/6KsLJM6TFRecYwR6jL5YL` | 499 |
+| `/orders/kudz6NkwqQTACiEptckUE` | 116 |
 | `/messages` | 223 |
 | `/account` | 52 |
