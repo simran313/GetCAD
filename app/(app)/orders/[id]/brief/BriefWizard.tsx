@@ -652,7 +652,7 @@ export function BriefWizard({
               />
               <SelectField
                 id="ring_size"
-                label={country ? `Ring size (${ringSys})` : "Ring size"}
+                label="Ring size"
                 options={[["", country ? "Choose…" : "Country first"], ...(country ? ringSystem(ringSys).sizes.map((z) => [z, z] as [string, string]) : [])]}
                 value={ringOther ? "" : ringSz}
                 onChange={(v) => {
