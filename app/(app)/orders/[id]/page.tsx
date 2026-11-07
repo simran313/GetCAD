@@ -147,7 +147,7 @@ export default async function OrderPage({
       supabase.from("order_specs").select("*").eq("order_id", id).maybeSingle(),
       supabase.from("orders").select("client_po").eq("id", id).maybeSingle(),
       supabase.from("order_reference_images").select("id").eq("order_id", id),
-      supabase.from("order_spec_accents").select("quantity").eq("order_id", id),
+      supabase.from("order_spec_accents").select("quantity, shape, width_um, setting").eq("order_id", id).order("position"),
       // The Files sheet: delivered names (as on /files).
       supabase.from("deliverables").select("file_version_id, file_name").eq("order_id", id),
       supabase
@@ -381,66 +381,93 @@ export default async function OrderPage({
         }
       />
     );
-    const teamTop = (
-      <Card as="section" variant="focus">
-        <CardHeader>
-          <CardTitle>Next</CardTitle>
-          <StatusBadge status={order.status} />
-        </CardHeader>
-        <CardBody className="space-y-3 text-[length:var(--fs-3)]">
-          <p className="font-medium">{next.why}</p>
-          {order.status === "QC_REVIEW" && (
-            <Link href={`/qc/${order.id}`} className={`${buttonVariants()} w-full`}>
-              Open the QC review
-            </Link>
-          )}
-          {pods && (movable || !job?.pod_id) && (
-            <div className="space-y-1">
-              <p className="text-[length:var(--fs-2)] text-muted-foreground">
-                Pod: {job?.pod_name ? `${job.pod_name}${job.pod_lead_name ? ` · ${job.pod_lead_name}` : ""}` : "none yet"}
-              </p>
-              <PodPicker orderId={order.id} pods={pods} label={job?.pod_id ? "Move" : "Choose"} />
-            </div>
-          )}
-          {checklistRows.length > 0 && (
-            <p className="tabular font-mono text-[length:var(--fs-2)] text-muted-foreground">
-              v{job?.work_version ?? 1} · designer {countWord(stageCount(checklistRows, "DESIGNER"))} · QC{" "}
-              {countWord(stageCount(checklistRows, "MANAGER"))} · files {slotRows.filter((r) => r.file_version_id).length}/{slotRows.length}
-            </p>
-          )}
-          <p className="flex flex-wrap gap-3 text-[length:var(--fs-2)]">
-            <Link href={`/orders/${order.id}/brief`} className="underline underline-offset-4">
-              The brief
-            </Link>
-            {postQc && order.service !== "render" && (
-              <>
-                {vs?.certificate && (
-                  <a href={`/api/orders/${order.id}/certificate`} className="underline underline-offset-4">
-                    Certificate
-                  </a>
-                )}
-                <a href={`/api/orders/${order.id}/weight-sheet`} className="underline underline-offset-4">
-                  Weight sheet
-                </a>
-              </>
-            )}
-            {postQc && (
-              <a href={`/api/orders/${order.id}/summary`} className="underline underline-offset-4">
-                Summary sheet
-              </a>
-            )}
+    // The documents and the work so far, shown in the order facts card.
+    const teamExtras = (
+      <>
+        {checklistRows.length > 0 && (
+          <p className="tabular font-mono text-muted-foreground">
+            v{job?.work_version ?? 1} · designer {countWord(stageCount(checklistRows, "DESIGNER"))} · QC{" "}
+            {countWord(stageCount(checklistRows, "MANAGER"))} · files {slotRows.filter((r) => r.file_version_id).length}/{slotRows.length}
           </p>
-          {postQc && order.service !== "render" && vs && !vs.certificate && (
-            <form action={issueCertificateAction}>
-              <input type="hidden" name="order_id" value={order.id} />
-              <Button type="submit" size="sm" variant="outline">
-                Issue certificate
-              </Button>
-            </form>
+        )}
+        <p className="flex flex-wrap gap-x-3 gap-y-1">
+          <Link href={`/orders/${order.id}/brief`} className="underline underline-offset-4">
+            Full brief
+          </Link>
+          {postQc && order.service !== "render" && (
+            <>
+              {vs?.certificate && (
+                <a href={`/api/orders/${order.id}/certificate`} className="underline underline-offset-4">
+                  Certificate
+                </a>
+              )}
+              <a href={`/api/orders/${order.id}/weight-sheet`} className="underline underline-offset-4">
+                Weight sheet
+              </a>
+            </>
+          )}
+          {postQc && (
+            <a href={`/api/orders/${order.id}/summary`} className="underline underline-offset-4">
+              Summary sheet
+            </a>
+          )}
+        </p>
+        {postQc && order.service !== "render" && vs && !vs.certificate && (
+          <form action={issueCertificateAction}>
+            <input type="hidden" name="order_id" value={order.id} />
+            <Button type="submit" size="sm" variant="outline">
+              Issue certificate
+            </Button>
+          </form>
+        )}
+      </>
+    );
+    // The brief on the page (owner, 7 Nov 2026): pricing and confirming read it, so it is not a link away.
+    const spec = specRes.data as Record<string, unknown> | null;
+    const teamBriefRows = briefRows(spec, {
+      service: order.service === "render" ? "render" : "cad",
+      photos: (photosRes.data ?? []).length,
+      accents: (accentsRes.data ?? []) as { quantity: number | null; shape?: string; width_um?: number | null; setting?: string }[],
+      detail: true,
+    }).filter((r) => r.key !== "name");
+    const teamBrief = (
+      <Card as="section">
+        <CardHeader>
+          <CardTitle>Brief</CardTitle>
+          <Link href={`/orders/${order.id}/brief`} className="text-[length:var(--fs-2)] underline underline-offset-4">
+            Open
+          </Link>
+        </CardHeader>
+        <CardBody>
+          {spec ? (
+            <dl className="divide-y divide-border text-[length:var(--fs-3)] leading-[var(--lh-3)]">
+              {teamBriefRows.map((r) => (
+                <div key={r.key} className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3 py-1.5">
+                  <dt className="text-muted-foreground">{r.label}</dt>
+                  <dd className="min-w-0 whitespace-pre-wrap break-words">{r.value ?? "—"}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-[length:var(--fs-3)] text-muted-foreground">No brief yet.</p>
           )}
         </CardBody>
       </Card>
     );
+    const team = {
+      // Assigning is the pod lead's move (owner, 4 Nov 2026): an admin is told who has it, not asked to do it.
+      why:
+        order.relation === "ADMIN" && next.stage === "assign" && job?.pod_id && order.confirmed_at
+          ? "Paid and confirmed · the pod lead assigns a designer"
+          : next.why,
+      pod: job?.pod_name ? `${job.pod_name}${job.pod_lead_name ? ` · ${job.pod_lead_name}` : ""}` : null,
+      designerRef: job?.designer_ref ?? null,
+      clientCode: job?.client_code ?? null,
+      podPicker: pods && (movable || !job?.pod_id) ? <PodPicker orderId={order.id} pods={pods} label={job?.pod_id ? "Move" : "Choose"} /> : null,
+      brief: teamBrief,
+      extras: teamExtras,
+      qcHref: order.status === "QC_REVIEW" && order.relation === "POD_LEAD" ? `/qc/${order.id}` : null,
+    };
     return (
       <Page>
         <Link
@@ -455,9 +482,9 @@ export default async function OrderPage({
         />
         <OrderDetail
           layout="team"
+          team={team}
           teamTop={
             <>
-              {teamTop}
               {standingCard}
               {/* Latest (R4): the last moves and the last message, under Next. */}
               <LatestActivity

@@ -87,7 +87,7 @@ test("the admin quotes it, records the payment and confirms the brief", async ({
   await act(page, page.getByRole("button", { name: "Confirm order" }));
   await expectGone(page, page.getByRole("button", { name: "Confirm order" }));
   // One pod: the order went to it on payment (0048).
-  await expect(page.getByText("Pod One").first()).toBeVisible();
+  await expect(page.getByText("Pod One").filter({ visible: true }).first()).toBeVisible();
   await page.context().close();
 });
 
