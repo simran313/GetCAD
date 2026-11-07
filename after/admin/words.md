@@ -19,7 +19,7 @@
 | `/admin/settings` | 334 |
 | `/dashboard` | 95 |
 | `/orders` | 77 |
-| `/orders/8Xs5Ek6U3uRuqc8vj748q` | 515 |
-| `/orders/nndNP5Xvzat2KjDrvcdCr` | 113 |
+| `/orders/2zT4bYQKzxNar6uKLWCCG` | 515 |
+| `/orders/BEZudPhqMYD9AynZRXqFu` | 113 |
 | `/messages` | 223 |
 | `/account` | 52 |
