@@ -743,7 +743,7 @@ function StepBar({ step, steps: STEPS, onPick, aside }: { step: number; steps: s
   // view under the top bar while scrolling.
   return (
     <div className="sticky top-[var(--chrome-top)] z-20 -mx-[var(--s-4)] mb-3 bg-background/95 px-[var(--s-4)] pb-1 pt-2 backdrop-blur md:hidden">
-      <div className="flex min-h-[var(--ctl-sm)] items-center justify-between gap-3">
+      <div className="flex min-h-[var(--ctl-sm)] items-center justify-between gap-2">
         <p className="flex shrink-0 items-baseline gap-2 text-[length:var(--fs-3)]">
           <span className="tabular text-muted-foreground">
             {step + 1}/{STEPS.length}
@@ -936,18 +936,23 @@ function QualityChip({
   const blocking = quality.gaps.filter((g) => g.severity === "blocking").sort(byStep);
   const first: BriefGap | undefined = blocking[0] ?? [...quality.gaps].sort(byStep)[0];
   const count = blocking.length || quality.gaps.length;
+  // "A reference photo" → "a reference photo"; beside the step on a phone,
+  // "reference photo", so the whole label fits a 390 px screen.
+  const what = first ? first.what.charAt(0).toLowerCase() + first.what.slice(1) : "";
+  const label = compact ? what.replace(/^(a|an|the) /, "") : what;
   const chip = first ? (
     <button
       type="button"
       onClick={() => onJump(first.field)}
       className={cn(
-        "inline-flex min-h-[var(--ctl-sm)] min-w-0 items-center gap-1 truncate rounded-[var(--r-full)] border px-3 text-[length:var(--fs-2)] font-medium",
-        compact ? "max-w-[65%]" : "max-w-[70%]",
+        "inline-flex min-h-[var(--ctl-sm)] min-w-0 items-center gap-1 truncate rounded-[var(--r-full)] border text-[length:var(--fs-2)] font-medium",
+        // Beside the step on a phone it takes what the row has left.
+        compact ? "px-2.5" : "max-w-[70%] px-3",
         blocking.length ? "border-[color:var(--tone-danger-fg)] text-[color:var(--tone-danger-fg)]" : "border-border text-muted-foreground",
       )}
     >
       <span className="truncate">
-        {count} {blocking.length ? "missing" : "to check"}: {first.what.charAt(0).toLowerCase() + first.what.slice(1)}
+        {count} {blocking.length ? "missing" : "to check"}: {label}
       </span>
     </button>
   ) : (
