@@ -1,4 +1,5 @@
 import { productWord } from "@/lib/client/orders";
+import { accentLine, stoneWord } from "@/core/orders/accents";
 
 /**
  * The brief as label/value lines for the job and QC screens (D4, P2). Works
@@ -13,8 +14,10 @@ const mm = (um: unknown) => (typeof um === "number" && um > 0 ? `${um / 1000}` :
 
 export interface AccentLine {
   shape: string;
-  width_um: number;
-  quantity: number;
+  /** null = scaled to the centre stone (0064). */
+  width_um: number | null;
+  /** null = not asked (0064). */
+  quantity: number | null;
   setting: string | null;
 }
 
@@ -32,16 +35,16 @@ export function briefLines(spec: BriefRow | null, accents: AccentLine[] = []): {
     [
       "Centre stone",
       spec.has_centre_stone
-        ? [pretty(spec.centre_shape), centreDims.length ? `${centreDims.join(" × ")} mm` : null, spec.centre_carat_mct ? `${Number(spec.centre_carat_mct) / 1000} ct` : null]
+        ? [stoneWord(spec.centre_shape as string) || null, centreDims.length ? `${centreDims.join(" × ")} mm` : null, spec.centre_carat_mct ? `${Number(spec.centre_carat_mct) / 1000} ct` : null]
             .filter(Boolean)
             .join(" · ")
         : "None",
     ],
-    ["Setting", spec.has_centre_stone ? pretty(spec.centre_setting) : null],
+    ["Setting", spec.has_centre_stone ? stoneWord(spec.centre_setting as string) || null : null],
     [
       "Side stones",
       accents.length
-        ? accents.map((a) => `${a.quantity} × ${pretty(a.shape)} ${a.width_um / 1000} mm${a.setting ? ` · ${pretty(a.setting)}` : ""}`).join("; ")
+        ? accents.map(accentLine).join("; ")
         : null,
     ],
     ["Stones supplied by", spec.stones_supplied_by && spec.stones_supplied_by !== "NONE" ? pretty(spec.stones_supplied_by) : null],

@@ -69,7 +69,7 @@ describe("briefRows", () => {
     ];
     expect(value(briefRows(ring, { service: "cad", photos: 1, accents }), "accents")).toBe("20 in 2 sizes");
     const team = briefRows(ring, { service: "cad", photos: 1, accents, detail: true });
-    expect(value(team, "accents-0")).toBe("18 × Round 1.3 mm, Pave");
-    expect(value(team, "accents-1")).toBe("2 × Pear 3 mm, Prong 4");
+    expect(value(team, "accents-0")).toBe("18 × Round 1.3 mm · Pave");
+    expect(value(team, "accents-1")).toBe("2 × Pear 3 mm · Prong 4");
   });
 });

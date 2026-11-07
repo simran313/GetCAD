@@ -365,3 +365,43 @@ describe("Test BE7 — wall thickness is derived, never stored", () => {
     expect(rows[0].render).toBe(0);
   });
 });
+
+// 0064 (owner, 7 Nov 2026): "As per reference image" for shapes and settings,
+// a side-stone row may scale to the centre stone (no width) and carries no count.
+describe("Test BE5b — side stones may scale to the centre stone (0064)", () => {
+  const id = generateId();
+
+  it("stores a row with no width and no count, shaped and set as per the reference", async () => {
+    await makeOrder(id);
+    await saveBasic(client, id);
+    await asUser(client, () =>
+      db.query(
+        `SELECT public.set_order_accents($1,
+           ARRAY['AS_PER_REFERENCE','ROUND']::stone_shape[],
+           ARRAY[NULL, 1300]::integer[], ARRAY[NULL, NULL]::integer[],
+           ARRAY['AS_PER_REFERENCE','PAVE']::setting_type[])`,
+        [id],
+      ),
+    );
+    const got = await db.query(
+      "SELECT position, shape, setting, width_um, quantity FROM order_spec_accents WHERE order_id=$1 ORDER BY position",
+      [id],
+    );
+    expect(got.rows).toEqual([
+      { position: 1, shape: "AS_PER_REFERENCE", setting: "AS_PER_REFERENCE", width_um: null, quantity: null },
+      { position: 2, shape: "ROUND", setting: "PAVE", width_um: 1300, quantity: null },
+    ]);
+  });
+
+  it("still refuses a width outside 0.2–20 mm", async () => {
+    await expect(
+      asUser(client, () =>
+        db.query(
+          `SELECT public.set_order_accents($1, ARRAY['ROUND']::stone_shape[],
+             ARRAY[50]::integer[], ARRAY[NULL]::integer[], ARRAY['PAVE']::setting_type[])`,
+          [id],
+        ),
+      ),
+    ).rejects.toThrow(/width_um/);
+  });
+});

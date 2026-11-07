@@ -146,7 +146,7 @@ describe("PDFs", () => {
     // Eyebrows are letter-spaced: compare without spaces.
     expect(text.replace(/\s/g, "")).toContain("RENDERVIEWS");
     expect(text.replace(/\s/g, "")).toContain("TECHNICALSHEET");
-    expect(text).toMatch(/24 × Round 1\.5 mm Pave/);
+    expect(text).toMatch(/24 × Round 1\.5 mm · Pave/);
     expect(text).toMatch(/14\s*K/);
     expect(text).toContain("4 h 30 min after confirmation");
     expect(text).toContain("Turnaround 8 h");

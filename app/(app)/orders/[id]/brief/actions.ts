@@ -142,7 +142,8 @@ export async function duplicateBriefAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
 
-  const accents = (accentsRes.data ?? []) as { shape: string; width_um: number; quantity: number; setting: string }[];
+  // width_um null = scaled to the centre stone, quantity null = not asked (0064): copied as they are.
+  const accents = (accentsRes.data ?? []) as { shape: string; width_um: number | null; quantity: number | null; setting: string }[];
   if (accents.length > 0) {
     const { error: accentError } = await supabase.rpc("set_order_accents", {
       p_order_id: id,
@@ -265,8 +266,12 @@ export async function saveBriefAction(formData: FormData): Promise<void> {
   // they disagree in length.
   const shapes = formData.getAll("accent_shape").map(String).filter(Boolean);
   if (shapes.length > 0) {
-    const widths = formData.getAll("accent_width_um").map((v) => Math.round(Number(v) || 0));
-    const quantities = formData.getAll("accent_quantity").map((v) => Math.round(Number(v) || 0));
+    // An empty width is "Scale to centre stone": the wizard only sends a row
+    // without one when that is ticked (0064). The brief no longer asks how
+    // many, so the count goes as null unless a saved one is still there.
+    const toInt = (v: FormDataEntryValue) => (Number(v) > 0 ? Math.round(Number(v)) : null);
+    const widths = formData.getAll("accent_width_um").map(toInt);
+    const quantities = shapes.map((_, i) => toInt(formData.getAll("accent_quantity")[i] ?? ""));
     const settings = formData.getAll("accent_setting").map(String);
     const { error: accentError } = await supabase.rpc("set_order_accents", {
       p_order_id: orderId,
