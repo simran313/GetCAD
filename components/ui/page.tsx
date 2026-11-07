@@ -8,14 +8,15 @@ import { cn } from "@/lib/utils";
  */
 export function Page({ children, className, form = false }: { children: React.ReactNode; className?: string; form?: boolean }) {
   return (
-    // R3: a new page arrives with a short rise (200 ms), so a tap visibly
-    // lands somewhere. No fade: starting at opacity 0 held back the first
-    // paint of the page's main content by about 250 ms (R6 speed check,
-    // tests/e2e/zz-speed.e2e.ts). Off under reduced motion.
+    // No entrance animation on the page itself. Any transform on <main>
+    // (R3's rise) makes it the frame for the fixed bars inside it, so on a
+    // phone the order's Download bar, the brief's Next and the save bars sat
+    // mid-page until the animation ended, then jumped to the screen's foot
+    // (R6: layout shift 0.096 on the phone order page). The top progress bar
+    // (nav-progress) is what shows a tap landed.
     <main
       className={cn(
         "w-full max-w-page space-y-6 px-4 py-6 md:px-8 md:py-8",
-        "animate-in slide-in-from-bottom-1 duration-200 ease-out motion-reduce:animate-none",
         form && "[&>*:not(header)]:max-w-2xl",
         className,
       )}
