@@ -3,6 +3,7 @@ import "server-only";
 import { Document, Page, renderToBuffer, Text, View } from "@react-pdf/renderer";
 
 import { gramsWord, mmWord, weightTable, type Metal } from "@/core";
+import { accentLine, stoneWord } from "@/core/orders/accents";
 
 import { pdf } from "./styles";
 
@@ -17,7 +18,8 @@ export interface WeightSheetData {
   volume_mm3: number;
   densities_mg_cm3: Partial<Record<Metal, number | null>>;
   spec: Record<string, string | number | boolean | null> | null;
-  accents: { shape: string; width_um: number; quantity: number; setting: string | null }[];
+  /** width_um null = scaled to the centre stone; quantity null = not asked (0064). */
+  accents: { shape: string; width_um: number | null; quantity: number | null; setting: string | null }[];
   measurements: { ring_size: string | null; inner_diameter_um: number | null } | null;
 }
 
@@ -42,18 +44,17 @@ export function stoneLines(
       ? [
           [
             "Centre",
-            String(s.centre_quantity ?? 1),
-            "×",
-            pretty(s.centre_shape),
+            Number(s.centre_quantity) > 1 ? `${s.centre_quantity} ×` : null,
+            stoneWord(s.centre_shape as string) || null,
             [s.centre_length_um, s.centre_width_um].filter(Boolean).map((v) => (Number(v) / 1000).toString()).join(" × ") + " mm",
-            pretty(s.centre_setting),
+            stoneWord(s.centre_setting as string) || null,
           ]
             .filter(Boolean)
             .join(" "),
         ]
       : []),
     ...accents.map((a, i) =>
-      [`Side ${i + 1}`, `${a.quantity} ×`, pretty(a.shape), `${a.width_um / 1000} mm`, pretty(a.setting)].filter(Boolean).join(" "),
+      `Side ${i + 1} ${accentLine(a)}`,
     ),
   ];
 }

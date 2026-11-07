@@ -4,6 +4,8 @@
  * team's read-only view). Pure, so every screen and the tests share one copy.
  */
 
+import { accentLine, stoneWord } from "./accents";
+
 const PRODUCT_WORDS: Record<string, string> = {
   RING: "Ring",
   BAND: "Band",
@@ -50,7 +52,8 @@ export function briefRows(
   opts: {
     service: string;
     photos: number;
-    accents?: { quantity: number; shape?: string; width_um?: number; setting?: string }[];
+    /** width_um null = scaled to the centre stone; quantity null = not asked (0064). */
+    accents?: { quantity: number | null; shape?: string; width_um?: number | null; setting?: string }[];
     /** One row per accent-stone size instead of a count (the team's view). */
     detail?: boolean;
   },
@@ -81,13 +84,13 @@ export function briefRows(
         value: s.has_centre_stone
           ? [
               Number(s.centre_quantity) > 1 ? `${s.centre_quantity} ×` : null,
-              pretty(s.centre_shape),
+              stoneWord(s.centre_shape as string) || null,
               s.centre_length_um && s.centre_width_um
                 ? `${Number(s.centre_length_um) / 1000} × ${Number(s.centre_width_um) / 1000} mm`
                 : s.centre_carat_mct
                   ? `${Number(s.centre_carat_mct) / 1000} ct`
                   : null,
-              pretty(s.centre_setting),
+              stoneWord(s.centre_setting as string) || null,
               s.centre_certified ? "certified" : null,
             ]
               .filter(Boolean)
@@ -102,7 +105,7 @@ export function briefRows(
         ? accents.map((a, i) => ({
             key: `accents-${i}`,
             label: `Accents ${i + 1}`,
-            value: `${a.quantity} × ${pretty(a.shape) ?? ""} ${a.width_um ? `${a.width_um / 1000} mm` : ""}, ${pretty(a.setting) ?? ""}`.replace(/\s+/g, " "),
+            value: accentLine(a),
             step: 1,
             field: "accent_shape",
           }))
@@ -111,7 +114,7 @@ export function briefRows(
               key: "accents",
               label: "Accent stones",
               value: accents.length
-                ? `${accents.reduce((n, a) => n + a.quantity, 0)} in ${accents.length} size${accents.length === 1 ? "" : "s"}`
+                ? accentSummary(accents)
                 : spec
                   ? "None"
                   : null,
@@ -135,4 +138,11 @@ export function briefRows(
 export function productWord(product: string | null | undefined): string {
   if (!product) return "New piece";
   return PRODUCT_WORDS[product.toUpperCase()] ?? product;
+}
+
+/** "18 in 2 sizes"; without counts (0064), "2 sizes". */
+function accentSummary(accents: { quantity: number | null }[]): string {
+  const sizes = `${accents.length} size${accents.length === 1 ? "" : "s"}`;
+  const counted = accents.reduce((n, a) => n + (a.quantity ?? 0), 0);
+  return counted > 0 && accents.every((a) => a.quantity) ? `${counted} in ${sizes}` : sizes;
 }

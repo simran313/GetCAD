@@ -27,7 +27,8 @@ import { Certificates } from "./Certificates";
 import type { CertificateView } from "@/lib/client/standingActions";
 import type { ReferenceImage } from "./ReferenceSection";
 import { refusalReason } from "@/lib/refusal";
-import { formatRingSize, parseRingSize, RING_SIZE_SYSTEMS, ringSystem } from "@/core/sizes/ringSizes";
+import { countryForSystem, formatRingSize, MAIN_RING_COUNTRIES, parseRingSize, RING_COUNTRIES, ringCountry, ringSystem } from "@/core/sizes/ringSizes";
+import { briefStepGaps, firstIncompleteStep, type StepGap } from "@/core/orders/briefSteps";
 
 /**
  * The brief, as a form.
@@ -51,6 +52,10 @@ const SHAPES = [
   "RADIANT", "ASSCHER", "HEART", "TRILLION", "BAGUETTE", "OTHER",
 ];
 const SETTINGS = ["PRONG_4", "PRONG_6", "BEZEL", "HALO", "PAVE", "CHANNEL", "TENSION", "FLUSH", "OTHER"];
+/** "As per reference image" (owner, 7 Nov 2026): a shape and a setting for the centre and side stones (0064). */
+const REFERENCE = "AS_PER_REFERENCE";
+/** Where the client last chose their country on this device (the brief stores only the size system). */
+const COUNTRY_KEY = "tcp_ring_country";
 const METALS = ["YELLOW", "WHITE", "ROSE", "TWO_TONE", "TRI_COLOUR", "PLATINUM", "SILVER"];
 
 /** Karats offered for each metal (a value saved before stays offered). */
@@ -74,7 +79,7 @@ function splitPiece(notes: string): { piece: string; rest: string } {
 const joinPiece = (piece: string, rest: string) => (piece.trim() ? `${PIECE_PREFIX}${piece.trim()}${rest ? `\n${rest}` : ""}` : rest);
 
 const label = (v: string) =>
-  v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  v === REFERENCE ? "As per reference image" : v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 /**
  * Millimetres as typed -> microns as stored. Module-level rather than a closure
@@ -90,8 +95,11 @@ function micronsFrom(form: Record<string, string>, key: string): number | null {
 export interface AccentRow {
   shape: string;
   widthMm: string;
+  /** No longer asked (0064); a count saved before is kept. */
   quantity: string;
   setting: string;
+  /** "Scale to centre stone": the width may be left out (saved as no width, 0064). */
+  scale?: boolean;
 }
 
 export interface BriefDefaults extends Partial<OrderSpecInput> {
@@ -160,7 +168,8 @@ export function BriefWizard({
     format: defaults.format ?? "BOTH",
     finish: defaults.finish ?? "HIGH_POLISH",
     centre_shape: defaults.centreShape ?? "ROUND",
-    centre_setting: defaults.centreSetting ?? "PRONG_6",
+    // Asked, not assumed (owner, 7 Nov 2026): no setting until one is chosen.
+    centre_setting: defaults.centreSetting ?? "",
     centre_quantity: String(defaults.centreQuantity ?? 1),
     centre_length_mm: defaults.centreLengthUm ? String(micronsToMm(defaults.centreLengthUm)) : "",
     centre_width_mm: defaults.centreWidthUm ? String(micronsToMm(defaults.centreWidthUm)) : "",
@@ -183,7 +192,20 @@ export function BriefWizard({
   // Ring size: the country's system, then a size from its list.
   const savedSize = parseRingSize(defaults.ringSize);
   // No size yet: the country of the client's last ring size, else US.
-  const [ringSys, setRingSys] = useState(defaults.ringSize ? savedSize.code : parseRingSize(lastRingSize).code);
+  const knownSys = defaults.ringSize ? savedSize.code : lastRingSize ? parseRingSize(lastRingSize).code : null;
+  const [ringSys, setRingSys] = useState(knownSys ?? "US");
+  // The country: none until chosen on a new brief; else this device's last
+  // choice if it uses the same system, else the system's first country.
+  const [country, setCountry] = useState(() => (knownSys ? countryForSystem(knownSys) : ""));
+  useEffect(() => {
+    if (!knownSys) return;
+    try {
+      const mine = window.localStorage.getItem(COUNTRY_KEY);
+      if (mine && ringCountry(mine)?.system === knownSys) setCountry(mine);
+    } catch {
+      /* private mode: the system's first country stands */
+    }
+  }, [knownSys]);
   const [ringSz, setRingSz] = useState(savedSize.size);
   const [ringOther, setRingOther] = useState<string | null>(savedSize.other);
   const ringSizeText = ringOther ?? formatRingSize(ringSys, ringSz);
@@ -201,10 +223,16 @@ export function BriefWizard({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveRefusal, setSaveRefusal] = useState<string | null>(null);
   const firstRender = useRef(true);
+  // Read by the autosave below; set once the step rules are worked out.
+  const centreIncompleteRef = useRef(false);
   useEffect(() => {
     if (readOnly) return;
     if (firstRender.current) {
       firstRender.current = false;
+      return;
+    }
+    if (centreIncompleteRef.current) {
+      setSaveState("idle");
       return;
     }
     setSaveState("saving");
@@ -222,7 +250,7 @@ export function BriefWizard({
       }
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [form, hasCentre, certified, accents, named, readOnly, ringSys, ringSz, ringOther, piece, centreAnswered]);
+  }, [form, hasCentre, certified, accents, named, readOnly, ringSys, ringSz, ringOther, piece, centreAnswered, country]);
 
   const set = (key: string) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
   const mm = (key: string) => micronsFrom(form, key);
@@ -261,6 +289,57 @@ export function BriefWizard({
   }, [form, hasCentre, certified, accents.length, referenceImageCount, pinnedImageCount, service, ringSizeText]);
   const centreGap = !isRender && !centreAnswered;
 
+  // What each step still needs (owner, 7 Nov 2026): Next, the step tabs and
+  // Review do not move on past a step with a required answer missing.
+  const stepGaps = briefStepGaps({
+    service,
+    name,
+    product: form.product ?? "",
+    piece,
+    photos: referenceImageCount,
+    centreAnswered,
+    hasCentre,
+    centreShape: form.centre_shape ?? "",
+    centreLengthMm: form.centre_length_mm ?? "",
+    centreWidthMm: form.centre_width_mm ?? "",
+    centreSetting: form.centre_setting ?? "",
+    accents: accents.map((a) => ({ shape: a.shape, setting: a.setting, widthMm: a.widthMm, scale: !!a.scale })),
+    sizeKind: sizeKind(form.product ?? ""),
+    country,
+    ringSize: ringOther ?? ringSz,
+    innerCircumferenceMm: form.inner_circumference_mm ?? "",
+    innerDiameterMm: form.inner_diameter_mm ?? "",
+    lengthMm: form.length_mm ?? "",
+    metal: form.metal ?? "",
+    karat: form.karatage ?? "",
+  });
+  const firstGapStep = firstIncompleteStep(stepGaps);
+  // The gaps are named once someone tries to move on, not while they type.
+  const [tried, setTried] = useState(false);
+  const gapsHere = stepGaps.filter((g) => g.step === step);
+  const showGaps = (gaps: StepGap[]) => {
+    setTried(true);
+    const first = gaps[0];
+    if (!first) return;
+    setStep(first.step);
+    window.setTimeout(() => document.getElementById(first.field)?.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+  };
+  const goTo = (target: number) => {
+    // Back is always open; forward only as far as the first step still missing something.
+    const reachable = firstGapStep === -1 ? STEPS.length - 1 : firstGapStep;
+    if (target <= step || target <= reachable) {
+      setTried(false);
+      setStep(target);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      showGaps(stepGaps.filter((g) => g.step === reachable));
+    }
+  };
+  // A centre stone with something missing is refused by the database
+  // (order_specs_centre_coherent), so it is not sent until it is whole.
+  const centreIncomplete = !isRender && hasCentre && stepGaps.some((g) => g.step === 1 && g.field.startsWith("centre_"));
+  centreIncompleteRef.current = centreIncomplete;
+
   // Filled in, on to the next (owner, 5 Nov 2026): after a choice the next
   // field scrolls into view, and an empty text box there takes the cursor.
   const advance = (fromId: string) =>
@@ -297,22 +376,22 @@ export function BriefWizard({
 
   // A gap's chip takes you to it: its step, then the field (photos by id).
   const jump = (field: string) => {
-    setStep(Math.min(stepForField(field), STEPS.length - 1));
+    const own = stepGaps.find((g) => g.field === field);
+    setStep(Math.min(own ? own.step : stepForField(field), STEPS.length - 1));
     const target = field === "references" ? "photos" : field === "size" ? "ring_size" : field;
     window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
   };
 
-  // The centre-stone question counts as missing until it is answered.
-  const shownQuality: ReturnType<typeof gradeBrief> = centreGap
-    ? {
-        ...quality,
-        blockingCount: quality.blockingCount + 1,
-        gaps: [
-          { severity: "blocking", field: "centre_choice", what: "Whether there is a centre stone", why: "The head and the band are built around it." },
-          ...quality.gaps,
-        ],
-      }
-    : quality;
+  // The chip names what the step rules still need first (the required
+  // answers), then what a designer would still have to guess.
+  const shownQuality: ReturnType<typeof gradeBrief> = {
+    ...quality,
+    blockingCount: stepGaps.length,
+    gaps: [
+      ...stepGaps.map((g) => ({ severity: "blocking" as const, field: g.field, what: g.what, why: "" })),
+      ...quality.gaps.filter((g) => g.severity !== "blocking" || g.field === "changeSummary"),
+    ],
+  };
 
   if (readOnly) {
     return (
@@ -338,7 +417,7 @@ export function BriefWizard({
       <input type="hidden" name="notes" value={notesText} />
       {/* On a phone one sticky row: the step and what is still missing, then
           the step tabs. At desk width the meter and chip sit above the form. */}
-      <StepBar step={step} steps={STEPS} onPick={setStep} aside={<QualityChip quality={shownQuality} onJump={jump} compact />} />
+      <StepBar step={step} steps={STEPS} onPick={goTo} aside={<QualityChip quality={shownQuality} onJump={jump} compact />} />
       <QualityChip quality={shownQuality} onJump={jump} className="max-md:hidden" />
 
       <Pane show={step === 0} title={STEPS[0]!}>
@@ -406,7 +485,12 @@ export function BriefWizard({
         <SelectField
           id="centre_choice"
           label="Centre stone"
-          options={[...(centreAnswered ? [] : ([["", "Choose…"]] as Array<[string, string]>)), ["NONE", "No centre stone"], ...SHAPES.map((v) => [v, label(v)] as [string, string])]}
+          options={[
+            ...(centreAnswered ? [] : ([["", "Choose…"]] as Array<[string, string]>)),
+            ["NONE", "No centre stone"],
+            [REFERENCE, label(REFERENCE)],
+            ...SHAPES.map((v) => [v, label(v)] as [string, string]),
+          ]}
           value={centreAnswered ? (hasCentre ? (form.centre_shape ?? "ROUND") : "NONE") : ""}
           onChange={(v) => {
             if (!v) return;
@@ -439,30 +523,22 @@ export function BriefWizard({
                 ≈ <span className="tabular font-medium">{estimatedCarat}</span>
               </p>
             ) : null}
-            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-2">
-              <SelectField
-                id="centre_setting"
-                name="centre_setting"
-                label="Setting"
-                options={SETTINGS.map((v) => [v, label(v)])}
-                value={form.centre_setting ?? "PRONG_6"}
-                onChange={(v) => {
-                  set("centre_setting")(v);
-                  advance("centre_setting");
-                }}
-              />
-              <SelectField
-                id="centre_quantity"
-                name="centre_quantity"
-                label="How many"
-                options={["1", "2", "3", "4", "5"].map((n) => [n, n])}
-                value={form.centre_quantity || "1"}
-                onChange={(v) => {
-                  set("centre_quantity")(v);
-                  advance("centre_quantity");
-                }}
-              />
-            </div>
+            {/* One centre stone (owner, 7 Nov 2026: "How many" is gone). */}
+            <SelectField
+              id="centre_setting"
+              name="centre_setting"
+              label="Setting"
+              options={[
+                ...(form.centre_setting ? [] : ([["", "Choose…"]] as Array<[string, string]>)),
+                [REFERENCE, label(REFERENCE)],
+                ...SETTINGS.map((v) => [v, label(v)] as [string, string]),
+              ]}
+              value={form.centre_setting ?? ""}
+              onChange={(v) => {
+                set("centre_setting")(v);
+                if (v) advance("centre_setting");
+              }}
+            />
             <label className="mt-2 flex min-h-[var(--ctl-sm)] cursor-pointer items-center gap-2 text-[length:var(--fs-3)]">
               <Checkbox name="centre_certified" checked={certified} onChange={(e) => setCertified(e.target.checked)} />
               Certified stone
@@ -474,53 +550,53 @@ export function BriefWizard({
         <p id="accent_shape" className="eyebrow mt-5 scroll-mt-24">Side stones (accents)</p>
 
         {accents.map((row, i) => {
-          // "Same as the centre stone" shows the centre's values.
-          const sameShape = hasCentre ? ([[form.centre_shape ?? "ROUND", `Same as centre (${label(form.centre_shape ?? "ROUND")})`]] as Array<[string, string]>) : [];
-          const sameSetting = hasCentre ? ([[form.centre_setting ?? "PRONG_6", `Same as centre (${label(form.centre_setting ?? "PRONG_6")})`]] as Array<[string, string]>) : [];
+          // Saved only once it says something a designer can use: a width,
+          // or "Scale to centre stone" (a row stored without a width means that, 0064).
+          const scales = !!row.scale && hasCentre;
+          const saved = Number(row.widthMm) > 0 || scales;
           return (
             <div key={i} className="mt-2 rounded-[var(--r-md)] border border-border p-2.5">
-              <input type="hidden" name="accent_shape" value={row.shape} />
-              <input type="hidden" name="accent_setting" value={row.setting} />
-              <input type="hidden" name="accent_width_um" value={row.widthMm ? mmToMicrons(Number(row.widthMm) || 0) : 0} />
-              <input type="hidden" name="accent_quantity" value={Number(row.quantity) || 0} />
+              {saved && (
+                <>
+                  <input type="hidden" name="accent_shape" value={row.shape} />
+                  <input type="hidden" name="accent_setting" value={row.setting} />
+                  <input type="hidden" name="accent_width_um" value={Number(row.widthMm) > 0 ? mmToMicrons(Number(row.widthMm)) : ""} />
+                  <input type="hidden" name="accent_quantity" value={Number(row.quantity) > 0 ? row.quantity : ""} />
+                </>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <SelectField
                   id={`as${i}`}
                   label="Shape"
-                  options={[...sameShape, ...SHAPES.filter((v) => !sameShape.some(([s]) => s === v)).map((v) => [v, label(v)] as [string, string])]}
+                  options={[[REFERENCE, label(REFERENCE)], ...SHAPES.map((v) => [v, label(v)] as [string, string])]}
                   value={row.shape}
                   onChange={(v) => updateAccent(setAccents, i, { shape: v })}
                 />
                 <SelectField
                   id={`ast${i}`}
                   label="Setting"
-                  options={[...sameSetting, ...SETTINGS.filter((v) => !sameSetting.some(([s]) => s === v)).map((v) => [v, label(v)] as [string, string])]}
+                  options={[[REFERENCE, label(REFERENCE)], ...SETTINGS.map((v) => [v, label(v)] as [string, string])]}
                   value={row.setting}
                   onChange={(v) => updateAccent(setAccents, i, { setting: v })}
                 />
-                <Field id={`aw${i}`} label="Width mm">
-                  <Input
-                    id={`aw${i}`}
-                    inputMode="decimal"
-                    value={row.widthMm}
-                    onChange={(e) => updateAccent(setAccents, i, { widthMm: e.target.value })}
-                    onKeyDown={enterAdvances(`aw${i}`)}
-                    placeholder="1.30"
-                    className="min-h-[var(--ctl)]"
-                  />
-                </Field>
-                <Field id={`aq${i}`} label="How many">
-                  <Input
-                    id={`aq${i}`}
-                    inputMode="numeric"
-                    value={row.quantity}
-                    onChange={(e) => updateAccent(setAccents, i, { quantity: e.target.value })}
-                    onKeyDown={enterAdvances(`aq${i}`)}
-                    placeholder="18"
-                    className="min-h-[var(--ctl)]"
-                  />
-                </Field>
               </div>
+              <Field id={`aw${i}`} label={scales ? "Width mm (optional)" : "Width mm"}>
+                <Input
+                  id={`aw${i}`}
+                  inputMode="decimal"
+                  value={row.widthMm}
+                  onChange={(e) => updateAccent(setAccents, i, { widthMm: e.target.value })}
+                  onKeyDown={enterAdvances(`aw${i}`)}
+                  placeholder="1.30"
+                  className="min-h-[var(--ctl)]"
+                />
+              </Field>
+              {hasCentre && (
+                <label className="mt-2 flex min-h-[var(--ctl-sm)] cursor-pointer items-center gap-2 text-[length:var(--fs-3)]">
+                  <Checkbox checked={!!row.scale} onChange={(e) => updateAccent(setAccents, i, { scale: e.target.checked })} />
+                  Scale to centre stone
+                </label>
+              )}
               <button
                 type="button"
                 className="mt-1 text-[length:var(--fs-2)] text-muted-foreground underline underline-offset-4 hover:text-foreground"
@@ -532,18 +608,12 @@ export function BriefWizard({
           );
         })}
 
+        {/* Another size is optional: one row per size of side stone. */}
         <Button
           type="button"
           variant="outline"
           className="mt-2 min-h-[var(--ctl)] w-full"
-          onClick={() =>
-            setAccents((a) => [
-              ...a,
-              hasCentre
-                ? { shape: form.centre_shape ?? "ROUND", widthMm: "", quantity: "", setting: form.centre_setting ?? "PRONG_6" }
-                : { shape: "ROUND", widthMm: "", quantity: "", setting: "PAVE" },
-            ])
-          }
+          onClick={() => setAccents((a) => [...a, { shape: REFERENCE, widthMm: "", quantity: "", setting: REFERENCE, scale: false }])}
         >
           {accents.length === 0 ? "Add side stones" : "Another size"}
         </Button>
@@ -556,11 +626,26 @@ export function BriefWizard({
               <SelectField
                 id="ring_system"
                 label="Country"
-                options={RING_SIZE_SYSTEMS.map((r) => [r.code, r.label])}
-                value={ringSys}
+                options={[
+                  ...(country ? [] : ([["", "Choose…"]] as Array<[string, string]>)),
+                  ...MAIN_RING_COUNTRIES.map((c) => [c.name, c.name] as [string, string]),
+                  ["—", "──────────"],
+                  ...RING_COUNTRIES.slice(MAIN_RING_COUNTRIES.length).map((c) => [c.name, c.name] as [string, string]),
+                ]}
+                value={country}
                 onChange={(v) => {
-                  setRingSys(v);
-                  if (!ringSystem(v).sizes.includes(ringSz)) setRingSz("");
+                  const c = ringCountry(v);
+                  if (!c) return;
+                  setCountry(c.name);
+                  try {
+                    window.localStorage.setItem(COUNTRY_KEY, c.name);
+                  } catch {
+                    /* private mode: not remembered on this device */
+                  }
+                  if (c.system !== ringSys) {
+                    setRingSys(c.system);
+                    if (!ringSystem(c.system).sizes.includes(ringSz)) setRingSz("");
+                  }
                   setRingOther(null);
                   advance("ring_system");
                 }}
@@ -568,7 +653,7 @@ export function BriefWizard({
               <SelectField
                 id="ring_size"
                 label="Ring size"
-                options={[["", "Choose…"], ...ringSystem(ringSys).sizes.map((z) => [z, z] as [string, string])]}
+                options={[["", country ? "Choose…" : "Country first"], ...(country ? ringSystem(ringSys).sizes.map((z) => [z, z] as [string, string]) : [])]}
                 value={ringOther ? "" : ringSz}
                 onChange={(v) => {
                   setRingSz(v);
@@ -688,6 +773,21 @@ export function BriefWizard({
         {!isRender && <input type="hidden" name="render_views" value={form.render_views} />}
       </Pane>
 
+      {tried && (gapsHere.length > 0 || (stepGaps.length > 0 && step === STEPS.length - 1)) && (
+        <div role="alert" className="mt-6 rounded-[var(--r-md)] border border-[color:var(--tone-danger-fg)] p-3 text-[length:var(--fs-3)] text-[color:var(--tone-danger-fg)]">
+          <p className="font-medium">To go on, add:</p>
+          <ul className="mt-1 list-disc pl-5">
+            {(gapsHere.length ? gapsHere : stepGaps).map((g) => (
+              <li key={g.field}>
+                <button type="button" className="text-left underline underline-offset-4" onClick={() => showGaps([g])}>
+                  {g.what}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="sticky bottom-[var(--chrome-bottom)] z-10 -mx-[var(--s-4)] mt-6 flex items-center gap-2 border-t border-border bg-background/95 px-[var(--s-4)] py-3 backdrop-blur md:bottom-0 md:mx-0 md:px-0">
         <button
           type="button"
@@ -698,11 +798,15 @@ export function BriefWizard({
         >
           <ChevronLeft className="h-5 w-5" aria-hidden />
         </button>
-        <SaveState state={saveState} reason={saveRefusal} />
+        {centreIncomplete ? (
+          <span className="min-w-0 shrink text-[length:var(--fs-2)] text-muted-foreground">Finish the centre stone to save</span>
+        ) : (
+          <SaveState state={saveState} reason={saveRefusal} />
+        )}
         {step < STEPS.length - 1 ? (
           <Button id="brief-next" type="button" className="min-h-[var(--ctl)] flex-1 md:hidden" onClick={() => {
-            setStep((s) => Math.min(STEPS.length - 1, s + 1));
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            if (gapsHere.length) return showGaps(gapsHere);
+            goTo(step + 1);
           }}>
             Next
           </Button>
@@ -711,6 +815,13 @@ export function BriefWizard({
           type="submit"
           name="intent"
           value="review"
+          onClick={(e) => {
+            // Every step complete before Review (at desk width all steps are on one page).
+            if (stepGaps.length) {
+              e.preventDefault();
+              showGaps(stepGaps);
+            }
+          }}
           className={cn("min-h-[var(--ctl)] flex-1 md:ml-auto md:flex-none", step !== STEPS.length - 1 && "hidden md:inline-flex")}
         >
           Review
@@ -732,8 +843,8 @@ function updateAccent(
 
 /** Which step to jump to when someone taps a gap in the quality panel. */
 function stepForField(field: string): number {
-  if (field === "referenceName" || field === "product" || field === "references") return 0;
-  if (field.startsWith("centre")) return 1;
+  if (["referenceName", "reference_name", "product", "other_piece", "references", "photos"].includes(field)) return 0;
+  if (field.startsWith("centre") || /^(as|ast|aw)\d+$/.test(field) || field.startsWith("accent")) return 1;
   // Size, metal and notes share the last step.
   return 2;
 }
@@ -903,7 +1014,7 @@ function SelectField({
       <Label htmlFor={id}>{text}</Label>
       <Select id={id} name={name} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1">
         {options.map(([v, t]) => (
-          <option key={v} value={v} disabled={v === "" && value !== ""}>
+          <option key={v} value={v} disabled={(v === "" && value !== "") || v === "—"}>
             {t}
           </option>
         ))}

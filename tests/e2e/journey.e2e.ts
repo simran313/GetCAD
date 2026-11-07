@@ -49,7 +49,7 @@ test("a client sends a CAD brief", async ({ browser }) => {
   // Dropdowns (owner, 5 Nov 2026); the centre stone must be answered.
   await page.getByLabel("What are we modelling?").selectOption("RING");
   await page.getByLabel("Centre stone", { exact: true }).selectOption("NONE");
-  await page.getByLabel("Country", { exact: true }).selectOption("US");
+  await page.getByLabel("Country", { exact: true }).selectOption("United States");
   await page.getByLabel("Ring size", { exact: true }).selectOption("7");
   await page.getByLabel("Metal", { exact: true }).selectOption("YELLOW");
   await page.getByLabel("Karat", { exact: true }).selectOption("18K");

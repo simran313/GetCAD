@@ -65,8 +65,9 @@ interface ImageRow {
 interface AccentDbRow {
   position: number;
   shape: string;
-  width_um: number;
-  quantity: number;
+  /** null = scaled to the centre stone (0064). */
+  width_um: number | null;
+  quantity: number | null;
   setting: string;
 }
 
@@ -183,8 +184,10 @@ export default async function BriefPage({
   const accents: AccentRow[] = ((accentsRes.data ?? []) as AccentDbRow[]).map((a) => ({
     shape: a.shape,
     setting: a.setting,
-    widthMm: String(a.width_um / 1000),
-    quantity: String(a.quantity),
+    widthMm: a.width_um ? String(a.width_um / 1000) : "",
+    quantity: a.quantity ? String(a.quantity) : "",
+    // A row saved without a width was saved as "Scale to centre stone" (0064).
+    scale: a.width_um == null,
   }));
 
   return (
@@ -283,9 +286,9 @@ function ReadOnlyBrief({ spec, accents, photos }: { spec: SpecRow | null; accent
     service: spec.render_views ? "render" : "cad",
     photos: photos,
     accents: accents.map((a) => ({
-      quantity: Number(a.quantity) || 0,
+      quantity: Number(a.quantity) || null,
       shape: a.shape,
-      width_um: Math.round(Number(a.widthMm) * 1000) || 0,
+      width_um: Math.round(Number(a.widthMm) * 1000) || null,
       setting: a.setting,
     })),
     detail: true,
