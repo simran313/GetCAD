@@ -85,29 +85,32 @@ afterAll(async () => {
 });
 
 describe("pay (DECISIONS §5)", () => {
-  it("QC pay: $20 → ₹500, $30 → ₹500, $55 → ₹900, $60 → ₹1,000, $85 → ₹1,400, $180 → ₹3,000", async () => {
+  // 0065: pod pay is half the designer's pay, at least ₹300; never from the price.
+  it("pod pay: 50% of designer pay, at least ₹300: ₹120 → ₹300, ₹960 → ₹480, ₹3,840 → ₹1,920", async () => {
     const { rows } = await db.query(
-      "SELECT c, app.qc_pay_paise(c) AS p FROM unnest(ARRAY[2000,3000,5500,6000,8500,18000]) c",
+      "SELECT d, app.pod_pay_paise(d) AS p FROM unnest(ARRAY[12000,48000,96000,384000]) d",
     );
-    expect(rows.map((r) => r.p / 100)).toEqual([500, 500, 900, 1000, 1400, 3000]);
+    expect(rows.map((r) => r.p / 100)).toEqual([300, 300, 480, 1920]);
   });
 
-  it("designer pay is locked from the category: D → ₹500, L → ₹4,000", async () => {
+  it("designer pay is the category minutes × ₹8: D → ₹480, L → ₹3,840; pod pay follows", async () => {
     const d = await submitted(client2);
     const l = await submitted(client2);
-    expect((await quote(d, "D")).designer_payout_paise).toBe(50000);
-    expect((await quote(l, "L", 30000, 48)).designer_payout_paise).toBe(400000);
+    expect(await quote(d, "D")).toMatchObject({ designer_payout_paise: 48000, qc_payout_paise: 30000 });
+    expect(await quote(l, "L", 30000, 48)).toMatchObject({ designer_payout_paise: 384000, qc_payout_paise: 192000 });
   });
 
-  it("a rate change reaches only orders quoted after it", async () => {
+  it("a change to the standard rate or the pod share reaches only orders quoted after it", async () => {
     const before = await submitted(client2);
     await quote(before, "D");
-    await q(admin, "SELECT public.set_category_rate('D', 60000)");
+    await q(admin, "SELECT public.set_app_setting('designer_rate_paise_per_minute', 1000)");
+    await q(admin, "SELECT public.set_app_setting('pod_share_pct', 60)");
     const after = await submitted(client2);
     await quote(after, "D");
-    await q(admin, "SELECT public.set_category_rate('D', 50000)");
-    expect((await order(before)).designer_payout_paise).toBe(50000);
-    expect((await order(after)).designer_payout_paise).toBe(60000);
+    await q(admin, "SELECT public.set_app_setting('designer_rate_paise_per_minute', 800)");
+    await q(admin, "SELECT public.set_app_setting('pod_share_pct', 50)");
+    expect(await order(before)).toMatchObject({ designer_payout_paise: 48000, qc_payout_paise: 30000 });
+    expect(await order(after)).toMatchObject({ designer_payout_paise: 60000, qc_payout_paise: 36000 });
   });
 });
 
@@ -135,7 +138,7 @@ describe("quote (DECISIONS §4)", () => {
 
   it("admin can override the price; payouts above 40% warn", async () => {
     const id = await submitted(client2);
-    const r = await quote(id, "F", 3000); // F pays ₹1,000 + QC ₹500 = ₹1,500 ≈ $17.86 on a $30 order
+    const r = await quote(id, "F", 3000); // F pays ₹960 + pod ₹480 = ₹1,440 ≈ $17.14 on a $30 order
     expect(r.price_total).toBe(3000);
     expect(r.warning).toMatch(/limit 40%/);
     expect((await quote(await submitted(client2), "A", 5500)).warning).toBeNull();

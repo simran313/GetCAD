@@ -9,8 +9,9 @@ import { readState } from "./state";
  * Phase 8b — money on screen (Spec §12.3 and §12.8, SPEC-ADDENDUM A9.6–A9.7):
  *
  *   a standard order that misses its first look is credited once (the
- *   sweep run twice, the admin deciding twice); designer and QC pay follow
- *   the category and price; payouts above 40 % of the price are flagged.
+ *   sweep run twice, the admin deciding twice); designer pay follows the
+ *   category (minutes × ₹8) and pod pay is half of it, at least ₹300 (0065);
+ *   payouts above 40 % of the price are flagged.
  *
  * The briefs are made in the database as the client (journey.e2e.ts drives
  * the brief screens); every quote, payment and decision is made on screen.
@@ -82,20 +83,21 @@ test("a missed first look is credited once", async ({ browser }) => {
   await client.context().close();
 });
 
-test("designer and QC pay follow the category and price; above 40 % is flagged", async ({ browser }) => {
+test("designer pay follows the category, pod pay follows it; above 40 % is flagged", async ({ browser }) => {
   const admin = await signedIn(browser, "admin");
   const cases = [
-    // [category, price $, deadline h, designer pay, QC pay, flagged]
-    ["D", 20, undefined, "₹500", "₹500", true],
-    ["D", 60, undefined, "₹500", "₹1,000", false],
-    ["L", 180, 48, "₹4,000", "₹3,000", true],
+    // [category, price $, deadline h, designer pay, pod pay, flagged]
+    // At ₹84 = $1: ₹780 ≈ $9.29 (above 40% of $20, not of $60); ₹5,760 ≈ $68.57 (above 40% of $150).
+    ["D", 20, undefined, "₹480", "₹300", true],
+    ["D", 60, undefined, "₹480", "₹300", false],
+    ["L", 150, 48, "₹3,840", "₹1,920", true],
   ] as const;
   for (const [category, price, deadline, designer, qc, flagged] of cases) {
     const orderId = await withDb((db) => submittedBrief(db, client2, `E2E ${category} at $${price}`));
     await quote(admin, orderId, category, price, deadline);
     await expect(figure(admin, "Price")).toHaveText(formatMoney(price * 100, "USD"));
     await expect(figure(admin, "Designer pay"), `${category} at $${price}`).toHaveText(designer);
-    await expect(figure(admin, "QC pay"), `${category} at $${price}`).toHaveText(qc);
+    await expect(figure(admin, "Pod pay"),`${category} at $${price}`).toHaveText(qc);
     const warning = admin.getByText(/above the 40% limit/);
     if (flagged) await expect(warning).toBeVisible();
     else await expect(warning).toHaveCount(0);

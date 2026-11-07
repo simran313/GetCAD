@@ -63,13 +63,13 @@ afterAll(async () => {
 });
 
 describe("categories and price bands (DECISIONS §3, §4)", () => {
-  it("seeds A–L exactly, with designer pay = minutes × ₹500 / 60", async () => {
+  it("seeds A–L exactly, with designer pay = minutes × ₹8 (0065; was ₹500 an hour)", async () => {
     const { rows } = await db.query("SELECT letter, minutes, tier, designer_rate_paise FROM job_categories ORDER BY letter");
     expect(rows.map((r) => [r.letter, r.minutes, r.tier, r.designer_rate_paise])).toEqual([
-      ["A", 15, "standard", 12500], ["B", 30, "standard", 25000], ["C", 45, "standard", 37500],
-      ["D", 60, "standard", 50000], ["E", 90, "standard", 75000], ["F", 120, "standard", 100000],
-      ["G", 180, "complex", 150000], ["H", 240, "complex", 200000], ["I", 300, "complex", 250000],
-      ["J", 360, "complex", 300000], ["K", 420, "complex", 350000], ["L", 480, "complex", 400000],
+      ["A", 15, "standard", 12000], ["B", 30, "standard", 24000], ["C", 45, "standard", 36000],
+      ["D", 60, "standard", 48000], ["E", 90, "standard", 72000], ["F", 120, "standard", 96000],
+      ["G", 180, "complex", 144000], ["H", 240, "complex", 192000], ["I", 300, "complex", 240000],
+      ["J", 360, "complex", 288000], ["K", 420, "complex", 336000], ["L", 480, "complex", 384000],
     ]);
   });
 
@@ -85,16 +85,14 @@ describe("categories and price bands (DECISIONS §3, §4)", () => {
     ]);
   });
 
-  it("only an admin changes a category rate; staff and designers read rates; clients do not", async () => {
-    await expect(q(ops, "SELECT public.set_category_rate('D', 60000)")).rejects.toThrow(/only an admin/i);
-    await q(admin, "SELECT public.set_category_rate('D', 60000)");
-    expect((await db.query("SELECT designer_rate_paise FROM job_categories WHERE letter='D'")).rows[0].designer_rate_paise).toBe(60000);
-    await q(admin, "SELECT public.set_category_rate('D', 50000)");
+  it("staff read the categories; designers (0065) and clients do not; the pay rate is per minute", async () => {
+    // 0065: pay is minutes × a per-minute rate, so a per-category rate is gone.
+    await expect(q(admin, "SELECT public.set_category_rate('D', 60000)")).rejects.toThrow(/does not exist/i);
 
     expect((await q(ops, "SELECT letter FROM job_categories")).rows).toHaveLength(12);
     expect((await q(clientMeera, "SELECT letter FROM job_categories")).rows).toHaveLength(0);
-    // Phase 5c (policies/0036): the designer's own rate card (docs/design D6).
-    expect((await q(designer, "SELECT letter FROM job_categories")).rows).toHaveLength(12);
+    // Owner, 7 Nov 2026: a designer never sees a rate.
+    expect((await q(designer, "SELECT letter FROM job_categories")).rows).toHaveLength(0);
     expect((await q(clientMeera, "SELECT code FROM price_bands")).rows).toHaveLength(4);
   });
 });

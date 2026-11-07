@@ -156,9 +156,23 @@ describe("pod lead", () => {
     expect((await rows(leadSouth, "SELECT id FROM orders")).map((r) => r.id)).toEqual([south]);
   });
 
-  it("sees the price (Spec §1) and their own QC pay", async () => {
-    const [o] = await rows(leadNorth, "SELECT price_total, qc_payout_paise FROM public.visible_orders($1)", [mine]);
-    expect(o).toEqual({ price_total: 5500, qc_payout_paise: 90000 });
+  // Owner, 7 Nov 2026 (0065): never the order value, by any route; the
+  // designer's pay and the pod's pay only.
+  it("never sees the price, only the designer's pay and the pod's pay", async () => {
+    const [o] = await rows(leadNorth, "SELECT price_total, currency, platform_commission, designer_payout_paise, qc_payout_paise FROM public.visible_orders($1)", [mine]);
+    expect(o).toMatchObject({ price_total: null, currency: null, platform_commission: null });
+    expect(o.designer_payout_paise).toBeGreaterThan(0);
+    expect(o.qc_payout_paise).toBeGreaterThan(0);
+    await expect(rows(leadNorth, "SELECT price_total FROM orders WHERE id=$1", [mine])).rejects.toThrow(/permission denied/i);
+    expect(await rows(leadNorth, "SELECT price_total FROM public.pod_jobs($1)", [mine])).toEqual([{ price_total: null }]);
+    // The client's payment is there; the pod lead cannot see it, the client and an admin can.
+    await db.query(
+      "INSERT INTO escrow_ledger (order_id, kind, party, amount, currency, created_by) VALUES ($1,'HOLD','CLIENT',5500,'USD',$2)",
+      [mine, client],
+    );
+    expect(await rows(leadNorth, "SELECT amount FROM escrow_ledger WHERE order_id=$1", [mine])).toEqual([]);
+    expect(await rows(client, "SELECT amount FROM escrow_ledger WHERE order_id=$1", [mine])).toEqual([{ amount: 5500 }]);
+    expect(await rows(admin, "SELECT amount FROM escrow_ledger WHERE order_id=$1", [mine])).toEqual([{ amount: 5500 }]);
     expect(await rows(leadNorth, "SELECT party FROM payout_obligations")).toEqual([{ party: "QC" }]);
   });
 
@@ -183,8 +197,12 @@ describe("pod lead", () => {
 
 describe("client", () => {
   it("reads own orders with prices, never the designer's identity", async () => {
-    const own = await rows(client, "SELECT id, price_total FROM orders ORDER BY id");
+    const own = await rows(client, "SELECT id, price_total FROM public.visible_orders() ORDER BY id");
     expect(own.map((r) => r.id).sort()).toEqual([mine, unassigned].sort());
+    expect(own.every((r) => r.price_total != null)).toBe(true);
+    // The team's pay is not the client's to see (0065), from the table or the function.
+    await expect(rows(client, "SELECT designer_payout_paise FROM orders")).rejects.toThrow(/permission denied/i);
+    expect((await rows(client, "SELECT designer_payout_paise, qc_payout_paise FROM public.visible_orders()")).every((r) => r.designer_payout_paise == null && r.qc_payout_paise == null)).toBe(true);
     expect(await rows(client, "SELECT id FROM designer_profiles")).toEqual([]);
     expect(await rows(client, "SELECT order_id FROM job_assignments")).toEqual([]);
     expect(await rows(client, "SELECT order_id FROM order_checks")).toEqual([]);

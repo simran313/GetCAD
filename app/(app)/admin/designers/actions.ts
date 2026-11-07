@@ -157,3 +157,22 @@ export async function revealBankAction(userId: string): Promise<FullBank | { err
   if (!data) return { error: "No bank details on file." };
   return data as FullBank;
 }
+
+/**
+ * A designer's own pay rate in rupees a minute, or empty / "standard" to go
+ * back to the standard rate (0065). Reaches jobs assigned after it.
+ */
+export async function setDesignerRateAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const userId = formData.get("user_id")?.toString() ?? "";
+  const raw = formData.get("standard") ? "" : (formData.get("rupees_per_minute")?.toString() ?? "").trim();
+  let paise: number | null = null;
+  if (raw !== "") {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) throw new Refusal("Enter the rate in rupees a minute, for example 8 or 9.50.");
+    paise = Math.round(n * 100);
+  }
+  const { error } = await supabase.rpc("set_designer_rate", { p_user_id: userId, p_paise_per_minute: paise });
+  refuseOn(error);
+  revalidatePath("/", "layout");
+}

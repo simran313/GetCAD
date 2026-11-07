@@ -15,14 +15,15 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { viewerZone } from "@/lib/time/zone";
 
-import { removeDocumentAction, saveBankAction, setDesignerPodAction, uploadDocumentsAction } from "../actions";
+import { removeDocumentAction, saveBankAction, setDesignerPodAction, setDesignerRateAction, uploadDocumentsAction } from "../actions";
 import { BankReveal } from "../BankReveal";
 import { ReloadForm } from "@/components/reload-form";
 import { bankWord, DOCUMENT_KINDS, statusWord, type DesignerRow } from "../words";
 
 /**
  * One designer, for admins (owner, 4 Nov 2026): how they sign in, their pod
- * (its lead then sees and assigns them), bank details, identity documents.
+ * (its lead then sees and assigns them), their pay rate (0065: the pod lead
+ * sees it, the designer never does), bank details, identity documents.
  * Bank details show in full only on "Show in full" (read on the press), and that read is
  * written to the audit log; so is every document opened.
  */
@@ -59,10 +60,15 @@ export default async function DesignerPage({ params }: { params: Promise<{ id: s
   const d = ((list.data ?? []) as DesignerRow[]).find((r) => r.user_id === id);
   if (!d) notFound();
 
-  const [docsRes, podsRes] = await Promise.all([
+  const [docsRes, podsRes, rateRes] = await Promise.all([
     supabase.rpc("designer_documents_for", { p_user_id: id }),
     supabase.rpc("pods_overview"),
+    supabase.rpc("team_designer_rates"),
   ]);
+  const rate = ((rateRes.data ?? []) as { designer_id: string; paise_per_minute: number; is_custom: boolean; standard_paise_per_minute: number }[]).find(
+    (r) => r.designer_id === id,
+  );
+  const perMinute = (p: number) => `₹${(p / 100).toFixed(2)}`;
   const docs = (docsRes.data ?? []) as Doc[];
   const pods = (podsRes.data ?? []) as { pod_id: string; name: string; lead_name: string | null }[];
   const status = statusWord(d);
@@ -127,6 +133,48 @@ export default async function DesignerPage({ params }: { params: Promise<{ id: s
           </p>
         </CardBody>
       </Card>
+
+      {rate && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pay rate</CardTitle>
+            <StatusPill tone={rate.is_custom ? "info" : "neutral"}>{rate.is_custom ? "Own rate" : "Standard"}</StatusPill>
+          </CardHeader>
+          <CardBody className="space-y-3">
+            <p className="text-[length:var(--fs-3)]">
+              <span className="tabular font-mono font-medium">{perMinute(rate.paise_per_minute)}</span> a minute of category time
+              <span className="text-muted-foreground"> · a 60-minute job pays {`₹${Math.round((rate.paise_per_minute * 60) / 100).toLocaleString("en-IN")}`}</span>
+            </p>
+            <ReloadForm action={setDesignerRateAction} className="flex flex-wrap items-end gap-2">
+              <input type="hidden" name="user_id" value={id} />
+              <Field label="Rupees a minute" htmlFor="rupees_per_minute">
+                <Input
+                  id="rupees_per_minute"
+                  name="rupees_per_minute"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputMode="decimal"
+                  className="w-32"
+                  defaultValue={(rate.paise_per_minute / 100).toFixed(2)}
+                />
+              </Field>
+              <Button type="submit" variant="outline">
+                Save rate
+              </Button>
+              {rate.is_custom && (
+                <Button type="submit" name="standard" value="1" variant="ghost">
+                  Back to standard ({perMinute(rate.standard_paise_per_minute)})
+                </Button>
+              )}
+            </ReloadForm>
+            <p className="text-[length:var(--fs-2)] text-muted-foreground">
+              Reaches jobs assigned after it. Their pod lead sees this rate; the designer never does, only what each job pays.
+              The standard rate is in <Link href="/admin/settings" className="underline underline-offset-4">Settings</Link>.
+            </p>
+          </CardBody>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

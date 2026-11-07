@@ -33,6 +33,9 @@ export const FIELDS: Record<string, Field> = {
   claim_window_days: { label: "Spec-claim window", help: "Days after delivery a client can open a claim.", unit: "days", scale: 1, decimals: 0 },
 
   usd_inr_paise_per_usd: { label: "Exchange rate", help: "A fixed rate for margins and the payout warning.", prefix: "₹", unit: "per $1", scale: 100, decimals: 2, critical: true },
+  designer_rate_paise_per_minute: { label: "Designer pay", help: "Standard rate per category minute. A designer's own rate is set on their page (Designers).", prefix: "₹", unit: "per minute", scale: 100, decimals: 2, critical: true },
+  pod_share_pct: { label: "Pod pay", help: "Share of the designer's pay on the job that goes to the pod lead.", unit: "%", scale: 1, decimals: 0, critical: true },
+  pod_min_paise: { label: "Least pod pay", help: "The pod lead is paid at least this on any job.", prefix: "₹", unit: "per job", scale: 100, decimals: 0, critical: true },
   payout_warning_pct: { label: "Payout warning", help: "Flag a quote when designer and QC pay pass this share of the price.", unit: "%", scale: 1, decimals: 0, critical: true },
   metal_price_cents_per_gram: { label: "Metal price for estimates", help: "Leave empty to show no metal estimate.", prefix: "$", unit: "per gram", scale: 100, decimals: 2, critical: true, optional: true },
 
@@ -56,8 +59,8 @@ export const SECTIONS: Section[] = [
   {
     id: "money",
     title: "Money",
-    description: "Used for margins, payout warnings and metal estimates. Prices themselves are set per band.",
-    keys: ["usd_inr_paise_per_usd", "payout_warning_pct", "metal_price_cents_per_gram"],
+    description: "Team pay, margins, payout warnings and metal estimates. Prices themselves are set per band. A pay change reaches jobs assigned after it.",
+    keys: ["designer_rate_paise_per_minute", "pod_share_pct", "pod_min_paise", "usd_inr_paise_per_usd", "payout_warning_pct", "metal_price_cents_per_gram"],
   },
   {
     id: "weights",

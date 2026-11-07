@@ -76,7 +76,8 @@ describe("my_work (D2–D4)", () => {
     expect(before.rows).toHaveLength(1);
     expect(before.rows[0].started_at).toBeNull();
     expect(before.rows[0].minutes).toBe(60);
-    expect(before.rows[0].pay_paise).toBe(50000);
+    // Assigning the job sets its pay at the designer's rate: D = 60 min × ₹8 (0065).
+    expect(before.rows[0].pay_paise).toBe(48000);
     expect(before.rows[0].job_code).toMatch(/\S/);
     const cols = Object.keys(before.rows[0]);
     for (const banned of ["order_ref", "title", "client_code", "price_total", "currency"]) expect(cols).not.toContain(banned);
@@ -152,10 +153,10 @@ describe("my_earnings (D6, P4)", () => {
 });
 
 describe("the rate card (D6)", () => {
-  it("a designer reads the category table; a client does not", async () => {
+  // Owner, 7 Nov 2026 (0065): a designer sees their pay per job, never a rate.
+  it("neither a designer nor a client reads the category rates", async () => {
     const d = await q(designer, "SELECT letter, designer_rate_paise FROM job_categories ORDER BY letter");
-    expect(d.rows).toHaveLength(12);
-    expect(d.rows[0]).toEqual({ letter: "A", designer_rate_paise: 12500 });
+    expect(d.rows).toHaveLength(0);
     expect((await q(client, "SELECT letter FROM job_categories")).rows).toHaveLength(0);
   });
 });

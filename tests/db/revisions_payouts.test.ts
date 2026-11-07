@@ -241,8 +241,8 @@ describe("payout obligations and the export (DECISIONS §5)", () => {
     expect(await owed(id)).toEqual([]);
     await close(id);
     expect(await owed(id)).toEqual([
-      { party: "DESIGNER", payee_id: designer, amount_paise: 50000, status: "owed" },
-      { party: "QC", payee_id: podLead, amount_paise: 90000, status: "owed" },
+      { party: "DESIGNER", payee_id: designer, amount_paise: 36000, status: "owed" }, // C: 45 min × ₹8 (0065)
+      { party: "QC", payee_id: podLead, amount_paise: 30000, status: "owed" },
     ]);
     // Closing again (however it happens) adds nothing.
     await db.query("UPDATE orders SET status='DELIVERED' WHERE id=$1", [id]);
@@ -321,7 +321,7 @@ describe("payout obligations and the export (DECISIONS §5)", () => {
     const paid = await q(admin, "SELECT public.mark_payout_batch_paid($1) AS n", [batch]);
     expect(paid.rows[0].n).toBe(count);
     const sent = await db.query(
-      "SELECT count(*)::int AS n FROM notifications WHERE user_id=$1 AND kind='PAYOUT' AND summary LIKE 'Your pay of ₹500.00%'",
+      "SELECT count(*)::int AS n FROM notifications WHERE user_id=$1 AND kind='PAYOUT' AND summary LIKE 'Your pay of ₹%'",
       [designer],
     );
     expect(sent.rows[0].n).toBe(count);

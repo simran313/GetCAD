@@ -46,8 +46,9 @@ export async function EarningsView({
 }: {
   eyebrow: string;
   rows: Earning[];
-  rates: { key: string; label: React.ReactNode; amount: string }[];
-  rateTitle: string;
+  /** None for a designer: they see their pay per job, never a rate (0065). */
+  rates?: { key: string; label: React.ReactNode; amount: string }[];
+  rateTitle?: string;
   rateNote: string;
   bank: Bank | null;
   countLabel?: string;
@@ -101,21 +102,23 @@ export async function EarningsView({
         </section>
 
         <aside className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{rateTitle}</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <dl className="divide-y divide-border">
-                {rates.map((r) => (
-                  <div key={r.key} className="flex items-center justify-between gap-3 py-[var(--s-2)] text-[length:var(--fs-2)]">
-                    <dt className="flex items-center gap-2">{r.label}</dt>
-                    <dd className="tabular font-mono">{r.amount}</dd>
-                  </div>
-                ))}
-              </dl>
-            </CardBody>
-          </Card>
+          {rates && rates.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{rateTitle}</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <dl className="divide-y divide-border">
+                  {rates.map((r) => (
+                    <div key={r.key} className="flex items-center justify-between gap-3 py-[var(--s-2)] text-[length:var(--fs-2)]">
+                      <dt className="flex items-center gap-2">{r.label}</dt>
+                      <dd className="tabular font-mono">{r.amount}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </CardBody>
+            </Card>
+          )}
           <Card>
             <CardBody className="space-y-2">
               {bank ? (
