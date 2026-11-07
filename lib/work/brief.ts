@@ -1,5 +1,6 @@
 import { productWord } from "@/lib/client/orders";
 import { accentLine, stoneWord } from "@/core/orders/accents";
+import { ringMeasure, ringMeasureLine } from "@/core/sizes/ringSizes";
 
 /**
  * The brief as label/value lines for the job and QC screens (D4, P2). Works
@@ -23,13 +24,20 @@ export interface AccentLine {
 
 export function briefLines(spec: BriefRow | null, accents: AccentLine[] = []): { label: string; value: string }[] {
   if (!spec) return [];
+  // A ring: its size, then the inside it is made to, from the size chart or
+  // as the client measured it, both shown when they differ (owner, 7 Nov 2026).
+  const ring =
+    spec.ring_size || spec.inner_circumference_um
+      ? ringMeasure(spec.ring_size as string | null, spec.inner_diameter_um as number | null, spec.inner_circumference_um as number | null)
+      : null;
   const centreDims = [mm(spec.centre_length_um), mm(spec.centre_width_um), mm(spec.centre_depth_um)].filter(Boolean);
   const lines: [string, string | null][] = [
     ["Product", productWord(spec.product as string)],
     ["Metal", [pretty(spec.metal), spec.karatage].filter(Boolean).join(" · ") || null],
     ["Ring size", (spec.ring_size as string) || null],
-    ["Inner diameter", mm(spec.inner_diameter_um) ? `${mm(spec.inner_diameter_um)} mm` : null],
-    ["Inner circumference", mm(spec.inner_circumference_um) ? `${mm(spec.inner_circumference_um)} mm` : null],
+    ["Inside", ring ? ringMeasureLine(ring, spec.ring_size as string | null) : null],
+    ["Inner diameter", !ring && mm(spec.inner_diameter_um) ? `${mm(spec.inner_diameter_um)} mm` : null],
+    ["Inner circumference", !ring && mm(spec.inner_circumference_um) ? `${mm(spec.inner_circumference_um)} mm` : null],
     ["Length", mm(spec.length_um) ? `${mm(spec.length_um)} mm` : null],
     ["Parts", spec.component_count && Number(spec.component_count) > 1 ? String(spec.component_count) : null],
     [

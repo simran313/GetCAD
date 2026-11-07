@@ -128,3 +128,85 @@ export function parseRingSize(text: string | null | undefined): { code: string; 
   if (us) return { code: "US", size: us, other: null };
   return { code: DEFAULT_RING_SYSTEM, size: "", other: t };
 }
+
+/**
+ * The inside of a ring by its size (owner, 7 Nov 2026: "diameter comes
+ * automatically, with a manual option if it is off"). Jewellers' charts, in
+ * millimetres; sizes between charts disagree by a few tenths, which is why
+ * the client may enter their own measurement and the designer sees both.
+ *
+ *   EU (ISO 8653): the size is the inside circumference in mm.
+ *   IT / ES / CH: the size + 40 mm.
+ *   US / Canada: inside diameter 11.63 + 0.8128 × size.
+ *   UK / Australia: A is 37.83 mm around, each half letter 0.628 mm more.
+ *   India: the common Indian chart (size 1 is 40.8 mm around, 30 is 70.1).
+ *   Japan / China / Hong Kong: inside diameter 12.7 + size / 3.
+ */
+const IN_CIRCUMFERENCE_MM = [
+  40.8, 41.9, 43.0, 44.0, 44.9, 45.9, 47.1, 48.1, 49.0, 50.3, 50.9, 51.8, 52.8, 54.0, 55.0,
+  55.9, 56.9, 58.1, 59.1, 60.0, 60.9, 62.2, 62.8, 63.8, 64.7, 66.0, 66.9, 67.9, 69.1, 70.1,
+];
+
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/** Inside circumference in mm for a size in a system, or null when the size is not on its chart. */
+export function ringCircumferenceMm(code: string, size: string): number | null {
+  const sys = RING_SIZE_SYSTEMS.find((s) => s.code === code);
+  if (!sys || !sys.sizes.includes(size)) return null;
+  switch (sys.code) {
+    case "EU":
+      return Number(size);
+    case "IT":
+      return Number(size) + 40;
+    case "US":
+      return round1(Math.PI * (11.63 + 0.8128 * Number(size)));
+    case "UK":
+      return round1(37.83 + 0.628 * sys.sizes.indexOf(size));
+    case "IN":
+      return IN_CIRCUMFERENCE_MM[Number(size) - 1] ?? null;
+    case "JP":
+      return round1(Math.PI * (12.7 + Number(size) / 3));
+  }
+}
+
+export interface RingMeasure {
+  /** Inside diameter and circumference, mm, one decimal. */
+  diameterMm: number;
+  circumferenceMm: number;
+  /** "chart": from the size; "measured": the client typed it. */
+  source: "chart" | "measured";
+  /** The chart's diameter for the chosen size, when the client's own measurement differs from it. */
+  chartDiameterMm: number | null;
+}
+
+/**
+ * What the designer works to: the client's own measurement when they gave
+ * one (diameter first, then circumference), else the chart's for the size.
+ */
+export function ringMeasure(
+  ringSize: string | null | undefined,
+  innerDiameterUm?: number | null,
+  innerCircumferenceUm?: number | null,
+): RingMeasure | null {
+  const parsed = parseRingSize(ringSize);
+  const chartCirc = parsed.size ? ringCircumferenceMm(parsed.code, parsed.size) : null;
+  const chartDia = chartCirc != null ? round1(chartCirc / Math.PI) : null;
+  const measuredDia = innerDiameterUm && innerDiameterUm > 0 ? innerDiameterUm / 1000 : null;
+  const measuredCirc = innerCircumferenceUm && innerCircumferenceUm > 0 ? innerCircumferenceUm / 1000 : null;
+  if (measuredDia != null || measuredCirc != null) {
+    const d = measuredDia ?? round1(measuredCirc! / Math.PI);
+    const c = measuredCirc ?? round1(measuredDia! * Math.PI);
+    return { diameterMm: round1(d), circumferenceMm: round1(c), source: "measured", chartDiameterMm: chartDia != null && Math.abs(chartDia - d) >= 0.05 ? chartDia : null };
+  }
+  if (chartCirc == null || chartDia == null) return null;
+  return { diameterMm: chartDia, circumferenceMm: round1(chartCirc), source: "chart", chartDiameterMm: null };
+}
+
+/** "Ø 17.3 mm inside · 54.4 mm around", with where it came from. */
+export function ringMeasureLine(m: RingMeasure, ringSize?: string | null): string {
+  const base = `Ø ${m.diameterMm.toFixed(1)} mm inside · ${m.circumferenceMm.toFixed(1)} mm around`;
+  if (m.source === "chart") return `${base} (size chart)`;
+  return m.chartDiameterMm != null
+    ? `${base} (client's measurement; the chart gives Ø ${m.chartDiameterMm.toFixed(1)} mm for ${ringSize})`
+    : `${base} (client's measurement)`;
+}

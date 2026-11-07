@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { countryForSystem, formatRingSize, MAIN_RING_COUNTRIES, parseRingSize, RING_COUNTRIES, RING_SIZE_SYSTEMS, ringCountry, ringSystem } from "./ringSizes";
+import { countryForSystem, formatRingSize, MAIN_RING_COUNTRIES, parseRingSize, RING_COUNTRIES, RING_SIZE_SYSTEMS, ringCircumferenceMm, ringCountry, ringMeasure, ringMeasureLine, ringSystem } from "./ringSizes";
 
 describe("ring sizes by country", () => {
   it("lists each system's sizes", () => {
@@ -48,5 +48,32 @@ describe("ring countries", () => {
     expect(parseRingSize("IT 12")).toEqual({ code: "IT", size: "12", other: null });
     expect(countryForSystem("EU")).toBe("Germany");
     expect(countryForSystem("UK")).toBe("United Kingdom");
+  });
+});
+
+describe("ring inside measurements (owner, 7 Nov 2026)", () => {
+  it("reads each country's chart", () => {
+    expect(ringCircumferenceMm("EU", "54")).toBe(54);
+    expect(ringCircumferenceMm("IT", "12")).toBe(52);
+    expect(ringCircumferenceMm("US", "7")).toBe(54.4);
+    expect(ringCircumferenceMm("UK", "N½")).toBe(54.8);
+    expect(ringCircumferenceMm("IN", "12")).toBe(51.8);
+    expect(ringCircumferenceMm("JP", "13")).toBe(53.5);
+    expect(ringCircumferenceMm("US", "99")).toBeNull();
+  });
+
+  it("gives the chart's diameter for a size, or the client's own measurement with the chart beside it", () => {
+    expect(ringMeasure("US 7")).toEqual({ diameterMm: 17.3, circumferenceMm: 54.4, source: "chart", chartDiameterMm: null });
+    expect(ringMeasure("US 7", 17800)).toEqual({ diameterMm: 17.8, circumferenceMm: 55.9, source: "measured", chartDiameterMm: 17.3 });
+    expect(ringMeasure("UK M", null, 53000)).toMatchObject({ diameterMm: 16.9, circumferenceMm: 53, source: "measured" });
+    expect(ringMeasure(null, 17000)).toMatchObject({ diameterMm: 17, source: "measured", chartDiameterMm: null });
+    expect(ringMeasure("")).toBeNull();
+  });
+
+  it("says where the numbers came from", () => {
+    expect(ringMeasureLine(ringMeasure("US 7")!)).toBe("Ø 17.3 mm inside · 54.4 mm around (size chart)");
+    expect(ringMeasureLine(ringMeasure("US 7", 17800)!, "US 7")).toBe(
+      "Ø 17.8 mm inside · 55.9 mm around (client's measurement; the chart gives Ø 17.3 mm for US 7)",
+    );
   });
 });

@@ -35,10 +35,19 @@ describe("briefRows", () => {
   it("reads a ring brief as the client chose it", () => {
     const rows = briefRows(ring, { service: "cad", photos: 2 });
     expect(value(rows, "metal")).toBe("Yellow · 18K");
-    expect(value(rows, "size")).toBe("US 7");
+    expect(value(rows, "size")).toBe("US 7 · Ø 17.3 mm inside");
     expect(value(rows, "photos")).toBe("2");
     expect(value(rows, "centre")).toBe("Round · 6.5 × 6.5 mm · Prong 6 · certified");
     expect(value(rows, "notes")).toBeNull();
+  });
+
+  it("shows the team the inside of a ring, from the chart or as the client measured it", () => {
+    expect(value(briefRows(ring, { service: "cad", photos: 1, detail: true }), "size")).toBe(
+      "US 7 · Ø 17.3 mm inside · 54.4 mm around (size chart)",
+    );
+    expect(value(briefRows({ ...ring, inner_diameter_um: 17800 }, { service: "cad", photos: 1, detail: true }), "size")).toBe(
+      "US 7 · Ø 17.8 mm inside · 55.9 mm around (client's measurement; the chart gives Ø 17.3 mm for US 7)",
+    );
   });
 
   it("leaves what is not answered as null, for an Add or a dash", () => {
