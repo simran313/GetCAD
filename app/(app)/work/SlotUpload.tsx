@@ -1,6 +1,6 @@
 "use client";
 
-import { Circle, CircleCheck, LoaderCircle, Upload } from "lucide-react";
+import { Circle, CircleCheck, LayoutGrid, LoaderCircle, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -10,6 +10,7 @@ import { actionErrorText } from "@/lib/refusal";
 import { cn } from "@/lib/utils";
 
 import { beginSlotUploadAction, finishSlotUploadAction } from "../orders/fileActions";
+import { RenderComposer } from "./RenderComposer";
 
 type Phase = { kind: "idle" } | { kind: "sending"; pct: number } | { kind: "checking" };
 
@@ -53,6 +54,8 @@ export function SlotUpload({
   const input = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [over, setOver] = useState(false);
+  // The Render slot can be made from four views (owner, 8 Nov 2026).
+  const [composing, setComposing] = useState(false);
   const busy = phase.kind !== "idle";
 
   async function upload(file: File) {
@@ -131,10 +134,28 @@ export function SlotUpload({
               if (file) void upload(file);
             }}
           />
-          <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => input.current?.click()}>
-            <Upload aria-hidden />
-            {fileName ? "Replace" : "Upload"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {code === "RENDER" && (
+              <Button type="button" size="sm" disabled={busy} onClick={() => setComposing(true)}>
+                <LayoutGrid aria-hidden />
+                From 4 views
+              </Button>
+            )}
+            <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => input.current?.click()}>
+              <Upload aria-hidden />
+              {fileName ? "Replace" : "Upload"}
+            </Button>
+          </div>
+          {code === "RENDER" && (
+            <RenderComposer
+              open={composing}
+              onClose={() => setComposing(false)}
+              onDone={(file) => {
+                setComposing(false);
+                void upload(file);
+              }}
+            />
+          )}
         </>
       )}
     </li>
