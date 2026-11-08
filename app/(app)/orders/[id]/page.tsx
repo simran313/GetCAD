@@ -21,6 +21,7 @@ import { saveOrderMasterInstructionsAction } from "@/lib/client/standingActions"
 import { ReloadForm } from "@/components/reload-form";
 import { issueCertificateAction } from "../actions";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { loadChatBrief } from "@/lib/chat/brief";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { ORDER_FILES_BUCKET } from "@/config/supabase";
 import { SITE_URL } from "@/lib/seo";
@@ -102,6 +103,7 @@ export default async function OrderPage({
     namesRes,
     unreadRes,
     readsRes,
+    chatBrief,
   ] =
     await Promise.all([
       supabase.from("users").select("role").maybeSingle(),
@@ -158,6 +160,8 @@ export default async function OrderPage({
         .is("read_at", null),
       // Phase 14: how far the other side has read each thread (the ticks).
       supabase.rpc("thread_read_state", { p_order_id: id }),
+      // The brief as the first message of the conversations (owner, 7 Nov 2026).
+      loadChatBrief(supabase, id, "TEAM_OR_CLIENT"),
     ]);
 
   const queryError =
@@ -331,6 +335,7 @@ export default async function OrderPage({
           timelineRows={(timelineRes.data ?? []) as TimelineRawRow[]}
           threads={(threadsRes.data as ThreadRow[] | null) ?? []}
           reads={toThreadReads(readsRes.data)}
+          chatBrief={chatBrief}
         />
         <AutoRefresh orderId={order.id} stamp={stampRes.data == null ? null : String(stampRes.data)} />
       </>
@@ -521,6 +526,7 @@ export default async function OrderPage({
           intake={intake}
           threads={(threadsRes.data as ThreadRow[] | null) ?? []}
           reads={toThreadReads(readsRes.data)}
+          chatBrief={chatBrief}
           attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
           transitions={transitions}
           versions={versions}
@@ -578,6 +584,7 @@ export default async function OrderPage({
           intake={intake}
           threads={(threadsRes.data as ThreadRow[] | null) ?? []}
           reads={toThreadReads(readsRes.data)}
+          chatBrief={chatBrief}
           attachments={(filesRes.data as AttachmentRow[] | null) ?? []}
           transitions={transitions}
           versions={versions}

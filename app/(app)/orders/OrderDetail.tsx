@@ -36,7 +36,7 @@ import { PayoutPanel, type PayoutStateSummary } from "./PayoutPanel";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel";
 import { ThreadsPanel } from "./ThreadsPanel";
-import type { AttachmentRow, DisputeRow, MessageRow, OrderRow, ThreadReads, ThreadRow, VersionRow } from "./types";
+import type { AttachmentRow, ChatBrief, DisputeRow, MessageRow, OrderRow, ThreadReads, ThreadRow, VersionRow } from "./types";
 import { viewerZone } from "@/lib/time/zone";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
@@ -149,6 +149,7 @@ export async function OrderDetail({
   threads = [],
   attachments = [],
   reads,
+  chatBrief = null,
   transitions,
   versions,
   messages,
@@ -179,6 +180,8 @@ export async function OrderDetail({
   attachments?: AttachmentRow[];
   /** How far the other side has read each thread (the ticks). */
   reads?: ThreadReads;
+  /** The brief as the first message of the conversations (owner, 7 Nov 2026). */
+  chatBrief?: ChatBrief | null;
   transitions: TransitionRow[];
   versions: VersionRow[];
   messages: MessageRow[];
@@ -745,6 +748,7 @@ export async function OrderDetail({
         messages={messages}
         attachments={attachments}
         reads={reads}
+        brief={chatBrief}
       />
     </>
   );

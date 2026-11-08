@@ -99,3 +99,17 @@ export interface DisputeRow {
   resolution: "REWORK" | "REFUND" | null;
   resolution_notes: string | null;
 }
+
+/**
+ * The brief as the first message of a conversation (owner, 7 Nov 2026): what
+ * the order is, its reference pictures and the client's notes, at the top of
+ * the chat so the pod lead and the designer talk about the design with it in
+ * view. Built from job_brief() for a designer (no client label), else from
+ * the brief itself; pictures through /api/reference-images.
+ */
+export interface ChatBrief {
+  title: string;
+  lines: { label: string; value: string }[];
+  notes: string | null;
+  images: { id: string; pins: string[] }[];
+}

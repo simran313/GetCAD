@@ -358,3 +358,95 @@ export async function postThreadAction(formData: FormData): Promise<void> {
   revalidatePath("/", "layout");
   flushEmailsAfterResponse();
 }
+
+/**
+ * Forward a message to the order's other conversation (owner, 7 Nov 2026):
+ * the client's message to the designer, the designer's to the client. Only
+ * the team reads both, so only the team can (order_threads gives anyone else
+ * one thread, and post rules stay the database's).
+ *
+ * The text goes as the team's own message: to the designer as "Forwarded from
+ * the client", to the client with no label (to a client the team is one
+ * voice). Files are not linked across but sent again through the upload gate
+ * of the conversation they go to: a client's file reaching the designer has
+ * its metadata stripped like any file sent to a designer, and a format the
+ * designer conversation does not take (a voice message, a PDF) is left out
+ * and counted.
+ */
+export async function forwardMessageAction(orderId: string, messageId: string): Promise<{ files: number; skipped: number }> {
+  const supabase = await createUserSupabaseClient();
+  const [threadsRes, messagesRes, filesRes] = await Promise.all([
+    supabase.rpc("order_threads", { p_order_id: orderId }),
+    supabase.rpc("order_messages", { p_order_id: orderId }),
+    supabase.rpc("thread_attachments", { p_order_id: orderId }),
+  ]);
+  refuseOn(threadsRes.error ?? messagesRes.error ?? filesRes.error);
+  const threads = (threadsRes.data ?? []) as { id: string; kind: string; can_post: boolean }[];
+  const message = ((messagesRes.data ?? []) as { id: string; thread_id: string; body: string }[]).find((m) => m.id === messageId);
+  if (!message) throw new Refusal("That message is not on this order.");
+  const from = threads.find((t) => t.id === message.thread_id);
+  const toKind = from?.kind === "client_team" ? "internal" : from?.kind === "internal" ? "client_team" : null;
+  const target = threads.find((t) => t.kind === toKind && t.can_post);
+  if (!target) throw new Refusal("Only the team can forward between the client and the designer.");
+  const toDesigner = target.kind === "internal";
+
+  const files = ((filesRes.data ?? []) as { id: string; message_id: string; file_name: string; content_type: string }[]).filter(
+    (f) => f.message_id === messageId,
+  );
+  const body = files.length > 0 && message.body === "Sent a file." ? "" : message.body.trim();
+  const text = toDesigner ? `Forwarded from the client${body ? `:\n${body}` : ""}` : body;
+
+  const storage = createAdminSupabaseClient().storage.from(ORDER_FILES_BUCKET);
+  let posted = 0;
+  let skipped = 0;
+  for (const f of files) {
+    const { data: row } = await supabase.rpc("thread_file_for_download", { p_file_id: f.id }).maybeSingle();
+    const key = (row as { object_key: string } | null)?.object_key;
+    const blob = key ? (await storage.download(key)).data : null;
+    if (!blob) {
+      skipped += 1;
+      continue;
+    }
+    const gate = await sanitizeUploadAsync(
+      {
+        filename: f.file_name,
+        declaredMimeType: attachmentContentType(f.file_name, f.content_type),
+        sizeBytes: blob.size,
+        bytes: new Uint8Array(await blob.arrayBuffer()),
+      },
+      generateId(),
+      toDesigner
+        ? { requireMetadataStrip: true, strip3dm }
+        : { allowlist: { ...DEFAULT_ALLOWLIST, ...DELIVERABLE_ALLOWLIST, ...VOICE_ALLOWLIST } },
+    );
+    if (!gate.ok || (toDesigner && !["image/png", "image/jpeg", "model/step", "model/stl", "model/x-3dm"].includes(gate.file.contentType))) {
+      skipped += 1;
+      continue;
+    }
+    const objectKey = `${orderId}/threads/${gate.file.objectName}`;
+    const up = await storage.upload(objectKey, gate.file.bytes, { contentType: gate.file.contentType, upsert: false });
+    if (up.error) throw new Error(`storage upload failed: ${up.error.message}`);
+    const { error } = await supabase.rpc("post_thread_file", {
+      p_thread_id: target.id,
+      p_object_key: objectKey,
+      p_content_type: gate.file.contentType,
+      p_size_bytes: gate.file.sizeBytes,
+      p_extension: gate.file.extension,
+      // The text rides on the first file, so the forward reads as one message.
+      p_note: posted === 0 && text ? text : null,
+    });
+    if (error) {
+      await storage.remove([objectKey]);
+      refuseOn(error);
+    }
+    posted += 1;
+  }
+  if (posted === 0) {
+    if (!body) throw new Refusal(toDesigner ? "Nothing in this message can go to the designer: they take PNG, JPEG, STEP, STL or 3DM files." : "Nothing to forward.");
+    const { error } = await supabase.rpc("post_thread_message", { p_thread_id: target.id, p_body: text });
+    refuseOn(error);
+  }
+  revalidatePath("/", "layout");
+  flushEmailsAfterResponse();
+  return { files: posted, skipped };
+}

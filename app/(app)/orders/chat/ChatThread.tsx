@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Camera, Check, CheckCheck, Clock3, Download, FileBox, ImageIcon, Mic, Paperclip, PenLine, RotateCw, SendHorizontal, Trash2, X } from "lucide-react";
+import { Camera, Check, CheckCheck, Clock3, CornerUpRight, Download, FileBox, ImageIcon, Mic, Paperclip, PenLine, RotateCw, SendHorizontal, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -11,12 +11,13 @@ import { toast } from "@/components/ui/toast";
 import { useTimeZone } from "@/components/time-zone";
 import { cn } from "@/lib/utils";
 
-import { postThreadAction } from "../fileActions";
+import { forwardMessageAction, postThreadAction } from "../fileActions";
 import { sendChatMessageAction } from "./actions";
-import type { AttachmentRow, MessageRow, ThreadRow } from "../types";
+import type { AttachmentRow, ChatBrief, MessageRow, ThreadRow } from "../types";
 import { refusalReason } from "@/lib/refusal";
 import { isPicture, preparePhoto } from "@/lib/client/images";
 
+import { BriefCard } from "./BriefCard";
 import { ImageMarkup } from "./ImageMarkup";
 import { clock, useVoiceRecorder, voiceSupported } from "./useVoiceRecorder";
 
@@ -90,6 +91,8 @@ export function ChatThread({
   othersReadAt = null,
   fill = false,
   label = "Message",
+  brief = null,
+  forwardTo = null,
 }: {
   orderId: string;
   thread: ThreadRow;
@@ -105,6 +108,10 @@ export function ChatThread({
   /** Fill the parent's height (the chat screen); otherwise a bounded panel. */
   fill?: boolean;
   label?: string;
+  /** The brief, shown as the conversation's first message (owner, 7 Nov 2026). */
+  brief?: ChatBrief | null;
+  /** The team, reading both conversations: forward the other side's messages across (owner, 7 Nov 2026). */
+  forwardTo?: "designer" | "client" | null;
 }) {
   const tz = useTimeZone();
   const router = useRouter();
@@ -124,6 +131,21 @@ export function ChatThread({
     });
   }, [saved]);
   const [viewing, setViewing] = useState<AttachmentRow | null>(null);
+  // Forwarding: the message being confirmed, and the one on its way.
+  const [forwarding, setForwarding] = useState<{ id: string; busy: boolean } | null>(null);
+  const forward = async (id: string) => {
+    setForwarding({ id, busy: true });
+    try {
+      const r = await forwardMessageAction(orderId, id);
+      const to = forwardTo === "designer" ? "the designer" : "the client";
+      toast(r.skipped > 0 ? `Forwarded to ${to}. ${r.skipped} file${r.skipped === 1 ? "" : "s"} left out (not a format they take).` : `Forwarded to ${to}.`, "success");
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast(refusalReason(e) ?? "Not forwarded. Try again.", "danger");
+    } finally {
+      setForwarding(null);
+    }
+  };
   // Mark-up (Phase 15): the picture being marked up, and the result waiting in the composer.
   const [markup, setMarkup] = useState<Blob | null>(null);
   const [attach, setAttach] = useState<{ file: File; key: number } | null>(null);
@@ -214,7 +236,10 @@ export function ChatThread({
         tabIndex={0}
         className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-[var(--s-4)] py-[var(--s-4)] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
-        {items.length === 0 && <p className="py-8 text-center text-[length:var(--fs-3)] text-muted-foreground">No messages yet</p>}
+        {brief && <BriefCard brief={brief} mine={client} onMarkup={thread.can_post ? (b) => setMarkup(b) : undefined} />}
+        {items.length === 0 && (
+          <p className="py-8 text-center text-[length:var(--fs-3)] text-muted-foreground">{brief ? "Ask about the design here" : "No messages yet"}</p>
+        )}
         {items.map((item) => {
           const day = dayKey(item.at, tz);
           const sep =
@@ -330,7 +355,43 @@ export function ChatThread({
                 <span className={cn(tick, "mt-0.5 px-1")}>
                   <time dateTime={m.created_at}>{formatTime(m.created_at, tz)}</time>
                   {m.is_mine && <Ticks state={readUpTo >= Date.parse(m.created_at) ? "read" : "sent"} />}
+                  {forwardTo && !m.is_mine && m.sender_party !== "TEAM" && forwarding?.id !== m.id && (
+                    <button
+                      type="button"
+                      onClick={() => setForwarding({ id: m.id, busy: false })}
+                      className="ml-1 inline-flex min-h-[var(--ctl-sm)] items-center gap-1 rounded-[var(--r-sm)] px-1.5 font-medium hover:bg-accent hover:text-foreground"
+                    >
+                      <CornerUpRight className="h-3.5 w-3.5" aria-hidden /> Forward to {forwardTo}
+                    </button>
+                  )}
                 </span>
+                {forwarding?.id === m.id && (
+                  <div role="group" aria-label="Forward this message" className="mt-1 max-w-[80%] rounded-[var(--r-md)] border border-border bg-subtle px-3 py-2 text-[length:var(--fs-2)]">
+                    <p>
+                      {forwardTo === "designer"
+                        ? "The designer gets the text and pictures as “Forwarded from the client”. Check it names nobody."
+                        : "The client gets it from the team, never from the designer by name."}
+                    </p>
+                    <div className="mt-1.5 flex gap-2">
+                      <button
+                        type="button"
+                        disabled={forwarding.busy}
+                        onClick={() => void forward(m.id)}
+                        className="inline-flex min-h-[var(--ctl-sm)] items-center rounded-[var(--r-full)] bg-primary px-3 font-medium text-primary-foreground disabled:opacity-60"
+                      >
+                        {forwarding.busy ? "Forwarding…" : `Forward to ${forwardTo}`}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={forwarding.busy}
+                        onClick={() => setForwarding(null)}
+                        className="inline-flex min-h-[var(--ctl-sm)] items-center rounded-[var(--r-full)] px-3 font-medium hover:bg-accent"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           );

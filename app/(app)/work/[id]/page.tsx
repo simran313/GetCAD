@@ -12,6 +12,7 @@ import { StatusTag } from "@/components/ui/status-tag";
 import { Timer } from "@/components/ui/timer";
 import { References } from "@/components/work/references";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
+import { productWord } from "@/lib/client/orders";
 import { briefLines, type AccentLine, type BriefRow } from "@/lib/work/brief";
 import { jobTitle, loadJobTimes, loadMyWork } from "@/lib/work/load";
 import { versionNote } from "@/lib/work/notes";
@@ -247,6 +248,16 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             messages={(messagesRes.data ?? []) as MessageRow[]}
             attachments={(filesRes.data ?? []) as AttachmentRow[]}
             reads={toThreadReads(readsRes.data)}
+            brief={
+              brief
+                ? {
+                    title: brief.product ? productWord(brief.product as string) : "The piece",
+                    lines: lines.filter((l) => l.label !== "Product"),
+                    notes: typeof brief.notes === "string" && brief.notes.trim() ? brief.notes.trim() : null,
+                    images: refs.map((r) => ({ id: r.id, pins: r.pins.map((p) => p.label) })),
+                  }
+                : null
+            }
           />
         </div>
 

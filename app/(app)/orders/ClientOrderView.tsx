@@ -32,7 +32,7 @@ import { OrderMenu } from "./OrderMenu";
 import { OrderTimeline } from "./OrderTimeline";
 import { RevisionsPanel, type RevisionsData } from "./RevisionsPanel";
 import { ThreadsPanel } from "./ThreadsPanel";
-import type { AttachmentRow, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
+import type { AttachmentRow, ChatBrief, MessageRow, OrderRow, ThreadReads, ThreadRow } from "./types";
 
 /**
  * The client's order page (order hub, Phase 10b; owner, 7 Nov 2026). Where
@@ -82,6 +82,7 @@ export async function ClientOrderView({
   timelineRows,
   threads = [],
   reads = {},
+  chatBrief = null,
   afterDelivery = null,
 }: {
   order: OrderRow & { service?: string; created_at?: string };
@@ -102,6 +103,8 @@ export async function ClientOrderView({
   /** The client's thread with the team (order_threads gives a client only that one). */
   threads?: ThreadRow[];
   reads?: ThreadReads;
+  /** The brief as the first message of the conversation (owner, 7 Nov 2026). */
+  chatBrief?: ChatBrief | null;
   /** Phase 7b: the share-a-preview card and spec claims, once approved. */
   afterDelivery?: React.ReactNode;
 }) {
@@ -358,7 +361,7 @@ export async function ClientOrderView({
       <div className={afterDelivery ? "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px]" : undefined}>
         {threads.length > 0 && (
           <div className="min-w-0">
-            <ThreadsPanel orderId={o.id} relation="CLIENT" threads={threads} messages={messages} attachments={attachments} reads={reads} />
+            <ThreadsPanel orderId={o.id} relation="CLIENT" threads={threads} messages={messages} attachments={attachments} reads={reads} brief={chatBrief} />
           </div>
         )}
         {afterDelivery && <div className="min-w-0 space-y-4">{afterDelivery}</div>}

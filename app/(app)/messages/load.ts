@@ -1,5 +1,6 @@
 import "server-only";
 
+import { loadChatBrief } from "@/lib/chat/brief";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { briefRows, buildTimeline, chatMilestones, clientNextStep, productWord, type TimelineRawRow } from "@/core";
@@ -82,7 +83,7 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
   // The client and the team see the order's own name, its events and brief
   // beside the chat; a designer keeps the job code and the messages only.
   const full = o.relation !== "DESIGNER";
-  const [threads, messages, files, stamp, unread, timeline, spec, accents, reads] = await Promise.all([
+  const [threads, messages, files, stamp, unread, timeline, spec, accents, reads, chatBrief] = await Promise.all([
     supabase.rpc("order_threads", { p_order_id: orderId }),
     supabase.rpc("order_messages", { p_order_id: orderId }),
     supabase.rpc("thread_attachments", { p_order_id: orderId }),
@@ -99,6 +100,8 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
     full ? supabase.from("order_specs").select("*").eq("order_id", orderId).maybeSingle() : Promise.resolve({ data: null }),
     full ? supabase.from("order_spec_accents").select("quantity").eq("order_id", orderId) : Promise.resolve({ data: null }),
     supabase.rpc("thread_read_state", { p_order_id: orderId }),
+    // The brief as the first message (owner, 7 Nov 2026); a designer's from job_brief().
+    loadChatBrief(supabase, orderId, o.relation),
   ]);
   const s = (spec.data ?? null) as Record<string, unknown> | null;
   const service = o.service ?? "cad";
@@ -119,6 +122,7 @@ export async function loadOpen(supabase: SupabaseClient, orderId: string): Promi
     reads: toThreadReads(reads.data),
     unreadSince: ((unread.data ?? []) as { created_at: string }[])[0]?.created_at ?? null,
     events: chatMilestones(buildTimeline((timeline.data ?? []) as TimelineRawRow[])).map((e) => ({ id: e.id, label: e.label, at: e.createdAt })),
+    chatBrief,
     brief: s
       ? briefRows(s, { service, photos: 0, accents: (accents.data ?? []) as { quantity: number }[] })
           .filter((r) => r.key !== "photos" && r.value)
