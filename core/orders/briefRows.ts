@@ -4,6 +4,7 @@
  * team's read-only view). Pure, so every screen and the tests share one copy.
  */
 
+import { ringMeasure, ringMeasureLine } from "../sizes/ringSizes";
 import { accentLine, stoneWord } from "./accents";
 
 const PRODUCT_WORDS: Record<string, string> = {
@@ -61,7 +62,18 @@ export function briefRows(
   const render = opts.service === "render";
   const s = spec ?? {};
   const mm = (k: string) => (s[k] ? `${Number(s[k]) / 1000} mm` : null);
+  // A ring: the size and its inside diameter, from the chart or as the client
+  // measured it (owner, 7 Nov 2026); the team sees where the number came from.
+  const ring =
+    s.ring_size || s.inner_circumference_um
+      ? ringMeasure(s.ring_size as string | null, s.inner_diameter_um as number | null, s.inner_circumference_um as number | null)
+      : null;
   const size =
+    (ring
+      ? [s.ring_size as string | null, opts.detail ? ringMeasureLine(ring, s.ring_size as string | null) : `Ø ${ring.diameterMm.toFixed(1)} mm inside`]
+          .filter(Boolean)
+          .join(" · ")
+      : null) ||
     (s.ring_size as string | null) ||
     (s.inner_circumference_um ? `${mm("inner_circumference_um")} around` : null) ||
     (s.inner_diameter_um ? `${mm("inner_diameter_um")} inside` : null) ||

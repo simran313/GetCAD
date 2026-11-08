@@ -64,6 +64,7 @@ describe("briefStepGaps", () => {
   it("step 3 needs the country and ring size (or the inside measurement), metal and karat", () => {
     expect(fields({ country: "", ringSize: "" })).toEqual(["2:ring_system", "2:ring_size"]);
     expect(fields({ country: "", ringSize: "", innerCircumferenceMm: "53.1" })).toEqual([]);
+    expect(fields({ country: "", ringSize: "", innerDiameterMm: "17.2" })).toEqual([]);
     expect(fields({ metal: "", karat: "" })).toEqual(["2:metal", "2:karatage"]);
     expect(fields({ product: "BANGLE", sizeKind: "wrist" })).toEqual(["2:inner_diameter_mm"]);
     expect(fields({ product: "PENDANT", sizeKind: "none", ringSize: "" })).toEqual([]);

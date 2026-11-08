@@ -7,7 +7,8 @@
  *      width, and setting. Each side-stone row: a shape, a setting, and a
  *      width unless "Scale to centre stone" is ticked. Side stones themselves
  *      are optional, and nobody is asked how many.
- *   3. Size & metal: the country and ring size (or the inside measurement),
+ *   3. Size & metal: the country and ring size (or the inside diameter or
+ *      circumference the client measured),
  *      the metal and the karat. Notes are optional.
  *
  * A render brief has no stones step and no size.
@@ -98,7 +99,8 @@ export function briefStepGaps(b: BriefStepInput): StepGap[] {
   const last = 2;
   if (b.service !== "render") {
     if (b.sizeKind === "ring") {
-      if (!positive(b.innerCircumferenceMm)) {
+      // A measurement the client took stands in for country and size.
+      if (!positive(b.innerCircumferenceMm) && !positive(b.innerDiameterMm)) {
         if (!filled(b.country)) gap(last, "ring_system", "Your country");
         if (!filled(b.ringSize)) gap(last, "ring_size", "The ring size");
       }

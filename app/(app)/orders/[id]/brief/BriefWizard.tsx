@@ -27,7 +27,7 @@ import { Certificates } from "./Certificates";
 import type { CertificateView } from "@/lib/client/standingActions";
 import type { ReferenceImage } from "./ReferenceSection";
 import { refusalReason } from "@/lib/refusal";
-import { countryForSystem, formatRingSize, MAIN_RING_COUNTRIES, parseRingSize, RING_COUNTRIES, ringCountry, ringSystem } from "@/core/sizes/ringSizes";
+import { countryForSystem, formatRingSize, MAIN_RING_COUNTRIES, parseRingSize, RING_COUNTRIES, ringCircumferenceMm, ringCountry, ringSystem } from "@/core/sizes/ringSizes";
 import { briefStepGaps, firstIncompleteStep, type StepGap } from "@/core/orders/briefSteps";
 
 /**
@@ -665,21 +665,51 @@ export function BriefWizard({
             {ringOther && (
               <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">Saved before as “{ringOther}”. Choose a size to replace it.</p>
             )}
-            <details className="mt-2">
-              <summary className="w-fit cursor-pointer text-[length:var(--fs-2)] text-muted-foreground underline underline-offset-4">
-                Know the inside circumference instead?
-              </summary>
-              <Field id="inner_circumference_mm" label="Inner circumference (mm)">
-                <Input
-                  id="inner_circumference_mm"
-                  inputMode="decimal"
-                  value={form.inner_circumference_mm}
-                  onChange={(e) => set("inner_circumference_mm")(e.target.value)}
-                  placeholder="53.1"
-                  className="min-h-[var(--ctl)]"
-                />
-              </Field>
-            </details>
+            {(() => {
+              // Owner, 7 Nov 2026: the inside diameter comes from the size; the
+              // client can enter their own when it is off, and the designer sees both.
+              const chartCirc = !ringOther && ringSz ? ringCircumferenceMm(ringSys, ringSz) : null;
+              const chartDia = chartCirc != null ? (chartCirc / Math.PI).toFixed(1) : null;
+              const own = Number(form.inner_diameter_mm) > 0 || Number(form.inner_circumference_mm) > 0;
+              return (
+                <>
+                  {chartDia && (
+                    <p className="mt-2 rounded-[var(--r-md)] bg-muted px-3 py-2 text-[length:var(--fs-3)]" aria-live="polite">
+                      Inside <span className="tabular font-mono font-medium">Ø {chartDia} mm</span>
+                      <span className="text-muted-foreground"> · {chartCirc!.toFixed(1)} mm around{own ? " (your measurement below is used)" : ""}</span>
+                    </p>
+                  )}
+                  <details className="mt-2" open={own || undefined}>
+                    <summary className="w-fit cursor-pointer text-[length:var(--fs-2)] text-muted-foreground underline underline-offset-4">
+                      {chartDia ? "Your ring measures differently? Enter it" : "Know the inside measurement instead?"}
+                    </summary>
+                    <div className="mt-1 grid grid-cols-2 gap-2">
+                      <Field id="inner_diameter_mm" label="Inside diameter (mm)">
+                        <Input
+                          id="inner_diameter_mm"
+                          inputMode="decimal"
+                          value={form.inner_diameter_mm}
+                          onChange={(e) => set("inner_diameter_mm")(e.target.value)}
+                          placeholder={chartDia ?? "17.3"}
+                          className="min-h-[var(--ctl)]"
+                        />
+                      </Field>
+                      <Field id="inner_circumference_mm" label="Or around (mm)">
+                        <Input
+                          id="inner_circumference_mm"
+                          inputMode="decimal"
+                          value={form.inner_circumference_mm}
+                          onChange={(e) => set("inner_circumference_mm")(e.target.value)}
+                          placeholder={chartCirc != null ? chartCirc.toFixed(1) : "54.4"}
+                          className="min-h-[var(--ctl)]"
+                        />
+                      </Field>
+                    </div>
+                    <p className="mt-1 text-[length:var(--fs-2)] text-muted-foreground">The designer works to your measurement and sees the size too.</p>
+                  </details>
+                </>
+              );
+            })()}
           </>
         )}
         {sizeKind(form.product ?? "") === "wrist" && (
