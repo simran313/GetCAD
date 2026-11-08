@@ -2,10 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { isOpenJob, jobState, loadWord, type JobTimes } from "@/core";
+import { isOpenJob, jobState, type JobTimes } from "@/core";
 import { ErrorPanel } from "@/components/error-panel";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Select } from "@/components/ui/select";
@@ -73,8 +73,8 @@ export default async function TeamBoardPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Column title="Unassigned" meta={`${unassigned.length} job${unassigned.length === 1 ? "" : "s"} · ${minutes(unassigned)} min`}>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <Column title="Unassigned" jobs={unassigned.length} note={unassigned.length ? `${minutes(unassigned)} min waiting` : undefined}>
           {unassigned.length === 0 && <Empty>Nothing waiting.</Empty>}
           {unassigned.map((j) => {
             const choices = designers.filter((d) => d.pod_id === j.pod_id);
@@ -119,8 +119,8 @@ export default async function TeamBoardPage() {
               key={d.designer_id}
               title={d.name ?? d.designer_ref ?? "Designer"}
               sub={d.designer_ref}
-              meta={`${mine.length} job${mine.length === 1 ? "" : "s"} · ${loadWord(d.open_minutes, d.shift_minutes)}`}
-              over={d.open_minutes > d.shift_minutes}
+              jobs={mine.length}
+              load={{ open: d.open_minutes, shift: d.shift_minutes }}
             >
               {mine.length === 0 && <Empty>Free for new work.</Empty>}
               {mine.map((j) => {
@@ -157,33 +157,54 @@ export default async function TeamBoardPage() {
   );
 }
 
+/**
+ * One column of the board (owner, 8 Nov 2026: no overlaps at any width). The
+ * name has the full line; under it the designer's number, then their load as
+ * a bar with words ("Free", "270 of 480 min"), so nothing shares a line with
+ * a name that may wrap.
+ */
 function Column({
   title,
   sub,
-  meta,
-  over,
+  jobs,
+  load,
+  note,
   children,
 }: {
   title: string;
   sub?: string | null;
-  meta: string;
-  over?: boolean;
+  jobs: number;
+  load?: { open: number; shift: number };
+  note?: string;
   children: React.ReactNode;
 }) {
+  const over = !!load && load.open > load.shift;
+  const pct = load ? Math.min(100, Math.round((load.open / Math.max(1, load.shift)) * 100)) : 0;
   return (
-    <Card as="section" className="bg-subtle">
-      <CardHeader>
-        <div className="min-w-0">
-          <CardTitle>{title}</CardTitle>
-          {sub && <p className="font-mono text-[length:var(--fs-2)] text-muted-foreground">{sub}</p>}
+    <Card as="section" className="flex flex-col bg-subtle">
+      <div className="space-y-1.5 border-b border-border px-[var(--s-4)] py-[var(--s-3)]">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="min-w-0 break-words text-[length:var(--fs-4)] font-semibold leading-[var(--lh-4)]">{title}</h2>
+          <span className="tabular shrink-0 rounded-[var(--r-full)] border border-border bg-card px-2 py-0.5 text-[length:var(--fs-1)] font-medium">
+            {jobs} job{jobs === 1 ? "" : "s"}
+          </span>
         </div>
-        <span className={`tabular font-mono text-[length:var(--fs-2)] ${over ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-          {meta}
-        </span>
-      </CardHeader>
-      <CardBody>
+        {sub && <p className="font-mono text-[length:var(--fs-1)] text-muted-foreground">{sub}</p>}
+        {load && (
+          <div className="space-y-1">
+            <div className="h-1.5 overflow-hidden rounded-[var(--r-full)] bg-border" aria-hidden>
+              <div className={over ? "h-full bg-[color:var(--tone-danger-fg)]" : "h-full bg-foreground"} style={{ width: `${pct}%` }} />
+            </div>
+            <p className={`tabular text-[length:var(--fs-1)] ${over ? "font-semibold text-[color:var(--tone-danger-fg)]" : "text-muted-foreground"}`}>
+              {load.open === 0 ? `Free · 0 of ${load.shift} min` : `${load.open} of ${load.shift} min${over ? " · over the shift" : ""}`}
+            </p>
+          </div>
+        )}
+        {note && <p className="tabular text-[length:var(--fs-1)] text-muted-foreground">{note}</p>}
+      </div>
+      <div className="flex-1 p-[var(--s-3)]">
         <ul className="space-y-3">{children}</ul>
-      </CardBody>
+      </div>
     </Card>
   );
 }

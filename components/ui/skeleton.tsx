@@ -32,7 +32,7 @@ function SkeletonRows({ rows = 4, className }: { rows?: number; className?: stri
  */
 function PageSkeleton({ strip = false, rows = 5, aside = false }: { strip?: boolean; rows?: number; aside?: boolean }) {
   return (
-    <main role="status" aria-label="Loading" className="w-full max-w-page space-y-6 px-4 py-6 md:px-8 md:py-8">
+    <main role="status" aria-label="Loading" className="mx-auto w-full max-w-page space-y-6 px-4 py-6 md:px-8 md:py-8">
       <div className="flex items-end justify-between gap-4">
         <div className="space-y-2">
           <Skeleton className="h-8 w-40" />
