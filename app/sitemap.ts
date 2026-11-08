@@ -4,8 +4,9 @@ import { SITE_URL } from "@/lib/seo";
 
 // Public marketing routes only — the authenticated product is intentionally
 // excluded (nothing there is meant for search engines; see robots.ts).
+// /results stays out while the public_stats flag can make it a 404.
 const ROUTES = [
-  "",
+  "/",
   "/jewelry-cad",
   "/how-it-works",
   "/pricing",
@@ -18,12 +19,17 @@ const ROUTES = [
   "/terms",
 ];
 
+/**
+ * When the public pages last changed in a way worth recrawling. A fixed date,
+ * not the request time: Google ignores a lastmod that is always "now". Move
+ * it forward when the website's content changes.
+ */
+export const SITE_CONTENT_UPDATED = "2026-11-08";
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
+  // Each URL exactly as its page's canonical ("https://thecadpillar.com/" for home).
   return ROUTES.map((path) => ({
-    url: `${SITE_URL}${path}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: path === "" ? 1 : path === "/jewelry-cad" || path === "/pricing" ? 0.9 : 0.7,
+    url: path === "/" ? `${SITE_URL}/` : `${SITE_URL}${path}`,
+    lastModified: SITE_CONTENT_UPDATED,
   }));
 }
