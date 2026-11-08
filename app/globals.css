@@ -161,6 +161,9 @@
     --s-4: 16px;  --s-5: 20px;  --s-6: 24px;  --s-8: 32px;  --s-10: 40px;
     --s-12: 48px; --s-16: 64px; --s-20: 80px; --s-24: 96px; --s-32: 128px;
     --section-y: 64px;
+    /* The portal page: 1120px on a laptop, wider on a large screen, always
+     * centred in the space beside the sidebar (owner, 8 Nov 2026: on a big
+     * screen everything sat at the left with empty space on the right). */
     --page-max: 1120px;
 
     /* -------------------------------------------------------------- shape -- */
@@ -341,5 +344,17 @@
     text-transform: uppercase;
     font-weight: var(--fw-medium);
     color: hsl(var(--muted-foreground));
+  }
+}
+
+/* Wider portal pages on large screens (owner, 8 Nov 2026). */
+@media (min-width: 1440px) {
+  :root {
+    --page-max: 1240px;
+  }
+}
+@media (min-width: 1800px) {
+  :root {
+    --page-max: 1400px;
   }
 }

@@ -258,8 +258,10 @@ export async function ClientOrderView({
         <HubTile
           icon={<History />}
           label="Timeline"
-          value={latest ? latest.label : "—"}
-          line={latest ? formatRelative(latest.createdAt, tz) : "No events yet"}
+          // The large slot fits a short fact: when it last moved; what moved is the line
+          // under it (owner, 8 Nov 2026: "Payment rec…" was cut off).
+          value={latest ? formatRelative(latest.createdAt, tz) : "—"}
+          line={latest ? latest.label : "No events yet"}
         >
           <div className="mb-5 space-y-1 text-[length:var(--fs-2)]">
             <p className="flex flex-wrap items-center gap-2 text-[length:var(--fs-3)] font-medium">
