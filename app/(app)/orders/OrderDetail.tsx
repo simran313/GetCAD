@@ -88,6 +88,8 @@ export interface TeamContext {
   extras: React.ReactNode;
   /** The QC review link for the pod lead while the job is in QC. */
   qcHref: string | null;
+  /** With a designer (0066): move it, take it back, or escalate; null otherwise. */
+  jobActions?: React.ReactNode;
 }
 
 
@@ -338,7 +340,7 @@ export async function OrderDetail({
   // admin keeps it as an exception, folded away so the page shows one next step.
   const assignEl = (
     <>
-      {designers &&
+      {designers && o.status === "PAYMENT_HELD" &&
         (isAdmin ? (
           <details className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] px-[var(--s-4)] py-[var(--s-3)]">
             <summary className="cursor-pointer text-[length:var(--fs-3)] font-medium">
@@ -874,11 +876,20 @@ export async function OrderDetail({
           ]
         : []),
       // Not before the order is confirmed: confirming comes first.
-      ...(designers && !assignNow && !confirmNow
+      // One order, one designer (0066): Assign only while nobody has it.
+      ...(designers && o.status === "PAYMENT_HELD" && !assignNow && !confirmNow
         ? [
             <div key="assign" className="space-y-1">
               <p className={field}>{isAdmin ? "Exception: assign a designer yourself · normally the pod lead does this" : "Give it to another designer"}</p>
               <AssignPanel orderId={o.id} designers={designers} />
+            </div>,
+          ]
+        : []),
+      ...(team.jobActions
+        ? [
+            <div key="job" className="w-full space-y-1">
+              <p className={field}>Move it to another designer, or take it back</p>
+              {team.jobActions}
             </div>,
           ]
         : []),

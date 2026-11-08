@@ -18,6 +18,16 @@ export async function reassignJobAction(orderId: string, designerId: string, rea
   revalidatePath("/pod/performance");
 }
 
+/** Take a job back from its designer (0066): waiting for a designer again; the designer and the admins are told. */
+export async function withdrawJobAction(orderId: string, reason: string): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("withdraw_job", { p_order_id: orderId, p_reason: reason.trim() || null });
+  refuseOn(error);
+  revalidatePath("/pod/board");
+  revalidatePath("/pod/performance");
+  revalidatePath(`/orders/${orderId}`);
+}
+
 export async function escalateJobAction(orderId: string, reason: string): Promise<void> {
   const supabase = await createUserSupabaseClient();
   const { error } = await supabase.rpc("escalate_job", { p_order_id: orderId, p_reason: reason.trim() });
