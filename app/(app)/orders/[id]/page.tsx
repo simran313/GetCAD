@@ -12,6 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { PodPicker, type PodOption } from "@/components/work/pod-picker";
+import { JobActions } from "../../pod/board/JobActions";
 import type { PodJob } from "@/lib/work/load";
 import type { VersionSpec } from "@/lib/work/spec";
 import { loadStanding } from "@/lib/work/standing";
@@ -229,7 +230,9 @@ export default async function OrderPage({
   const none = Promise.resolve({ data: null });
   const teamView = order.relation !== "CLIENT";
   const [designersRes, checklistRes, slotsRes, shotsRes, contactRes, fingerprintsRes, linksRes, windowRes, claimsRes, payoutRes, jobRes, podsRes, vsRes, teamClaimsRes] = await Promise.all([
-    staffing && ["PAYMENT_HELD", "ASSIGNED"].includes(order.status) ? supabase.rpc("pod_designers", { p_order_id: order.id }) : none,
+    staffing && ["PAYMENT_HELD", "ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(order.status)
+      ? supabase.rpc("pod_designers", { p_order_id: order.id })
+      : none,
     working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status) ? supabase.rpc("job_checklist", { p_order_id: order.id }) : none,
     working && !["SUBMITTED", "QUOTED", "PAYMENT_HELD"].includes(order.status) ? supabase.rpc("job_slots", { p_order_id: order.id }) : none,
     placedByTeam && order.relation !== "DESIGNER"
@@ -462,14 +465,41 @@ export default async function OrderPage({
         </CardBody>
       </Card>
     );
+    // Who has the job, by name for the team (owner, 8 Nov 2026: the page did
+    // not say it was already with a designer).
+    const holder = job?.designer_id ? [job.designer_ref, job.designer_name].filter(Boolean).join(" · ") || "a designer" : null;
+    const withDesigner = !!holder && ["ASSIGNED", "IN_PROGRESS", "REVISION_REQUESTED"].includes(order.status);
+    const podDesigners = (designersRes.data as PodDesigner[] | null) ?? [];
     const team = {
       // Assigning is the pod lead's move (owner, 4 Nov 2026): an admin is told who has it, not asked to do it.
       why:
         order.relation === "ADMIN" && next.stage === "assign" && job?.pod_id && order.confirmed_at
           ? "Paid and confirmed · the pod lead assigns a designer"
-          : next.why,
+          : withDesigner && order.status === "ASSIGNED"
+            ? `Assigned to ${holder} · not started yet`
+            : withDesigner && order.status === "IN_PROGRESS"
+              ? `${holder} is working on it`
+              : withDesigner && order.status === "REVISION_REQUESTED"
+                ? `Changes asked · with ${holder}`
+                : next.why,
+      jobActions: withDesigner ? (
+        <JobActions
+          inline
+          orderId={order.id}
+          label={order.display_ref ?? "job"}
+          status={order.status}
+          designers={podDesigners
+            .filter((d) => d.designer_id !== job?.designer_id)
+            .map((d) => ({
+              id: d.designer_id,
+              name: [d.designer_ref, d.name].filter(Boolean).join(" · ") || "Designer",
+              load: `${d.open_minutes}/${d.shift_minutes} min`,
+              assignable: d.assignable,
+            }))}
+        />
+      ) : null,
       pod: job?.pod_name ? `${job.pod_name}${job.pod_lead_name ? ` · ${job.pod_lead_name}` : ""}` : null,
-      designerRef: job?.designer_ref ?? null,
+      designerRef: holder ?? job?.designer_ref ?? null,
       clientCode: job?.client_code ?? null,
       podPicker: pods && (movable || !job?.pod_id) ? <PodPicker orderId={order.id} pods={pods} label={job?.pod_id ? "Move" : "Choose"} /> : null,
       brief: teamBrief,

@@ -9,25 +9,32 @@ import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { actionErrorText } from "@/lib/refusal";
 
-import { escalateJobAction, reassignJobAction } from "../actions";
+import { escalateJobAction, reassignJobAction, withdrawJobAction } from "../actions";
 
 /**
- * Move a job to another designer, or escalate it to an admin (Phase 13c).
- * Folded away under one line so the board stays readable.
+ * Move a job to another designer, take it back from its designer (0066:
+ * it waits for a designer again; the designer and the admins are told), or
+ * escalate it to an admin (Phase 13c). Folded away under one line on the
+ * board; open on the order page, where it sits under "Other actions".
  */
 export function JobActions({
   orderId,
   label,
   status,
   designers,
+  inline = false,
 }: {
   orderId: string;
   label: string;
   status: string;
   designers: { id: string; name: string; load: string; assignable: boolean }[];
+  /** Without the fold (the order page already folds it). */
+  inline?: boolean;
 }) {
   const router = useRouter();
-  const ids = { to: useId(), why: useId(), esc: useId() };
+  const ids = { to: useId(), why: useId(), esc: useId(), back: useId() };
+  const [back, setBack] = useState("");
+  const canTakeBack = status === "ASSIGNED" || status === "IN_PROGRESS";
   const [to, setTo] = useState("");
   const [why, setWhy] = useState("");
   const [esc, setEsc] = useState("");
@@ -42,16 +49,15 @@ export function JobActions({
         setTo("");
         setWhy("");
         setEsc("");
+        setBack("");
         router.refresh();
       } catch (e) {
         toast(actionErrorText(e) ?? "Not saved. Try again.", "danger");
       }
     });
 
-  return (
-    <details className="group text-[length:var(--fs-2)]">
-      <summary className="cursor-pointer list-none text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Move or escalate</summary>
-      <div className="mt-2 space-y-3">
+  const body = (
+    <div className={inline ? "space-y-3" : "mt-2 space-y-3"}>
         <form
           className="space-y-2"
           onSubmit={(e) => {
@@ -86,6 +92,28 @@ export function JobActions({
             Move job
           </Button>
         </form>
+        {canTakeBack && (
+          <form
+            className="space-y-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(() => withdrawJobAction(orderId, back), "Taken back · waiting for a designer");
+            }}
+          >
+            <Input
+              id={ids.back}
+              aria-label="Why it is taken back"
+              placeholder={started ? "Why it is taken back (required)" : "Why it is taken back (optional)"}
+              value={back}
+              onChange={(e) => setBack(e.target.value)}
+              required={started}
+              maxLength={500}
+            />
+            <Button type="submit" size="sm" variant="outline" disabled={pending || (started && !back.trim())}>
+              Take back from the designer
+            </Button>
+          </form>
+        )}
         <form
           className="space-y-2"
           onSubmit={(e) => {
@@ -99,6 +127,12 @@ export function JobActions({
           </Button>
         </form>
       </div>
+  );
+  if (inline) return <div className="text-[length:var(--fs-2)]">{body}</div>;
+  return (
+    <details className="group text-[length:var(--fs-2)]">
+      <summary className="cursor-pointer list-none text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Move, take back or escalate</summary>
+      {body}
     </details>
   );
 }

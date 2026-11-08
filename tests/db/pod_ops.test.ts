@@ -188,3 +188,45 @@ describe("sweep_job_alerts", () => {
     await expect(q(podLead, "SELECT public.sweep_job_alerts()")).rejects.toThrow(/permission denied/);
   });
 });
+
+// Owner, 8 Nov 2026 (0066): one order, one designer; the pod lead can take a
+// job back, which leaves the designer's list and tells the admins.
+describe("one designer per order, and taking a job back", () => {
+  it("assigns once; a second assign is refused (move or take back instead)", async () => {
+    const id = await job();
+    await q(podLead, "SELECT public.assign_designer($1,$2)", [id, dana]);
+    await expect(q(podLead, "SELECT public.assign_designer($1,$2)", [id, dana])).rejects.toThrow(/already with a designer/);
+    await expect(q(podLead, "SELECT public.assign_designer($1,$2)", [id, ravi])).rejects.toThrow(/already with a designer/);
+    const open = await db.query("SELECT count(*)::int AS n FROM job_assignments WHERE order_id=$1 AND ended_at IS NULL", [id]);
+    expect(open.rows[0].n).toBe(1);
+  });
+
+  it("takes an assigned job back: no designer, waiting again, off their load and list; the admins are told", async () => {
+    const id = await job();
+    await q(podLead, "SELECT public.assign_designer($1,$2)", [id, dana]);
+    const before = (await db.query("SELECT app.designer_open_minutes($1) AS m", [dana])).rows[0].m;
+    await q(podLead, "SELECT public.withdraw_job($1)", [id]);
+    expect(await status(id)).toEqual({ status: "PAYMENT_HELD", designer_id: null });
+    expect((await db.query("SELECT app.designer_open_minutes($1) AS m", [dana])).rows[0].m).toBeLessThan(before);
+    expect((await q(dana, "SELECT order_id FROM public.my_work($1)", [id])).rows).toEqual([]);
+    expect((await db.query("SELECT count(*)::int AS n FROM job_assignments WHERE order_id=$1 AND ended_at IS NULL", [id])).rows[0].n).toBe(0);
+    const told = await db.query("SELECT user_id, summary FROM notifications WHERE order_id=$1 AND summary LIKE '%taken back%'", [id]);
+    expect(told.rows.map((r) => r.user_id)).toEqual(expect.arrayContaining([dana, admin]));
+    expect((await db.query("SELECT count(*)::int AS n FROM audit.audit_log WHERE entity_id=$1 AND action='JOB_WITHDRAWN'", [id])).rows[0].n).toBe(1);
+    // ... and it can be assigned again.
+    await q(podLead, "SELECT public.assign_designer($1,$2)", [id, ravi]);
+    expect(await status(id)).toEqual({ status: "ASSIGNED", designer_id: ravi });
+  });
+
+  it("a started job comes back only with a reason; only the pod lead or an admin; not another pod's", async () => {
+    const id = await job();
+    await q(podLead, "SELECT public.assign_designer($1,$2)", [id, dana]);
+    await db.query("UPDATE orders SET status='IN_PROGRESS' WHERE id=$1", [id]);
+    await expect(q(podLead, "SELECT public.withdraw_job($1)", [id])).rejects.toThrow(/say why/);
+    await expect(q(dana, "SELECT public.withdraw_job($1,'x')", [id])).rejects.toThrow(/only an admin or this order's pod lead/);
+    await expect(q(otherLead, "SELECT public.withdraw_job($1,'x')", [id])).rejects.toThrow(/only an admin or this order's pod lead/);
+    await q(admin, "SELECT public.withdraw_job($1,'Client paused the order')", [id]);
+    expect(await status(id)).toEqual({ status: "PAYMENT_HELD", designer_id: null });
+    await expect(q(admin, "SELECT public.withdraw_job($1,'again')", [id])).rejects.toThrow(/assigned or in progress/);
+  });
+});

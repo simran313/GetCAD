@@ -151,12 +151,18 @@ test("one minute over the shift is refused to the pod lead, allowed to an admin 
     await admin.getByLabel("Over-capacity reason (admin)").fill("Rush for a regular client; Rohan agreed to stay late.");
     const assign = admin.getByRole("button", { name: "Assign", exact: true });
     await act(admin, assign);
-    // The panel stays (an order can be reassigned until work starts): the
-    // timeline is the proof. The event shows twice since R4 (under "Latest"
-    // and in the timeline), so the first is enough.
+    // The timeline is the proof. The event shows twice since R4 (under
+    // "Latest" and in the timeline), so the first is enough.
     await settled(admin, "assigned", (timeout) =>
       expect(admin.getByText("Assigned to a designer", { exact: true }).first()).toBeVisible({ timeout }),
     );
+    // One order, one designer (0066): no Assign once it is with someone; the
+    // page names them, and offers Move and Take back instead.
+    await admin.reload();
+    await expect(admin.getByText(/^Assigned to .+ · not started yet$/)).toBeVisible();
+    await expect(admin.getByRole("button", { name: "Assign", exact: true })).toHaveCount(0);
+    await admin.getByText("Other actions").click();
+    await expect(admin.getByRole("button", { name: "Take back from the designer" })).toBeVisible();
     const reason = await withDb(async (db) => (await db.query("SELECT override_reason FROM job_assignments WHERE order_id = $1", [orderId])).rows[0]?.override_reason);
     expect(reason).toMatch(/Rush for a regular client/);
   } finally {
