@@ -1,7 +1,7 @@
 import { clerk } from "@clerk/testing/playwright";
 import { expect, type Browser, type Locator, type Page } from "@playwright/test";
 
-import { slotFile } from "./files";
+import { png, slotFile } from "./files";
 import { PERSONAS, type Persona } from "./state";
 
 /** A fresh browser context signed in as one persona (Clerk sign-in token). */
@@ -141,7 +141,29 @@ export async function doDesignerVersion(page: Page, orderId: string) {
   // Choosing a file uploads it (Phase 13a): browser → storage → checked into the slot.
   for (const code of REQUIRED_SLOTS) {
     const input = page.getByLabel(`File for ${code}`, { exact: true });
-    await input.setInputFiles(await slotFile(code));
+    if (code === "RENDER") {
+      // The render is made from four views (owner, 8 Nov 2026): fill the four
+      // boxes, swap two by their move button, clear one and refill it, make it.
+      await page.getByRole("button", { name: "From 4 views" }).click();
+      const dialog = page.getByRole("dialog", { name: "Render from four views" });
+      const views = ["Front", "Side", "Top", "Perspective"];
+      for (const [i, view] of views.entries()) {
+        const chooser = page.waitForEvent("filechooser");
+        await dialog.getByRole("group", { name: `${view} view, empty` }).click();
+        await (await chooser).setFiles({ name: `${view}.png`, mimeType: "image/png", buffer: png([40 + i * 50, 120, 200 - i * 40], 48) });
+        await expect(dialog.getByRole("group", { name: `${view} view, filled` })).toBeVisible();
+      }
+      await dialog.getByRole("button", { name: "Move the Front view: then tap the box to swap with" }).click();
+      await dialog.getByRole("group", { name: "Top view, filled" }).click();
+      await dialog.getByRole("button", { name: "Remove the Side view" }).click();
+      const again = page.waitForEvent("filechooser");
+      await dialog.getByRole("group", { name: "Side view, empty" }).click();
+      await (await again).setFiles({ name: "side.png", mimeType: "image/png", buffer: png([200, 200, 60], 48) });
+      await dialog.getByRole("button", { name: "Make the render and upload" }).click();
+      await expect(dialog).toHaveCount(0);
+    } else {
+      await input.setInputFiles(await slotFile(code));
+    }
     const row = page.locator("li", { has: page.getByLabel(`File for ${code}`, { exact: true }) });
     await settled(page, `${code} uploaded`, (timeout) => expect(row.getByRole("button", { name: "Replace" })).toBeVisible({ timeout }));
   }
