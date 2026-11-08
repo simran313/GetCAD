@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import localFont from "next/font/local";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
@@ -30,11 +31,19 @@ const GeistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  // Absolute URLs for canonical and Open Graph tags resolve against the site.
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
     default: "The CAD Pillar",
     template: "%s | The CAD Pillar",
   },
-  description: "The operational infrastructure for jewelry CAD production.",
+  description: SITE_DESCRIPTION,
+  // Google Search Console's HTML-tag verification, when the owner sets the
+  // token (DNS verification needs nothing here).
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
   // Safari largely ignores the manifest and reads these instead, so an
   // installed iOS app takes its name and status-bar treatment from here.
   appleWebApp: {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
@@ -50,6 +51,10 @@ import { viewerZone } from "@/lib/time/zone";
  * visible_orders() — the same per-role, reference-only read the order lists
  * use — so it never shows anyone more than their own pages do.
  */
+// The product is never a search result (8 Nov 2026): a portal page that
+// somehow reaches a crawler says so itself, besides robots.txt and the 404.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>

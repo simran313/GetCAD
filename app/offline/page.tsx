@@ -12,7 +12,7 @@ import { Wordmark } from "@/components/wordmark";
  * Static on purpose: it has to be precacheable, which means no data fetching
  * and nothing role-dependent.
  */
-export const metadata = { title: "Offline" };
+export const metadata = { title: "Offline", robots: { index: false, follow: false } };
 
 export default function OfflinePage() {
   return (
