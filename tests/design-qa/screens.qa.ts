@@ -48,13 +48,25 @@ async function measureFit(page: Page, who: string, entry: string) {
         const d = document.documentElement;
         const over = d.scrollWidth - d.clientWidth;
         if (over <= 1) return null;
+        // The real culprit: past the right edge, not inside anything that
+        // clips it or is fixed, and whose parent is not itself past the edge.
+        const free = (el: Element): boolean => {
+          for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+            const cs = getComputedStyle(a);
+            if (cs.position === "fixed" || /(hidden|clip|auto|scroll)/.test(cs.overflowX)) return false;
+          }
+          return getComputedStyle(el).position !== "fixed";
+        };
+        const past = (el: Element) => el.getBoundingClientRect().right > d.clientWidth + 1;
         const wide = [...document.querySelectorAll("body *")]
-          .filter((el) => {
+          .filter((el) => el.getBoundingClientRect().width > 0 && past(el) && free(el) && !(el.parentElement && past(el.parentElement) && free(el.parentElement)))
+          .slice(0, 3)
+          .map((el) => {
             const b = el.getBoundingClientRect();
-            return b.width > 0 && b.right > d.clientWidth + 1 && getComputedStyle(el).position !== "fixed";
-          })
-          .slice(-1)
-          .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${String(el.className).split(" ").slice(0, 3).join(".")}`);
+            const cls = String(el.getAttribute("class") ?? "").split(" ").filter(Boolean).slice(0, 6).join(".");
+            const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
+            return `${el.tagName.toLowerCase()}.${cls} [w=${Math.round(b.width)} right=${Math.round(b.right)}] "${text}"`;
+          });
         return `${over}px wider · ${wide.join(", ")}`;
       })
       .catch(() => null);
