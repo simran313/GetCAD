@@ -25,7 +25,7 @@ const td = "py-[var(--s-2)] pr-3 tabular";
 
 export function Calculators({ initialGold }: { initialGold: string }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-2">
+    <div className="grid gap-6 xl:grid-cols-2 [&>*]:min-w-0">
       <GoldCard initial={initialGold} />
       <DiamondCard />
     </div>
@@ -57,7 +57,7 @@ function GoldCard({ initial }: { initial: string }) {
         {rows.length === 0 ? (
           <p className="text-[length:var(--fs-2)] text-muted-foreground">Enter the 18K cast weight to see every metal.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[22rem] text-[length:var(--fs-3)]">
               <caption className="sr-only">Cast weight per metal</caption>
               <thead className="border-b border-border">
@@ -140,7 +140,7 @@ function DiamondCard() {
         </Button>
 
         {totals.byShape.length > 0 && (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[20rem] text-[length:var(--fs-3)]">
               <caption className="sr-only">Total by shape</caption>
               <thead className="border-b border-border">
