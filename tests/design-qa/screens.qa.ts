@@ -30,6 +30,46 @@ const WIDTHS = [
   [1440, 900],
 ] as const;
 
+/**
+ * Every screen at every size (owner, 8 Nov 2026: "highly compatible with
+ * every screen size, gadget and phone"): besides the shots, each route is
+ * measured for sideways scrolling at a small phone through a large laptop.
+ * No screenshot at the extra widths; the page reflows in place.
+ */
+const FIT_WIDTHS = [320, 360, 390, 430, 768, 1024, 1280, 1440, 1920, 2560];
+const overflow = new Map<string, string[]>();
+
+async function measureFit(page: Page, who: string, entry: string) {
+  for (const width of FIT_WIDTHS) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(150);
+    const r = await page
+      .evaluate(() => {
+        const d = document.documentElement;
+        const over = d.scrollWidth - d.clientWidth;
+        if (over <= 1) return null;
+        const wide = [...document.querySelectorAll("body *")]
+          .filter((el) => {
+            const b = el.getBoundingClientRect();
+            return b.width > 0 && b.right > d.clientWidth + 1 && getComputedStyle(el).position !== "fixed";
+          })
+          .slice(-1)
+          .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${String(el.className).split(" ").slice(0, 3).join(".")}`);
+        return `${over}px wider · ${wide.join(", ")}`;
+      })
+      .catch(() => null);
+    if (r) overflow.set(who, [...(overflow.get(who) ?? []), `| ${entry} | ${width} | ${r} |`]);
+  }
+}
+
+function writeFitReport(who: string): number {
+  const rows = overflow.get(who) ?? [];
+  const file = join(OUT, who, "fit.md");
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, [`# fit: ${who} (sideways scrolling at ${FIT_WIDTHS.join(", ")} px)`, "", rows.length ? "| Route | Width | What |\n| --- | ---: | --- |" : "None.", ...rows, ""].join("\n"));
+  return rows.length;
+}
+
 const state = readState();
 const journey = existsSync(join(E2E_DIR, "journey.json"))
   ? (JSON.parse(readFileSync(join(E2E_DIR, "journey.json"), "utf8")) as { orderId: string }).orderId
@@ -124,6 +164,7 @@ async function shoot(page: Page, who: string, entry: string) {
     if (width === 390 && !open) await countWords(page, who, path);
     if (width !== 768) await audit(page, who, entry, width);
   }
+  await measureFit(page, who, entry);
 }
 
 async function as(browser: Browser, persona: Persona | null): Promise<Page> {
@@ -221,6 +262,9 @@ for (const [who, { persona, paths }] of Object.entries(ROUTES).filter(([w]) => O
     writeWordsReport(who);
     const serious = writeAxeReport(who);
     console.log(`axe ${who}: ${serious} serious or critical`);
+    const wide = writeFitReport(who);
+    console.log(`fit ${who}: ${wide} route/width pairs scroll sideways`);
     if (process.env.DESIGN_QA_AXE_STRICT === "1") expect(serious, `axe findings for ${who}: see design-qa/${STAGE}/${who}/axe.md`).toBe(0);
+    if (process.env.DESIGN_QA_AXE_STRICT === "1") expect(wide, `sideways scrolling for ${who}: see design-qa/${STAGE}/${who}/fit.md`).toBe(0);
   });
 }

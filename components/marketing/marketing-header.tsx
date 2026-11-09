@@ -23,7 +23,11 @@ export function MarketingHeader() {
   const phone = c("LIVE_CALL_PHONE");
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-6 px-4 sm:px-6 lg:px-8">
+      {/* Fits a 320px phone (8 Nov 2026: on 320-390px phones the buttons ran
+          past the edge and the page scrolled sideways): tighter gaps, the
+          WhatsApp icon from 380px (it is in the menu below that), and a
+          shorter Start label (HeaderAccount). */}
+      <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
         <Link href="/" aria-label="The CAD Pillar, home" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[17px] font-semibold tracking-[-0.02em]">
           <PillarMark className="h-[18px] w-[18px]" />
           The CAD Pillar
@@ -36,7 +40,7 @@ export function MarketingHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
-          <WhatsAppButton variant="icon" text="Hi, I'd like a quote for a jewelry CAD design." />
+          <WhatsAppButton variant="icon" text="Hi, I'd like a quote for a jewelry CAD design." className="hidden min-[380px]:inline-flex" />
           <HeaderAccount phone={phone} />
           <MobileMenu nav={NAV} phone={phone} />
         </div>

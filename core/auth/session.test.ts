@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isProtectedPath } from "./session";
+import { isProtectedPath, isPublicWebsitePage, PUBLIC_WEBSITE_PAGES } from "./session";
 
 describe("isProtectedPath", () => {
   it("protects the dashboard and everything under it", () => {
@@ -60,5 +60,20 @@ describe("Test AU8 — the payment webhook must stay reachable", () => {
   it("still protects the authenticated product", () => {
     expect(isProtectedPath("/orders")).toBe(true);
     expect(isProtectedPath("/dashboard")).toBe(true);
+  });
+});
+
+describe("isPublicWebsitePage (8 Nov 2026)", () => {
+  it("is the website's pages, with or without a trailing slash, and nothing private", () => {
+    expect(isPublicWebsitePage("/")).toBe(true);
+    expect(isPublicWebsitePage("/pricing")).toBe(true);
+    expect(isPublicWebsitePage("/jewelry-cad/")).toBe(true);
+    for (const p of ["/sign-in", "/sign-up", "/orders", "/orders/abc", "/admin", "/api/health", "/p/token", "/pricing/x", "/home"]) {
+      expect(isPublicWebsitePage(p), p).toBe(false);
+    }
+  });
+
+  it("never overlaps a protected path", () => {
+    for (const p of PUBLIC_WEBSITE_PAGES) expect(isProtectedPath(p), p).toBe(false);
   });
 });

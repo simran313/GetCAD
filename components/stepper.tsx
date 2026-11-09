@@ -64,7 +64,7 @@ export function Stepper({
   return (
     <ol
       className={cn(
-        "flex items-center gap-2 text-[length:var(--fs-3)] leading-[var(--lh-3)]",
+        "flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--fs-3)] leading-[var(--lh-3)]",
         className,
       )}
       aria-label="Progress"
