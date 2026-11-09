@@ -67,6 +67,8 @@ function writeFitReport(who: string): number {
   const file = join(OUT, who, "fit.md");
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, [`# fit: ${who} (sideways scrolling at ${FIT_WIDTHS.join(", ")} px)`, "", rows.length ? "| Route | Width | What |\n| --- | ---: | --- |" : "None.", ...rows, ""].join("\n"));
+  // In the log too: a failed run does not publish its reports.
+  for (const r of rows) console.log(`fit ${who} ${r}`);
   return rows.length;
 }
 
