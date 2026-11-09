@@ -41,7 +41,8 @@ export function HeaderAccount({ phone }: { phone: string | null }) {
         Talk to us live
       </a>
       <Link href="/sign-up" className={cn(buttonVariants({ size: "sm" }), "whitespace-nowrap")}>
-        <span className="sm:hidden">Start a design</span>
+        <span className="min-[430px]:hidden">Start</span>
+        <span className="hidden min-[430px]:inline sm:hidden">Start a design</span>
         <span className="hidden sm:inline">Start your first design</span>
       </Link>
     </>

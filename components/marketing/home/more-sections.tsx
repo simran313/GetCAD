@@ -10,9 +10,13 @@ import {
 import { CLAIMS, c } from "@/content/claims";
 import { cn } from "@/lib/utils";
 
-/* f. Why it costs less: an illustrative cost stack, no numbers ---------- */
+/* f. Why it costs less: an illustrative cost stack, no numbers ----------
+ * The two cards have the same rows, side by side (owner, 8 Nov 2026: on a
+ * large screen our card was half empty). What a traditional studio charges
+ * for and we do not is shown in our card crossed out, "not charged". */
 const TRADITIONAL = ["Design time", "Project manager", "Scheduling and chasing", "Status emails and calls", "Office and idle time"];
 const TCP = ["Expert design check", "Independent QC sign-off"];
+const NOT_CHARGED = ["Status emails and calls", "Office and idle time"];
 
 export function CostStack() {
   return (
@@ -36,10 +40,20 @@ export function CostStack() {
               </div>
             ))}
             {ours && (
-              <div className="flex h-11 items-center rounded-[var(--r-sm)] border border-dashed border-border px-3 text-[14px] text-muted-foreground">
+              <div className="flex min-h-11 items-center rounded-[var(--r-sm)] border border-dashed border-border px-3 py-1.5 text-[14px] text-muted-foreground">
                 Modelling, intake, routing, tracking: AI
               </div>
             )}
+            {ours &&
+              NOT_CHARGED.map((r) => (
+                <div
+                  key={r}
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-[var(--r-sm)] border border-dashed border-border px-3 py-1.5 text-[14px] text-muted-foreground"
+                >
+                  <span className="line-through decoration-1">{r}</span>
+                  <span className="shrink-0 text-[13px]">Not charged</span>
+                </div>
+              ))}
           </div>
         </div>
       ))}

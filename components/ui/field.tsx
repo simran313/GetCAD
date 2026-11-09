@@ -23,7 +23,8 @@ export function Field({
 }) {
   const describedBy = htmlFor ? `${htmlFor}-note` : undefined;
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
+    // min-w-0: a field in a grid column may be narrower than an input's default width (8 Nov 2026).
+    <div className={cn("flex min-w-0 flex-col gap-2", className)}>
       <label htmlFor={htmlFor} className="text-[length:var(--fs-2)] font-medium leading-[var(--lh-2)]">
         {label}
         {optional && <span className="ml-1.5 font-normal text-muted-foreground">optional</span>}

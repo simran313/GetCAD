@@ -138,21 +138,23 @@ export async function MessagesView({
       <div className={cn(open && "hidden md:block")}>
         <PageHeader eyebrow={copy.eyebrow} title="Messages" description={copy.description} />
       </div>
-      <div className="grid gap-6 md:grid-cols-[340px_1fr]">
-        <div className={cn("min-w-0 self-start md:sticky md:top-4 md:max-h-[calc(100dvh-7rem)] md:overflow-y-auto md:pr-1", open && "hidden md:block")}>
+      {/* Side by side from 1024px; a tablet shows the list or the conversation, like a phone
+          (8 Nov 2026: at 768px the two columns did not fit beside the sidebar). */}
+      <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+        <div className={cn("min-w-0 self-start lg:sticky lg:top-4 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto lg:pr-1", open && "hidden lg:block")}>
           <ConversationList items={toItems(conversations, role, tz)} activeId={open?.orderId ?? null} team={copy.team} />
           {/* The open conversation refreshes itself (AutoRefresh); the list follows every thread. */}
           <InboxLive />
         </div>
 
-        <div className={cn("space-y-4", !open && "hidden md:block")}>
+        <div className={cn("min-w-0 space-y-4", !open && "hidden lg:block")}>
           {open ? (
             <>
               <ChatScreen key={open.orderId} open={open} call={call} startOn={startOn} />
               <AutoRefresh orderId={open.orderId} stamp={open.stamp} seconds={2} threads={open.threads.map((t) => t.id)} />
             </>
           ) : (
-            <Card className="hidden md:block">
+            <Card className="hidden lg:block">
               <EmptyState icon={<MessageSquare />} title="Choose a conversation" description="Pick an order on the left to read and reply." />
             </Card>
           )}

@@ -54,7 +54,9 @@ export function ResponsiveDataList<T>({
   const by = (place: Column<T>["card"]) => columns.filter((c) => (c.card ?? "meta") === place);
   return (
     <>
-      <div className="hidden overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] md:block">
+      {/* relative: screen-reader text in a header cell is absolutely positioned; without a
+          positioned box here it escaped the clip and widened the page (8 Nov 2026). */}
+      <div className="relative hidden overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] md:block">
         <table className="w-full border-collapse text-left">
           {caption && <caption className="sr-only">{caption}</caption>}
           <thead>

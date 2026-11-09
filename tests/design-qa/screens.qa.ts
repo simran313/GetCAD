@@ -30,6 +30,60 @@ const WIDTHS = [
   [1440, 900],
 ] as const;
 
+/**
+ * Every screen at every size (owner, 8 Nov 2026: "highly compatible with
+ * every screen size, gadget and phone"): besides the shots, each route is
+ * measured for sideways scrolling at a small phone through a large laptop.
+ * No screenshot at the extra widths; the page reflows in place.
+ */
+const FIT_WIDTHS = [320, 360, 390, 430, 768, 1024, 1280, 1440, 1920, 2560];
+const overflow = new Map<string, string[]>();
+
+async function measureFit(page: Page, who: string, entry: string) {
+  for (const width of FIT_WIDTHS) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(150);
+    const r = await page
+      .evaluate(() => {
+        const d = document.documentElement;
+        const over = d.scrollWidth - d.clientWidth;
+        if (over <= 1) return null;
+        // The real culprit: past the right edge, not inside anything that
+        // clips it or is fixed, and whose parent is not itself past the edge.
+        const free = (el: Element): boolean => {
+          for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+            const cs = getComputedStyle(a);
+            if (cs.position === "fixed" || /(hidden|clip|auto|scroll)/.test(cs.overflowX)) return false;
+          }
+          return getComputedStyle(el).position !== "fixed";
+        };
+        const past = (el: Element) => el.getBoundingClientRect().right > d.clientWidth + 1;
+        const wide = [...document.querySelectorAll("body *")]
+          .filter((el) => el.getBoundingClientRect().width > 0 && past(el) && free(el) && !(el.parentElement && past(el.parentElement) && free(el.parentElement)))
+          .slice(0, 3)
+          .map((el) => {
+            const b = el.getBoundingClientRect();
+            const cls = String(el.getAttribute("class") ?? "").split(" ").filter(Boolean).slice(0, 6).join(".");
+            const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
+            return `${el.tagName.toLowerCase()}.${cls} [w=${Math.round(b.width)} right=${Math.round(b.right)}] "${text}"`;
+          });
+        return `${over}px wider · ${wide.join(", ")}`;
+      })
+      .catch(() => null);
+    if (r) overflow.set(who, [...(overflow.get(who) ?? []), `| ${entry} | ${width} | ${r} |`]);
+  }
+}
+
+function writeFitReport(who: string): number {
+  const rows = overflow.get(who) ?? [];
+  const file = join(OUT, who, "fit.md");
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, [`# fit: ${who} (sideways scrolling at ${FIT_WIDTHS.join(", ")} px)`, "", rows.length ? "| Route | Width | What |\n| --- | ---: | --- |" : "None.", ...rows, ""].join("\n"));
+  // In the log too: a failed run does not publish its reports.
+  for (const r of rows) console.log(`fit ${who} ${r}`);
+  return rows.length;
+}
+
 const state = readState();
 const journey = existsSync(join(E2E_DIR, "journey.json"))
   ? (JSON.parse(readFileSync(join(E2E_DIR, "journey.json"), "utf8")) as { orderId: string }).orderId
@@ -77,6 +131,7 @@ async function audit(page: Page, who: string, path: string, width: number) {
   const list = findings.get(who) ?? [];
   for (const v of serious) {
     list.push({ path, width, rule: v.id, impact: v.impact ?? "", help: v.help, targets: v.nodes.slice(0, 5).map((n) => n.target.join(" ")) });
+    console.log(`axe ${who} ${path} @${width}: ${v.id} (${v.impact}) ${v.nodes.slice(0, 2).map((n) => n.target.join(" ")).join(", ")}`);
   }
   findings.set(who, list);
   if (serious.length) console.log(`axe ${who} ${path} @${width}: ${serious.map((v) => `${v.id}×${v.nodes.length}`).join(", ")}`);
@@ -124,6 +179,7 @@ async function shoot(page: Page, who: string, entry: string) {
     if (width === 390 && !open) await countWords(page, who, path);
     if (width !== 768) await audit(page, who, entry, width);
   }
+  await measureFit(page, who, entry);
 }
 
 async function as(browser: Browser, persona: Persona | null): Promise<Page> {
@@ -221,6 +277,9 @@ for (const [who, { persona, paths }] of Object.entries(ROUTES).filter(([w]) => O
     writeWordsReport(who);
     const serious = writeAxeReport(who);
     console.log(`axe ${who}: ${serious} serious or critical`);
+    const wide = writeFitReport(who);
+    console.log(`fit ${who}: ${wide} route/width pairs scroll sideways`);
     if (process.env.DESIGN_QA_AXE_STRICT === "1") expect(serious, `axe findings for ${who}: see design-qa/${STAGE}/${who}/axe.md`).toBe(0);
+    if (process.env.DESIGN_QA_AXE_STRICT === "1") expect(wide, `sideways scrolling for ${who}: see design-qa/${STAGE}/${who}/fit.md`).toBe(0);
   });
 }

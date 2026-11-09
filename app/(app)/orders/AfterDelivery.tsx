@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusTag } from "@/components/ui/status-tag";
 import { CopyField } from "@/components/preview/copy-field";
 import { shortDate } from "@/lib/client/orders";
+import { cn } from "@/lib/utils";
 
 import { createPreviewLinkAction, updatePreviewLinkAction } from "./previewActions";
 import { viewerZone } from "@/lib/time/zone";
@@ -170,7 +171,7 @@ export async function ClaimsCard({
           </div>
         ))}
         {window?.open && (
-          <Link href={`/orders/${orderId}/claim`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <Link href={`/orders/${orderId}/claim`} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-auto min-h-[var(--ctl-sm)] whitespace-normal py-1.5 text-left")}>
             A file broke its spec sheet? Open a claim
           </Link>
         )}

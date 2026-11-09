@@ -20,7 +20,16 @@ export default async function SecurityPage() {
         ← Account
       </Link>
       <PageHeader title="Sign-in and security" description="Email, password, two-step sign-in and the devices you are signed in on." />
-      <UserProfile routing="hash" appearance={CLERK_APPEARANCE} />
+      {/* Clerk's card has its own width; held to the page's (8 Nov 2026: 240px too wide at 768px). */}
+      <div className="relative max-w-full overflow-x-auto">
+        <UserProfile
+          routing="hash"
+          appearance={{
+            ...CLERK_APPEARANCE,
+            elements: { ...CLERK_APPEARANCE.elements, rootBox: "w-full max-w-full", cardBox: "w-full max-w-full" },
+          }}
+        />
+      </div>
     </Page>
   );
 }

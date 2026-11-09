@@ -203,7 +203,7 @@ export function ChatScreen({
       </section>
 
       {details && !designer && (
-        <aside aria-label="Order details" className="hidden w-72 shrink-0 space-y-4 self-start rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)] md:block">
+        <aside aria-label="Order details" className="hidden w-72 shrink-0 space-y-4 self-start rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)] xl:block">
           <div>
             <p className="font-semibold">{open.title}</p>
             <p className="mt-1 flex items-center gap-2 text-[length:var(--fs-2)] text-muted-foreground">

@@ -51,7 +51,8 @@ export function PipelineStrip({ stages, active }: { stages: Stage[]; active?: st
 
 function PipelineTable({ stages, active }: { stages: Stage[]; active?: string | null }) {
   return (
-    <nav aria-label="Pipeline stages" className="hidden md:block">
+    // Scrolls inside itself on a tablet (8 Nov 2026: the strip pushed the page 642px wider at 768px).
+    <nav aria-label="Pipeline stages" className="hidden overflow-x-auto rounded-[var(--r-lg)] md:block">
       <ol className="flex min-w-max lg:min-w-0 divide-x divide-border overflow-hidden rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)]">
         {stages.map((s) => {
           const on = s.key === active;
