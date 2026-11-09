@@ -131,6 +131,7 @@ async function audit(page: Page, who: string, path: string, width: number) {
   const list = findings.get(who) ?? [];
   for (const v of serious) {
     list.push({ path, width, rule: v.id, impact: v.impact ?? "", help: v.help, targets: v.nodes.slice(0, 5).map((n) => n.target.join(" ")) });
+    console.log(`axe ${who} ${path} @${width}: ${v.id} (${v.impact}) ${v.nodes.slice(0, 2).map((n) => n.target.join(" ")).join(", ")}`);
   }
   findings.set(who, list);
   if (serious.length) console.log(`axe ${who} ${path} @${width}: ${serious.map((v) => `${v.id}×${v.nodes.length}`).join(", ")}`);
