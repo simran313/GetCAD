@@ -12,7 +12,7 @@ Work top to bottom. Most days it takes 15–20 minutes. The live-support hours a
 | 4 | **Queue** → **Ready to assign** | Rows saying "Paid · choose a pod" or "Paid · confirm the order…" | **Choose** the pod, then **Confirm** ([pod](#choose-pod), [confirm](#confirm)) |
 | 5 | **Queue** → **Ready to assign** | Rows saying "Paid and confirmed · assign a designer" whose clock is running down | Check the pod lead is on it (**Team board** via the order's pod). Assign yourself only as an exception ([how](#admin-assign)) |
 | 6 | **Queue** → **With designer** and **In QC** counters | Jobs stuck for hours; the **First look** column turning red | Open the order; message the pod lead in the designer conversation |
-| 7 | **Messages** → **Needs reply** | Clients waiting on the team, especially on orders with no pod yet | Reply in the **Client ↔ Team** tab ([how](#messages-admin)) |
+| 7 | **Messages** → **Needs reply** | Clients waiting on the team, especially on orders with no pod yet | Reply in the **Client** tab ([how](#messages-admin)) |
 | 8 | **Queue** → **Ready to deliver** and **Delivered** | Approved orders not yet delivered; delivered orders not closed | **Deliver**, then **Close** ([how](#deliver-close)) |
 | 9 | **Applications** and **Leads** | New designer applications and contact messages | Accept / Reject; **Mark handled** |
 | 10 | **Designers** | Anyone **Waiting to sign in**, **Not in a pod**, or with **No bank details** | Chase them; place them in a pod ([how](#add-designers)) |
@@ -97,7 +97,7 @@ The team's order page always has the same shape:
 
 1. **Next step** (top). The status pill, one sentence saying where the order stands, the first-look line, and the **one action** the order needs now. Every other action your role may take sits under **Other actions ›**: click it to expand.
 2. **Brief.** The client's answers. **Open** shows the full brief with photos.
-3. **Conversations.** One card with a tab for **Client ↔ Team** and a tab for **Team ↔ Designer**.
+3. **Conversations.** One card with a **Client** tab and a **Designer** tab ("The designer never sees this" / "The client never sees this").
 4. **Files**, **Revisions** and **Timeline** (every recorded event, oldest first).
 5. **Order** card (right; below on a phone):
    - **Pod**, **Designer**, **Client** (code), **Category** (with tier and hours);

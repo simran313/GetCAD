@@ -64,6 +64,8 @@ When a job is assigned you get a notification ("You have been assigned to an ord
 
 ![A job page: clock, references, brief, upload slots and checks](../assets/screens/designer-job.png)
 
+![A job on a phone: status, Pause, master instructions and references](../assets/screens/designer-phone-job.png){.phone}
+
 **Due to QC** is your deadline: the client's first-look time minus the time kept for QC.
 
 - An hour before it, you are notified "…due to QC within the hour".

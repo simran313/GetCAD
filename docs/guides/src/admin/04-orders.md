@@ -6,7 +6,7 @@ Each section below is one step of the order's life, in the order it happens. For
 
 There are two ways in:
 
-1. **The client orders in the portal.** They choose **New order** → **CAD design** (or **Render**), answer the three brief steps, and press **Send for a price**. The order arrives on the **Queue** as **Awaiting quote**. The client gets the "Order received" email. No one on the team is notified: the Queue is where you see it.
+1. **The client orders in the portal.** They choose **New order** → **CAD design** (or **Renders**), answer the three brief steps, and press **Send for a price**. The order arrives on the **Queue** as **Awaiting quote**. The client gets the "Order received" email. No one on the team is notified: the Queue is where you see it.
 2. **The team places it for them** ("on behalf"), when the request came by email, WhatsApp or phone. See the next section.
 
 A client who wrote to you before having an account can be created in the same form.
@@ -32,7 +32,7 @@ A client who wrote to you before having an account can be created in the same fo
 5. Under **3. Screenshots of the request**, click **Choose screenshots** and add at least one (up to 20).
    - The client and the team see them.
    - Designers never do.
-6. Tick **Email the client that the order is placed** if the client should get the "Order placed for you" email and in-app notice. Leave it unticked if you will message them yourself.
+6. **Email the client that the order is placed** is ticked by default: the client gets the "Order placed for you" email and an in-app notice. Untick it if you will message them yourself.
 7. Click **Place order**.
 
 > [!WARNING] Before you press Place order
@@ -53,15 +53,14 @@ Fill in the brief on the order (the team may write it for on-behalf orders), the
 
 **Who:** Sales or Admin. **When:** the order is **Submitted** (Queue: **Awaiting quote**, button **Price it**).
 
+| Category | Minutes | Tier | Default price (band) |
+| --- | --- | --- | --- |
+| A, B, C | 15, 30, 45 | Standard | $35 |
+| D, E, F | 60, 90, 120 | Standard | $85 |
+| G, H, I, J, K, L | 180–480 | Complex | from $120 (enter the price) |
+
 1. Open the order. Read the **Brief** card and any **Master instructions**.
-2. In the **Next step** card, choose the **Category** (A–L):
-
-   | Category | Minutes | Tier | Default price (band) |
-   | --- | --- | --- | --- |
-   | A, B, C | 15, 30, 45 | Standard | $35 |
-   | D, E, F | 60, 90, 120 | Standard | $85 |
-   | G, H, I, J, K, L | 180–480 | Complex | from $120 (enter the price) |
-
+2. In the **Next step** card, choose the **Category** (A–L) from the table above.
 3. Leave **Price $ (optional)** empty to use the band price. Or enter the price in US dollars, for example `35` or `120.50`.
 4. For G–L only, enter **Deadline h (G–L)**: the hours to the first look. It is required for complex orders.
 5. Click **Set quote**.
@@ -112,7 +111,6 @@ Fill in the brief on the order (the team may write it for on-behalf orders), the
 
 **Check:** the **First look** column on the Queue shows a countdown, and the order says "First look due by …".
 
-![A paid order waiting for confirmation](../assets/screens/admin-order-confirm.png)
 
 ## Assign a designer (admin exception) {#admin-assign}
 
@@ -216,7 +214,7 @@ The team has no "cancel" button for an unpaid order: the client cancels it.
 A client raises a problem from their order → **⋯** → **Raise a problem** (while the order is **In progress** or **Ready to preview**). The order becomes **Disputed** and freezes. The client sees "We're looking into a problem", and is emailed. The designer is notified. The Queue shows "N disputes open…" → **Show**, and the row's reason is the client's own words.
 
 1. Open the order. The **Dispute** panel shows "Dispute open" and the client's reason.
-2. Talk to the client in the **Client ↔ Team** conversation before deciding.
+2. Talk to the client in the **Client** conversation before deciding.
 3. Decide:
    - **Send back for rework** (Ops). The order returns to **In progress** with the same designer. The client and designer are told it was resolved.
    - **Refund the client…** (Finance). A confirmation asks you to type `refund`.

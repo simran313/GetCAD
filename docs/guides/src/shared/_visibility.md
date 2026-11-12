@@ -9,8 +9,8 @@
 | Brief, reference pictures and pins | Own orders | Assigned jobs | Pod orders | All |
 | Client's master instructions | Own (Account) | Assigned jobs | Pod orders | All; can edit for a client |
 | Screenshots of an emailed or WhatsApp request | Own orders | Never | Pod orders | All |
-| Client ↔ Team conversation | Own orders, as "Your team" | **Never** | Pod orders | All |
-| Team ↔ Designer conversation | **Never** | Own jobs | Pod orders | All |
+| Client conversation (Client tab) | Own orders, as "Your team" | **Never** | Pod orders | All |
+| Designer conversation (Designer tab) | **Never** | Own jobs | Pod orders | All |
 | Render views and technical sheet | Once QC passes (**Ready to preview** onwards) | Own jobs | Pod orders | All |
 | 3DM and STL files | From **approval** on; shown as **Locked** before | Own jobs | Pod orders | All |
 | QC certificate and weight sheet | After QC passes | No | Pod orders | All |

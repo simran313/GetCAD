@@ -38,7 +38,8 @@ const ALLOWED_TAGS = /&lt;(\/?)(kbd|br|span|sup|sub)((?:\s+[a-z-]+="[^"]*")*)\s*
 
 function inline(text) {
   const codes = [];
-  let s = text.replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(esc(c)) - 1}\u0000`);
+  // Code may wrap only after / or _, never inside a word.
+  let s = text.replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(esc(c).replace(/([/_])/g, "$1<wbr>")) - 1}\u0000`);
   s = esc(s).replace(ALLOWED_TAGS, (_, close, tag, attrs) => `<${close}${tag}${attrs.replace(/&quot;/g, '"')}>`);
   s = s
     .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1">')
@@ -274,7 +275,7 @@ li > ul, li > ol { margin: 3pt 0 4pt; }
 ol > li::marker { font-weight: 600; font-variant-numeric: tabular-nums; }
 a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--strong); text-underline-offset: 2px; }
 strong { font-weight: 600; }
-code { font: 500 0.88em var(--mono); background: var(--fill); border: 1px solid var(--hairline); border-radius: 4px; padding: 0 3px; word-break: break-word; }
+code { font: 500 0.88em var(--mono); background: var(--fill); border: 1px solid var(--hairline); border-radius: 4px; padding: 0 3px; }
 pre { background: var(--card); border: 1px solid var(--hairline); border-radius: 6px; padding: 8pt 10pt; overflow-x: auto; font-size: 8.5pt; break-inside: avoid; }
 pre code { background: none; border: 0; padding: 0; }
 kbd { font: 500 0.85em var(--mono); border: 1px solid var(--strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--paper); }
@@ -288,7 +289,8 @@ th { text-align: left; font-weight: 600; background: var(--fill); }
 th, td { border: 1px solid var(--hairline); padding: 4pt 6pt; vertical-align: top; }
 tr { break-inside: avoid; }
 table.wide { font-size: 8pt; }
-td code, th code { font-size: 0.85em; white-space: nowrap; word-break: normal; }
+td code, th code { font-size: 0.85em; word-break: normal; overflow-wrap: normal; }
+code { word-break: normal; }
 /* Callouts */
 .callout { border: 1px solid var(--hairline); border-left: 3px solid var(--ink); background: var(--card); border-radius: 6px; padding: 7pt 10pt 3pt; margin: 8pt 0 12pt; break-inside: avoid; }
 .callout-title { font-weight: 600; margin-bottom: 3pt; }
@@ -298,8 +300,8 @@ td code, th code { font-size: 0.85em; white-space: nowrap; word-break: normal; }
 blockquote { margin: 8pt 0; padding-left: 10pt; border-left: 2px solid var(--hairline); color: var(--muted); }
 /* Figures */
 figure { margin: 8pt 0 14pt; break-inside: avoid; }
-figure img { display: block; max-width: 100%; max-height: 150mm; margin: 0 auto; border: 1px solid var(--hairline); border-radius: 6px; }
-figure.narrow img { max-width: 70%; }
+figure img { display: block; max-width: 100%; max-height: 120mm; object-fit: contain; margin: 0 auto; border: 1px solid var(--hairline); border-radius: 6px; }
+figure.narrow img { max-width: 62%; max-height: 90mm; }
 figure.phone img { max-width: 45%; max-height: 135mm; }
 figure.half img { max-width: 58%; }
 figcaption { margin-top: 5pt; font-size: 8.5pt; color: var(--muted); text-align: center; }

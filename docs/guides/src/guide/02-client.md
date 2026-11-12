@@ -5,7 +5,7 @@ For jewelry businesses ordering CAD and renders. Everything here happens in your
 ## What do you need to do? {#client-tasks}
 
 - [Open your account for the first time](#client-first-login)
-- [Order a CAD design or a render](#client-order)
+- [Order a CAD design or renders](#client-order)
 - [Start again from a past order](#client-repeat)
 - [Pay for an order](#client-pay)
 - [Follow an order](#client-follow)
@@ -41,14 +41,20 @@ For jewelry businesses ordering CAD and renders. Everything here happens in your
 - your latest **Messages** and **Recent orders**;
 - **Your account**: **Wallet**, **Activity**, and any **Credit for your next order**.
 
+**The bar along the top** (clients only):
+
+- **Live support online / offline**: a green dot while a person is answering. Live support runs 3 PM to midnight India time; hover to see when it next opens, in your own time. The portal itself is open around the clock.
+- The **WhatsApp** icon opens a chat with the team.
+- **Talk to your team** calls the team by phone.
+
 ![A client's Home](../assets/screens/client-home.png)
 
-## Order a CAD design or a render {#client-order}
+## Order a CAD design or renders {#client-order}
 
 1. Click **New order** (on a phone, the raised **+**).
-2. Choose **CAD design** ("3DM and STL, ready to cast") or **Render** ("Photo-real images of your piece"). A draft opens, and it saves as you type. "Not saved" means it could not save, with the reason.
+2. Choose **CAD design** ("3DM and STL, ready to cast") or **Renders** ("Photo-real images of your piece"). A draft opens, and it saves as you type. "Not saved" means it could not save, with the reason.
 
-![New order: CAD design or Render, past orders and drafts](../assets/screens/client-new-order.png)
+![New order: CAD design or Renders, past orders and drafts](../assets/screens/client-new-order.png)
 
 **Step 1 · The piece**
 
@@ -107,7 +113,7 @@ When the price is ready you get a notification and a "Quote ready" email, and th
 1. Click **Pay & start**. The **Pay** page shows the price, **What you get**, and the first-look promise:
    - standard pieces: "First look within 6 hours of order confirmation, or the full price comes back to you as credit and we still finish it";
    - complex pieces: the hours agreed.
-2. Under **Pay by card, UPI or bank**, click the pay button and finish in the Razorpay checkout.
+2. Under **Pay by card, UPI or bank**, click **Pay $…** and finish in the Razorpay checkout.
 3. "Payment submitted" appears. The order shows **Paid** within seconds; refresh if not.
 
 **Paying by Wise, bank transfer or PayPal?** Click **Message the team** for the details. The team marks the order paid when the money arrives.
@@ -138,6 +144,8 @@ The order page shows:
 
 The first-look clock starts only once you have paid **and** the team has confirmed your brief.
 
+![The same order on a phone: the progress line, the status, and the cards](../assets/screens/client-phone-order.png){.phone}
+
 **Orders list** tabs: **Needs you**, **In progress** and the others. Each row shows the next step and when.
 
 ## Review the first look, ask for changes, approve {#client-review}
@@ -154,7 +162,6 @@ When QC passes the design you get a notification and a "First look ready" email.
    3. The page shows "1 of 2 rounds used". Two rounds are included within 14 days of the first look.
 4. After the included rounds are used, or the 14 days have passed: "Order a change … as a new order". It is priced separately.
 
-![Review renders: approve, or ask for changes](../assets/screens/client-review.png)
 
 > [!WARNING] Before you approve
 > Approval is final for this order. It unlocks the production files, and any later change is a new order.
@@ -181,6 +188,8 @@ After approval, the order page offers **Share a 3D preview**. It shows "Your log
 2. Click **Create link**.
 3. **Copy the link now**: "for safety it is shown only once".
 4. Each link lists when it was **Made**, its views, and "open until …". **+30 days** extends it; **Turn off** stops it.
+
+![A delivered order: Files ready, the spec guarantee with claims, and Share a 3D preview](../assets/screens/client-order-delivered.png)
 
 ## Message the team {#client-messages}
 

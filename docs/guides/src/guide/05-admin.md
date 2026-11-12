@@ -85,7 +85,7 @@ They can be assigned only once they have signed the agreement ([why](#exists-vs-
 **Access** → find the person.
 
 - **Role** saves at once. Choosing **Pod lead** creates their pod.
-- **⋯** → **Suspend…** → **Suspend account** freezes them. **Reinstate** undoes it.
+- **⋯** → **Suspend…** → type `suspend` → **Suspend account** freezes them. **Reinstate** undoes it.
 - The last active Ops account cannot be demoted.
 
 ## Exists versus can receive work {#exists-vs-eligible-short}

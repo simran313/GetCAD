@@ -25,9 +25,9 @@ A new client who signs up without being invited is asked once, on **Welcome**, f
 
 ### On a phone {#on-a-phone}
 
-The sidebar becomes a bar along the bottom of the screen. It shows your first two destinations, **Messages**, and **More**. Roles that create orders also get a raised **+** button. **More** opens every other destination, plus **Sign out**. The top bar shows the page name, the bell and the search button.
+The sidebar becomes a bar along the bottom of the screen. It shows your first two destinations, **Messages** (designers also get **Earnings**), and **More**. Roles that create orders also get a raised **+** button. **More** opens every other destination, plus **Sign out**. The top bar shows the page name, the bell and the search button.
 
-![On a phone, More opens every destination that is not on the bottom bar](../assets/screens/admin-phone-more.png){.phone}
+![A pod lead on a phone: the bottom bar with QC queue, Team board, the raised +, Messages and More](../assets/screens/pod-phone-qc.png){.phone}
 
 ### Your account page {#account-page}
 

@@ -38,7 +38,7 @@ If your sidebar is empty of designers, or the board says "No designers in your p
 - **Awaiting QC · oldest first**, with **Start review**;
 - **In your review**, with **Continue**.
 
-Each row shows the designer, the version, when it was submitted and how many lines you have marked. The top of the page shows your **QC earnings · month** and the **Next client first look**.
+Each row shows the designer, the version, when it was submitted and how many lines you have marked. The figures across the top count jobs **waiting for QC**, **in your review**, orders **paid, not yet assigned**, and your **QC earnings · month**.
 
 ![The QC queue](../assets/screens/pod-qc-queue.png)
 
@@ -206,10 +206,10 @@ To take one down: **Remove** → "Remove '…'? Designers in the pod will no lon
 
 Each order has two tabs:
 
-- **Client ↔ Team**: the designer never sees it, and to the client you are "Your team".
-- **Team ↔ Designer**: the client never sees it.
+- **Client**: the conversation with the client; the designer never sees it, and to the client you are "Your team".
+- **Designer**: the conversation with the designer; the client never sees it.
 
-You are notified of new messages from the client and from the designer. You can forward a message from one side to the other with **Forward this message** → **Forward to …**. Check that a client's message names nobody before forwarding it to the designer.
+You are notified of new messages from the client and from the designer. Under a message, **Forward to designer** (or **Forward to client**) passes it to the other side after a confirmation. Check that a client's message names nobody before forwarding it to the designer.
 
 ## Re-measure a spec claim {#pod-claims}
 

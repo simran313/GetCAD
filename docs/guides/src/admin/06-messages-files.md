@@ -6,8 +6,8 @@ Every order has two separate conversations. The database keeps them apart.
 
 | Tab on the order | Members | Never seen by | Notes |
 | --- | --- | --- | --- |
-| **Client ↔ Team** | The client; the pod lead; admins | **The designer** | To the client, every team message comes from **"Your team"**. Team members see each other as "Team · first name". Opens with the client's brief as the first message. |
-| **Team ↔ Designer** | The designer; the pod lead; admins | **The client** | The designer's copy of the brief never names the client. |
+| **Client** tab (client ↔ team) | The client; the pod lead; admins | **The designer** | To the client, every team message comes from **"Your team"**. Team members see each other as "Team · first name". Opens with the client's brief as the first message. |
+| **Designer** tab (team ↔ designer) | The designer; the pod lead; admins | **The client** | The designer's copy of the brief never names the client. |
 | **Old messages** | Admins only | Everyone else | Read-only messages from before the current chat (version 1). Shown only when they exist. |
 
 ## Messages {#messages-admin}
@@ -15,8 +15,8 @@ Every order has two separate conversations. The database keeps them apart.
 **Open:** sidebar → **Messages** (`/messages`). On an order, the conversations are also in the **Conversations** card.
 
 - **The list** shows every order's conversation, with the latest message and an unread count.
-  - Filters: **All**, **Unread**, **Needs reply** (the client or designer wrote last), **No messages**.
-  - **Search conversations** by order number or name.
+  - Filters, each with a count: **All**, **Unread**, **Needs reply** (the client or designer wrote last), **No messages**.
+  - **Search conversations** by order number or product.
 - **The conversation:**
   - **All conversations** (back, on a phone);
   - the order title;
@@ -26,7 +26,7 @@ Every order has two separate conversations. The database keeps them apart.
 
 **Writing a message**
 
-1. Choose the tab, **Client ↔ Team** or **Team ↔ Designer**.
+1. Choose the tab: **Client** (the conversation with the client) or **Designer** (the conversation with the designer).
 2. Type in **Message**.
    - **Attach** (paper clip) offers **Camera**, **Photos** or **File** (up to 25 MB each).
    - The microphone records a **voice message**.
@@ -44,11 +44,11 @@ Every order has two separate conversations. The database keeps them apart.
 
 **Forwarding between the client and the designer.** Only the team can forward.
 
-1. On a message, click **Forward this message**.
+1. Under the message, click **Forward to designer** (on a designer's message: **Forward to client**).
 2. Read the note:
    - to the designer: "The designer gets the text and pictures as 'Forwarded from the client'. Check it names nobody.";
    - to the client: "The client gets it from the team, never from the designer by name."
-3. Click **Forward to …**. Files are cleaned again on the way. File types the destination cannot take are left out, and the message says how many.
+3. Click **Forward to designer** (or **Forward to client**) to send it, or **Cancel**. Files are cleaned again on the way. File types the destination cannot take are left out, and the message says how many.
 
 > [!WARNING] Before you forward to a designer
 > Read the client's message first. If it contains their company name, an address or a phone number, do not forward it; retype the instruction instead. Anonymity is the product's promise.
@@ -85,7 +85,6 @@ Every order has two separate conversations. The database keeps them apart.
 
 **Open:** **Settings** → **Email previews** (`/admin/emails`).
 
-![Email previews: the delivery mode, every template, and a test send](../assets/screens/admin-emails.png)
 
 - **The banner** shows the mode:
   - "Live: emails go to their real recipients."

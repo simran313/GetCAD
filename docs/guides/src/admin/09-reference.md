@@ -27,8 +27,8 @@ The database enforces every row of this table. **Own** means the client's own or
 | Download deliverables | Own (renders from preview; 3DM and STL from approval) | Assigned | Pod | All |
 | Certificate, weight sheet | Own, after QC | — | Pod | All |
 | Summary sheet | Own, after approval | — | Pod | All |
-| **Messages:** Client ↔ Team | Own | — | Pod | All |
-| Team ↔ Designer | — | Assigned | Pod | All |
+| **Messages:** client conversation | Own | — | Pod | All |
+| designer conversation | — | Assigned | Pod | All |
 | Forward between the two | — | — | Pod | All |
 | **People:** add designers; bank details; documents | — | Own bank details | — | All |
 | Place designers in pods; create pods; set pod leads | — | — | — | All |
@@ -99,7 +99,7 @@ The name shows greyed out, marked "· not signed" on the Team board or "(not sig
 2. Is the client looking at the right order? Files are listed per order on **Files**.
 3. Did the designer upload into the right slot? The team's **Files** panel shows each version.
 4. A render-only order has no STL, 3DM, certificate or weight sheet.
-5. A file sent in the **Team ↔ Designer** conversation is never visible to the client. Forward it ([how](#messages-admin)).
+5. A file sent in the **Designer** conversation is never visible to the client. Forward it ([how](#messages-admin)).
 6. Still missing: technical support, with the order reference and the file name.
 
 ### "A notification did not arrive" {#ts-notification}

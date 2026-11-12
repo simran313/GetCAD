@@ -59,8 +59,8 @@ Tabs: **To review**, **Accepted**, **Rejected**, **All**.
    - An email that belongs to a client or team account is refused.
 3. **Tell each designer to sign in.**
 
-   > [!WARNING] No invitation email is sent
-   > Adding a designer creates the account silently. Send them the line from their page: "sign in at thecadpillar.com/sign-in with *their email*. A code arrives by email. Then sign the designer agreement."
+> [!WARNING] No invitation email is sent
+> Adding a designer creates the account silently. Send them the line from their page: "sign in at thecadpillar.com/sign-in with *their email*. A code arrives by email. Then sign the designer agreement."
 
 4. Click the designer's name to open their page, then:
    - [place them in a pod](#designer-pod);
@@ -182,8 +182,9 @@ A full Admin needs Sales, Ops and Finance. The Access screen sets only one, the 
 
 1. **Access** → the person's row → **⋯** (More) → **Suspend…**.
 2. Read the dialog: "Suspend, never delete: their orders, files and history stay as they are. You can reinstate them from the same menu."
-3. Click **Suspend account**.
-4. To undo it: **⋯** → **Reinstate**.
+3. Type `suspend` in **Type suspend to confirm**. The button stays disabled until you do.
+4. Click **Suspend account**.
+5. To undo it: **⋯** → **Reinstate**.
 
 ![The row menu: Copy account ID, Suspend…](../assets/screens/admin-access-row-menu.png){.narrow}
 
