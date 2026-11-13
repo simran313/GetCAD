@@ -55,6 +55,8 @@ password manager, never in the repo.
 - ☐ Clerk dashboard → create a **production instance** for the app.
 - ☐ Add the DNS records (CNAMEs) it gives you, at your registrar.
 - ☐ Note the **production** `pk_live_…`, `sk_live_…`, and Frontend API origin.
+- ☐ Existing accounts: copy them and move the database to the new ids with
+  [CLERK-PRODUCTION.md](./CLERK-PRODUCTION.md).
 - ☐ ⚠️ **Re-register it with Supabase**: Supabase → Authentication →
   Third-Party Auth → set the Clerk domain to the **production** Frontend API.
   🔎 If you skip this, every signed-in database read returns nothing — the
