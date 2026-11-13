@@ -72,6 +72,59 @@ export function isPublicWebsitePage(pathname: string): boolean {
   return (PUBLIC_WEBSITE_PAGES as readonly string[]).includes(path);
 }
 
+/**
+ * The first path segment of every route the app serves outside the public
+ * website: the product, sign-in, the API, preview links and the design
+ * preview. Requests under these always go through Clerk's middleware, as
+ * before. tests/config/route-inventory.test.ts walks app/ and fails if a
+ * route is added under a segment missing from this list.
+ */
+export const APP_ROUTE_SEGMENTS = [
+  "account",
+  "admin",
+  "dashboard",
+  "files",
+  "home",
+  "materials",
+  "messages",
+  "onboarding",
+  "orders",
+  "pod",
+  "qc",
+  "settings",
+  "tools",
+  "wallet",
+  "welcome",
+  "work",
+  "sign-in",
+  "sign-up",
+  "login",
+  "signup",
+  "api",
+  "trpc",
+  "p",
+  "design-preview",
+] as const;
+
+/**
+ * Whether a request can be served without Clerk's middleware (SEO audit,
+ * 12 Nov 2026). A page view (GET or HEAD) of a public website page, or of a
+ * path that is not a route at all, needs no session: the public pages never
+ * call auth(), and an unknown path renders the 404 page, which does not
+ * either. Before this, an unknown path went through Clerk, which on the
+ * development instance answered 307 to clerk.accounts.dev instead of 404;
+ * Search Console reported those as redirect errors. Anything under an app
+ * segment, and every form post, still goes through Clerk exactly as before.
+ * The same rule applies to every visitor; nothing depends on who asks.
+ */
+export function skipsClerk(method: string, pathname: string): boolean {
+  if (method !== "GET" && method !== "HEAD") return false;
+  if (isPublicWebsitePage(pathname)) return true;
+  const first = pathname.split("/").filter(Boolean)[0] ?? "";
+  if (first === "" || first.startsWith("_next")) return false;
+  return !(APP_ROUTE_SEGMENTS as readonly string[]).includes(first.toLowerCase());
+}
+
 /** True if `pathname` is behind auth. Matches a prefix exactly or as a segment. */
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(

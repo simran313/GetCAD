@@ -8,17 +8,20 @@ import { CostStack, SimplePricing, SwitchGrid, TeamStrip, WorkGallery } from "@/
 import { FinalCta, Hero, HowItWorks, ProofBar, Section } from "@/components/marketing/home/sections";
 import { StickyMobileCta } from "@/components/marketing/home/sticky-cta";
 import { c, showClaim } from "@/content/claims";
-import { jsonLdString, pageMetadata, siteJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageMetadata, siteJsonLd } from "@/lib/seo";
 
 // Brand first in the home title, so a search for "The CAD Pillar" or
 // "thecadpillar" finds the name where Google looks first (owner, 8 Nov 2026).
 // The page itself is unchanged.
-const home = pageMetadata(
+// The brand-first title stays as it is (8 Nov 2026, when Search Console was
+// set up); the description names the service and who it is for.
+export const metadata: Metadata = pageMetadata(
   "The CAD Pillar: jewelry CAD, factory-ready in hours",
-  "The CAD Pillar is the AI-native jewelry CAD studio. Our AI models every piece and senior designers check every file. First look within 6 hours, bulk orders included, or it's free. From $35 a design.",
+  "The CAD Pillar: jewelry CAD design services for US jewelers, brands and manufacturers. Castable 3DM and STL files, a first look in 6 hours, from $35 a design.",
   "/",
+  { absolute: true },
 );
-export const metadata: Metadata = { ...home, title: { absolute: "The CAD Pillar: jewelry CAD, factory-ready in hours" } };
 
 /** Home (redesign step 4): the conversion sequence a–l. */
 export default function HomePage() {
@@ -32,8 +35,8 @@ export default function HomePage() {
   ];
   return (
     <>
-      {/* WebSite + Organization (schema.org): the site's name for search; nothing visible. */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd()) }} />
+      {/* WebSite, Organization, Service and the questions below (schema.org): for search; nothing visible. */}
+      <JsonLd data={siteJsonLd(faq)} />
       <DraftClaimsBanner />
       <Hero />
       <ProofBar />

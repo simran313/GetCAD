@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 
 import { Ctas, FinalCta, Hero, Section } from "@/components/marketing/blocks";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
-  "Our guarantees",
-  "First look in 6 hours or it's free. Castable files, guaranteed to spec — fixed free and the CAD fee refunded if a file breaks its own spec sheet.",
+  "Our Jewelry CAD Guarantees",
+  "A first look within 6 hours or it's free, and castable jewelry CAD files guaranteed to spec: fixed free, CAD fee refunded, if a file breaks its own spec sheet.",
   "/guarantee",
 );
 
@@ -13,6 +14,7 @@ export const metadata: Metadata = pageMetadata(
 export default function GuaranteePage() {
   return (
     <>
+      <JsonLd data={pageJsonLd("/guarantee", "Guarantees")} />
       <Hero eyebrow="Guarantees" title="Two promises, in writing.">
         <Ctas />
       </Hero>

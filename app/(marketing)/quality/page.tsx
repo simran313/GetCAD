@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 
 import { CHECK_GROUPS } from "@/components/marketing/content";
 import { Ctas, FinalCta, Hero, Section } from "@/components/marketing/blocks";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
-  "Quality: checked twice before you see it",
-  "Two-stage QC on every design: the designer's check, then the QC manager's, who didn't make it.",
+  "Jewelry CAD Quality Control, Checked Twice",
+  "Two-stage QC on every jewelry CAD file: the designer's check, then a QC manager's, covering measurements, diamonds, setting, metal, open edges and the STL mesh.",
   "/quality",
 );
 
@@ -15,6 +16,7 @@ export default function QualityPage() {
   let n = 0;
   return (
     <>
+      <JsonLd data={pageJsonLd("/quality", "Quality")} />
       <Hero
         eyebrow="Quality"
         title="Checked twice before you see it."

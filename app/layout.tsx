@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import localFont from "next/font/local";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
@@ -39,6 +39,15 @@ export const metadata: Metadata = {
     template: "%s | The CAD Pillar",
   },
   description: SITE_DESCRIPTION,
+  // Sharing defaults for any page that sets none of its own; website pages
+  // set theirs through pageMetadata (lib/seo.ts).
+  openGraph: {
+    siteName: SITE_NAME,
+    type: "website",
+    locale: "en_US",
+    images: [OG_IMAGE],
+  },
+  twitter: { card: "summary_large_image", images: [OG_IMAGE.url] },
   // Google Search Console's HTML-tag verification, when the owner sets the
   // token (DNS verification needs nothing here).
   ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
