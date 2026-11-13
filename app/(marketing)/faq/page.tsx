@@ -3,13 +3,19 @@ import Link from "next/link";
 
 import { FAQ } from "@/components/marketing/content";
 import { Faq, FinalCta, Hero, Section } from "@/components/marketing/blocks";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = pageMetadata("FAQ", "Where we are, how fast it is, what you get and who owns it.", "/faq");
+export const metadata: Metadata = pageMetadata(
+  "Jewelry CAD Services FAQ",
+  "Answers for jewelers outsourcing CAD: turnaround, 3DM and STL files, design ownership and NDA, revisions, US-dollar pricing, and working from a sketch or photo.",
+  "/faq",
+);
 
 export default function FaqPage() {
   return (
     <>
+      <JsonLd data={pageJsonLd("/faq", "FAQ", { faq: FAQ })} />
       <Hero eyebrow="FAQ" title="Questions jewelers ask us." />
       <Section>
         <Faq items={FAQ} />

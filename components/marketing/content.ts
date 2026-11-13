@@ -57,13 +57,29 @@ export const FAQ: [string, string][] = [
   ],
   [
     "How fast is it really?",
-    "A first look within 6 hours of order confirmation, bulk orders included, or it's free. Our AI does the modelling; experts check every file, and 99% of first looks are right first time. Complex pieces get a firm deadline with the price.",
+    "A first look within 6 hours of order confirmation, bulk orders included, or it's free. Our AI does the modeling; experts check every file, and 99% of first looks are right first time. Complex pieces get a firm deadline with the price.",
   ],
   ["What files do I get?", "3DM and STL, 3 renders, a signed spec sheet, a weight sheet and a 3D preview link."],
   ["Who owns the design?", "You do, once paid. White-label, with an NDA by default."],
   ["Can you work from a photo or a sketch?", "Yes. Add size, metal and stones and we'll price it within the hour."],
   ["What if I need changes?", "Two revision rounds are included within 14 days."],
   ["Do you work with consumers?", "No. We work only with jewelry businesses."],
+  [
+    "Do you work with jewelers in the United States?",
+    "Yes. We work remotely with jewelry businesses across the United States, and in the UK, Australia and Canada. Prices are in US dollars, you brief and approve every design in the portal, and live support hours are shown in US Eastern time.",
+  ],
+  [
+    "What pieces can you model?",
+    "Rings, including engagement rings and bands, plus pendants, earrings, bracelets, bangles and necklaces, as CAD for casting or 3D printing. We also make photo-real renders of a piece.",
+  ],
+  [
+    "Can you be a white-label CAD partner for my store or factory?",
+    "Yes. Files carry your naming, never ours, and we work under NDA by default. Our designers never see who you or your customer are. Brands, retailers and manufacturers use us for overflow, rush weeks or every order, with a retainer for regular volume.",
+  ],
+  [
+    "What do you need from me to start?",
+    "A sketch, photo or reference image, plus the size, metal and stones. You add them in a short brief in the portal and get a fixed price within the hour, before you pay anything.",
+  ],
 ];
 
 /**

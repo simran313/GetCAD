@@ -6,11 +6,12 @@ import { SimplePricing } from "@/components/marketing/home/more-sections";
 import { SupportStatus } from "@/components/support/support-status";
 import { WhatsAppButton } from "@/components/support/whatsapp";
 import { c } from "@/content/claims";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
-  "Pricing",
-  "From $35 a design, with a fixed price before you pay. Retainers for jewelers with regular orders.",
+  "Jewelry CAD Pricing: From $35 a Design",
+  "Jewelry CAD pricing in US dollars: from $35 a design, a fixed price before you pay, two revision rounds included, and retainers for regular orders.",
   "/pricing",
 );
 
@@ -22,6 +23,7 @@ export const metadata: Metadata = pageMetadata(
 export default function PricingPage() {
   return (
     <>
+      <JsonLd data={pageJsonLd("/pricing", "Pricing", { service: true })} />
       <Hero eyebrow="Pricing" title={`From ${c("ENTRY_PRICE")} a design.`} sub="You get a fixed price for your piece within the hour and only pay when you accept it.">
         <Ctas />
       </Hero>

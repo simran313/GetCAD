@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 import { LegalPage } from "@/components/marketing/legal-page";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata(
   "Privacy policy",
@@ -64,11 +65,14 @@ const SECTIONS = [
 
 export default function PrivacyPage() {
   return (
-    <LegalPage
+    <>
+      <JsonLd data={pageJsonLd("/privacy", "Privacy policy")} />
+      <LegalPage
       title="Privacy policy"
       updated="October 2026"
       intro="What we collect, why, and how it is handled."
       sections={SECTIONS}
     />
+    </>
   );
 }

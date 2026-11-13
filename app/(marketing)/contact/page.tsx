@@ -5,14 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Eyebrow } from "@/components/marketing/blocks";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 import { submitLeadAction } from "./actions";
 
 export const metadata: Metadata = pageMetadata(
-  "Contact Sales",
-  "Get in touch — for jewelry businesses evaluating The CAD Pillar, or CAD designers with questions before applying.",
+  "Contact Sales: Jewelry CAD for Your Business | The CAD Pillar",
+  "Talk to The CAD Pillar about jewelry CAD design for your brand, store or factory: volumes, retainers and white-label work. Designers with questions are welcome.",
   "/contact",
+  { absolute: true },
 );
 
 const selectCls =
@@ -27,6 +29,7 @@ export default async function ContactPage({
 
   return (
     <section className="container max-w-xl py-16">
+      <JsonLd data={pageJsonLd("/contact", "Contact")} />
       <Eyebrow>Contact</Eyebrow>
       <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.25rem)] font-normal leading-[1.05]">Talk to us</h1>
       <p className="mt-4 text-sm text-muted-foreground">

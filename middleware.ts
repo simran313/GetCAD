@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
-import { encodeFirstTouch, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, firstTouchFrom, isProtectedPath, isPublicWebsitePage } from "@/core";
+import { encodeFirstTouch, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, firstTouchFrom, isProtectedPath, skipsClerk } from "@/core";
 
 /**
  * First touch (Phase 6): where a visitor first arrived from, kept once in our
@@ -54,7 +54,9 @@ export default function middleware(req: NextRequest, ev: NextFetchEvent) {
   // engines' renderers included, through a redirect to clerk.accounts.dev
   // and back before the page. Nothing on these pages reads the session on
   // the server; their form posts (POST) still go through Clerk below.
-  if ((req.method === "GET" || req.method === "HEAD") && isPublicWebsitePage(req.nextUrl.pathname)) {
+  // Public website pages and paths that are not routes (a 404) need no
+  // session; see skipsClerk in core/auth/session.ts.
+  if (skipsClerk(req.method, req.nextUrl.pathname)) {
     return firstTouch(req) ?? NextResponse.next();
   }
   return withClerk(req, ev);
