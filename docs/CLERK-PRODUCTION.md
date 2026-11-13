@@ -124,3 +124,19 @@ Keep that gap to the length of a deploy.
   `designers/<old id>/…`): the files stay where they are and the database
   rows still point at them. Only the folder name keeps the old id.
 - JSON payloads of sent emails and analytics events: historical records.
+
+## Done: 13 November 2026 (what happened, for next time)
+
+- 26 accounts moved (913 references); 5 automated test accounts left as
+  they were. Google sign-in set up with the company's own credentials.
+- The first remap version failed on Supabase (`session_replication_role`
+  needs a superuser); nothing changed. Fixed to pause triggers as the table
+  owner; the test now runs as a non-superuser owner.
+- **The window matters.** Between the remap (step 9) and the redeploy
+  (step 11), a designer with an open development session reached /welcome,
+  whose `ensure_self()` created an empty CLIENT account under their old id.
+  Found by `db/ops/clerk-switch-health.sql` (rows 4 and 8), removed with
+  `db/ops/clerk-duplicate-cleanup.sql` (dry run first; recorded in the audit
+  log as DUPLICATE_ACCOUNT_REMOVED). Next time: do steps 9 to 11 back to
+  back, and run the health check straight after.
+- Health check after the cleanup: all 10 rows as expected.
