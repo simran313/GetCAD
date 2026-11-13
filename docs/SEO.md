@@ -76,3 +76,54 @@ Clerk dashboard → create the Production instance for `thecadpillar.com` (DNS r
   - LinkedIn and Instagram company pages that link to https://thecadpillar.com.
   Add those profile URLs to `sameAs` in `lib/seo.ts` once they exist.
 - **Checking progress:** Search Console → Performance → Queries, filtered to "cad pillar".
+
+## US search optimization (12 Nov 2026)
+
+One PR, no page added, removed, renamed or moved (`tests/config/route-inventory.test.ts` pins the 12 website routes).
+
+### What was wrong, measured on the live site as Googlebot
+
+| Finding | Cause | Fix |
+| --- | --- | --- |
+| Unknown URLs answered **307 to clerk.accounts.dev** instead of 404 (Search Console "Redirect error") | Every path that was not a listed website page went through Clerk's middleware, and a development instance sends a first-time browser to its handshake | `skipsClerk` (`core/auth/session.ts`): a GET/HEAD of a website page **or of a path that is no route** skips Clerk and gets the real 404. Every app route, sign-in, the API and every form post still go through Clerk; the rule is the same for every visitor |
+| No page had an `og:image`; X cards were `summary` | No sharing image existed | `public/og/the-cad-pillar-jewelry-cad.png` (1200 × 630, `scripts/og-image.mjs`), on every page, `summary_large_image` |
+| Structured data on the home page only (WebSite, Organization) | — | Home: WebSite, Organization, **Service**, **FAQPage** (the questions shown). `/jewelry-cad` and `/pricing`: Service. `/faq`: FAQPage. Every other page: **BreadcrumbList**. One organization id throughout; no address, rating or review |
+| Generic titles ("Pricing", "FAQ", "How it works", "Contact Sales"), descriptions up to 210 characters | — | Each page's own title and a description under 160 characters, around its search intent (below) |
+| `/jewelry-cad` linked from nowhere (sitemap and ads only) | — | Footer → Product → **Jewelry CAD services**; the page links to how it works, pricing, quality and guarantees |
+| `/jewelry-cad` 272 words, no service detail | Ads landing page | One section: CAD from sketches and photos, 3DM + STL, rendering, white-label outsourcing, working from the US (USD, portal, ET hours). Every line is an existing promise |
+| 404 page offered only "Go to dashboard" (`<a><button>`, nested controls) | — | Links to the website and to the dashboard, an `<h1>`, `noindex` |
+
+### Keyword map (one cluster per page, no overlap)
+
+| Page | Title | Cluster |
+| --- | --- | --- |
+| `/` | The CAD Pillar: jewelry CAD, factory-ready in hours (unchanged) | Brand: thecadpillar, The CAD Pillar, The CAD Pillar jewelry CAD |
+| `/jewelry-cad` | Custom Jewelry CAD Design Services | Jewelry CAD services, custom jewelry CAD design, 3D modeling, rendering, white-label |
+| `/how-it-works` | How Jewelry CAD Outsourcing Works | Jewelry CAD outsourcing, CAD from sketches |
+| `/pricing` | Jewelry CAD Pricing: From $35 a Design | Jewelry CAD pricing, cost |
+| `/quality` | Jewelry CAD Quality Control, Checked Twice | Manufacturing-ready, castable CAD |
+| `/guarantee` | Our Jewelry CAD Guarantees | Turnaround and spec guarantee |
+| `/faq` | Jewelry CAD Services FAQ | Buyer questions: US clients, pieces, white-label, files, ownership |
+| `/contact` | Contact Sales: Jewelry CAD for Your Business | Sales enquiries, retainers |
+| `/apply-designer` | Apply as a Jewelry CAD Designer | Designer recruitment (kept apart from buyer intent) |
+
+Headings (`<h1>`), navigation labels and URLs are unchanged. No search-volume figures were available, so none are claimed.
+
+### Measured (production build, 4× CPU throttling, phone viewport, median of 3)
+
+| Page | LCP before → after | CLS | JS |
+| --- | --- | --- | --- |
+| `/` | 1056 → 1000 ms | 0 → 0 | 155 kB → 155 kB |
+| `/jewelry-cad` | 880 → 876 ms | 0 → 0 | 159 kB → 159 kB |
+| `/pricing` | 940 → 940 ms | 0 → 0 | 145 kB → 145 kB |
+
+No performance change was needed or made: same bundles, same static pages, no layout shift. Field data (Core Web Vitals report) comes from Search Console after release.
+
+### Owner steps after merging
+
+1. **Search Console → Pages → Redirect error → Validate fix.** Unknown URLs now answer 404; the public pages already answered 200.
+2. **URL inspection → Request indexing** for `/`, `/jewelry-cad`, `/how-it-works`, `/pricing`, `/faq` (titles and structured data changed).
+3. **Rich results test** (`https://search.google.com/test/rich-results`) on `/` and `/faq`: Organization, Breadcrumb and FAQ should parse without errors. FAQ rich snippets are shown by Google only for some sites; the data still describes the page.
+4. **Switch Clerk to production keys.** `/sign-in` and `/sign-up` still pass through Clerk's development handshake (307). They are noindex, so this is not a ranking issue, but a production instance removes the redirect for everyone.
+5. **Analytics:** the site has no GA4 or other third-party analytics; leads are attributed by the first-party first-touch cookie and the "How did you hear about us?" answer (Admin → Clients → Where clients come from). To add GA4, create a property, then decide on consent before adding the tag; it is a third-party script and costs page speed.
+6. Add LinkedIn / Instagram / Google Business Profile URLs to `sameAs` in `lib/seo.ts` once those profiles exist.

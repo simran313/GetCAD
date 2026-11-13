@@ -10,7 +10,7 @@ export type {
   VerifiedPrincipal,
   VerifyClerkTokenOptions,
 } from "./auth/verifyClerkToken";
-export { isProtectedPath, isPublicWebsitePage, PROTECTED_PREFIXES, PUBLIC_WEBSITE_PAGES } from "./auth/session";
+export { APP_ROUTE_SEGMENTS, isProtectedPath, isPublicWebsitePage, PROTECTED_PREFIXES, PUBLIC_WEBSITE_PAGES, skipsClerk } from "./auth/session";
 export { isStaffRole, STAFF_ROLES } from "./auth/roles";
 export type { StaffRole } from "./auth/roles";
 export { availableTransitions } from "./orders/availableTransitions";

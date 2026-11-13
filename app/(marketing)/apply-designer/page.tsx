@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 
 import { Stepper } from "@/components/stepper";
 import { Eyebrow } from "@/components/marketing/blocks";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 import { DesignerApplicationForm } from "./DesignerApplicationForm";
 
 export const metadata: Metadata = pageMetadata(
-  "Apply as a CAD Designer",
-  "A short screening application — not a full account. Tell us about your CAD experience and we'll follow up by email.",
+  "Apply as a Jewelry CAD Designer",
+  "Jewelry CAD designers: apply to work with The CAD Pillar. A short screening form, not an account; tell us about your CAD experience and we'll reply by email.",
   "/apply-designer",
 );
 
@@ -23,6 +24,7 @@ export default async function ApplyDesignerPage({
 
   return (
     <section className="container max-w-xl py-16">
+      <JsonLd data={pageJsonLd("/apply-designer", "Apply as a designer")} />
       <Eyebrow>For CAD designers</Eyebrow>
       <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,3.25rem)] font-normal leading-[1.05]">Apply as a designer</h1>
       <p className="mt-4 text-sm text-muted-foreground">

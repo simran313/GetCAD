@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 import { LegalPage } from "@/components/marketing/legal-page";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata("Terms of service", "The terms for ordering jewelry CAD from The CAD Pillar.", "/terms");
 
@@ -78,11 +79,14 @@ const SECTIONS = [
 
 export default function TermsPage() {
   return (
-    <LegalPage
+    <>
+      <JsonLd data={pageJsonLd("/terms", "Terms of service")} />
+      <LegalPage
       title="Terms of service"
       updated="October 2026"
       intro="The rules for ordering from The CAD Pillar, in plain language."
       sections={SECTIONS}
     />
+    </>
   );
 }
