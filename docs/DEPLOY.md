@@ -71,6 +71,11 @@ app. It will ask you to add DNS records (CNAMEs) at your domain registrar.
 Afterwards you will have a new publishable key (`pk_live_…`) and secret key
 (`sk_live_…`), and a new Frontend API origin.
 
+**Existing accounts:** a production instance has none of the development
+accounts, and gives each person a new user id. Follow
+[CLERK-PRODUCTION.md](./CLERK-PRODUCTION.md), which copies the accounts and
+moves the database to the new ids, before people sign in on production.
+
 **Then re-register it with Supabase**: Supabase Dashboard → Authentication →
 Third-Party Auth → update the Clerk domain to the production Frontend API. If
 you skip this, every signed-in database read returns nothing, because

@@ -47,3 +47,6 @@ npm-debug.log*
 /design-qa/
 /lighthouse-report/
 /.lighthouseci/
+
+# Clerk production switch (scripts/clerk-copy-users.mjs): holds emails, never commit
+.clerk-migration/
