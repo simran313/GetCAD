@@ -101,9 +101,11 @@ Keep that gap to the length of a deploy.
 
 ## If something is wrong
 
-- **Step 8 or 9 fails** with "permission denied to set parameter
-  session_replication_role": nothing was changed. Stop and tell me; the
-  remap needs a different way to pause triggers on your project.
+- **Step 8 or 9 fails:** nothing was changed (the whole run is one
+  statement). Send me the error text only. (13 Nov 2026: the first version
+  failed with "permission denied to set parameter session_replication_role";
+  it now pauses triggers as the table owner instead, and the test runs it as
+  a non-superuser owner, as Supabase does.)
 - **After step 9, you need to go back:** set the Vercel variables back to the
   development keys, set Supabase Third-Party Auth back to the development
   Clerk domain, redeploy, and run the remap again with each pair reversed

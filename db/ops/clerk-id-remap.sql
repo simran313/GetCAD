@@ -14,11 +14,15 @@
 --      users are dropped and listed (e.g. test accounts that never onboarded).
 --   2. Refuses, changing nothing, if a new id already has a users row, if an
 --      id appears twice, or if an id is not a Clerk user id.
---   3. Rewrites every text column in the public and app schemas whose value is
---      an old id (63 foreign keys to users, plus the plain text columns such as
---      messages.sender_id and orders.designer_id), with triggers and foreign-
---      key checks paused for this statement only, so no state-machine,
---      email, repricing or notification trigger fires on what is a pure rename.
+--   3. Pauses the app's own triggers on the public and app tables (the
+--      table owner may do this; no superuser setting is needed), so no
+--      state-machine, email, repricing or notification trigger fires on what
+--      is a pure rename. Foreign-key checks stay ON throughout: a new users
+--      row is added for each person, every text column whose value is an old
+--      id is pointed at the new one (63 foreign keys to users, plus plain
+--      columns such as messages.sender_id and orders.designer_id), then the
+--      old users row is removed. The same triggers are switched back on
+--      before the statement ends (and a failure undoes the pause too).
 --   4. Leaves audit.audit_log exactly as it is: each entry's hash covers its
 --      actor id, so rewriting it would break audit.verify_chain(). History
 --      keeps the old ids; the mapping itself is appended as one audit entry
@@ -45,6 +49,8 @@ DECLARE
   skipped    jsonb;
   bad        text;
   chain      jsonb;
+  paused     text[] := '{}';
+  trg        record;
 BEGIN
   CREATE TEMP TABLE clerk_id_map (old_id text NOT NULL, new_id text NOT NULL, email text) ON COMMIT DROP;
 
@@ -77,8 +83,28 @@ BEGIN
     RAISE EXCEPTION 'None of the old ids has an account here. Wrong list, or wrong database? Nothing was changed.';
   END IF;
 
-  -- ---- 2. rewrite, with triggers and FK checks paused for this transaction --
-  PERFORM set_config('session_replication_role', 'replica', true);
+  -- ---- 2. pause the app's own triggers (only those now enabled) ----------
+  SELECT string_agg(DISTINCT c.oid::regclass::text, ', ') INTO bad
+    FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_namespace ns ON ns.oid = c.relnamespace
+   WHERE NOT t.tgisinternal AND ns.nspname IN ('public', 'app') AND NOT pg_has_role(c.relowner, 'USAGE');
+  IF bad IS NOT NULL THEN
+    RAISE EXCEPTION 'You are signed in to the SQL Editor as a role that does not own: %. Nothing was changed.', bad;
+  END IF;
+  FOR trg IN
+    SELECT c.oid::regclass::text AS tbl, t.tgname
+      FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_namespace ns ON ns.oid = c.relnamespace
+     WHERE NOT t.tgisinternal AND t.tgenabled = 'O' AND ns.nspname IN ('public', 'app')
+     ORDER BY 1, 2
+  LOOP
+    EXECUTE format('ALTER TABLE %s DISABLE TRIGGER %I', trg.tbl, trg.tgname);
+    paused := paused || format('%s|%s', trg.tbl, trg.tgname);
+  END LOOP;
+
+  -- ---- 3. move: new users rows, every reference, then the old rows -------
+  INSERT INTO public.users
+  SELECT (jsonb_populate_record(NULL::public.users, to_jsonb(u) || jsonb_build_object('id', m.new_id))).*
+    FROM public.users u JOIN pg_temp.clerk_id_map m ON m.old_id = u.id;
+
   FOR r IN
     SELECT c.table_schema AS s, c.table_name AS t, c.column_name AS col
       FROM information_schema.columns c
@@ -87,6 +113,7 @@ BEGIN
        AND c.table_schema IN ('public', 'app')
        AND c.data_type IN ('text', 'character varying')
        AND c.is_generated = 'NEVER'   -- generated columns recompute themselves
+       AND NOT (c.table_schema = 'public' AND c.table_name = 'users' AND c.column_name = 'id')
      ORDER BY 1, 2, 3
   LOOP
     EXECUTE format('UPDATE %I.%I t SET %I = m.new_id FROM pg_temp.clerk_id_map m WHERE t.%I = m.old_id',
@@ -97,9 +124,18 @@ BEGIN
       total := total + n;
     END IF;
   END LOOP;
-  PERFORM set_config('session_replication_role', 'origin', true);
 
-  -- ---- 3. check -------------------------------------------------------------
+  DELETE FROM public.users u USING pg_temp.clerk_id_map m WHERE u.id = m.old_id;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  changed := changed || jsonb_build_object('users.id', n);
+  total := total + n;
+
+  -- ---- 4. switch the same triggers back on ---------------------------------
+  FOR trg IN SELECT split_part(x, '|', 1) AS tbl, split_part(x, '|', 2) AS tgname FROM unnest(paused) x LOOP
+    EXECUTE format('ALTER TABLE %s ENABLE TRIGGER %I', trg.tbl, trg.tgname);
+  END LOOP;
+
+  -- ---- 5. check -------------------------------------------------------------
   FOR r IN
     SELECT c.table_schema AS s, c.table_name AS t, c.column_name AS col
       FROM information_schema.columns c

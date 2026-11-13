@@ -14,6 +14,10 @@ import { connectFreshDb, givePayoutAccount } from "../helpers/db";
  * fires: no email, notification or state change), the audit chain stays valid
  * with history untouched, the moved person reads their own data under the new
  * id, a dry run changes nothing, and a bad list is refused whole.
+ *
+ * Run as Supabase's SQL Editor runs it: as a role that OWNS the tables but is
+ * NOT a superuser (13 Nov 2026: the first version paused triggers with
+ * session_replication_role, which Supabase's postgres role may not set).
  */
 let db: Client;
 
@@ -98,22 +102,58 @@ beforeAll(async () => {
   await asUser(designer, () => db.query("SELECT public.post_message($1,'Started on the shank')", [orderId]));
   await db.query("SELECT audit.log_event('FIXTURE', 'users', $1, $1, 'DESIGNER')", [designer]);
   auditBefore = await count("SELECT count(*) AS n FROM audit.audit_log");
+  await makeSupabaseLikeOwner();
+  triggersBefore = await triggerStates();
 });
 
 afterAll(async () => {
   await db?.end();
 });
 
+const OWNER = "remap_table_owner";
+
+/** A non-superuser that owns every public/app table, like Supabase's postgres role. */
+async function makeSupabaseLikeOwner(): Promise<void> {
+  await db.query(`DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${OWNER}') THEN
+      CREATE ROLE ${OWNER} NOSUPERUSER NOLOGIN BYPASSRLS;
+    END IF; END $$`);
+  const tables = await db.query(
+    "SELECT format('%I.%I', schemaname, tablename) AS t FROM pg_tables WHERE schemaname IN ('public','app')",
+  );
+  for (const { t } of tables.rows) await db.query(`ALTER TABLE ${t} OWNER TO ${OWNER}`);
+  await db.query(`GRANT USAGE ON SCHEMA public, app, audit TO ${OWNER}`);
+  await db.query(`GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public, app, audit TO ${OWNER}`);
+  await db.query(`GRANT SELECT ON audit.audit_log TO ${OWNER}`);
+}
+
 async function run(sql: string): Promise<void> {
+  await db.query(`SET ROLE ${OWNER}`);
   try {
     await db.query(sql);
   } catch (e) {
     await db.query("ROLLBACK").catch(() => undefined);
     throw e;
+  } finally {
+    await db.query("RESET ROLE");
   }
 }
 
+const triggerStates = async () =>
+  (
+    await db.query(
+      `SELECT c.oid::regclass::text || '.' || t.tgname AS k, t.tgenabled::text AS v
+         FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE NOT t.tgisinternal AND n.nspname IN ('public','app') ORDER BY 1`,
+    )
+  ).rows;
+let triggersBefore: { k: string; v: string }[];
+
 describe("clerk-id-remap.sql", () => {
+  it("runs as a table owner that may not set session_replication_role (as on Supabase)", async () => {
+    await expect(run("SELECT set_config('session_replication_role', 'replica', true)")).rejects.toThrow(/permission denied/);
+  });
+
   it("dry run: reports, changes nothing", async () => {
     const before = await cellsHolding([designer, lead]);
     await expect(run(script([[designer, newDesigner, "dana@x.example"], [lead, newLead, "lead@x.example"]], true))).rejects.toThrow(
@@ -122,6 +162,7 @@ describe("clerk-id-remap.sql", () => {
     expect(await cellsHolding([designer, lead])).toBe(before);
     expect(await cellsHolding([newDesigner, newLead])).toBe(0);
     expect(await count("SELECT count(*) AS n FROM audit.audit_log")).toBe(auditBefore);
+    expect(await triggerStates()).toEqual(triggersBefore);
   });
 
   it("refuses a list whose new id already has an account, changing nothing", async () => {
@@ -156,6 +197,9 @@ describe("clerk-id-remap.sql", () => {
     // Immutable rows move too (the chat must still show the designer's own messages as theirs).
     expect(await count("SELECT count(*) AS n FROM messages WHERE sender_id=$1", [newDesigner])).toBe(1);
     expect(await counts()).toEqual(before);
+    // Every trigger is back exactly as it was.
+    expect(await triggerStates()).toEqual(triggersBefore);
+    expect(triggersBefore.length).toBeGreaterThan(20);
 
     // History untouched; the move itself recorded; the chain still verifies.
     expect(await count("SELECT count(*) AS n FROM audit.audit_log WHERE action='FIXTURE' AND actor_id=$1", [designer])).toBe(1);
