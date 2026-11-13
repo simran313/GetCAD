@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 640" width="1040" height="640" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Order state machine">
+<title>Order state machine</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<polyline points="170,63 210,63" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="360,63 400,63" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="550,63 590,63" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="464.2" y="98" width="211.6" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="570" y="109" font-size="10" fill="#525252" text-anchor="middle">paid: signed webhook or admin record</text>
+<polyline points="740,63 780,63" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="855,86 855,170" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="872" y="142" width="66" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="905" y="153" font-size="10" fill="#525252" text-anchor="middle">Start work</text>
+<polyline points="855,216 855,300" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="780,323 740,323" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="590,323 550,323" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="553.8" y="315" width="32.4" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="570" y="326" font-size="10" fill="#525252" text-anchor="middle">pass</text>
+<polyline points="665,300 665,216" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="648.8" y="250" width="32.4" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="665" y="261" font-size="10" fill="#525252" text-anchor="middle">fail</text>
+<polyline points="740,193 780,193" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="400,323 360,323" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="210,323 170,323" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="95,346 95,430" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="95,476 105,560" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="95,86 95,173 210,173" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="285,86 285,150" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="475,86 475,173 360,173" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="780,193 740,193 740,453 550,453" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<polyline points="475,346 475,430" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<polyline points="550,453 560,453 560,240 830,240 855,216" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="604.2" y="232" width="71.6" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="640" y="243" font-size="10" fill="#525252" text-anchor="middle">ops resumes</text>
+<polyline points="475,476 475,493 780,493" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<polyline points="665,86 665,130 1005,130 1005,493 930,493" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="972" y="286" width="66" height="26" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="1005" y="297" font-size="10" fill="#525252" text-anchor="middle">refund</text>
+<text x="1005" y="309" font-size="10" fill="#525252" text-anchor="middle">while held</text>
+<rect x="20" y="40" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="95" y="60.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">DRAFT</text>
+<text x="95" y="74.5" font-size="10" fill="#525252" text-anchor="middle">client</text>
+<rect x="210" y="40" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="285" y="60.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">SUBMITTED</text>
+<text x="285" y="74.5" font-size="10" fill="#525252" text-anchor="middle">client</text>
+<rect x="400" y="40" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="475" y="60.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">QUOTED</text>
+<text x="475" y="74.5" font-size="10" fill="#525252" text-anchor="middle">sales / admin</text>
+<rect x="590" y="40" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="665" y="60.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">PAYMENT_HELD</text>
+<text x="665" y="74.5" font-size="10" fill="#525252" text-anchor="middle">paid · escrow</text>
+<rect x="780" y="40" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="855" y="60.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">ASSIGNED</text>
+<text x="855" y="74.5" font-size="10" fill="#525252" text-anchor="middle">pod lead / ops</text>
+<rect x="780" y="170" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="855" y="190.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">IN_PROGRESS</text>
+<text x="855" y="204.5" font-size="10" fill="#525252" text-anchor="middle">designer</text>
+<rect x="780" y="300" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="855" y="320.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">DESIGNER_SUBMITTED</text>
+<text x="855" y="334.5" font-size="10" fill="#525252" text-anchor="middle">designer</text>
+<rect x="590" y="300" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="665" y="320.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">QC_REVIEW</text>
+<text x="665" y="334.5" font-size="10" fill="#525252" text-anchor="middle">ops</text>
+<rect x="590" y="170" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="665" y="190.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">REVISION_REQUESTED</text>
+<text x="665" y="204.5" font-size="10" fill="#525252" text-anchor="middle">QC sends back</text>
+<rect x="400" y="300" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="475" y="320.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">CLIENT_PREVIEW</text>
+<text x="475" y="334.5" font-size="10" fill="#525252" text-anchor="middle">QC passed</text>
+<rect x="210" y="300" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="285" y="320.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">APPROVED</text>
+<text x="285" y="334.5" font-size="10" fill="#525252" text-anchor="middle">client</text>
+<rect x="20" y="300" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="95" y="320.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">DELIVERED</text>
+<text x="95" y="334.5" font-size="10" fill="#525252" text-anchor="middle">ops</text>
+<rect x="20" y="430" width="150" height="46" rx="23" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="95" y="450.5" font-size="11.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">CLOSED</text>
+<text x="95" y="464.5" font-size="10" fill="#525252" text-anchor="middle">client or ops</text>
+<rect x="20" y="560" width="170" height="46" rx="23" fill="#0A0A0A" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="105" y="580.5" font-size="11.5" font-weight="600" fill="#FFFFFF" text-anchor="middle">PAYOUT_RELEASED</text>
+<text x="105" y="594.5" font-size="10" fill="#D4D4D4" text-anchor="middle">finance</text>
+<rect x="210" y="150" width="150" height="46" rx="23" fill="#FDF2F2" stroke="#9B2C2C" stroke-width="1.4" />
+<text x="285" y="170.5" font-size="11.5" font-weight="600" fill="#7F1D1D" text-anchor="middle">CANCELLED</text>
+<text x="285" y="184.5" font-size="10" fill="#525252" text-anchor="middle">client, before paying</text>
+<rect x="400" y="430" width="150" height="46" rx="23" fill="#FDF2F2" stroke="#9B2C2C" stroke-width="1.4" />
+<text x="475" y="450.5" font-size="11.5" font-weight="600" fill="#7F1D1D" text-anchor="middle">DISPUTED</text>
+<text x="475" y="464.5" font-size="10" fill="#525252" text-anchor="middle">client, with a reason</text>
+<rect x="780" y="470" width="150" height="46" rx="23" fill="#FDF2F2" stroke="#9B2C2C" stroke-width="1.4" />
+<text x="855" y="490.5" font-size="11.5" font-weight="600" fill="#7F1D1D" text-anchor="middle">REFUNDED</text>
+<text x="855" y="504.5" font-size="10" fill="#525252" text-anchor="middle">finance</text>
+<text x="1028" y="630" font-size="9.5" fill="#A3A3A3" text-anchor="end">Who moves each step is enforced by public.order_transitions (from, to, role) and the transition functions</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 420" width="1040" height="420" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="File pipeline and IP protection">
+<title>File pipeline and IP protection</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<polyline points="170,102 210,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="380,102 420,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="630,102 670,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="840,102 880,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="950,134 950,190" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="170,312 210,312" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="420,312 460,312" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="415.4" y="304" width="49.199999999999996" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="440" y="315" font-size="10" fill="#525252" text-anchor="middle">granted</text>
+<polyline points="555,280 555,230 755,230 755,134" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="315,354 315,380 765,380 765,344" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="20" y="70" width="150" height="64" rx="18" fill="#F5F5F5" stroke="#737373" stroke-width="1.4" />
+<text x="95" y="99.5" font-size="12.5" font-weight="600" fill="#171717" text-anchor="middle">Designer / client</text>
+<text x="95" y="113.5" font-size="10" fill="#525252" text-anchor="middle">chooses a file</text>
+<rect x="210" y="70" width="170" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="295" y="93.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Signed upload URL</text>
+<text x="295" y="107.5" font-size="10" fill="#525252" text-anchor="middle">per slot, per order</text>
+<text x="295" y="119.5" font-size="10" fill="#525252" text-anchor="middle">≤ 50 MB</text>
+<rect x="420" y="50" width="210" height="104" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="525" y="81.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Sanitization gate</text>
+<text x="525" y="95.5" font-size="10" fill="#525252" text-anchor="middle">extension + magic bytes</text>
+<text x="525" y="107.5" font-size="10" fill="#525252" text-anchor="middle">metadata stripped (EXIF, XMP)</text>
+<text x="525" y="119.5" font-size="10" fill="#525252" text-anchor="middle">3DM blocks exploded · PDF cleaned</text>
+<text x="525" y="131.5" font-size="10" fill="#525252" text-anchor="middle">auto-named ORDER_SLOT_vN</text>
+<rect x="670" y="70" width="170" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="670" y1="77" x2="840" y2="77" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="755" y="99.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">order-files bucket</text>
+<text x="755" y="113.5" font-size="10" fill="#525252" text-anchor="middle">private</text>
+<rect x="880" y="70" width="140" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="880" y1="77" x2="1020" y2="77" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="950" y="99.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">file_versions</text>
+<text x="950" y="113.5" font-size="10" fill="#525252" text-anchor="middle">versioned · audited</text>
+<rect x="880" y="190" width="140" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="880" y1="197" x2="1020" y2="197" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="950" y="213.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">SHA-256 fingerprint</text>
+<text x="950" y="227.5" font-size="10" fill="#525252" text-anchor="middle">delivered = archived</text>
+<text x="950" y="239.5" font-size="10" fill="#525252" text-anchor="middle">read-only</text>
+<rect x="20" y="280" width="150" height="64" rx="18" fill="#F5F5F5" stroke="#737373" stroke-width="1.4" />
+<text x="95" y="309.5" font-size="12.5" font-weight="600" fill="#171717" text-anchor="middle">Download request</text>
+<text x="95" y="323.5" font-size="10" fill="#525252" text-anchor="middle">/api/files/…</text>
+<rect x="210" y="270" width="210" height="84" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="315" y="291.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Download gate</text>
+<text x="315" y="305.5" font-size="10" fill="#525252" text-anchor="middle">Clerk auth() → RLS</text>
+<text x="315" y="317.5" font-size="10" fill="#525252" text-anchor="middle">visible_orders() + role</text>
+<text x="315" y="329.5" font-size="10" fill="#525252" text-anchor="middle">state (e.g. client only after</text>
+<text x="315" y="341.5" font-size="10" fill="#525252" text-anchor="middle">approval)</text>
+<rect x="460" y="280" width="190" height="64" rx="6" fill="#FFF7ED" stroke="#B54708" stroke-width="1.4" />
+<text x="555" y="309.5" font-size="12.5" font-weight="600" fill="#7A2E0E" text-anchor="middle">60-second signed URL</text>
+<text x="555" y="323.5" font-size="10" fill="#525252" text-anchor="middle">service role, after the gate</text>
+<rect x="690" y="280" width="150" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="690" y1="287" x2="840" y2="287" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="765" y="309.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">audit_log</text>
+<text x="765" y="323.5" font-size="10" fill="#525252" text-anchor="middle">identity reads logged</text>
+<text x="1028" y="410" font-size="9.5" fill="#A3A3A3" text-anchor="end">The bucket is private; every download is decided per request and lasts 60 seconds</text>
+</svg>

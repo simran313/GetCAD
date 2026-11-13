@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 400" width="1040" height="400" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Anonymity wall (double blind)">
+<title>Anonymity wall (double blind)</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<rect x="20" y="40" width="280" height="330" rx="10" fill="#FAFAFA" stroke="#D4D4D4" stroke-dasharray="5 4"/>
+<text x="32" y="60" font-size="11" font-weight="600" letter-spacing="0.06em" fill="#525252">CLIENT SIDE</text>
+<rect x="380" y="40" width="280" height="330" rx="10" fill="#FFFFFF" stroke="#D4D4D4" stroke-dasharray="5 4"/>
+<text x="392" y="60" font-size="11" font-weight="600" letter-spacing="0.06em" fill="#525252">SHARED (NO NAMES)</text>
+<rect x="740" y="40" width="280" height="330" rx="10" fill="#FAFAFA" stroke="#D4D4D4" stroke-dasharray="5 4"/>
+<text x="752" y="60" font-size="11" font-weight="600" letter-spacing="0.06em" fill="#525252">DESIGNER SIDE</text>
+<polyline points="280,115 400,115" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="295.8" y="107" width="88.39999999999999" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="340" y="118" font-size="10" fill="#525252" text-anchor="middle">client_id only</text>
+<polyline points="760,115 640,115" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="650.2" y="107" width="99.6" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="700" y="118" font-size="10" fill="#525252" text-anchor="middle">designer_id only</text>
+<polyline points="520,150 520,180" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="520,244 520,274" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="40" y="80" width="240" height="70" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="40" y1="87" x2="280" y2="87" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="160" y="106.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">client_profiles</text>
+<text x="160" y="120.5" font-size="10" fill="#525252" text-anchor="middle">company, contact</text>
+<text x="160" y="132.5" font-size="10" fill="#525252" text-anchor="middle">admins only (identity reads logged)</text>
+<rect x="40" y="190" width="240" height="64" rx="6" fill="#FFFFFF" stroke="#A3A3A3" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="160" y="213.5" font-size="12.5" font-weight="600" fill="#525252" text-anchor="middle">Client sees</text>
+<text x="160" y="227.5" font-size="10" fill="#525252" text-anchor="middle">"Your team" · "Designer"</text>
+<text x="160" y="239.5" font-size="10" fill="#525252" text-anchor="middle">never a designer's name</text>
+<rect x="400" y="80" width="240" height="70" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="400" y1="87" x2="640" y2="87" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="520" y="106.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">orders</text>
+<text x="520" y="120.5" font-size="10" fill="#525252" text-anchor="middle">opaque ids · job_code · status</text>
+<text x="520" y="132.5" font-size="10" fill="#525252" text-anchor="middle">money columns via functions</text>
+<rect x="400" y="180" width="240" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="400" y1="187" x2="640" y2="187" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="520" y="203.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">threads / messages</text>
+<text x="520" y="217.5" font-size="10" fill="#525252" text-anchor="middle">role labels, not people</text>
+<text x="520" y="229.5" font-size="10" fill="#525252" text-anchor="middle">designers never post to clients</text>
+<rect x="400" y="274" width="240" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="400" y1="281" x2="640" y2="281" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="520" y="303.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">file_versions</text>
+<text x="520" y="317.5" font-size="10" fill="#525252" text-anchor="middle">metadata stripped on the way in</text>
+<rect x="760" y="80" width="240" height="70" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="760" y1="87" x2="1000" y2="87" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="880" y="106.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">designer_profiles</text>
+<text x="880" y="120.5" font-size="10" fill="#525252" text-anchor="middle">legal name, bank, documents</text>
+<text x="880" y="132.5" font-size="10" fill="#525252" text-anchor="middle">admins only · every view logged</text>
+<rect x="760" y="190" width="240" height="64" rx="6" fill="#FFFFFF" stroke="#A3A3A3" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="880" y="213.5" font-size="12.5" font-weight="600" fill="#525252" text-anchor="middle">Designer sees</text>
+<text x="880" y="227.5" font-size="10" fill="#525252" text-anchor="middle">the brief and "Client"</text>
+<text x="880" y="239.5" font-size="10" fill="#525252" text-anchor="middle">never company, price or payments</text>
+<text x="1028" y="390" font-size="9.5" fill="#A3A3A3" text-anchor="end">Orders carry opaque ids; each side's identity sits in its own table, read only through logged functions</text>
+</svg>

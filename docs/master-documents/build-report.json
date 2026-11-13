@@ -1,0 +1,29 @@
+{
+  "generated": "13 November 2026",
+  "codeRevision": "1c08b52",
+  "pdf": {
+    "file": "docs/master-documents/THE-CAD-PILLAR-MASTER-TECHNICAL-HANDBOOK.pdf",
+    "pages": 181,
+    "bytes": 10676293
+  },
+  "docx": {
+    "file": "docs/master-documents/THE-CAD-PILLAR-MASTER-TECHNICAL-HANDBOOK.docx",
+    "bytes": 1374739,
+    "pagesWhenRenderedByLibreOffice": 200
+  },
+  "checks": {
+    "diagramsRendered": 10,
+    "chaptersInPdf": 19,
+    "chaptersInDocx": 19,
+    "chaptersExpected": 19,
+    "pdfContentsEntries": 154,
+    "pdfContentsPagesLocated": 154,
+    "pdfMarkersLeft": 0,
+    "docxImages": 10,
+    "docxContentsEntries": 154,
+    "docxContentsPagesLocated": 154,
+    "docxContentsPasses": 1,
+    "docxRendersInLibreOffice": true
+  },
+  "ok": true
+}

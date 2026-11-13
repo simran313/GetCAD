@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 380" width="1040" height="380" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Delivery pipeline">
+<title>Delivery pipeline</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<polyline points="170,102 210,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="360,102 400,62" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="360,102 400,142" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="285,134 380,228 400,228" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="610,62 650,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="610,142 650,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="800,102 840,102" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="725,134 740,230" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="677.1" y="174" width="110.8" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="732.5" y="185" font-size="10" fill="#525252" text-anchor="middle">if the PR adds one</text>
+<polyline points="830,262 870,262" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="95,134 95,262 210,262" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="20" y="70" width="150" height="64" rx="18" fill="#F5F5F5" stroke="#737373" stroke-width="1.4" />
+<text x="95" y="99.5" font-size="12.5" font-weight="600" fill="#171717" text-anchor="middle">Branch</text>
+<text x="95" y="113.5" font-size="10" fill="#525252" text-anchor="middle">claude/… or feature</text>
+<rect x="210" y="70" width="150" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="285" y="99.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Pull request</text>
+<text x="285" y="113.5" font-size="10" fill="#525252" text-anchor="middle">one phase per PR</text>
+<rect x="400" y="30" width="210" height="64" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="505" y="53.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">CI · verify</text>
+<text x="505" y="67.5" font-size="10" fill="#525252" text-anchor="middle">typecheck · lint · 1,201 tests</text>
+<text x="505" y="79.5" font-size="10" fill="#525252" text-anchor="middle">secret scan (throwaway Postgres)</text>
+<rect x="400" y="110" width="210" height="64" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="505" y="133.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">CI · e2e</text>
+<text x="505" y="147.5" font-size="10" fill="#525252" text-anchor="middle">Playwright journeys · Lighthouse</text>
+<text x="505" y="159.5" font-size="10" fill="#525252" text-anchor="middle">PostgREST + Clerk dev keys</text>
+<rect x="400" y="200" width="210" height="56" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="505" y="225.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">Vercel preview</text>
+<text x="505" y="239.5" font-size="10" fill="#525252" text-anchor="middle">per branch</text>
+<rect x="650" y="70" width="150" height="64" rx="18" fill="#F5F5F5" stroke="#737373" stroke-width="1.4" />
+<text x="725" y="99.5" font-size="12.5" font-weight="600" fill="#171717" text-anchor="middle">Owner review</text>
+<text x="725" y="113.5" font-size="10" fill="#525252" text-anchor="middle">merges</text>
+<rect x="840" y="70" width="180" height="64" rx="32" fill="#0A0A0A" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="930" y="99.5" font-size="12.5" font-weight="600" fill="#FFFFFF" text-anchor="middle">main → Vercel prod</text>
+<text x="930" y="113.5" font-size="10" fill="#D4D4D4" text-anchor="middle">thecadpillar.com</text>
+<rect x="650" y="230" width="180" height="64" rx="6" fill="#FFF7ED" stroke="#B54708" stroke-width="1.4" />
+<text x="740" y="253.5" font-size="12.5" font-weight="600" fill="#7A2E0E" text-anchor="middle">db/migrations</text>
+<text x="740" y="267.5" font-size="10" fill="#525252" text-anchor="middle">owner runs db:apply</text>
+<text x="740" y="279.5" font-size="10" fill="#525252" text-anchor="middle">or the SQL editor</text>
+<rect x="870" y="230" width="150" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="870" y1="237" x2="1020" y2="237" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="945" y="265.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">Supabase prod</text>
+<rect x="210" y="230" width="150" height="64" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="285" y="253.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">Design QA</text>
+<text x="285" y="267.5" font-size="10" fill="#525252" text-anchor="middle">[design-qa:&lt;stage&gt;]</text>
+<text x="285" y="279.5" font-size="10" fill="#525252" text-anchor="middle">screens + axe</text>
+<text x="1028" y="370" font-size="9.5" fill="#A3A3A3" text-anchor="end">Database migrations are applied by the owner, never by CI or Vercel</text>
+</svg>

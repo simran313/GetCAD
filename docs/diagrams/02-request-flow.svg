@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 470" width="1040" height="470" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Request flow and trust boundaries">
+<title>Request flow and trust boundaries</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<rect x="20" y="40" width="150" height="400" rx="10" fill="#FAFAFA" stroke="#D4D4D4" stroke-dasharray="5 4"/>
+<text x="32" y="60" font-size="11" font-weight="600" letter-spacing="0.06em" fill="#525252">BROWSER</text>
+<rect x="190" y="40" width="470" height="400" rx="10" fill="#FFFFFF" stroke="#D4D4D4" stroke-dasharray="5 4"/>
+<text x="202" y="60" font-size="11" font-weight="600" letter-spacing="0.06em" fill="#525252">VERCEL · NEXT.JS SERVER</text>
+<rect x="680" y="40" width="340" height="400" rx="10" fill="#FAFAFA" stroke="#D4D4D4" stroke-dasharray="5 4"/>
+<text x="692" y="60" font-size="11" font-weight="600" letter-spacing="0.06em" fill="#525252">SUPABASE</text>
+<polyline points="95,180 95,110 210,110" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="305,140 305,180" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="400,215 440,215" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="540,180 540,110 700,110" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="775,140 775,165 850,180" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="850,180 935,165 935,140" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="305,250 305,365 440,365" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="322.7" y="357" width="99.6" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="372.5" y="368" font-size="10" fill="#525252" text-anchor="middle">only when needed</text>
+<polyline points="640,365 700,365" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="850,400 850,425 95,425 95,240" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="425.5" y="417" width="94" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="472.5" y="428" font-size="10" fill="#525252" text-anchor="middle">redirect · 60 s</text>
+<rect x="35" y="180" width="120" height="60" rx="18" fill="#F5F5F5" stroke="#737373" stroke-width="1.4" />
+<text x="95" y="207.5" font-size="12.5" font-weight="600" fill="#171717" text-anchor="middle">Page / form</text>
+<text x="95" y="221.5" font-size="10" fill="#525252" text-anchor="middle">Clerk cookie</text>
+<rect x="210" y="80" width="190" height="60" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="305" y="107.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">1 · Middleware</text>
+<text x="305" y="121.5" font-size="10" fill="#525252" text-anchor="middle">skipsClerk() / protect()</text>
+<rect x="210" y="180" width="190" height="70" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="305" y="205" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">2 · Server Component</text>
+<text x="305" y="220" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">or Server Action</text>
+<text x="305" y="234" font-size="10" fill="#525252" text-anchor="middle">auth() → userId</text>
+<rect x="440" y="180" width="200" height="70" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="540" y="212.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">3 · createUserSupabaseClient</text>
+<text x="540" y="226.5" font-size="10" fill="#525252" text-anchor="middle">Bearer = Clerk session JWT</text>
+<rect x="440" y="330" width="200" height="70" rx="6" fill="#FFF7ED" stroke="#B54708" stroke-width="1.4" />
+<text x="540" y="356.5" font-size="12.5" font-weight="600" fill="#7A2E0E" text-anchor="middle">createAdminSupabaseClient</text>
+<text x="540" y="370.5" font-size="10" fill="#525252" text-anchor="middle">service role · server-only</text>
+<text x="540" y="382.5" font-size="10" fill="#525252" text-anchor="middle">after the app's own check</text>
+<rect x="700" y="80" width="150" height="60" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="700" y1="87" x2="850" y2="87" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="775" y="107.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">PostgREST</text>
+<text x="775" y="121.5" font-size="10" fill="#525252" text-anchor="middle">verifies JWT (JWKS)</text>
+<rect x="700" y="180" width="300" height="70" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="700" y1="187" x2="1000" y2="187" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="850" y="206.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">4 · RLS + SECURITY DEFINER functions</text>
+<text x="850" y="220.5" font-size="10" fill="#525252" text-anchor="middle">app.current_clerk_id() = JWT sub</text>
+<text x="850" y="232.5" font-size="10" fill="#525252" text-anchor="middle">role helpers · column rules</text>
+<rect x="870" y="80" width="130" height="60" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="870" y1="87" x2="1000" y2="87" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="935" y="107.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">Tables</text>
+<text x="935" y="121.5" font-size="10" fill="#525252" text-anchor="middle">fail closed</text>
+<rect x="700" y="330" width="300" height="70" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="700" y1="337" x2="1000" y2="337" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="850" y="362.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">Storage (private buckets)</text>
+<text x="850" y="376.5" font-size="10" fill="#525252" text-anchor="middle">60-second signed URL to the browser</text>
+<text x="1028" y="460" font-size="9.5" fill="#A3A3A3" text-anchor="end">Every read and write runs as the signed-in person; the service role is used only after the app's own check</text>
+</svg>

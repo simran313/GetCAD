@@ -50,3 +50,7 @@ npm-debug.log*
 
 # Clerk production switch (scripts/clerk-copy-users.mjs): holds emails, never commit
 .clerk-migration/
+
+# Restricted security material (never commit; see docs/security/09-security-audit.md)
+docs/security/restricted/
+*RESTRICTED*
