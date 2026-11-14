@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 390" width="1040" height="390" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Money flow and escrow">
+<title>Money flow and escrow</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<polyline points="180,92 215,92" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="385,92 420,92" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="590,92 625,145" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="591.3" y="110.5" width="32.4" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="607.5" y="121.5" font-size="10" fill="#525252" text-anchor="middle">HOLD</text>
+<polyline points="385,202 600,202 625,145" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="461.4" y="194" width="77.19999999999999" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="500" y="205" font-size="10" fill="#525252" text-anchor="middle">HOLD (admin)</text>
+<polyline points="720,265 720,190" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="815,145 870,145" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="817.4" y="124" width="49.199999999999996" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="842" y="135" font-size="10" fill="#525252" text-anchor="middle">RELEASE</text>
+<polyline points="945,190 945,265" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="945,321 945,350 780,350 780,190 720,190" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="814.6" y="342" width="110.8" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="870" y="353" font-size="10" fill="#525252" text-anchor="middle">bounced → REVERSAL</text>
+<polyline points="720,190 660,230 505,230 505,265" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="558.2" y="222" width="43.599999999999994" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="580" y="233" font-size="10" fill="#525252" text-anchor="middle">REFUND</text>
+<rect x="20" y="60" width="160" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="100" y="83.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Quote</text>
+<text x="100" y="97.5" font-size="10" fill="#525252" text-anchor="middle">total = designer + QC</text>
+<text x="100" y="109.5" font-size="10" fill="#525252" text-anchor="middle">+ platform (exact)</text>
+<rect x="215" y="60" width="170" height="64" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="300" y="89.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">Razorpay checkout</text>
+<text x="300" y="103.5" font-size="10" fill="#525252" text-anchor="middle">card · UPI · international</text>
+<rect x="420" y="60" width="170" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="505" y="83.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Signed webhook</text>
+<text x="505" y="97.5" font-size="10" fill="#525252" text-anchor="middle">/api/webhooks/razorpay</text>
+<text x="505" y="109.5" font-size="10" fill="#525252" text-anchor="middle">HMAC · idempotent</text>
+<rect x="215" y="170" width="170" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="300" y="193.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Manual payment</text>
+<text x="300" y="207.5" font-size="10" fill="#525252" text-anchor="middle">admin records Wise /</text>
+<text x="300" y="219.5" font-size="10" fill="#525252" text-anchor="middle">PayPal / bank</text>
+<rect x="625" y="100" width="190" height="90" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="625" y1="107" x2="815" y2="107" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="720" y="130.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">escrow_ledger</text>
+<text x="720" y="144.5" font-size="10" fill="#525252" text-anchor="middle">HOLD (+) · RELEASE (−)</text>
+<text x="720" y="156.5" font-size="10" fill="#525252" text-anchor="middle">REFUND (−) · REVERSAL (+)</text>
+<text x="720" y="168.5" font-size="10" fill="#525252" text-anchor="middle">append-only · conserved</text>
+<rect x="625" y="265" width="190" height="56" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="720" y="290.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Order CLOSED</text>
+<text x="720" y="304.5" font-size="10" fill="#525252" text-anchor="middle">finance releases</text>
+<rect x="870" y="100" width="150" height="90" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="870" y1="107" x2="1020" y2="107" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="945" y="130.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">Payout obligations</text>
+<text x="945" y="144.5" font-size="10" fill="#525252" text-anchor="middle">designer (INR)</text>
+<text x="945" y="156.5" font-size="10" fill="#525252" text-anchor="middle">pod / QC</text>
+<text x="945" y="168.5" font-size="10" fill="#525252" text-anchor="middle">platform commission</text>
+<rect x="870" y="265" width="150" height="56" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="945" y="290.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">Razorpay Route</text>
+<text x="945" y="304.5" font-size="10" fill="#525252" text-anchor="middle">bank transfer</text>
+<rect x="420" y="265" width="170" height="56" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="505" y="290.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Refund</text>
+<text x="505" y="304.5" font-size="10" fill="#525252" text-anchor="middle">finance · full or partial</text>
+<text x="1028" y="380" font-size="9.5" fill="#A3A3A3" text-anchor="end">Ledger rows are append-only; a trigger refuses any release or refund that exceeds what was collected</text>
+</svg>

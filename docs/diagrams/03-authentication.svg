@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 360" width="1040" height="360" font-family="Geist, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Authentication and identity bridge">
+<title>Authentication and identity bridge</title>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#404040"/></marker></defs>
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+<polyline points="150,172 190,172" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="360,172 400,172" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="358.2" y="164" width="43.599999999999994" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="380" y="175" font-size="10" fill="#525252" text-anchor="middle">issues</text>
+<polyline points="570,172 610,172" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<rect x="568.2" y="164" width="43.599999999999994" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="590" y="175" font-size="10" fill="#525252" text-anchor="middle">Bearer</text>
+<polyline points="700,140 700,82 830,82" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="925,114 925,140" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="925,204 925,230" fill="none" stroke="#404040" stroke-width="1.4"  marker-end="url(#arr)"/>
+<polyline points="485,204 485,260" fill="none" stroke="#404040" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+<rect x="452" y="224" width="66" height="14" rx="3" fill="#FFFFFF" opacity="0.92"/>
+<text x="485" y="235" font-size="10" fill="#525252" text-anchor="middle">no row yet</text>
+<rect x="20" y="140" width="130" height="64" rx="18" fill="#F5F5F5" stroke="#737373" stroke-width="1.4" />
+<text x="85" y="163.5" font-size="12.5" font-weight="600" fill="#171717" text-anchor="middle">Person</text>
+<text x="85" y="177.5" font-size="10" fill="#525252" text-anchor="middle">email code or</text>
+<text x="85" y="189.5" font-size="10" fill="#525252" text-anchor="middle">Google</text>
+<rect x="190" y="140" width="170" height="64" rx="6" fill="#F7F3EC" stroke="#7A5C2E" stroke-width="1.4" />
+<text x="275" y="169.5" font-size="12.5" font-weight="600" fill="#3B2A12" text-anchor="middle">Clerk (production)</text>
+<text x="275" y="183.5" font-size="10" fill="#525252" text-anchor="middle">clerk.thecadpillar.com</text>
+<rect x="400" y="140" width="170" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="485" y="163.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">Session JWT</text>
+<text x="485" y="177.5" font-size="10" fill="#525252" text-anchor="middle">sub = user_… id</text>
+<text x="485" y="189.5" font-size="10" fill="#525252" text-anchor="middle">short-lived, rotated</text>
+<rect x="610" y="140" width="180" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="610" y1="147" x2="790" y2="147" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="700" y="163.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">Supabase third-party auth</text>
+<text x="700" y="177.5" font-size="10" fill="#525252" text-anchor="middle">checks signature (JWKS)</text>
+<text x="700" y="189.5" font-size="10" fill="#525252" text-anchor="middle">and issuer</text>
+<rect x="830" y="50" width="190" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="830" y1="57" x2="1020" y2="57" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="925" y="79.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">app.current_clerk_id()</text>
+<text x="925" y="93.5" font-size="10" fill="#525252" text-anchor="middle">reads the JWT sub</text>
+<rect x="830" y="140" width="190" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="830" y1="147" x2="1020" y2="147" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="925" y="163.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">users.role + user_roles</text>
+<text x="925" y="177.5" font-size="10" fill="#525252" text-anchor="middle">CLIENT · DESIGNER · QC</text>
+<text x="925" y="189.5" font-size="10" fill="#525252" text-anchor="middle">SALES · OPS · FINANCE · ADMIN</text>
+<rect x="830" y="230" width="190" height="64" rx="6" fill="#EEF2F6" stroke="#334155" stroke-width="1.4"/>
+<line x1="830" y1="237" x2="1020" y2="237" stroke="#334155" stroke-width="0.8" opacity="0.5"/>
+<text x="925" y="259.5" font-size="12.5" font-weight="600" fill="#0F172A" text-anchor="middle">RLS policies and functions</text>
+<text x="925" y="273.5" font-size="10" fill="#525252" text-anchor="middle">allow or refuse each row</text>
+<rect x="400" y="260" width="170" height="64" rx="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.4" />
+<text x="485" y="283.5" font-size="12.5" font-weight="600" fill="#0A0A0A" text-anchor="middle">/welcome · ensure_self()</text>
+<text x="485" y="297.5" font-size="10" fill="#525252" text-anchor="middle">first visit creates a</text>
+<text x="485" y="309.5" font-size="10" fill="#525252" text-anchor="middle">CLIENT row (audited)</text>
+<text x="1028" y="350" font-size="9.5" fill="#A3A3A3" text-anchor="end">Clerk proves who you are; the database decides what you may do</text>
+</svg>

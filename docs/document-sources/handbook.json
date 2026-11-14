@@ -1,0 +1,37 @@
+{
+  "title": "Master Technical Handbook",
+  "subtitle": "Security audit, architecture blueprint and developer handover",
+  "organisation": "The CAD Pillar · a brand of Ichizu Private Limited",
+  "version": "1.0",
+  "date": "13 November 2026",
+  "classification": "Internal. Sanitised for repository access; exploit-sensitive detail is in a restricted annex held by the owner.",
+  "output": "docs/master-documents/THE-CAD-PILLAR-MASTER-TECHNICAL-HANDBOOK",
+  "chapters": [
+    "docs/founder-guide/01-executive-overview.md",
+    "docs/architecture/02-application-architecture.md",
+    "docs/founder-guide/03-founder-technical-education.md",
+    "docs/architecture/04-frontend-and-backend.md",
+    "docs/database/05-database-schema-and-rls.md",
+    "docs/security/06-authentication-and-authorization.md",
+    "docs/api/07-api-and-server-actions.md",
+    "docs/security/08-file-storage-and-ip-protection.md",
+    "docs/security/09-security-audit.md",
+    "docs/architecture/10-infrastructure-and-deployment.md",
+    "docs/architecture/11-third-party-integrations.md",
+    "docs/features/12-feature-reference.md",
+    "docs/developer-handover/13-developer-onboarding.md",
+    "docs/developer-handover/14-troubleshooting-and-disaster-recovery.md",
+    "docs/developer-handover/15-technical-debt-and-roadmap.md",
+    "docs/developer-handover/16-production-readiness-checklist.md",
+    "docs/diagrams/17-diagram-atlas.md",
+    "docs/founder-guide/18-glossary.md",
+    "docs/security/19-audit-method-and-assumptions.md"
+  ],
+  "appendices": [
+    { "letter": "A", "file": "docs/database/generated/schema.md" },
+    { "letter": "B", "file": "docs/database/generated/functions.md" },
+    { "letter": "C", "file": "docs/api/generated/routes.md" },
+    { "letter": "D", "file": "docs/api/generated/server-actions.md" },
+    { "letter": "E", "file": "docs/architecture/generated/environment.md" }
+  ]
+}
