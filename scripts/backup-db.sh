@@ -8,11 +8,12 @@
 #
 #   bash scripts/backup-db.sh
 #
-# It asks for two things, neither shown on screen:
-#   1. the database connection string: Supabase → Connect → Session pooler →
-#      URI, with [YOUR-PASSWORD] replaced by the database password;
-#   2. a passphrase to encrypt the file (twice). Keep it in your password
-#      manager: without it the backup cannot be opened.
+# It asks for three things:
+#   1. the database connection string, pasted exactly as Supabase shows it
+#      (Supabase → Connect → Session pooler → URI, still with [YOUR-PASSWORD]);
+#   2. the database password (not shown on screen), which it puts in for you;
+#   3. a passphrase to encrypt the file, twice (not shown). Keep it in your
+#      password manager: without it the backup cannot be opened.
 #
 # What it saves: the schemas public, app and audit (every table, row,
 # function, policy and grant). Not included: files in Storage buckets (CAD
@@ -42,13 +43,18 @@ need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing '$1'. Do the one-tim
 need pg_dump; need pg_restore; need psql; need openssl
 
 if [[ -z "${DB_URL:-}" ]]; then
-  read -r -s -p "Paste the connection string (Session pooler URI, password filled in), then Enter: " DB_URL; echo
+  read -r -p "Paste the connection string exactly as Supabase shows it (Session pooler URI), then Enter: " DB_URL
 fi
 if [[ "$DB_URL" != postgres://* && "$DB_URL" != postgresql://* ]]; then
   echo "That does not look like a connection string (it should start with postgresql://). Nothing was done." >&2; exit 1
 fi
 if [[ "$DB_URL" == *"[YOUR-PASSWORD]"* ]]; then
-  echo "Replace [YOUR-PASSWORD] in the connection string with the real password. Nothing was done." >&2; exit 1
+  # Ask for the password separately, without showing it, and put it in safely encoded.
+  read -r -s -p "Database password (not shown), then Enter: " DB_PASSWORD; echo
+  if [[ -z "$DB_PASSWORD" ]]; then echo "No password entered. Nothing was done." >&2; exit 1; fi
+  encoded="$(DB_PASSWORD="$DB_PASSWORD" node -e 'process.stdout.write(encodeURIComponent(process.env.DB_PASSWORD))')"
+  DB_URL="${DB_URL/\[YOUR-PASSWORD\]/$encoded}"
+  unset DB_PASSWORD encoded
 fi
 
 server_major="$(psql "$DB_URL" -Atc 'SHOW server_version_num' | cut -c1-2)"
