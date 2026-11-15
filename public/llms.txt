@@ -4,9 +4,12 @@
 
 ## Key facts
 
-- Service: custom jewelry CAD design and jewelry CAD outsourcing (3D modeling for casting and 3D printing), plus photo-real jewelry rendering.
+- Service: custom jewelry CAD design and jewelry CAD outsourcing (3D modeling for casting and 3D printing), plus photo-real jewelry rendering and repair of CAD files made by other designers.
+- Software: Rhino and MatrixGold, with ZBrush for organic and sculpted pieces.
 - Pieces: rings (including engagement rings and wedding bands), pendants, earrings, bracelets, bangles and necklaces.
 - Price: from $35 a design, in US dollars. A fixed price within the hour, before you pay. Complex and sculpted pieces are quoted. Retainers for regular orders (monthly rate, named account manager, priority in the queue).
+- Renders only: photo-real renders of the client's own 3DM or STL, from $15 a design.
+- CAD file repair: inspection, repair and optimization of 3DM and STL files made elsewhere (geometry, non-manifold meshes, structural defects, manufacturing readiness), quoted after the file is reviewed.
 - Speed: first look within 6 hours of order confirmation for standard pieces, or the full amount comes back as credit. Complex pieces get a firm deadline with the price.
 - Every order includes: 3DM + STL ready for printing and casting; 3 render views; a signed spec sheet (walls, prongs, stone seats, size); a weight sheet in 10K, 14K, 18K, platinum and silver; a 3D preview link with the client's logo; 2 revision rounds within 14 days.
 - Quality: every file is checked twice (two-stage QC: the designer's check, then the QC manager's). 99% of first looks meet the brief and the factory's requirements. If a file breaks its own spec sheet, it is fixed free and the CAD fee is refunded (30-day window).
@@ -25,6 +28,14 @@
 ## Pages
 
 - [Jewelry CAD services](https://thecadpillar.com/jewelry-cad): what is modeled, files delivered, rendering, white-label outsourcing, working with US jewelers.
+- [Engagement ring CAD](https://thecadpillar.com/engagement-ring-cad): solitaires, halos, pavé and side-stone rings for jewelers; seats cut to the stones.
+- [Sketch or photo to CAD](https://thecadpillar.com/sketch-to-cad): what to send, pricing within the hour, marking up changes.
+- [STL and 3DM files](https://thecadpillar.com/jewelry-stl-3dm-files): the difference between 3DM and STL; files ready to print and cast.
+- [Jewelry rendering](https://thecadpillar.com/jewelry-rendering): renders of your own 3DM or STL, from $15.
+- [CAD file repair](https://thecadpillar.com/cad-file-repair): fixing STL and 3DM files from other designers.
+- [White-label CAD for jewelers](https://thecadpillar.com/for-jewelers): outsourcing CAD under your own name.
+- [How much jewelry CAD costs](https://thecadpillar.com/jewelry-cad-cost): prices, what drives them, how to save.
+- [CAD service vs freelancers vs in-house](https://thecadpillar.com/compare): a side-by-side comparison.
 - [How it works](https://thecadpillar.com/how-it-works): brief, price within the hour, first look, revisions, download.
 - [Pricing](https://thecadpillar.com/pricing): from $35 a design; retainers for regular orders.
 - [Quality control](https://thecadpillar.com/quality): the two-stage checklist every file passes.

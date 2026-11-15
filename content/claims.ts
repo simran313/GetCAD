@@ -50,6 +50,10 @@ export const CLAIMS = {
   /** Spec-claim window (DECISIONS §7). */
   CLAIM_WINDOW_DAYS: claim(30, true),
   AI_LINE: claim("AI-native jewelry CAD. Checked by experts.", true),
+  /** Renders of the client's own 3DM or STL, without CAD work (DECISIONS §4, 1.29; owner, 15 Nov 2026). */
+  RENDER_ONLY_PRICE: claim("$15", true),
+  /** The software the designers model in (DECISIONS §9, 1.29; owner, 15 Nov 2026). */
+  SOFTWARE: claim("Rhino and MatrixGold, with ZBrush for organic and sculpted pieces", true),
   /** Anonymised team cards (role · years · specialty). No names or photos. */
   TEAM: claim(
     [

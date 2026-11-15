@@ -147,3 +147,22 @@ When the website's content changes, move `SITE_CONTENT_UPDATED` in `app/sitemap.
 2. In Bing Webmaster Tools → **Sitemaps**, check `https://thecadpillar.com/sitemap.xml` shows Success; → **URL Inspection**, inspect `https://thecadpillar.com/jewelry-cad`.
 3. GitHub → Actions → **IndexNow** → *Run workflow* once (it then runs by itself after website changes). A green run says "Submitted N URLs".
 4. Brave (Claude's index) has no submission tool; it finds pages through links and its own crawl. Links from other sites (directories, lists, profiles) are what speed it up.
+
+## AI search (GEO), phase 2: one page per search intent (15 Nov 2026)
+
+Eight pages, one cluster each, no overlap with the existing pages. Each opens with a two-sentence answer (what, price, speed), then an "At a glance" fact grid, sections that each start with a direct answer, a question list (FAQPage structured data) and related links. Content lives in `components/marketing/service-pages.ts`; the layout in `components/marketing/service-page.tsx`. New facts from the owner are in DECISIONS 1.29 and `content/claims.ts` (`RENDER_ONLY_PRICE`, `SOFTWARE`).
+
+| Page | Title | Cluster |
+| --- | --- | --- |
+| `/engagement-ring-cad` | Engagement Ring CAD Design for Jewelers | engagement ring CAD, custom ring CAD design |
+| `/for-jewelers` | Outsource Jewelry CAD for Jewelers | outsource jewelry CAD, white-label CAD, CAD for jewelers |
+| `/jewelry-rendering` | Jewelry Rendering Services from $15 | jewelry rendering service, CAD renders |
+| `/jewelry-stl-3dm-files` | Jewelry STL and 3DM Files for Casting | STL for casting, 3DM files, 3DM vs STL |
+| `/sketch-to-cad` | Jewelry Sketch or Photo to CAD | sketch to CAD, photo to jewelry CAD |
+| `/cad-file-repair` | Jewelry CAD File Repair: STL and 3DM | STL repair, fix jewelry CAD file |
+| `/jewelry-cad-cost` | How Much Does Jewelry CAD Cost? (2026) | jewelry CAD cost, ring CAD price |
+| `/compare` | Jewelry CAD Service vs Freelancers vs In-House | CAD service vs freelancer vs in-house |
+
+Rendering and file repair carry their own `Service` node (`pageJsonLd(..., { ownService })`); the CAD pages reuse the main service. All eight are in the sitemap (lastmod 2026-11-15), the footer ("Services" column, plus cost and compare under Product), `/jewelry-cad`, `llms.txt`, the route inventory, the e2e page walk and design QA. `tests/config/geo.test.ts` keeps them in step and blocks the internal price bands and UK spellings.
+
+Not yet: a portfolio page (waiting for the owner's own pieces; client work never appears without written permission).
