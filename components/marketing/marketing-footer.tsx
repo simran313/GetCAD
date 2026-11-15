@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SupportStatus } from "@/components/support/support-status";
 import { WhatsAppButton } from "@/components/support/whatsapp";
 import { Wordmark } from "@/components/wordmark";
+import { SOCIAL_PROFILES } from "@/lib/seo";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -59,6 +60,20 @@ export function MarketingFooter() {
           </p>
           <WhatsAppButton label="WhatsApp us" className="mt-4" />
           <SupportStatus className="mt-3 flex" />
+          <ul className="mt-3 flex flex-wrap gap-x-4" aria-label="The CAD Pillar on social media">
+            {SOCIAL_PROFILES.map((p) => (
+              <li key={p.name}>
+                <a
+                  href={p.url}
+                  target="_blank"
+                  rel="me noopener noreferrer"
+                  className="inline-flex min-h-11 items-center text-[15px] text-muted-foreground hover:text-foreground"
+                >
+                  {p.name}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
         {COLUMNS.map((col) => (
           <div key={col.title}>
