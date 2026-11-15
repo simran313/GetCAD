@@ -127,3 +127,23 @@ No performance change was needed or made: same bundles, same static pages, no la
 4. **Switch Clerk to production keys.** `/sign-in` and `/sign-up` still pass through Clerk's development handshake (307). They are noindex, so this is not a ranking issue, but a production instance removes the redirect for everyone.
 5. **Analytics:** the site has no GA4 or other third-party analytics; leads are attributed by the first-party first-touch cookie and the "How did you hear about us?" answer (Admin → Clients → Where clients come from). To add GA4, create a property, then decide on consent before adding the tag; it is a third-party script and costs page speed.
 6. Add LinkedIn / Instagram / Google Business Profile URLs to `sameAs` in `lib/seo.ts` once those profiles exist.
+
+## AI search (GEO), phase 1: technical (15 Nov 2026)
+
+AI assistants answer from search indexes: ChatGPT search mainly from **Bing**, Claude from **Brave**, Google's AI Overviews and AI Mode from **Google**, Perplexity from its own crawl plus others. Being quotable needs three things: crawlers can read the site, the facts are easy to extract, and each index knows the pages exist.
+
+| Check | State |
+|---|---|
+| Googlebot, Bingbot, GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, PerplexityBot, Google-Extended | All get 200 and the full HTML of every public page (checked live 15 Nov 2026); robots.txt allows all of them |
+| `/llms.txt` | **Added.** A plain-text summary for AI assistants (llmstxt.org layout): what the business does, prices, speed, deliverables, quality, ownership, where, who it is for, and links to the public pages. It repeats only what the website says; `tests/config/geo.test.ts` fails if a claim, deliverable or link drifts from `content/claims.ts`, `components/marketing/content.ts` or the sitemap |
+| IndexNow (Bing, Yandex, Seznam, Naver) | **Added.** Key file `public/<key>.txt`; `scripts/indexnow.mjs` submits every sitemap URL plus `llms.txt`; `.github/workflows/indexnow.yml` runs it after a website change reaches `main`, once the deploy is live. Google does not use IndexNow (it reads the sitemap) |
+| Bing verification | `NEXT_PUBLIC_BING_SITE_VERIFICATION` adds the `msvalidate.01` tag. Not needed if Bing imports the site from Search Console (recommended) |
+
+When the website's content changes, move `SITE_CONTENT_UPDATED` in `app/sitemap.ts` forward; the IndexNow run waits for that date to be live before submitting.
+
+### Owner steps after merging
+
+1. **Bing Webmaster Tools** (bing.com/webmasters) → sign in with the Google account that owns Search Console → **Import from Google Search Console** → select `thecadpillar.com`. This verifies the site and imports the sitemap in one step.
+2. In Bing Webmaster Tools → **Sitemaps**, check `https://thecadpillar.com/sitemap.xml` shows Success; → **URL Inspection**, inspect `https://thecadpillar.com/jewelry-cad`.
+3. GitHub → Actions → **IndexNow** → *Run workflow* once (it then runs by itself after website changes). A green run says "Submitted N URLs".
+4. Brave (Claude's index) has no submission tool; it finds pages through links and its own crawl. Links from other sites (directories, lists, profiles) are what speed it up.
