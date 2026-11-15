@@ -63,15 +63,17 @@ Only pin or post **your own designs** (the portfolio you are preparing). Never c
 
 ## 3. Directories and listings (in priority order)
 
-| # | Where | Why | Cost | How |
-|---|---|---|---|---|
-| 1 | **Ganoksin business directory**, category "3D and CAD/CAM Jewelry Services and Products" | The best-known jewelry-trade knowledge site; already cited in AI answers about CAD services | Free | ganoksin.com/business-directory → "List Your Business". Use the **Long** description and the keyword list. |
-| 2 | **Crunchbase** company profile | AI assistants and data providers read it for company facts | Free | crunchbase.com → Add a company. Short description, website, LinkedIn, location Mumbai, category "3D Technology / Jewelry / Design". |
-| 3 | **Clutch** and **GoodFirms** | B2B service directories that rank well and are quoted in "best X services" answers | Free basic listing | clutch.co → "Get listed"; goodfirms.co → "Get listed". Service line: 3D modeling / product design; industry: jewelry. Reviews there come later (section 5). |
-| 4 | **Jewellery Monthly directory** (UK trade) | Trade audience in our second market | Free | jewellerymonthly.co.uk → Jewellery business directory → "Submit new listing". |
-| 5 | **MJSA** (Manufacturing Jewelers & Suppliers of America) sourcing / buyers' guide, CAD/CAM category | The US trade association for manufacturers and suppliers | Usually needs membership; ask first | mjsa.org → contact membership; ask whether a non-US CAD service can list. |
-| 6 | **Trustpilot** business profile | Where reviews will live (section 5) | Free | business.trustpilot.com → claim "thecadpillar.com". |
-| 7 | **Google Business Profile** (optional) | Ties the brand to a real place in Google; helps branded searches | Free | Only with the real Mumbai studio address, as a service-area business. Do not use a US address you do not have. |
+Free listings only. If a form asks for payment, skip it: none of these is worth paying for at this stage. (Ganoksin's directory and Crunchbase profiles turned out to be paid, owner, 15 Nov 2026, so they are not on this list.)
+
+| # | Where | Why | How |
+|---|---|---|---|
+| 1 | **Behance** (Adobe) project pages | Free portfolio site that ranks well and that AI answers cite for "jewelry CAD designers / renders"; each project can link to thecadpillar.com | behance.net → sign in → Create a project per design (your own pieces only): title with the search words ("Halo engagement ring CAD, 3DM + STL"), the **Short** description, tags from the keyword list, a link to the matching page |
+| 2 | **Sketchfab** | Free 3D model viewer; jewelers can turn a ring in the browser. Strong proof for a CAD studio | sketchfab.com → upload a few of your own models (STL, can be set to view-only, no download) → description with a link to `/jewelry-stl-3dm-files` |
+| 3 | **Upwork agency** and **Fiverr** profile under "The CAD Pillar" | These two own the search results for "jewelry CAD design service" today; being listed there puts the brand where buyers already look | Free to create. Same name, description and samples; say "from $35"; keep platform orders inside the platform per their rules |
+| 4 | **Clutch** and **GoodFirms** free profiles | B2B directories quoted in "best X services" answers | clutch.co → "Get listed"; goodfirms.co → "Get listed". Use the free profile only; ignore paid sponsorship offers |
+| 5 | **Trustpilot** business profile | Where reviews will live (section 5) | business.trustpilot.com → claim "thecadpillar.com" (free plan) |
+| 6 | **Google Business Profile**, **Bing Places** | Ties the brand to a real place in Google and Bing (Bing feeds ChatGPT); helps branded searches | Free. Only with the real Mumbai studio address, as a service-area business. Never a US address you do not have |
+| 7 | **Jewellery Monthly directory** (UK trade) | Trade audience in our second market | jewellerymonthly.co.uk → Jewellery business directory → "Submit new listing" (free if it stays free; skip otherwise) |
 
 Record each listing (URL, date, login) in the tracker sheet (section 7).
 
@@ -163,8 +165,8 @@ Also monthly: Google Search Console → Performance → Queries (new non-brand q
 |---|---|---|
 | 1 | Update all four profiles (section 2) | 30 min |
 | 1 | Bing Webmaster Tools import; Search Console "Request indexing" for the new pages | 10 min |
-| 2 | Ganoksin, Crunchbase listings | 30 min |
-| 3 | Clutch, GoodFirms, Trustpilot claim | 40 min |
+| 2 | Behance (3 projects) and Sketchfab (3 models), own designs only | 45 min |
+| 3 | Upwork agency, Clutch, GoodFirms, Trustpilot claim | 45 min |
 | 4 | Emails to the four "Top 10" lists | 20 min |
 | 5 | Pinterest: claim website, five boards, first 10 pins (own designs) | 45 min |
 | 6–14 | Two Reddit or Quora answers a week; one short video a week; first monthly AI check | 1 h a week |
