@@ -48,10 +48,18 @@ export const metadata: Metadata = {
     images: [OG_IMAGE],
   },
   twitter: { card: "summary_large_image", images: [OG_IMAGE.url] },
-  // Google Search Console's HTML-tag verification, when the owner sets the
-  // token (DNS verification needs nothing here).
-  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+  // Search Console (Google) and Webmaster Tools (Bing) HTML-tag verification,
+  // when the owner sets a token (DNS verification, or Bing's import from
+  // Search Console, needs nothing here). Bing's index feeds ChatGPT search.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+    ? {
+        verification: {
+          ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : {}),
+          ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+            ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
+            : {}),
+        },
+      }
     : {}),
   // Safari largely ignores the manifest and reads these instead, so an
   // installed iOS app takes its name and status-bar treatment from here.

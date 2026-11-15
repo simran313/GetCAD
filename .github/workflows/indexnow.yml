@@ -1,0 +1,41 @@
+name: IndexNow
+
+# After a change to the public website reaches main (and so production), tell
+# Bing and the other IndexNow engines to recrawl the pages. ChatGPT's web
+# search draws mainly on Bing's index. Google ignores IndexNow; it uses the
+# sitemap. scripts/indexnow.mjs waits until the live sitemap shows the
+# repository's SITE_CONTENT_UPDATED date (the Vercel deploy), then submits.
+# No secrets: the IndexNow key is public by design (public/<key>.txt).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/(marketing)/**"
+      - "components/marketing/**"
+      - "content/**"
+      - "lib/seo.ts"
+      - "app/sitemap.ts"
+      - "public/llms.txt"
+  workflow_dispatch:
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Submit the website's pages
+        run: |
+          DATE=$(grep -oE 'SITE_CONTENT_UPDATED = "[0-9-]+"' app/sitemap.ts | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+          node scripts/indexnow.mjs --wait "$DATE"
