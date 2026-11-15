@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PRODUCTS } from "@/components/marketing/content";
+import { c } from "@/content/claims";
 import { Eyebrow, FinalCta, Section } from "@/components/marketing/blocks";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -35,7 +36,7 @@ const SERVICES: [string, string][] = [
   ],
   [
     "Jewelry rendering",
-    "Render views of every design to approve, and photo-real renders as an order of their own, quoted on request.",
+    `Render views of every design to approve, and photo-real renders of your own 3DM or STL as an order of their own, from ${c("RENDER_ONLY_PRICE")} a design.`,
   ],
   [
     "White-label CAD outsourcing",
@@ -47,6 +48,16 @@ const BLOCKS: [string, string][] = [
   ["Fast", "Our AI models every piece, so a first look comes within 6 hours of order confirmation, bulk orders included."],
   ["Checked", "Two-stage QC on every file — the designer's check, then the QC manager's: measurements, diamonds, setting, metal, open edges, mesh. 99% of first looks are right first time."],
   ["Fair", "From $35 a design. Retainers for regular orders. No setup fees."],
+];
+
+/** The service pages, one per kind of job (AI search, phase 2). */
+const MORE = [
+  { href: "/engagement-ring-cad", label: "Engagement ring CAD" },
+  { href: "/sketch-to-cad", label: "Sketch or photo to CAD" },
+  { href: "/jewelry-stl-3dm-files", label: "STL and 3DM files" },
+  { href: "/jewelry-rendering", label: "Jewelry rendering" },
+  { href: "/cad-file-repair", label: "CAD file repair" },
+  { href: "/for-jewelers", label: "White-label CAD for jewelers" },
 ];
 
 /** The ads landing page (LANDING-COPY "/jewelry-cad"). */
@@ -139,6 +150,15 @@ export default function JewelryCadPage() {
           </Link>
           .
         </p>
+        <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[length:var(--fs-3)]">
+          {MORE.map((l) => (
+            <li key={l.href}>
+              <Link href={l.href} className="underline underline-offset-4">
+                {l.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </Section>
       <FinalCta />
     </>

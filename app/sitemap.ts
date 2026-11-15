@@ -15,6 +15,14 @@ const ROUTES = [
   "/faq",
   "/contact",
   "/apply-designer",
+  "/engagement-ring-cad",
+  "/for-jewelers",
+  "/jewelry-rendering",
+  "/jewelry-stl-3dm-files",
+  "/sketch-to-cad",
+  "/cad-file-repair",
+  "/jewelry-cad-cost",
+  "/compare",
   "/privacy",
   "/terms",
 ];
@@ -24,7 +32,7 @@ const ROUTES = [
  * not the request time: Google ignores a lastmod that is always "now". Move
  * it forward when the website's content changes.
  */
-export const SITE_CONTENT_UPDATED = "2026-11-12";
+export const SITE_CONTENT_UPDATED = "2026-11-15";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Each URL exactly as its page's canonical ("https://thecadpillar.com/" for home).

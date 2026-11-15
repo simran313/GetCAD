@@ -126,7 +126,8 @@ function serviceNode(): Record<string, unknown> {
       name: "Jewelry CAD services",
       itemListElement: [
         { "@type": "Offer", itemOffered: { "@type": "Service", name: "Custom jewelry CAD design (3DM and STL)" } },
-        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Jewelry rendering" } },
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Jewelry rendering" }, priceSpecification: { "@type": "PriceSpecification", priceCurrency: "USD", minPrice: "15" } },
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Jewelry CAD file repair (3DM and STL)" } },
         { "@type": "Offer", itemOffered: { "@type": "Service", name: "Jewelry CAD outsourcing for brands and manufacturers" } },
       ],
     },
@@ -171,13 +172,36 @@ export function siteJsonLd(faq: readonly (readonly [string, string])[] = []): Re
 export function pageJsonLd(
   path: string,
   name: string,
-  extra: { service?: boolean; faq?: readonly (readonly [string, string])[] } = {},
+  extra: {
+    service?: boolean;
+    /** A service of its own (rendering, file repair), described only as the page describes it. */
+    ownService?: { name: string; description: string; lowPrice?: string };
+    faq?: readonly (readonly [string, string])[];
+  } = {},
 ): Record<string, unknown> {
   return graph(
     breadcrumbNode(path, name),
     ...(extra.service ? [serviceNode(), organizationNode()] : []),
+    ...(extra.ownService ? [ownServiceNode(path, extra.ownService), organizationNode()] : []),
     ...(extra.faq?.length ? [faqNode(path, extra.faq)] : []),
   );
+}
+
+/** A service with its own page, offered by the same organization. */
+function ownServiceNode(path: string, s: { name: string; description: string; lowPrice?: string }): Record<string, unknown> {
+  return {
+    "@type": "Service",
+    "@id": `${SITE_URL}${path}#service`,
+    name: s.name,
+    serviceType: s.name,
+    description: s.description,
+    url: `${SITE_URL}${path}`,
+    provider: { "@id": ORG_ID() },
+    areaServed: AREAS_SERVED,
+    ...(s.lowPrice
+      ? { offers: { "@type": "AggregateOffer", priceCurrency: "USD", lowPrice: s.lowPrice, url: `${SITE_URL}${path}` } }
+      : {}),
+  };
 }
 
 /** Safe to put inside <script type="application/ld+json">: no "</script>" can close it early. */

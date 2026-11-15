@@ -45,6 +45,14 @@ describe("public website route inventory", () => {
         "/quality",
         "/results",
         "/terms",
+        "/engagement-ring-cad",
+        "/for-jewelers",
+        "/jewelry-rendering",
+        "/jewelry-stl-3dm-files",
+        "/sketch-to-cad",
+        "/cad-file-repair",
+        "/jewelry-cad-cost",
+        "/compare",
       ].sort(),
     );
   });

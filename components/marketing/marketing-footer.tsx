@@ -14,6 +14,19 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/guarantee", label: "Guarantee" },
       { href: "/quality", label: "Quality" },
       { href: "/faq", label: "FAQ" },
+      { href: "/jewelry-cad-cost", label: "What CAD costs" },
+      { href: "/compare", label: "Compare options" },
+    ],
+  },
+  {
+    title: "Services",
+    links: [
+      { href: "/engagement-ring-cad", label: "Engagement ring CAD" },
+      { href: "/sketch-to-cad", label: "Sketch to CAD" },
+      { href: "/jewelry-stl-3dm-files", label: "STL and 3DM files" },
+      { href: "/jewelry-rendering", label: "Jewelry rendering" },
+      { href: "/cad-file-repair", label: "CAD file repair" },
+      { href: "/for-jewelers", label: "For jewelers" },
     ],
   },
   {
@@ -35,11 +48,11 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-subtle">
-      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 sm:grid-cols-3 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:px-8">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 sm:grid-cols-4 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr] lg:px-8">
         {/* The brand column has its own row until there is room for its
-            support line beside three link columns (owner, 5 Nov 2026: it ran
+            support line beside the link columns (owner, 5 Nov 2026: it ran
             into "Product"). */}
-        <div className="sm:col-span-3 lg:col-span-1">
+        <div className="sm:col-span-4 lg:col-span-1">
           <Wordmark />
           <p className="mt-3 max-w-xs text-[15px] leading-[1.5] text-muted-foreground">
             The AI-native jewelry CAD studio. The portal is open 24/7.
