@@ -30,6 +30,15 @@ const GeistMono = localFont({
   preload: false,
 });
 
+/** Optional meta-tag domain verifications (public tokens), only those set. */
+const OTHER_VERIFICATION: Record<string, string> = {
+  ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : {}),
+  ...(process.env.NEXT_PUBLIC_PINTEREST_DOMAIN_VERIFY ? { "p:domain_verify": process.env.NEXT_PUBLIC_PINTEREST_DOMAIN_VERIFY } : {}),
+  ...(process.env.NEXT_PUBLIC_FACEBOOK_DOMAIN_VERIFICATION
+    ? { "facebook-domain-verification": process.env.NEXT_PUBLIC_FACEBOOK_DOMAIN_VERIFICATION }
+    : {}),
+};
+
 export const metadata: Metadata = {
   // Absolute URLs for canonical and Open Graph tags resolve against the site.
   metadataBase: new URL(SITE_URL),
@@ -51,13 +60,13 @@ export const metadata: Metadata = {
   // Search Console (Google) and Webmaster Tools (Bing) HTML-tag verification,
   // when the owner sets a token (DNS verification, or Bing's import from
   // Search Console, needs nothing here). Bing's index feeds ChatGPT search.
-  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+  // Pinterest and Facebook domain claims work the same way: a public token,
+  // only when set.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || Object.keys(OTHER_VERIFICATION).length
     ? {
         verification: {
           ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : {}),
-          ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
-            ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
-            : {}),
+          ...(Object.keys(OTHER_VERIFICATION).length ? { other: OTHER_VERIFICATION } : {}),
         },
       }
     : {}),

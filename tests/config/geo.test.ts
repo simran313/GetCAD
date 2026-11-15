@@ -7,7 +7,7 @@ import sitemap from "../../app/sitemap";
 import { DELIVERABLES, FAQ } from "../../components/marketing/content";
 import { SERVICE_PAGE_LIST } from "../../components/marketing/service-pages";
 import { CLAIMS, c } from "../../content/claims";
-import { SITE_URL, pageJsonLd } from "../../lib/seo";
+import { SITE_URL, SOCIAL_PROFILES, pageJsonLd, siteJsonLd } from "../../lib/seo";
 
 /**
  * AI search (GEO, 15 Nov 2026): llms.txt is a plain-text summary for AI
@@ -82,6 +82,8 @@ describe("Bing verification", () => {
     const layout = read("app/layout.tsx");
     expect(layout).toMatch(/"msvalidate\.01": process\.env\.NEXT_PUBLIC_BING_SITE_VERIFICATION/);
     expect(layout).toMatch(/process\.env\.NEXT_PUBLIC_BING_SITE_VERIFICATION\s*\?/);
+    expect(layout).toMatch(/"p:domain_verify": process\.env\.NEXT_PUBLIC_PINTEREST_DOMAIN_VERIFY/);
+    expect(layout).toMatch(/"facebook-domain-verification": process\.env\.NEXT_PUBLIC_FACEBOOK_DOMAIN_VERIFICATION/);
   });
 });
 
@@ -127,5 +129,18 @@ describe("service and guide pages", () => {
     expect(service).toMatchObject({ name: "Jewelry rendering", offers: { priceCurrency: "USD", lowPrice: "15" } });
     expect(g.find((n) => n["@type"] === "FAQPage")).toBeTruthy();
     expect(JSON.stringify(g)).not.toMatch(/"(address|aggregateRating|review|ratingValue)"/);
+  });
+});
+
+describe("the company's profiles", () => {
+  it("are tied to the organization (sameAs), linked from the footer and listed in llms.txt", () => {
+    const org = (siteJsonLd()["@graph"] as Record<string, unknown>[]).find((n) => n["@type"] === "Organization")!;
+    expect(org.sameAs).toEqual(SOCIAL_PROFILES.map((p) => p.url));
+    expect(SOCIAL_PROFILES.map((p) => p.name)).toEqual(["LinkedIn", "Instagram", "Facebook", "Pinterest"]);
+    for (const p of SOCIAL_PROFILES) {
+      expect(p.url).toMatch(/^https:\/\/www\./);
+      expect(llms).toContain(`(${p.url})`);
+    }
+    expect(read("components/marketing/marketing-footer.tsx")).toMatch(/rel="me noopener noreferrer"/);
   });
 });

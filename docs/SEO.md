@@ -166,3 +166,7 @@ Eight pages, one cluster each, no overlap with the existing pages. Each opens wi
 Rendering and file repair carry their own `Service` node (`pageJsonLd(..., { ownService })`); the CAD pages reuse the main service. All eight are in the sitemap (lastmod 2026-11-15), the footer ("Services" column, plus cost and compare under Product), `/jewelry-cad`, `llms.txt`, the route inventory, the e2e page walk and design QA. `tests/config/geo.test.ts` keeps them in step and blocks the internal price bands and UK spellings.
 
 Not yet: a portfolio page (waiting for the owner's own pieces; client work never appears without written permission).
+
+## AI search (GEO), phase 3: off-site (15 Nov 2026)
+
+The company profiles (LinkedIn, Instagram, Facebook, Pinterest) are in `SOCIAL_PROFILES` (`lib/seo.ts`): the organization's `sameAs`, the footer (`rel="me"`) and `llms.txt`. Optional Pinterest and Facebook domain claims: `NEXT_PUBLIC_PINTEREST_DOMAIN_VERIFY`, `NEXT_PUBLIC_FACEBOOK_DOMAIN_VERIFICATION`. The owner's playbook (descriptions, profiles, directories, list outreach, reviews, content, monthly AI check) is [docs/marketing/AI-SEARCH-OFFSITE-KIT.md](./marketing/AI-SEARCH-OFFSITE-KIT.md).

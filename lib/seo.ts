@@ -32,6 +32,18 @@ const AREAS_SERVED = [
   { "@type": "Country", name: "Canada" },
 ];
 
+/**
+ * The company's own profiles (owner, 15 Nov 2026). Listed as `sameAs` on the
+ * organization so search engines and AI assistants tie them to this site,
+ * and linked from the footer.
+ */
+export const SOCIAL_PROFILES = [
+  { name: "LinkedIn", url: "https://www.linkedin.com/company/the-cad-pillar/" },
+  { name: "Instagram", url: "https://www.instagram.com/thecadpillar/" },
+  { name: "Facebook", url: "https://www.facebook.com/profile.php?id=61596418588937" },
+  { name: "Pinterest", url: "https://www.pinterest.com/thecadpillar/" },
+] as const;
+
 /** The sharing image (Open Graph, X): made by scripts/og-image.mjs. */
 export const OG_IMAGE = {
   url: "/og/the-cad-pillar-jewelry-cad.png",
@@ -59,6 +71,7 @@ function organizationNode(): Record<string, unknown> {
     description: SITE_DESCRIPTION,
     slogan: "AI-native jewelry CAD. Checked by experts.",
     email: "simran@thecadpillar.com",
+    sameAs: SOCIAL_PROFILES.map((p) => p.url),
     areaServed: AREAS_SERVED,
     knowsAbout: [
       "Jewelry CAD design",
