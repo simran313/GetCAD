@@ -54,3 +54,6 @@ npm-debug.log*
 # Restricted security material (never commit; see docs/security/09-security-audit.md)
 docs/security/restricted/
 *RESTRICTED*
+
+# Encrypted database backups made by scripts/backup-db.sh (never commit)
+.backups/
