@@ -104,6 +104,9 @@ describe("messages", () => {
       "Hi Ana, Bright Bridal in Austin. Simran",
     );
     expect(fillTemplate("Hi {first_name}, {business}", {})).toBe("Hi there, your business");
+    // The researched detail, or a bracket the sender must replace (0071).
+    expect(fillTemplate("I saw {detail}.", { detail: "the halo you posted" })).toBe("I saw the halo you posted.");
+    expect(unfilledParts(fillTemplate("I saw {detail}.", {}))).toEqual(["[a real detail about them]"]);
   });
 
   it("finds the [bracket] parts still to replace", () => {

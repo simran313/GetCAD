@@ -62,6 +62,8 @@ export const IMPORT_FIELDS = [
   { key: "segment", label: "Business type", hints: ["type", "segment", "category", "industry", "business type"] },
   { key: "tags", label: "Tags", hints: ["tags", "tag", "labels", "group"] },
   { key: "notes", label: "Notes", hints: ["notes", "note", "comments", "comment", "remarks", "description"] },
+  { key: "detail", label: "Real detail (for message 1)", hints: ["detail", "personal detail", "icebreaker", "hook"] },
+  { key: "fit", label: "Fit (A, B or C)", hints: ["fit", "priority", "grade", "rating"] },
   { key: "source", label: "Source", hints: ["source", "found", "where", "list"] },
 ] as const;
 export type ImportField = (typeof IMPORT_FIELDS)[number]["key"];
@@ -248,6 +250,7 @@ export const PLACEHOLDERS = [
   ["{business}", "Their business name (or “your business”)"],
   ["{city}", "Their city"],
   ["{my_name}", "Your first name"],
+  ["{detail}", "The real detail found in research (or a [bracket] to fill in)"],
 ] as const;
 
 export interface FillWith {
@@ -255,6 +258,7 @@ export interface FillWith {
   business_name?: string | null;
   city?: string | null;
   my_name?: string | null;
+  detail?: string | null;
 }
 
 /** A template's text with the placeholders filled in. */
@@ -264,7 +268,8 @@ export function fillTemplate(text: string, v: FillWith): string {
     .replace(/\{first_name\}/g, first || "there")
     .replace(/\{business\}/g, v.business_name?.trim() || "your business")
     .replace(/\{city\}/g, v.city?.trim() || "your city")
-    .replace(/\{my_name\}/g, v.my_name?.trim() || "");
+    .replace(/\{my_name\}/g, v.my_name?.trim() || "")
+    .replace(/\{detail\}/g, v.detail?.trim() || "[a real detail about them]");
 }
 
 /** The [square-bracket] parts still to be replaced with a real detail. */
@@ -317,6 +322,8 @@ export const CSV_COLUMNS = [
   { heading: "State", what: "State or region", needed: "Optional", example: "TX" },
   { heading: "Country", what: "", needed: "Optional", example: "United States" },
   { heading: "Type", what: "Jeweler, manufacturer, brand, studio", needed: "Optional", example: "Bridal jeweler" },
+  { heading: "Fit", what: "A strong, B maybe, C weak", needed: "Optional", example: "A" },
+  { heading: "Detail", what: "A real detail; finishes “I saw …” in message 1", needed: "Optional", example: "the halo ring you posted last week" },
   { heading: "Tags", what: "Separated by commas", needed: "Optional", example: "bridal, texas" },
   { heading: "Notes", what: "Anything worth keeping", needed: "Optional", example: "Met at JCK 2026" },
 ] as const;
@@ -327,7 +334,11 @@ export function sampleCsv(): string {
   const rows = [
     CSV_COLUMNS.map((c) => c.heading),
     CSV_COLUMNS.map((c) => c.example),
-    ["Cast House", "", "orders@example.com", "", "", "", "Providence", "RI", "United States", "Manufacturer", "", ""],
+    CSV_COLUMNS.map((c) =>
+      ({ Business: "Cast House", Email: "orders@example.com", City: "Providence", State: "RI", Country: "United States", Type: "Manufacturer", Fit: "B" })[
+        c.heading as string
+      ] ?? "",
+    ),
   ];
   return `${rows.map((r) => r.map(esc).join(",")).join("\r\n")}\r\n`;
 }

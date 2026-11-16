@@ -15,6 +15,7 @@ import { viewerZone } from "@/lib/time/zone";
 
 import { OutreachUnavailable } from "../shared";
 import { type ContactDetail, type SenderRow, type TeamMember, contactTitle } from "../types";
+import { fitLabel } from "@/core/outreach/research";
 import { Compose } from "../Compose";
 import { ContactSide, LogTouch } from "./ContactActions";
 
@@ -110,6 +111,8 @@ export default async function OutreachContactPage({ params }: { params: Promise<
                 ["Written to", c.touches > 0 ? `${c.touches}×, last ${c.last_contacted_at ? formatDate(c.last_contacted_at, tz) : ""}` : "Not yet"],
                 ["Follow up", c.next_follow_up_at ? formatDate(c.next_follow_up_at, tz) : null],
                 ["Replied", c.replied_at ? formatDate(c.replied_at, tz) : null],
+                ["Fit", c.fit ? `${c.fit}: ${fitLabel(c.fit)}` : null],
+                ["Real detail", c.detail],
                 ["Source", c.source],
                 ["Tags", c.tags.length ? c.tags.join(", ") : null],
                 ["Added", formatDate(c.created_at, tz)],

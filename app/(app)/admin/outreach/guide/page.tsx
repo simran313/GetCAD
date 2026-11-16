@@ -69,6 +69,12 @@ export default async function OutreachGuidePage() {
           has a sample file to fill in. Repeats, existing clients and do-not-contact people are skipped. New contacts are shared evenly
           between the senders for that list.
         </p>
+        <p>
+          To find new businesses, use <A href="/admin/outreach/research">Research</A>: start an area (a business type in a city), open its
+          ready-made searches (Google Maps, Google, Instagram, Yelp, Facebook, LinkedIn), and capture each business that fits with a real
+          detail and a fit grade (A, B or C). The detail fills message 1; strong fits are offered first on Today. If a business is already in
+          outreach or a client, the form says so before you spend time on it.
+        </p>
       </Step>
 
       <Step n={3} title="Every day: work through Today">

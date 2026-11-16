@@ -31,6 +31,8 @@
 
 ## 2. Build the list (45 minutes a day, first week)
 
+Do this in the portal under **Admin → Outreach → Research** (DECISIONS 1.34): start an area (a business type in a city), and it opens every search below for you, in a new tab. Capture each business there: it is checked against outreach and clients as you type, its real detail fills message 1, and its fit grade (A, B or C, the priorities above) decides what Today offers first.
+
 **Google Maps:** search each of these in the top 25 US metros (New York, Los Angeles, Chicago, Houston, Dallas, Phoenix, Philadelphia, San Antonio, San Diego, Austin, Miami, Atlanta, Seattle, Denver, Boston and others):
 
 - `custom jeweler [city]`
@@ -40,7 +42,7 @@
 
 **Instagram:** search the hashtags `#customjewelry`, `#customengagementring`, `#bridaljeweler`, `#jewelrycad` and `#cadjewelry`. Then open accounts with a US location and a business profile.
 
-**Per business, record:** business name, website, Instagram, city and state, contact name (owner or "custom design" contact), email from their site, the type of business (priority 1–3 above), and one specific thing you noticed (a recent custom piece, their "design your own" page).
+**Per business, record:** business name, website, Instagram, city and state, contact name (owner or "custom design" contact), email from their site, the type of business, a fit grade (A strong, B maybe, C weak), and one specific thing you noticed (a recent custom piece, their "design your own" page): the real detail.
 
 **Target: 300 businesses in week one.** That is two weeks of messages at 20–30 a day.
 

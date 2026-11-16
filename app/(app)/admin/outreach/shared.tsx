@@ -6,12 +6,13 @@ import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 
 /** The outreach screens' own links, under the page title. */
-export type OutreachSection = "dashboard" | "today" | "import" | "new" | "templates" | "senders" | "guide";
+export type OutreachSection = "dashboard" | "today" | "research" | "import" | "new" | "templates" | "senders" | "guide";
 
 export function OutreachNav({ current, isAdmin }: { current: OutreachSection; isAdmin: boolean }) {
   const links = [
     { key: "dashboard", href: "/admin/outreach", label: "Dashboard" },
     { key: "today", href: "/admin/outreach/today", label: "Today" },
+    { key: "research", href: "/admin/outreach/research", label: "Research" },
     { key: "new", href: "/admin/outreach/new", label: "Add contact" },
     { key: "import", href: "/admin/outreach/import", label: "Import a list" },
     { key: "templates", href: "/admin/outreach/templates", label: "Templates" },

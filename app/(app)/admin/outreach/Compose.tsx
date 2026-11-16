@@ -37,6 +37,7 @@ export interface ComposeContact {
   instagram: string | null;
   linkedin: string | null;
   city: string | null;
+  detail?: string | null;
   touches: number;
   do_not_contact?: boolean;
 }

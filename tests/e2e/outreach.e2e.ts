@@ -96,3 +96,40 @@ test("a client never reaches outreach", async ({ browser }) => {
   await expect(client.getByRole("table")).toHaveCount(0);
   await client.context().close();
 });
+
+test("an admin researches an area: searches open in new tabs, prospects are captured with a detail and fit, repeats are caught", async ({ browser }) => {
+  const admin = await signedIn(browser, "admin");
+  const city = `Testville ${tag}`;
+
+  await admin.goto("/admin/outreach/research");
+  await admin.getByLabel("City").fill(city);
+  await admin.getByLabel("State or region").fill("TX");
+  await act(admin, admin.getByRole("button", { name: "Add and start researching" }));
+  await expect(admin.getByText(`Retail or custom jeweler · ${city}, TX`)).toBeVisible({ timeout: 15_000 });
+
+  const maps = admin.getByRole("link", { name: new RegExp(`^Google Maps custom jeweler near ${city}, TX$`) });
+  await expect(maps).toHaveAttribute("target", "_blank");
+  await expect(maps).toHaveAttribute("href", /^https:\/\/www\.google\.com\/maps\/search\//);
+
+  const email = `owner-${tag}@research.example.com`;
+  await admin.getByLabel("Business name").fill(`Found Jewelers ${tag}`);
+  await admin.getByLabel("Website").fill(`https://www.found-${tag}.example.com/rings`);
+  await admin.getByLabel("Email").fill(email);
+  await admin.getByLabel("A real detail").fill("the oval halo you posted on Tuesday");
+  await admin.getByRole("button", { name: "A: Strong fit" }).click();
+  await act(admin, admin.getByRole("button", { name: "Save and next" }));
+  await expect(admin.getByRole("link", { name: `Found Jewelers ${tag}` })).toBeVisible();
+
+  const found = await withDb(
+    async (db) =>
+      (await db.query("SELECT kind, fit, detail, area_id IS NOT NULL AS in_area, segment, city FROM outreach_contacts WHERE email = $1", [email])).rows[0],
+  );
+  expect(found).toEqual({ kind: "PROSPECT", fit: "A", detail: "the oval halo you posted on Tuesday", in_area: true, segment: "RETAIL_JEWELER", city });
+
+  // The same business again, by its website: flagged before any time goes on it.
+  await admin.getByLabel("Website").fill(`found-${tag}.example.com`);
+  await admin.getByLabel("Business name").focus();
+  await expect(admin.getByText("Already in outreach (same website). Skip it and move on.")).toBeVisible();
+  await expect(admin.getByRole("button", { name: "Save and next" })).toBeDisabled();
+  await admin.context().close();
+});

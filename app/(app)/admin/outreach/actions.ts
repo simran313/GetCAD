@@ -66,7 +66,7 @@ export async function importDoneAction(): Promise<void> {
 
 const CONTACT_FIELDS = [
   "business_name", "contact_name", "email", "phone", "whatsapp", "instagram", "linkedin", "website",
-  "city", "region", "country", "segment", "tags", "notes", "source",
+  "city", "region", "country", "segment", "tags", "notes", "source", "detail", "fit", "area_id",
 ] as const;
 
 function contactFields(fd: FormData): Record<string, string> {
@@ -203,4 +203,32 @@ export async function saveTemplateAction(fd: FormData): Promise<OutreachResult<s
   if (error) return fail(error.message);
   revalidatePath("/admin/outreach/templates");
   return { ok: true, data: data as string };
+}
+
+/** Add a research area or change one (0071): status, owner, notes. */
+export async function saveAreaAction(fd: FormData): Promise<OutreachResult<string>> {
+  const supabase = await createUserSupabaseClient();
+  const { data, error } = await supabase.rpc("outreach_save_area", {
+    p_id: text(fd, "id"),
+    p_segment: text(fd, "segment") ?? "RETAIL_JEWELER",
+    p_city: text(fd, "city") ?? "",
+    p_region: text(fd, "region"),
+    p_country: text(fd, "country"),
+    p_status: text(fd, "status"),
+    p_owner_id: text(fd, "owner_id"),
+    p_notes: text(fd, "notes"),
+  });
+  if (error) return fail(error.message);
+  revalidatePath("/admin/outreach/research");
+  return { ok: true, data: data as string };
+}
+
+export type CheckResult = { state: "CLIENT" | "DUPLICATE" | null; by: string | null };
+
+/** Is this business already in outreach or a client? Asked while researching. */
+export async function checkContactAction(fields: Record<string, string>): Promise<OutreachResult<CheckResult>> {
+  const supabase = await createUserSupabaseClient();
+  const { data, error } = await supabase.rpc("outreach_check", { p_fields: fields });
+  if (error) return fail(error.message);
+  return { ok: true, data: data as CheckResult };
 }

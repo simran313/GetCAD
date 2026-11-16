@@ -21,6 +21,7 @@ import { contactTitle } from "../types";
 export const dynamic = "force-dynamic";
 
 type TodayContact = ComposeContact & {
+  fit: string | null;
   stage: string;
   next_follow_up_at: string | null;
   last_contacted_at: string | null;
@@ -51,6 +52,7 @@ function Row({ c, templates, myName, tz, due }: { c: TodayContact; templates: Ou
           </span>
           <span className="flex flex-wrap items-center gap-2 text-[length:var(--fs-2)]">
             <Badge variant={due ? "default" : "outline"}>Message {c.step} of 3</Badge>
+            {c.fit && <Badge variant="muted">Fit {c.fit}</Badge>}
             {due && c.next_follow_up_at && <span className="text-muted-foreground">due {formatDay(c.next_follow_up_at, tz)}</span>}
             {c.sender && <span className="text-muted-foreground">from {c.sender.label}</span>}
             <span className="font-medium underline underline-offset-2 group-open:hidden">Write</span>
