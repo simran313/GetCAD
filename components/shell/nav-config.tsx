@@ -14,6 +14,7 @@ import {
   Magnet,
   MessageSquare,
   Plus,
+  Send,
   Settings,
   User,
   UserPlus,
@@ -47,6 +48,7 @@ const ICON: Record<string, React.ReactNode> = {
   access: <KeyRound />,
   applications: <UserPlus />,
   leads: <Magnet />,
+  outreach: <Send />,
   settings: <Settings />,
   materials: <BookOpen />,
   performance: <BarChart3 />,
@@ -59,7 +61,7 @@ const GROUPS: Record<string, [string | undefined, string[]][]> = {
   staff: [
     ["Work", ["queue", "orders", "messages", "new"]],
     ["Money", ["billing"]],
-    ["People", ["clients", "access", "applications", "leads"]],
+    ["People", ["clients", "access", "applications", "leads", "outreach"]],
     ["System", ["settings"]],
   ],
   podLead: [
