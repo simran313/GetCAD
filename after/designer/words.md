@@ -4,9 +4,9 @@
 | --- | ---: |
 | `/home` | 84 |
 | `/work` | 126 |
-| `/work/8WBrMAGNXcEQgRJqJS75Z` | 323 |
-| `/work/8WBrMAGNXcEQgRJqJS75Z/checklist` | 325 |
-| `/work/8WBrMAGNXcEQgRJqJS75Z/review` | 372 |
+| `/work/YSvPemHmm4ENT7RkvCyz6` | 323 |
+| `/work/YSvPemHmm4ENT7RkvCyz6/checklist` | 325 |
+| `/work/YSvPemHmm4ENT7RkvCyz6/review` | 372 |
 | `/work/earnings` | 77 |
 | `/settings/payouts` | 110 |
 | `/onboarding/designer` | 30 |
