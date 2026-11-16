@@ -101,6 +101,10 @@ describe("Test AE — security invariants (hardening)", () => {
     try {
       // ensure_self + create_order both write base tables via definer funcs
       await db.query("SELECT public.ensure_self()");
+      // A self sign-up is verified by the team before it may order (0068).
+      await db.query("RESET ROLE");
+      await db.query("UPDATE users SET status = 'ACTIVE' WHERE id = $1", [client]);
+      await db.query("SET ROLE authenticated");
       const id = generateId();
       await db.query("SELECT public.create_order($1,'CAD_MODEL','USD')", [id]);
       const { rows } = await db.query("SELECT status FROM orders WHERE id=$1", [id]);

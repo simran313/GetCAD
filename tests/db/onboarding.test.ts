@@ -40,7 +40,8 @@ describe("Test L — audited self-onboarding", () => {
     const u = await db.query("SELECT id, role, status FROM users WHERE id = $1", [alice]);
     expect(u.rows).toHaveLength(1);
     expect(u.rows[0].role).toBe("CLIENT");
-    expect(u.rows[0].status).toBe("ACTIVE");
+    // A self sign-up waits for the team to verify the business (0068).
+    expect(u.rows[0].status).toBe("PENDING");
 
     const a = await db.query(
       "SELECT action, actor_id, entity_id, entity_type FROM audit.audit_log WHERE entity_id = $1",

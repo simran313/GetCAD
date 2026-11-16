@@ -25,6 +25,13 @@ export function samplePayloads(siteUrl: string): { [K in EmailTemplate]: EmailPa
     DESIGNER_APPLICATION_REJECTED: { full_name: "Sam Okafor" },
     PAYOUT_SENT: { amount_minor: 3_000_000, currency: "INR", order_ref: "RN-C-24" },
     ORDER_PLACED_FOR_YOU: { order_ref: o.order_ref, order_id: o.order_id, channel: "whatsapp", site_url: siteUrl },
+    CLIENT_VERIFICATION_RECEIVED: { name: o.name },
+    CLIENT_APPROVED: { name: o.name, site_url: siteUrl },
+    CLIENT_VERIFICATION_DECLINED: {
+      name: o.name,
+      reason: "The EIN letter is hard to read. Please upload a clearer scan or your state registration.",
+      site_url: siteUrl,
+    },
     WELCOME: { name: o.name, site_url: siteUrl },
     ORDER_RECEIVED: o,
     QUOTE_READY: o,

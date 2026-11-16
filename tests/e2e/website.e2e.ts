@@ -74,9 +74,10 @@ test("a new jeweler signs up from a campaign and must say how they heard about u
   await page.goto("/sign-in");
   await clerk.signIn({ page, emailAddress: email });
 
-  // Home sends a new client to Welcome until their business is on file.
+  // A new sign-up sees only the verification screen, never the portal (0068).
   await page.goto("/home");
-  await page.waitForURL("**/welcome");
+  await expect(page.getByRole("heading", { name: "Tell us who you are" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "New order" })).toHaveCount(0);
   await page.getByLabel("Business name").fill("Nina Atelier");
   await page.getByLabel("Your name").fill("Nina Rao");
   const heard = page.getByLabel("How did you hear about us?");
@@ -88,12 +89,38 @@ test("a new jeweler signs up from a campaign and must say how they heard about u
   await refused(page, page.getByRole("button", { name: "Continue" }));
   expect(await withDb(async (db) => (await db.query("SELECT 1 FROM client_profiles WHERE user_id = $1", [userId])).rowCount)).toBe(0);
 
-  await page.goto("/welcome");
+  await page.goto("/home");
   await page.getByLabel("Business name").fill("Nina Atelier");
   await page.getByLabel("Your name").fill("Nina Rao");
   await page.getByLabel("How did you hear about us?").selectOption("instagram");
   await act(page, page.getByRole("button", { name: "Continue" }));
-  await settled(page, "profile saved", (timeout) => expect(page.getByRole("heading", { name: "Welcome, Nina Atelier" })).toBeVisible({ timeout }));
+  await settled(page, "profile saved", (timeout) => expect(page.getByRole("heading", { name: "Verify your business" })).toBeVisible({ timeout }));
+
+  // Still closed: any portal address shows the same screen, and the database
+  // refuses an order from an unverified business.
+  await page.goto("/orders/new");
+  await expect(page.getByRole("heading", { name: "Verify your business" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unlocks once you're verified" })).toBeVisible();
+  await expect(withDb((db) => submittedBrief(db, userId, "Too early"))).rejects.toThrow(/not verified yet/);
+
+  // The business and one proof of registration.
+  await page.getByLabel("What kind of business is it?").selectOption("RETAIL_JEWELER");
+  await page.getByLabel("Website or Instagram").fill("ninaatelier.example");
+  await page.getByLabel("Business address").fill("12 Main St, Austin, TX 78701");
+  await page.getByLabel("What is it?").selectOption("EIN_LETTER");
+  await page.getByLabel("Proof file").setInputFiles({ name: "ein-letter.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n% e2e\n") });
+  await act(page, page.getByRole("button", { name: "Submit for verification" }));
+  await settled(page, "submitted", (timeout) => expect(page.getByRole("heading", { name: "We're checking your business" })).toBeVisible({ timeout }));
+
+  // An admin reviews it under Access and approves; the portal opens.
+  const admin = await signedIn(browser, "admin");
+  await admin.goto("/admin/access#pending");
+  await expect(admin.getByRole("link", { name: "ein-letter.pdf" })).toBeVisible();
+  await act(admin, admin.getByRole("button", { name: "Approve Nina Atelier" }));
+  await admin.context().close();
+  expect(await withDb(async (db) => (await db.query("SELECT status FROM users WHERE id = $1", [userId])).rows[0].status)).toBe("ACTIVE");
+  await page.goto("/welcome");
+  await expect(page.getByRole("heading", { name: "Welcome, Nina Atelier" })).toBeVisible();
 
   // The campaign they first came from, with their answer.
   const attribution = await withDb(

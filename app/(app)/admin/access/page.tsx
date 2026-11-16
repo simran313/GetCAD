@@ -10,6 +10,7 @@ import { identitiesFor, type Identity } from "@/lib/clerk/identities";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 import { AccessTable, type AccessRow } from "./AccessTable";
+import { PendingApprovals } from "./PendingApprovals";
 
 /**
  * Access control — who is on the platform and what they may do.
@@ -147,6 +148,8 @@ export default async function AdminUsersPage({
       />
 
       {identityError && <ErrorPanel title="Couldn't load emails" message={`${identityError} — showing account references only.`} />}
+
+      {isAdmin && <PendingApprovals />}
 
       <AccessTable
         rows={rows}
