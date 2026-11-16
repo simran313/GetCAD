@@ -102,7 +102,11 @@ export async function updateContactAction(fd: FormData): Promise<OutreachResult>
   return { ok: true };
 }
 
-/** SENT, REPLIED or NOTE; the follow-up arrives as an ISO time from the browser. */
+/**
+ * SENT, REPLIED or NOTE; the follow-up arrives as an ISO time from the browser.
+ * A send may name its template and step (0070): the next date follows the
+ * day 1 / 4 / 10 sequence unless a date is given.
+ */
 export async function logTouchAction(fd: FormData): Promise<OutreachResult> {
   const id = text(fd, "id") ?? "";
   const supabase = await createUserSupabaseClient();
@@ -113,9 +117,12 @@ export async function logTouchAction(fd: FormData): Promise<OutreachResult> {
     p_body: text(fd, "body"),
     p_follow_up: text(fd, "follow_up"),
     p_sender_id: text(fd, "sender_id"),
+    p_template_id: text(fd, "template_id"),
+    p_step: text(fd, "step") ? Number(text(fd, "step")) : null,
   });
   if (error) return fail(error.message);
   refresh(id);
+  revalidatePath("/admin/outreach/today");
   return { ok: true };
 }
 
@@ -176,5 +183,24 @@ export async function saveSenderAction(fd: FormData): Promise<OutreachResult<str
   if (error) return fail(error.message);
   revalidatePath("/admin/outreach/senders");
   refresh();
+  return { ok: true, data: data as string };
+}
+
+/** Add or change a message template (admins). */
+export async function saveTemplateAction(fd: FormData): Promise<OutreachResult<string>> {
+  const supabase = await createUserSupabaseClient();
+  const { data, error } = await supabase.rpc("outreach_save_template", {
+    p_id: text(fd, "id"),
+    p_name: text(fd, "name") ?? "",
+    p_list: text(fd, "list") ?? "ANY",
+    p_segment: text(fd, "segment"),
+    p_channel: text(fd, "channel") ?? "EMAIL",
+    p_step: Number(text(fd, "step") ?? 1),
+    p_subject: text(fd, "subject"),
+    p_body: fd.get("body")?.toString() ?? "",
+    p_active: fd.get("active") !== "false",
+  });
+  if (error) return fail(error.message);
+  revalidatePath("/admin/outreach/templates");
   return { ok: true, data: data as string };
 }

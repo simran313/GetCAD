@@ -12,6 +12,7 @@ import { viewerZone } from "@/lib/time/zone";
 import { OutreachNav, OutreachUnavailable, td, th } from "../shared";
 import type { SenderRow } from "../types";
 import { ImportFlow } from "./ImportFlow";
+import { ImportGuide } from "./ImportGuide";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +50,10 @@ export default async function OutreachImportPage() {
     <Page>
       <PageHeader
         title="Import a list"
-        description="A CSV saved from Excel or Google Sheets, or cells pasted from one. Repeats, existing clients and do-not-contact people are left out."
+        description="A CSV file saved from Excel or Google Sheets, or cells pasted from one."
       />
       <OutreachNav current="import" isAdmin={isAdmin} />
+      <ImportGuide open={past.length === 0} />
       <ImportFlow senders={active.map((s) => ({ id: s.id, label: s.label, address: s.address, channel: s.channel, for_kind: s.for_kind }))} />
 
       {past.length > 0 && (

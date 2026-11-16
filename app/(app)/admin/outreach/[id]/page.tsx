@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { formatDate, formatDateTime } from "@/core";
-import { channelLabel, gmailComposeUrl, instagramUrl, kindLabel, segmentLabel, stageLabel, websiteUrl, whatsappUrl } from "@/core/outreach";
+import { type OutreachTemplate, channelLabel, gmailComposeUrl, instagramUrl, kindLabel, segmentLabel, stageLabel, websiteUrl, whatsappUrl } from "@/core/outreach";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { viewerZone } from "@/lib/time/zone";
 
 import { OutreachUnavailable } from "../shared";
 import { type ContactDetail, type SenderRow, type TeamMember, contactTitle } from "../types";
+import { Compose } from "../Compose";
 import { ContactSide, LogTouch } from "./ContactActions";
 
 export const dynamic = "force-dynamic";
@@ -38,13 +39,15 @@ export default async function OutreachContactPage({ params }: { params: Promise<
   const tz = await viewerZone();
   const supabase = await createUserSupabaseClient();
 
-  const [contact, senders, dash] = await Promise.all([
+  const [contact, senders, dash, templates, me] = await Promise.all([
     supabase.rpc("outreach_contact", { p_id: id }),
     supabase.rpc("outreach_senders_list"),
     supabase.rpc("outreach_dashboard"),
+    supabase.rpc("outreach_templates_list"),
+    supabase.from("staff_profiles").select("first_name").eq("user_id", userId).maybeSingle(),
   ]);
   if (contact.error && /no such contact/i.test(contact.error.message)) notFound();
-  const err = contact.error ?? senders.error ?? dash.error;
+  const err = contact.error ?? senders.error ?? dash.error ?? templates.error;
   if (err) return <OutreachUnavailable message={err.message} />;
 
   const c = contact.data as ContactDetail;
@@ -138,6 +141,20 @@ export default async function OutreachContactPage({ params }: { params: Promise<
               </CardBody>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Write the next message</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <Compose
+                contact={c}
+                sender={c.sender}
+                templates={(templates.data ?? []) as OutreachTemplate[]}
+                myName={(me.data as { first_name?: string } | null)?.first_name ?? null}
+              />
+            </CardBody>
+          </Card>
 
           <LogTouch contact={c} senders={allSenders.filter((s) => s.active)} />
 

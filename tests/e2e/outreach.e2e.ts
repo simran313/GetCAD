@@ -16,7 +16,7 @@ const csv = [
   `Cast House again ${tag},,ORDERS-${tag}@cast.example.com,,,`,
 ].join("\n");
 
-test("an admin sets up a sender, imports a list and records a send", async ({ browser }) => {
+test("an admin sets up a sender, imports a list, sends from Today and records the reply", async ({ browser }) => {
   const admin = await signedIn(browser, "admin");
 
   await admin.goto("/admin/outreach/senders");
@@ -41,21 +41,49 @@ test("an admin sets up a sender, imports a list and records a send", async ({ br
   );
   expect(row).toMatchObject({ segment: "RETAIL_JEWELER", has_sender: true });
 
+  // Today offers the new contact; the right template is filled in and opens in Gmail from the sender.
+  await admin.goto("/admin/outreach/today");
+  const item = admin.locator("li", { hasText: `Bright Bridal ${tag}` });
+  await item.locator("summary").click();
+  const message = item.getByLabel("Message");
+  await expect(message).toHaveValue(/^Hi Ana,/);
+  await expect(item.getByText(/Replace before sending/)).toBeVisible();
+  await message.fill("Hi Ana, I saw your halo ring last week. We are a CAD studio for jewelers, from $35. Want to try one?");
+  await expect(item.getByText(/Replace before sending/)).toHaveCount(0);
+  const gmail = item.getByRole("link", { name: `Open in Gmail (cold-${tag}@example-cad.com)` });
+  await expect(gmail).toHaveAttribute("href", new RegExp(`su=CAD\\+for\\+Bright\\+Bridal\\+${tag}`));
+  await expect(gmail).toHaveAttribute("href", new RegExp(`authuser=cold-${tag}%40example-cad\\.com`));
+  await act(admin, item.getByRole("button", { name: "Mark as sent" }));
+
+  const sent = await withDb(
+    async (db) =>
+      (
+        await db.query(
+          `SELECT c.stage, c.touches, a.step, a.template_id IS NOT NULL AS templated,
+                  round(extract(epoch FROM c.next_follow_up_at - now()) / 86400) AS days
+             FROM outreach_contacts c JOIN outreach_activities a ON a.contact_id = c.id AND a.kind = 'SENT'
+            WHERE c.id = $1`,
+          [row.id],
+        )
+      ).rows[0],
+  );
+  expect(sent).toMatchObject({ stage: "CONTACTED", touches: 1, step: 1, templated: true });
+  expect(Number(sent.days)).toBe(3);
+
+  // Their reply, recorded on the contact page.
   await admin.goto(`/admin/outreach/${row.id}`);
   await expect(admin.getByRole("heading", { name: `Bright Bridal ${tag}` })).toBeVisible();
-  const gmail = admin.getByRole("link", { name: `Gmail from cold-${tag}@example-cad.com` });
-  await expect(gmail).toHaveAttribute("href", new RegExp(`authuser=cold-${tag}%40example-cad\\.com`));
-  await admin.getByRole("radio", { name: "I wrote to them" }).click();
-  await admin.getByLabel("What was said").fill("Intro email with the $35 first design");
+  await admin.getByRole("radio", { name: "They replied" }).click();
+  await admin.getByLabel("What was said").fill("Wants a price for a halo");
   await act(admin, admin.getByRole("button", { name: "Save", exact: true }).first());
-  await settled(admin, "send recorded", (timeout) => expect(admin.getByText("Intro email with the $35 first design")).toBeVisible({ timeout }));
-
+  await settled(admin, "reply recorded", (timeout) => expect(admin.getByText("Wants a price for a halo")).toBeVisible({ timeout }));
   const after = await withDb(async (db) => (await db.query("SELECT stage, touches FROM outreach_contacts WHERE id = $1", [row.id])).rows[0]);
-  expect(after).toEqual({ stage: "CONTACTED", touches: 1 });
+  expect(after).toEqual({ stage: "REPLIED", touches: 1 });
 
   await admin.goto("/admin/outreach");
   await expect(admin.getByRole("heading", { name: "Outreach" })).toBeVisible();
-  await expect(admin.getByRole("link", { name: `Cold ${tag}` })).toBeVisible();
+  await expect(admin.getByRole("heading", { name: "Last 14 days" })).toBeVisible();
+  await expect(admin.getByLabel(/: \d+ sent, 1 reply$/).last()).toBeVisible();
   await admin.context().close();
 });
 

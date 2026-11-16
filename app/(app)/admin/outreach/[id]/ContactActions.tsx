@@ -42,13 +42,13 @@ const Err = ({ error }: { error: string | null }) =>
 /** Record a send, a reply or a note, with the date to follow up. */
 export function LogTouch({ contact, senders }: { contact: ContactDetail; senders: SenderRow[] }) {
   const { pending, error, run } = useRun();
-  const [kind, setKind] = useState<"SENT" | "REPLIED" | "NOTE">(contact.do_not_contact ? "NOTE" : contact.touches > 0 ? "REPLIED" : "SENT");
+  const [kind, setKind] = useState<"SENT" | "REPLIED" | "NOTE">(contact.do_not_contact || contact.touches === 0 ? "NOTE" : "REPLIED");
   const defaultChannel = contact.email ? "EMAIL" : contact.whatsapp ? "WHATSAPP" : contact.instagram ? "INSTAGRAM" : "PHONE";
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Record a touch</CardTitle>
+        <CardTitle>Record by hand</CardTitle>
       </CardHeader>
       <CardBody>
         <form
@@ -105,7 +105,7 @@ export function LogTouch({ contact, senders }: { contact: ContactDetail; senders
             label="Follow up on"
             htmlFor="touch-day"
             optional
-            hint={kind === "SENT" ? "Leave empty to be reminded in four days." : undefined}
+            hint={kind === "SENT" ? "For a message sent outside this page. Leave empty to follow the sequence (day 4, then day 10)." : undefined}
           >
             <Input id="touch-day" name="follow_day" type="date" className="sm:w-56" />
           </Field>

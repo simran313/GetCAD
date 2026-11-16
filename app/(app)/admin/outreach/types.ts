@@ -72,7 +72,10 @@ export interface Dashboard {
     replied: number;
     sent_today: number;
     sent_7d: number;
+    interested: number;
+    no_sender: number;
   };
+  daily: { day: string; sent: number; replied: number }[];
   funnel: { kind: string; stage: string; n: number }[];
   senders: {
     id: string;

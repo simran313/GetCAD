@@ -209,14 +209,14 @@ describe("a rep's own book", () => {
 });
 
 describe("working a contact", () => {
-  it("moves from New to Contacted on a send, and is due again in four days", async () => {
+  it("moves from New to Contacted on a send, and is due again on day 4 (0070's sequence)", async () => {
     const ana = await byEmail("ana@bright-bridal.example.com");
     await q(admin, "SELECT public.outreach_log($1, 'SENT', 'EMAIL', 'Intro email')", [ana.id]);
     const after = await byEmail("ana@bright-bridal.example.com");
     expect(after).toMatchObject({ stage: "CONTACTED", touches: 1 });
     const days = (new Date(after.next_follow_up_at).getTime() - Date.now()) / 86_400_000;
-    expect(days).toBeGreaterThan(3.9);
-    expect(days).toBeLessThan(4.1);
+    expect(days).toBeGreaterThan(2.9);
+    expect(days).toBeLessThan(3.1);
   });
 
   it("shows up as due once the date passes, and as Replied when they answer", async () => {

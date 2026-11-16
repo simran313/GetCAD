@@ -163,8 +163,9 @@ Track everything in the portal under **Admin → Outreach** (DECISIONS 1.32), no
 
 - **Senders:** add each address or handle you write from (4–5 email addresses, WhatsApp, Instagram). Use the main domain for people you know and a second domain for prospects; start each new address at 20 a day.
 - **Import a list:** save your sheet as CSV (or paste the cells), choose Existing contacts or Prospects, check the columns, import. Repeats, existing clients and do-not-contact people are left out; the rest are shared evenly between the senders, so their reply rates can be compared.
-- **Each contact:** "Gmail from …" opens a message from the right account; WhatsApp opens the chat. After sending, record "I wrote to them" (they are due again in four days), then "They replied" or a note.
-- **Dashboard:** contacts, due today, sent today against each sender's limit, reply rate per sender, and who became a client (matched by email when they sign up).
+- **Today:** every day, open Today. It lists the follow-ups due, then new contacts up to each sender's limit. Press Write: the right template (the messages in section 4, kept under Templates) is filled in; replace anything in [square brackets], press Open in Gmail or Open WhatsApp, send it there, then Mark as sent. Message 2 comes up on day 4, message 3 on day 10.
+- **Replies:** on the contact's page, record "They replied" and set the stage (Interested, Not now with a date, Not interested).
+- **Dashboard:** the funnel (written to → replied → interested → client → ordered), the last 14 days, reply rate per sender and per template, and who became a client (matched by email when they sign up). Full instructions: Admin → Outreach → How it works.
 - **Do not contact:** anyone who asks is marked at once, with the reason, and is never written to or imported again.
 
 If you still keep a sheet for research, these headings import without changes: Business · Contact · Email · Phone · WhatsApp · Instagram · Website · City · State · Country · Type · Tags · Notes · Source

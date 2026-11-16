@@ -218,3 +218,116 @@ export function websiteUrl(site: string): string | null {
 export function replyRate(contacted: number, replied: number): number | null {
   return contacted > 0 ? Math.round((replied / contacted) * 100) : null;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Messages (0070): templates, the sequence, the CSV guide.                  */
+/* ------------------------------------------------------------------------ */
+
+/** The sequence: message 1 on day 1, message 2 on day 4, message 3 on day 10, then stop. */
+export const SEQUENCE = [
+  { step: 1, day: 1, label: "Message 1", wait: "Day 1" },
+  { step: 2, day: 4, label: "Message 2", wait: "3 days after message 1" },
+  { step: 3, day: 10, label: "Message 3", wait: "6 days after message 2" },
+] as const;
+
+export interface OutreachTemplate {
+  id: string;
+  name: string;
+  list: string;
+  segment: string | null;
+  channel: string;
+  step: number;
+  subject: string | null;
+  body: string;
+  active: boolean;
+}
+
+/** The words a template can use; each is filled in from the contact and the sender. */
+export const PLACEHOLDERS = [
+  ["{first_name}", "Their first name (or “there”)"],
+  ["{business}", "Their business name (or “your business”)"],
+  ["{city}", "Their city"],
+  ["{my_name}", "Your first name"],
+] as const;
+
+export interface FillWith {
+  contact_name?: string | null;
+  business_name?: string | null;
+  city?: string | null;
+  my_name?: string | null;
+}
+
+/** A template's text with the placeholders filled in. */
+export function fillTemplate(text: string, v: FillWith): string {
+  const first = v.contact_name?.trim().split(/\s+/)[0];
+  return text
+    .replace(/\{first_name\}/g, first || "there")
+    .replace(/\{business\}/g, v.business_name?.trim() || "your business")
+    .replace(/\{city\}/g, v.city?.trim() || "your city")
+    .replace(/\{my_name\}/g, v.my_name?.trim() || "");
+}
+
+/** The [square-bracket] parts still to be replaced with a real detail. */
+export function unfilledParts(text: string): string[] {
+  return [...text.matchAll(/\[[^\]\n]{2,}\]/g)].map((m) => m[0]);
+}
+
+/**
+ * The best template for a message: same channel and step; this list before
+ * "any list"; this business type before "any type". Falls back to the
+ * nearest earlier step when none is written for this one (Instagram and
+ * WhatsApp have two steps, LinkedIn one).
+ */
+export function pickTemplate<T extends OutreachTemplate>(
+  templates: T[],
+  want: { channel: string; step: number; list: string; segment: string | null },
+): T | null {
+  const score = (t: T) =>
+    (t.list === want.list ? 2 : t.list === "ANY" ? 1 : -100) + (t.segment === want.segment && t.segment ? 2 : t.segment === null ? 1 : -100);
+  for (let step = want.step; step >= 1; step--) {
+    const fits = templates
+      .filter((t) => t.active && t.channel === want.channel && t.step === step)
+      .map((t) => ({ t, s: score(t) }))
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s);
+    if (fits[0]) return fits[0].t;
+  }
+  return null;
+}
+
+/** The channels a contact can be written to on, best first. */
+export function reachableChannels(c: { email?: string | null; whatsapp?: string | null; phone?: string | null; instagram?: string | null; linkedin?: string | null }): string[] {
+  const out: string[] = [];
+  if (c.email) out.push("EMAIL");
+  if (c.whatsapp || c.phone) out.push("WHATSAPP");
+  if (c.instagram) out.push("INSTAGRAM");
+  if (c.linkedin) out.push("LINKEDIN");
+  return out;
+}
+
+/** The import file, column by column, as the guide and the sample file show it. */
+export const CSV_COLUMNS = [
+  { heading: "Business", what: "The business name", needed: "Business, Contact or Email", example: "Bright Bridal" },
+  { heading: "Contact", what: "The person's name", needed: "Business, Contact or Email", example: "Ana Lopez" },
+  { heading: "Email", what: "One email address", needed: "One way to reach them", example: "ana@example.com" },
+  { heading: "Phone", what: "With country code; WhatsApp opens from it", needed: "One way to reach them", example: "+1 512 555 0100" },
+  { heading: "Instagram", what: "Handle or link", needed: "Optional", example: "@brightbridal" },
+  { heading: "Website", what: "Their site", needed: "Optional", example: "example.com" },
+  { heading: "City", what: "", needed: "Optional", example: "Austin" },
+  { heading: "State", what: "State or region", needed: "Optional", example: "TX" },
+  { heading: "Country", what: "", needed: "Optional", example: "United States" },
+  { heading: "Type", what: "Jeweler, manufacturer, brand, studio", needed: "Optional", example: "Bridal jeweler" },
+  { heading: "Tags", what: "Separated by commas", needed: "Optional", example: "bridal, texas" },
+  { heading: "Notes", what: "Anything worth keeping", needed: "Optional", example: "Met at JCK 2026" },
+] as const;
+
+/** A sample file with the headings above and two example rows (example.com addresses). */
+export function sampleCsv(): string {
+  const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  const rows = [
+    CSV_COLUMNS.map((c) => c.heading),
+    CSV_COLUMNS.map((c) => c.example),
+    ["Cast House", "", "orders@example.com", "", "", "", "Providence", "RI", "United States", "Manufacturer", "", ""],
+  ];
+  return `${rows.map((r) => r.map(esc).join(",")).join("\r\n")}\r\n`;
+}

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { formatDay, formatRelative } from "@/core";
 import { KINDS, STAGES, kindLabel, replyRate, stageLabel } from "@/core/outreach";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { viewerZone } from "@/lib/time/zone";
 import { cn } from "@/lib/utils";
 
+import { DailyChart, FunnelChart, SenderChart, StageMix, TemplateChart } from "@/components/outreach/charts";
 import { OutreachNav, OutreachUnavailable, td, th } from "./shared";
 import { type ContactRow, type Dashboard, contactTitle } from "./types";
 
@@ -50,10 +52,13 @@ function Pill({ to, active, children }: { to: string; active: boolean; children:
   );
 }
 
-function Stat({ label, value, note }: { label: string; value: React.ReactNode; note?: React.ReactNode }) {
+function Stat({ label, value, note, accent }: { label: string; value: React.ReactNode; note?: React.ReactNode; accent?: string }) {
   return (
     <div className="rounded-[var(--r-lg)] border border-border bg-card shadow-[var(--e-1)] p-[var(--s-4)]">
-      <p className="text-[length:var(--fs-2)] text-muted-foreground">{label}</p>
+      <p className="flex items-center gap-1.5 text-[length:var(--fs-2)] text-muted-foreground">
+        {accent && <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-[3px]" style={{ background: accent }} />}
+        {label}
+      </p>
       <p className="tabular mt-1 text-[length:var(--fs-5)] font-semibold leading-[var(--lh-5)]">{value}</p>
       {note && <p className="mt-0.5 text-[length:var(--fs-2)] text-muted-foreground">{note}</p>}
     </div>
@@ -71,7 +76,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
   const due = sp.stage === "DUE";
 
   const supabase = await createUserSupabaseClient();
-  const [dash, list] = await Promise.all([
+  const [dash, list, templates] = await Promise.all([
     supabase.rpc("outreach_dashboard"),
     supabase.rpc("outreach_contacts_list", {
       p_kind: sp.list || null,
@@ -83,6 +88,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
       p_limit: PAGE_SIZE,
       p_offset: (page - 1) * PAGE_SIZE,
     }),
+    supabase.rpc("outreach_templates_list"),
   ]);
   if (dash.error) return <OutreachUnavailable message={dash.error.message} />;
   if (list.error) return <OutreachUnavailable message={list.error.message} />;
@@ -96,6 +102,11 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
   const ordered = d.conversion.reduce((s, c) => s + Number(c.ordered), 0);
   const value = d.conversion.reduce((s, c) => s + Number(c.order_value ?? 0), 0);
   const funnel = (kind: string, stage: string) => d.funnel.find((f) => f.kind === kind && f.stage === stage)?.n ?? 0;
+  const sentTemplates = ((templates.data ?? []) as { id: string; name: string; sent: number; replied: number }[])
+    .map((x) => ({ ...x, sent: Number(x.sent), replied: Number(x.replied) }))
+    .filter((x) => x.sent > 0)
+    .sort((a, b) => b.sent - a.sent)
+    .slice(0, 6);
 
   return (
     <Page>
@@ -109,8 +120,8 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
       <section aria-label="Totals" className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Stat label="Contacts" value={t.contacts} note={`${t.existing} existing · ${t.prospects} prospects`} />
         <Stat label="Due to follow up" value={t.due} note={<Link className="underline underline-offset-2" href={href(sp, { stage: "DUE" })}>Show them</Link>} />
-        <Stat label="Sent today" value={t.sent_today} note={`${t.sent_7d} in 7 days`} />
-        <Stat label="Replied" value={t.replied} note={`${pct(replyRate(Number(t.contacted), Number(t.replied)))} of ${t.contacted} written to`} />
+        <Stat label="Sent today" accent="var(--viz-sent)" value={t.sent_today} note={`${t.sent_7d} in 7 days`} />
+        <Stat label="Replied" accent="var(--viz-reply)" value={t.replied} note={`${pct(replyRate(Number(t.contacted), Number(t.replied)))} of ${t.contacted} written to`} />
         <Stat
           label="Became clients"
           value={won}
@@ -118,6 +129,80 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
         />
       </section>
 
+      <Card className="flex flex-wrap items-center justify-between gap-3 p-[var(--s-4)]">
+        <p className="text-[length:var(--fs-3)]">
+          <span className="font-semibold">Today:</span> {t.due} follow-up{t.due === 1 ? "" : "s"} due · {t.never_contacted} contact
+          {t.never_contacted === 1 ? "" : "s"} not written to yet
+          {t.no_sender > 0 && <span className="text-muted-foreground"> · {t.no_sender} without a sender</span>}
+        </p>
+        <Link href="/admin/outreach/today" className={buttonVariants({ size: "sm" })}>
+          Open today&apos;s list
+        </Link>
+      </Card>
+
+      <section aria-label="Charts" className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>From first message to order</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <FunnelChart
+              steps={[
+                { label: "Written to", n: Number(t.contacted) },
+                { label: "Replied", n: Number(t.replied) },
+                { label: "Interested", n: Number(t.interested) },
+                { label: "Became clients", n: won },
+                { label: "Ordered", n: ordered },
+              ]}
+            />
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Last 14 days</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <DailyChart days={d.daily.map((x) => ({ day: x.day, sent: Number(x.sent), replied: Number(x.replied) }))} />
+          </CardBody>
+        </Card>
+        {d.senders.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Senders compared</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <SenderChart
+                senders={d.senders.map((x) => ({ id: x.id, label: x.label, active: x.active, contacted: Number(x.contacted), replied: Number(x.replied) }))}
+              />
+            </CardBody>
+          </Card>
+        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Each list by stage</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <StageMix lists={KINDS.map(([k, l]) => ({ label: l, counts: Object.fromEntries(STAGES.map(([st]) => [st, Number(funnel(k, st))])) }))} />
+          </CardBody>
+        </Card>
+        {sentTemplates.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Reply rate by template</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <TemplateChart templates={sentTemplates} />
+            </CardBody>
+          </Card>
+        )}
+      </section>
+
+      <details className="group">
+        <summary className="cursor-pointer list-none text-[length:var(--fs-3)] font-medium underline underline-offset-2">
+          <span className="group-open:hidden">Show the numbers as tables</span>
+          <span className="hidden group-open:inline">Hide the tables</span>
+        </summary>
+        <div className="mt-6 space-y-6">
       {d.senders.length > 0 && (
         <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Senders">
           <CardHeader>
@@ -238,6 +323,8 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
           </Card>
         )}
       </div>
+        </div>
+      </details>
 
       <section aria-label="Contacts" className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">

@@ -358,3 +358,30 @@
     --page-max: 1400px;
   }
 }
+
+/*
+ * Outreach charts (owner, 16 Nov 2026; DECISIONS 1.33): the one place the
+ * portal uses colour to tell series apart. Validated for colour-blind
+ * separation on white (dataviz palette, fixed order, never cycled):
+ * categorical slots 1–6, a five-step blue ramp for ordered stages, and the
+ * pair "written to" (blue) / "replied" (orange) used the same way on every
+ * chart. Labels and values stay in the text colours; a table view sits
+ * under each chart.
+ */
+:root {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-6: #008300;
+  --viz-sent: var(--viz-1);
+  --viz-reply: var(--viz-2);
+  --viz-step-1: #86b6ef;
+  --viz-step-2: #5598e7;
+  --viz-step-3: #2a78d6;
+  --viz-step-4: #1c5cab;
+  --viz-step-5: #104281;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+}
