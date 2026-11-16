@@ -314,7 +314,7 @@ export function Preview() {
         </Section>
 
         <Section id="outreach-charts" title="Outreach charts" note="The outreach dashboard's charts (DECISIONS 1.33), with sample numbers. Hover or tab to a bar to read it.">
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
             <Card>
               <CardHeader>
                 <CardTitle>From first message to order</CardTitle>

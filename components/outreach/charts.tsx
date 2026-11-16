@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 /** Hover or focus a mark to read its numbers. */
 function Tip({ children, label, className, style }: { children: React.ReactNode; label: string; className?: string; style?: React.CSSProperties }) {
   return (
-    <div tabIndex={0} aria-label={label} style={style} className={cn("group/tip relative rounded-[4px] outline-none focus-visible:ring-2 focus-visible:ring-foreground", className)}>
+    <div tabIndex={0} role="img" aria-label={label} style={style} className={cn("group/tip relative rounded-[4px] outline-none focus-visible:ring-2 focus-visible:ring-foreground", className)}>
       {children}
       <span
         role="tooltip"
@@ -53,7 +53,7 @@ export function FunnelChart({ steps }: { steps: { label: string; n: number }[] }
         const prev = i > 0 ? steps[i - 1]!.n : null;
         const share = prev !== null ? `${pct(s.n, prev)}% of ${steps[i - 1]!.label.toLowerCase()}` : "";
         return (
-          <li key={s.label} className="grid grid-cols-[7.5rem_minmax(0,1fr)_auto] items-center gap-3 text-[length:var(--fs-2)]">
+          <li key={s.label} className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] items-center gap-3 text-[length:var(--fs-2)]">
             <span className="truncate">{s.label}</span>
             <Tip label={`${s.label}: ${s.n}${share ? ` (${share})` : ""}`}>
               <div className="h-3.5 w-full rounded-[4px] bg-[var(--viz-grid)]/40">
@@ -122,7 +122,7 @@ export function SenderChart({ senders }: { senders: { id: string; label: string;
         {senders.map((s) => {
           const rate = s.contacted > 0 ? pct(s.replied, s.contacted) : null;
           return (
-            <li key={s.id} className="grid grid-cols-[7.5rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-[length:var(--fs-2)]">
+            <li key={s.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)_3rem] sm:grid-cols-[7.5rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-[length:var(--fs-2)]">
               <span className={cn("truncate", !s.active && "text-muted-foreground")}>{s.label}</span>
               <Tip label={`${s.label}: ${s.contacted} written to, ${s.replied} replied${rate !== null ? ` (${rate}%)` : ""}`}>
                 <div className="space-y-[2px]">

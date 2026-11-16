@@ -140,7 +140,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
         </Link>
       </Card>
 
-      <section aria-label="Charts" className="grid gap-6 lg:grid-cols-2">
+      <section aria-label="Charts" className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader>
             <CardTitle>From first message to order</CardTitle>
