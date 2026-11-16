@@ -153,6 +153,14 @@ Rows without usable bank details are not exported. **Designers** → the payee �
 
 The look-up of names at the sign-in service failed, or your role may not make it. The page says "Couldn't load emails — showing account references only". Reload. If it persists, technical support.
 
+### "A new client cannot see the portal or place an order" {#ts-client-pending}
+
+1. **Access** → **Waiting for approval**. Are they listed? Then their business is not approved yet: open the proof and **Approve** ([how](#approve-clients)).
+2. **Not submitted yet?** They have not sent the business details. Ask them to sign in and finish **Verify your business**, or approve them if you know the business.
+3. **Declined?** They see your note and can submit again. Tell them what to send.
+4. **Approved, but they say nothing changed?** Ask them to refresh the page. If they never got the "Your business is verified" email, check **Settings** → **Email previews**: in **Test mode** emails go to the test inbox, not to clients.
+5. **Status Suspended** on **Access**: a suspended client cannot order. **⋯** → **Reinstate** if that was a mistake.
+
 ### When to call technical support {#support}
 
 - Granting or removing additional staff roles (making a full Admin).

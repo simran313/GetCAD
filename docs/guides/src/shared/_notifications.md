@@ -38,6 +38,9 @@ The platform tells people about events in three ways. They are separate, and onl
 | Spec claim decided | Client (and the pod lead, for the free fix when upheld) | Result of the claim |
 | Client orders a change after approval | Pod lead | "A client ordered a change to an approved design. It needs a quote." |
 | Team places an order for a client, with the email box ticked | Client | "The team placed an order for you." |
+| A new client submits their business for verification | Every Ops and admin account | "New business to verify: …" (opens **Access** → **Waiting for approval**) |
+| An admin approves a client's business | Client | "Your business is verified. Every feature is now unlocked." |
+| An admin declines a client's verification | Client | "We could not verify your business yet. See what to send." |
 | Payout batch marked paid | Each payee | "Your pay of ₹… for this job was sent." |
 | Order refunded | Client | "Your order has been refunded." |
 
@@ -50,7 +53,10 @@ Client emails are sent by the database event, never by a page, and each can be s
 
 | Event | Email | Client can turn it off |
 | --- | --- | --- |
-| Client creates their own account | Welcome | No |
+| A new client submits their business for verification | We're verifying your business | No |
+| An admin approves the business (the client's welcome) | Your business is verified, with **Start your first design** | No |
+| An admin declines the verification | We need a little more to verify your business, with the admin's note | No |
+| A verified client adds their business for the first time | Welcome | No |
 | Portal order sent for a price | Order received | No |
 | Order quoted (each new price) | Quote ready | No |
 | Quote unpaid for 24 hours | Quote reminder | Yes (Reminders) |

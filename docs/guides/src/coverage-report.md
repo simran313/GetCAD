@@ -65,6 +65,7 @@ No production data, account or setting was read or changed. All screenshots show
 | Credits | `/admin/credits` | Queue alert; Billing | Decide late credits | Admin only | Admin → Decide a late first-look credit | UI-test |
 | Clients | `/admin/clients` | Sidebar | Recompute public numbers; search; set an account manager | Admin only | Admin → Clients | UI-screen |
 | Access | `/admin/access` (`/admin/users` redirects) | Sidebar | Role; Suspend…; Reinstate; Copy account ID | OPS only; names need the identity look-up | Admin → Staff accounts and roles | UI-screen |
+| Access → Waiting for approval | `/admin/access#pending` | Access; the bell | Open proofs (audited); Approve; Decline with a reason | Admin only | Admin → Approve new clients | UI-test (approve); decline: DB test |
 | Pods | `/admin/access/pods` | Access → Pods | Create their pod; change lead; add or remove designers; create a pod | Admin only | Admin → Pods | UI-screen |
 | Applications | `/admin/applications` | Sidebar | Accept; Reject (note required); Reopen | OPS or SALES | Admin → Designer applications | UI-screen |
 | Leads | `/admin/leads` | Sidebar | Mark handled; Reopen | OPS or SALES | Admin → Website contact leads | UI-screen |
@@ -114,7 +115,8 @@ No production data, account or setting was read or changed. All screenshots show
 
 | Screen | Route | Reached by | Can do | Conditions | Guide section | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| Welcome | `/welcome` | First sign-in with no profile | Save business details; push opt-in | Self sign-ups only | Clients → Your first sign-in | UI-test (website sign-up) |
+| Verification screen | Every client page while the account is not approved | First sign-in (self sign-up) | Your details; business details; proof upload and removal; submit; resubmit after a decline | Client status Pending (0068) | Clients → Verify your business | UI-test (website sign-up walks it to approval) |
+| Welcome | `/welcome` | After approval | Push opt-in; start an order | Verified clients | Clients → Your first sign-in | UI-test (website sign-up) |
 | Home | `/home` | Sign-in | See actions, draft, messages, orders, credit | — | Clients → Your first sign-in | UI-screen |
 | New order | `/orders/new` | Sidebar; Home | CAD or Render; start from a past order; delete a draft | — | Clients → Order; Start again | UI-test |
 | Brief | `/orders/[id]/brief` | New order | Three steps; photos; pins; certificates | Fixed once priced | Clients → Order a CAD design | UI-test |
@@ -226,4 +228,5 @@ These are documented in the guides as they behave today. They may be worth fixin
 | 10 | Designer agreement signing on first sign-in | e2e designers are pre-signed | Add a test designer; sign in with their email; sign; check **Active** |
 | 11 | Disputes, refunds and release escrow from the screen | No test drives them; the buttons need a primary Finance or Ops role | On staging, with a Finance-primary account |
 | 12 | Sign-in on the live site | Production still uses a Clerk development instance | After switching to production keys, sign in once per role |
+| 14 | Screenshots of the client verification screen and **Access → Waiting for approval** | Added after run 209; the e2e sign-up test walks both, but no guide screenshot was captured | Re-run `[design-qa:guide]` with a pending client in the test data |
 | 13 | Screenshots for states the test data lacked: the admin **Confirm order** step, the client's **Review renders** page, the QC review with its decision buttons, and **Email previews** | No order was in those states when run 209 captured; the QC review image shows its layout on an in-progress order | Create those states on the test stack and re-run `[design-qa:guide]`; the text for them is verified from code |

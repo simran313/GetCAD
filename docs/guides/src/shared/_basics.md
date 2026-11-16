@@ -5,7 +5,7 @@
 3. Enter the code that arrives by email. No password is needed. If you set a password under **Account → Sign-in and security**, you can use it instead.
 4. The portal opens on your role's starting page (see [Account types at a glance](#account-types)).
 
-A new client who signs up without being invited is asked once, on **Welcome**, for their business details. Team members, designers and clients the team created skip that step.
+A new client who signs up without being invited sees only the verification screen until the team approves their business: their details, then the business and one proof of registration. Team members, designers and clients the team created skip that step.
 
 ### Finding your way around {#workspace-layout}
 
