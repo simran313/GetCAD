@@ -25,6 +25,8 @@ const ROUTES = [
   "/compare",
   "/privacy",
   "/terms",
+  "/refund-policy",
+  "/delivery-policy",
 ];
 
 /**
@@ -32,7 +34,7 @@ const ROUTES = [
  * not the request time: Google ignores a lastmod that is always "now". Move
  * it forward when the website's content changes.
  */
-export const SITE_CONTENT_UPDATED = "2026-11-15";
+export const SITE_CONTENT_UPDATED = "2026-11-16";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Each URL exactly as its page's canonical ("https://thecadpillar.com/" for home).

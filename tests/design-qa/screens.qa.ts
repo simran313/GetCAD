@@ -209,7 +209,7 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
     persona: null,
     paths: async () => [
       "/", "/how-it-works", "/pricing", "/quality", "/guarantee", "/results", "/jewelry-cad", "/faq",
-      "/contact", "/apply-designer", "/privacy", "/terms", "/engagement-ring-cad", "/for-jewelers", "/jewelry-rendering", "/jewelry-stl-3dm-files", "/sketch-to-cad", "/cad-file-repair", "/jewelry-cad-cost", "/compare", "/sign-in", "/sign-up", `/p/${"x".repeat(32)}`,
+      "/contact", "/apply-designer", "/privacy", "/terms", "/refund-policy", "/delivery-policy", "/engagement-ring-cad", "/for-jewelers", "/jewelry-rendering", "/jewelry-stl-3dm-files", "/sketch-to-cad", "/cad-file-repair", "/jewelry-cad-cost", "/compare", "/sign-in", "/sign-up", `/p/${"x".repeat(32)}`,
     ],
   },
   client: {

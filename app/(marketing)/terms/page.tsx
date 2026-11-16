@@ -17,7 +17,7 @@ const SECTIONS = [
   {
     heading: "Orders and prices",
     body: [
-      "You send a brief through your account. We reply with a fixed price for that piece. Prices start from $35 a design; the price depends on the piece and how detailed it is, and render-only orders are quoted. Regular clients can ask for a retainer.",
+      "You send a brief through your account. We reply with a fixed price for that piece. Prices start from $35 a design; the price depends on the piece and how detailed it is. Renders of a file you already have start at $15 a design and are quoted. Regular clients can ask for a retainer.",
       "You only pay when you accept a price. An order starts once it is paid and we have confirmed the brief is complete.",
       "Payment is by card or UPI through Razorpay, or by Wise, bank transfer or PayPal by arrangement. Prices are in US dollars.",
     ],
@@ -72,7 +72,7 @@ const SECTIONS = [
   {
     heading: "Changes and contact",
     body: [
-      "We may update these terms; the version in force when you place an order applies to that order. Questions: use the contact page. [Governing law and company details to be confirmed with counsel.]",
+      "We may update these terms; the version in force when you place an order applies to that order. Cancellations, refunds and credits are set out in our cancellation and refund policy, and how files are delivered in our delivery policy. Questions: use the contact page. [Governing law and company details to be confirmed with counsel.]",
     ],
   },
 ];

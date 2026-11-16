@@ -85,6 +85,8 @@ const PAGES = [
   "apply-designer/page.tsx",
   "privacy/page.tsx",
   "terms/page.tsx",
+  "refund-policy/page.tsx",
+  "delivery-policy/page.tsx",
   "engagement-ring-cad/page.tsx",
   "for-jewelers/page.tsx",
   "jewelry-rendering/page.tsx",
@@ -118,7 +120,7 @@ describe("website page metadata", () => {
   });
 
   it("keeps the canonical paths and the brand-first home title", () => {
-    expect(metas.map((m) => m.path)).toEqual(["/", "/jewelry-cad", "/how-it-works", "/pricing", "/guarantee", "/quality", "/faq", "/contact", "/apply-designer", "/privacy", "/terms", "/engagement-ring-cad", "/for-jewelers", "/jewelry-rendering", "/jewelry-stl-3dm-files", "/sketch-to-cad", "/cad-file-repair", "/jewelry-cad-cost", "/compare"]);
+    expect(metas.map((m) => m.path)).toEqual(["/", "/jewelry-cad", "/how-it-works", "/pricing", "/guarantee", "/quality", "/faq", "/contact", "/apply-designer", "/privacy", "/terms", "/refund-policy", "/delivery-policy", "/engagement-ring-cad", "/for-jewelers", "/jewelry-rendering", "/jewelry-stl-3dm-files", "/sketch-to-cad", "/cad-file-repair", "/jewelry-cad-cost", "/compare"]);
     expect(metas[0]!.title).toBe("The CAD Pillar: jewelry CAD, factory-ready in hours");
   });
 

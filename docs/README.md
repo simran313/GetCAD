@@ -80,8 +80,9 @@ Chapter 9 is safe for this repository. Exploit-sensitive evidence (exact grants,
 | [DECISIONS.md](./DECISIONS.md) | Business decisions (source of truth) |
 | [SYSTEM.md](./SYSTEM.md), [OPERATIONS.md](./OPERATIONS.md) | How an order moves; every action per role (superseded where they disagree with DECISIONS) |
 | [TCP-BUILD-SPEC.md](./TCP-BUILD-SPEC.md), [SPEC-ADDENDUM.md](./SPEC-ADDENDUM.md), [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) | Original specification and build plan |
-| [DEPLOY.md](./DEPLOY.md), [LAUNCH.md](./LAUNCH.md), [CLERK-PRODUCTION.md](./CLERK-PRODUCTION.md) | Deployment, go-live, Clerk production switch |
+| [DEPLOY.md](./DEPLOY.md), [LAUNCH.md](./LAUNCH.md), [CLERK-PRODUCTION.md](./CLERK-PRODUCTION.md), [PAYMENTS-GO-LIVE.md](./PAYMENTS-GO-LIVE.md) | Deployment, go-live, Clerk production switch, payments go-live |
 | [PERFORMANCE.md](./PERFORMANCE.md), [SEO.md](./SEO.md), [EMAIL.md](./EMAIL.md) | Speed budgets, search, email |
 | [BLACKBOX.md](./BLACKBOX.md), `PHASE-*-ROLLOUT.md` | Acceptance tests and phase runbooks |
 | [guides/](./guides/README.md) | Platform User Guide and Admin Operations Manual (for people using the portal) |
 | [redesign/](./redesign/REVAMP-NOV-2026.md), [design/](./design/README.md), [marketing/](./marketing/LANDING-COPY.md) | Design system and copy |
+| [marketing/OUTBOUND-KIT.md](./marketing/OUTBOUND-KIT.md), [marketing/AI-SEARCH-OFFSITE-KIT.md](./marketing/AI-SEARCH-OFFSITE-KIT.md) | Outreach to US jewelers; getting named by other sites and AI assistants |
