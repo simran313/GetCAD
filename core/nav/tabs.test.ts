@@ -21,14 +21,15 @@ describe("tabsForRole", () => {
   });
 
   // A1–A10 (Phase 5d).
-  it("gives the admin workspace its twelve tabs, four on the phone", () => {
+  it("gives the admin workspace its thirteen tabs, four on the phone", () => {
     expect(tabsForRole("OPS").map((t) => t.label)).toEqual([
-      "Queue", "Create order", "All orders", "Messages", "Billing", "Clients", "Designers", "Access", "Applications", "Leads", "Settings", "Account",
+      "Queue", "Create order", "All orders", "Messages", "Billing", "Clients", "Designers", "Access", "Applications", "Leads", "Outreach", "Settings", "Account",
     ]);
     expect(activeTabKey("/messages/ord_1", tabsForRole("OPS"))).toBe("messages");
     expect(mobileTabs(tabsForRole("OPS")).map((t) => t.key)).toEqual(["queue", "new", "orders", "account"]);
     expect(activeTabKey("/admin/orders", tabsForRole("OPS"))).toBe("orders");
     expect(activeTabKey("/admin/access/pods", tabsForRole("OPS"))).toBe("access");
+    expect(activeTabKey("/admin/outreach/import", tabsForRole("SALES"))).toBe("outreach");
   });
 
   // P1–P6 (Phase 5c): the pod lead's own workspace.
@@ -90,6 +91,7 @@ describe("tabsForRole", () => {
       "/admin/access",
       "/admin/applications",
       "/admin/leads",
+      "/admin/outreach",
       "/admin/settings",
       "/account",
     ]);

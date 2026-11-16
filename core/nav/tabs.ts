@@ -104,6 +104,8 @@ const STAFF_TABS: Tab[] = [
   { key: "access", label: "Access", href: "/admin/access", icon: "board", mobile: false },
   { key: "applications", label: "Applications", href: "/admin/applications", icon: "work", mobile: false },
   { key: "leads", label: "Leads", href: "/admin/leads", icon: "message", mobile: false },
+  // Contacts, senders and every touch, for admins and sales (owner, 16 Nov 2026).
+  { key: "outreach", label: "Outreach", href: "/admin/outreach", icon: "message", mobile: false },
   { key: "settings", label: "Settings", href: "/admin/settings", icon: "board", mobile: false },
   ACCOUNT,
 ]

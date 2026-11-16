@@ -147,7 +147,7 @@ If they reply, send the link: thecadpillar.com/engagement-ring-cad (or /for-jewe
 | "Where are you based?" | "We're an Indian company with a remote team of senior CAD designers; we work US hours and answer calls and WhatsApp 5:30 AM – 2:30 PM ET. You brief and approve everything in our portal." |
 | "Is my design safe?" | "White-label with an NDA by default. You own the files once paid, and our designers never see your customer." |
 | "Send examples" | Send 3–5 of **your own** designs (portfolio), never client work. |
-| "Not now" | "Understood. Mind if I check back after the holidays?" Note the date in the sheet. |
+| "Not now" | "Understood. Mind if I check back after the holidays?" Set the stage to Not now with a follow-up date in Outreach. |
 | "Yes, let's try" | "Sign up at thecadpillar.com and verify your business (2 minutes; we approve within the hour during US hours). Then send the brief, and I'll watch for it." Then **approve them fast**. |
 
 **After a yes:**
@@ -157,15 +157,23 @@ If they reply, send the link: thecadpillar.com/engagement-ring-cad (or /for-jewe
 
 ---
 
-## 6. Tracking sheet (Google Sheets)
+## 6. Tracking (Admin → Outreach)
 
-**Columns:** Business · Type (1/2/3) · City, State · Contact · Email · Instagram · Website · Personal detail · Day 1 sent · Day 4 sent · Day 10 sent · Replied (date) · Outcome (Interested / Not now / No / Signed up / First order / Repeat) · Next step · Notes
+Track everything in the portal under **Admin → Outreach** (DECISIONS 1.32), not in a sheet:
+
+- **Senders:** add each address or handle you write from (4–5 email addresses, WhatsApp, Instagram). Use the main domain for people you know and a second domain for prospects; start each new address at 20 a day.
+- **Import a list:** save your sheet as CSV (or paste the cells), choose Existing contacts or Prospects, check the columns, import. Repeats, existing clients and do-not-contact people are left out; the rest are shared evenly between the senders, so their reply rates can be compared.
+- **Each contact:** "Gmail from …" opens a message from the right account; WhatsApp opens the chat. After sending, record "I wrote to them" (they are due again in four days), then "They replied" or a note.
+- **Dashboard:** contacts, due today, sent today against each sender's limit, reply rate per sender, and who became a client (matched by email when they sign up).
+- **Do not contact:** anyone who asks is marked at once, with the reason, and is never written to or imported again.
+
+If you still keep a sheet for research, these headings import without changes: Business · Contact · Email · Phone · WhatsApp · Instagram · Website · City · State · Country · Type · Tags · Notes · Source
 
 **Daily cadence (about 1 hour):**
 - **30 minutes:** 20–30 new Day 1 messages.
 - **10 minutes:** Day 4 and Day 10 follow-ups that are due.
 - **15 minutes:** replies, sign-ups, approvals.
-- **5 minutes:** update the sheet.
+- **5 minutes:** record what you sent and what came back.
 
 **Weekly numbers to watch:**
 - messages sent;
@@ -202,7 +210,7 @@ Change one thing at a time (subject, first line or offer), never everything.
 
 | Day | Do |
 |---|---|
-| 1 | Add the signature above (it carries the registered address) to your email; set up the tracking sheet; list 60 businesses |
+| 1 | Add the signature above (it carries the registered address) to your email; add your senders under Admin → Outreach; import your existing contacts; list 60 businesses |
 | 2–5 | List 60 a day; send 20–30 Day 1 messages a day; LinkedIn connects to 10 manufacturers a day |
 | 4 onward | Day 4 follow-ups as they fall due |
 | 8–14 | Keep sending; Day 10 closes; move "Not now" to a January follow-up |
