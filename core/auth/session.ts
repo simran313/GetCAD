@@ -61,6 +61,8 @@ export const PUBLIC_WEBSITE_PAGES = [
   "/privacy",
   "/terms",
   "/results",
+  "/refund-policy",
+  "/delivery-policy",
   "/engagement-ring-cad",
   "/for-jewelers",
   "/jewelry-rendering",

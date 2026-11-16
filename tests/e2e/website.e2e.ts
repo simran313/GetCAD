@@ -31,6 +31,8 @@ const PAGES = [
   "/apply-designer",
   "/privacy",
   "/terms",
+  "/refund-policy",
+  "/delivery-policy",
   "/engagement-ring-cad",
   "/for-jewelers",
   "/jewelry-rendering",

@@ -18,7 +18,7 @@ const walk = (dir: string): string[] =>
     return statSync(join(root, rel)).isDirectory() ? walk(rel) : [rel];
   });
 
-const PAGES = ["", "jewelry-cad", "how-it-works", "pricing", "guarantee", "quality", "faq", "terms", "privacy", "contact", "apply-designer", "engagement-ring-cad", "for-jewelers", "jewelry-rendering", "jewelry-stl-3dm-files", "sketch-to-cad", "cad-file-repair", "jewelry-cad-cost", "compare"];
+const PAGES = ["", "jewelry-cad", "how-it-works", "pricing", "guarantee", "quality", "faq", "terms", "privacy", "refund-policy", "delivery-policy", "contact", "apply-designer", "engagement-ring-cad", "for-jewelers", "jewelry-rendering", "jewelry-stl-3dm-files", "sketch-to-cad", "cad-file-repair", "jewelry-cad-cost", "compare"];
 
 describe("the website", () => {
   it("has every page from LANDING-COPY", () => {
