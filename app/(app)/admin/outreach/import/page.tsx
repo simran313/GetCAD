@@ -55,7 +55,7 @@ export default async function OutreachImportPage() {
       <ImportFlow senders={active.map((s) => ({ id: s.id, label: s.label, address: s.address, channel: s.channel, for_kind: s.for_kind }))} />
 
       {past.length > 0 && (
-        <Card className="overflow-x-auto">
+        <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Recent imports">
           <CardHeader>
             <CardTitle>Recent imports</CardTitle>
           </CardHeader>

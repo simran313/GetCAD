@@ -183,7 +183,7 @@ export function ImportFlow({ senders }: { senders: SenderOption[] }) {
       </Card>
 
       {table.length > 0 && (
-        <Card className="overflow-x-auto">
+        <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Which column is which">
           <CardHeader>
             <CardTitle>Which column is which</CardTitle>
           </CardHeader>

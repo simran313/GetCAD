@@ -45,8 +45,9 @@ export function ServicePage({ page }: { page: ServicePageContent }) {
         <Section key={s.title} title={s.title}>
           <p className="max-w-3xl text-[length:var(--fs-4)] leading-[var(--lh-4)]">{s.answer}</p>
           {s.points && <Ticks items={s.points} className="mt-6 max-w-3xl" />}
+          {/* Focusable so the table scrolls with the keyboard on a phone (axe: scrollable-region-focusable). */}
           {s.table && (
-            <div className="mt-8 overflow-x-auto rounded-[var(--r-lg)] border border-border">
+            <div tabIndex={0} role="region" aria-label={s.title} className="mt-8 overflow-x-auto rounded-[var(--r-lg)] border border-border">
               <table className="w-full min-w-[560px] border-collapse text-left text-[length:var(--fs-2)] leading-[var(--lh-2)]">
                 <thead className="bg-subtle">
                   <tr>

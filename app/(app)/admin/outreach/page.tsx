@@ -119,7 +119,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
       </section>
 
       {d.senders.length > 0 && (
-        <Card className="overflow-x-auto">
+        <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Senders">
           <CardHeader>
             <CardTitle>Senders</CardTitle>
           </CardHeader>
@@ -159,7 +159,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-x-auto">
+        <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Where each list stands">
           <CardHeader>
             <CardTitle>Where each list stands</CardTitle>
           </CardHeader>
@@ -194,7 +194,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
         </Card>
 
         {d.is_admin && d.owners.length > 0 ? (
-          <Card className="overflow-x-auto">
+          <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Who works them">
             <CardHeader>
               <CardTitle>Who works them</CardTitle>
             </CardHeader>
@@ -276,7 +276,7 @@ export default async function OutreachPage({ searchParams }: { searchParams: Pro
             />
           </Card>
         ) : (
-          <Card className="overflow-x-auto">
+          <Card className="overflow-x-auto" tabIndex={0} role="region" aria-label="Contacts">
             <table className="w-full text-left text-[length:var(--fs-2)]">
               <thead className="border-b border-border text-muted-foreground">
                 <tr>
