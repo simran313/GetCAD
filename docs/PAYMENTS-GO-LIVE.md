@@ -12,8 +12,8 @@ Where payments stand, what is ready, and the exact steps once the bank account i
 | Test or live keys in production? | **Unknown: check** | Vercel → `tcp` → Settings → Environment Variables → `RAZORPAY_KEY_ID` starts `rzp_test_` (test) or `rzp_live_` (live) |
 | Manual payments (bank transfer, Wise, PayPal) | Ready | Admin → order → **Mark paid** (DECISIONS §13) |
 | Policy pages payment providers check | **Added in this PR**: `/refund-policy`, `/delivery-policy`; Terms and Privacy exist | Footer → Legal |
-| Terms of service | **Still marked "Draft · pending legal review"**, with a placeholder for company details and governing law | `/terms` |
-| Contact page with a business address | **Missing address** | `/contact` |
+| Terms of service | Final (16 Nov 2026): company, CIN, registered office, Indian law, courts at New Delhi. A lawyer's review is still recommended | `/terms` |
+| Contact page with a business address | Done: registered office, CIN, email, phone; also in every page's footer | `/contact` |
 | Invoices for clients | **Not built**: the platform issues no invoices | Admin manual, "There is no invoice email" |
 | Designer payouts (Razorpay Route) | Export + bank transfer for now (in-app payouts off, DECISIONS §12) | Admin → Payouts |
 
@@ -22,13 +22,7 @@ Where payments stand, what is ready, and the exact steps once the bank account i
 ## Before the bank details arrive (can be done now)
 
 1. **Merge this PR**: the refund and delivery policy pages go live, linked from every page's footer.
-2. **Send the company details for the Terms and Contact pages:**
-   - Ichizu Private Limited's registered office address;
-   - CIN;
-   - GSTIN (if registered);
-   - the governing law and courts you want (usually India, courts at Mumbai).
-
-   I will finalise `/terms`, removing the draft banner once you approve the text, and add the address to `/contact`. If counsel must review the Terms first, keep the banner until then, but expect Razorpay to ask about it.
+2. **GST registration.** Apply now: Razorpay may ask for the GSTIN, and the LUT that keeps export invoices at 0% needs it. Add the GSTIN to `content/claims.ts` (`COMPANY`) once issued.
 3. **Check which Razorpay keys production uses** (step above).
 4. **Open a Wise Business account** (USD account details, so US clients can pay by ACH from their own bank) and/or a **PayPal Business** account. This is the fastest way to take a US payment while Razorpay international is pending.
 

@@ -81,7 +81,7 @@ Subject: CAD for [Store name] custom orders
 >
 > [Your name]
 > The CAD Pillar · thecadpillar.com · WhatsApp +91 83692 88293
-> [Business address]
+> Ichizu Private Limited, B10, Ground Floor, Vivek Vihar, Phase 2, New Delhi 110095, India
 > Not interested? Reply "no" and I won't write again.
 
 **Day 4**
@@ -144,7 +144,7 @@ If they reply, send the link: thecadpillar.com/engagement-ring-cad (or /for-jewe
 |---|---|
 | "How much?" | "From $35 for standard pieces like solitaires and bands. Halo, pavé and sculpted pieces get a fixed price within the hour, before you pay. Send me one and I'll price it." |
 | "We have a CAD guy" | "Great. We're often the overflow for jewelers with their own designer: same specs, your naming. Keep us for rush weeks." |
-| "Where are you based?" | "Our studio is in Mumbai; we work US hours and answer calls and WhatsApp 5:30 AM – 2:30 PM ET. You brief and approve everything in our portal." |
+| "Where are you based?" | "We're an Indian company with a remote team of senior CAD designers; we work US hours and answer calls and WhatsApp 5:30 AM – 2:30 PM ET. You brief and approve everything in our portal." |
 | "Is my design safe?" | "White-label with an NDA by default. You own the files once paid, and our designers never see your customer." |
 | "Send examples" | Send 3–5 of **your own** designs (portfolio), never client work. |
 | "Not now" | "Understood. Mind if I check back after the holidays?" Note the date in the sheet. |
@@ -185,7 +185,7 @@ Change one thing at a time (subject, first line or offer), never everything.
   - have a clear way to opt out ("Reply 'no'…");
   - have an honest subject line.
 
-  Honour opt-outs at once and never write again. Add the address to the signature before the first send.
+  Honour opt-outs at once and never write again. The signature in section 4 carries it.
 - **Deliverability:**
   - send manually from Google Workspace, 20–30 a day, growing slowly;
   - no attachments or images in the first email, one link at most;
@@ -202,7 +202,7 @@ Change one thing at a time (subject, first line or offer), never everything.
 
 | Day | Do |
 |---|---|
-| 1 | Add the business address to your email signature; set up the tracking sheet; list 60 businesses |
+| 1 | Add the signature above (it carries the registered address) to your email; set up the tracking sheet; list 60 businesses |
 | 2–5 | List 60 a day; send 20–30 Day 1 messages a day; LinkedIn connects to 10 manufacturers a day |
 | 4 onward | Day 4 follow-ups as they fall due |
 | 8–14 | Keep sending; Day 10 closes; move "Not now" to a January follow-up |

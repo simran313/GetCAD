@@ -50,6 +50,15 @@ export const CLAIMS = {
   /** Spec-claim window (DECISIONS §7). */
   CLAIM_WINDOW_DAYS: claim(30, true),
   AI_LINE: claim("AI-native jewelry CAD. Checked by experts.", true),
+  /** The registered company and office (owner, 16 Nov 2026: office flex). Shown on Contact, Terms and the footer. */
+  COMPANY: claim(
+    {
+      legalName: "Ichizu Private Limited",
+      cin: "U74101DL2026PTC471762",
+      address: "B10, Ground Floor, Vivek Vihar, Phase 2, New Delhi 110095, India",
+    },
+    true,
+  ),
   /** Renders of the client's own 3DM or STL, without CAD work (DECISIONS §4, 1.29; owner, 15 Nov 2026). */
   RENDER_ONLY_PRICE: claim("$15", true),
   /** The software the designers model in (DECISIONS §9, 1.29; owner, 15 Nov 2026). */

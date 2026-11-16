@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { c } from "@/content/claims";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +79,17 @@ export default async function ContactPage({
           <Button type="submit">Send message</Button>
         </form>
       )}
+      <div className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">{c("COMPANY").legalName}</p>
+        <p className="mt-1">{c("COMPANY").address}</p>
+        <p className="mt-1">CIN {c("COMPANY").cin}</p>
+        <p className="mt-1">
+          <a href={`mailto:${c("EMAIL")}`} className="underline underline-offset-4">
+            {c("EMAIL")}
+          </a>
+          {" · "}WhatsApp and phone {c("LIVE_CALL_PHONE")}
+        </p>
+      </div>
     </section>
   );
 }

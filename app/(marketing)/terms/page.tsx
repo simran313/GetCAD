@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LegalPage } from "@/components/marketing/legal-page";
+import { c } from "@/content/claims";
 import { JsonLd } from "@/components/seo/json-ld";
 import { pageJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -11,7 +12,7 @@ const SECTIONS = [
   {
     heading: "Who we are and who we serve",
     body: [
-      "The CAD Pillar, a brand of Ichizu Private Limited (\"we\"), makes jewelry CAD files and renders for jewelry businesses. We work only with businesses (\"you\"), not with consumers. Our studio is in Mumbai, India, and works US business hours.",
+      "The CAD Pillar, a brand of Ichizu Private Limited (\"we\"), makes jewelry CAD files and renders for jewelry businesses. We work only with businesses (\"you\"), not with consumers. We are a company registered in India, with a remote team of designers, and we work US business hours.",
     ],
   },
   {
@@ -72,7 +73,14 @@ const SECTIONS = [
   {
     heading: "Changes and contact",
     body: [
-      "We may update these terms; the version in force when you place an order applies to that order. Cancellations, refunds and credits are set out in our cancellation and refund policy, and how files are delivered in our delivery policy. Questions: use the contact page. [Governing law and company details to be confirmed with counsel.]",
+      "We may update these terms; the version in force when you place an order applies to that order. Cancellations, refunds and credits are set out in our cancellation and refund policy, and how files are delivered in our delivery policy. Questions: use the contact page.",
+    ],
+  },
+  {
+    heading: "Company, governing law and courts",
+    body: [
+      `The CAD Pillar is a brand of ${c("COMPANY").legalName} (CIN ${c("COMPANY").cin}), registered office ${c("COMPANY").address}.`,
+      "These terms are governed by the laws of India. The courts at New Delhi have exclusive jurisdiction over any dispute arising from them or from an order.",
     ],
   },
 ];
@@ -83,7 +91,8 @@ export default function TermsPage() {
       <JsonLd data={pageJsonLd("/terms", "Terms of service")} />
       <LegalPage
       title="Terms of service"
-      updated="October 2026"
+      updated="November 2026"
+      draft={false}
       intro="The rules for ordering from The CAD Pillar, in plain language."
       sections={SECTIONS}
     />
