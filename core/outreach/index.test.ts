@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { buildRows, chunk, gmailComposeUrl, guessMapping, looksLikeHeader, parseTable, replyRate, websiteUrl, whatsappUrl } from ".";
+import {
+  buildRows,
+  chunk,
+  fillTemplate,
+  gmailComposeUrl,
+  guessMapping,
+  looksLikeHeader,
+  parseTable,
+  pickTemplate,
+  reachableChannels,
+  replyRate,
+  sampleCsv,
+  unfilledParts,
+  websiteUrl,
+  whatsappUrl,
+} from ".";
 
 describe("parseTable", () => {
   it("reads quoted commas, doubled quotes and line breaks inside a cell", () => {
@@ -75,5 +90,56 @@ describe("links", () => {
   it("gives a reply rate only once someone was written to", () => {
     expect(replyRate(0, 0)).toBeNull();
     expect(replyRate(40, 3)).toBe(8);
+  });
+});
+
+describe("messages", () => {
+  const t = (over: Partial<import(".").OutreachTemplate>) => ({
+    id: "x", name: "x", list: "ANY", segment: null, channel: "EMAIL", step: 1, subject: "s", body: "b", active: true, ...over,
+  });
+
+  it("fills in the placeholders, with a fallback for what is missing", () => {
+    const text = "Hi {first_name}, {business} in {city}. {my_name}";
+    expect(fillTemplate(text, { contact_name: "Ana Lopez", business_name: "Bright Bridal", city: "Austin", my_name: "Simran" })).toBe(
+      "Hi Ana, Bright Bridal in Austin. Simran",
+    );
+    expect(fillTemplate("Hi {first_name}, {business}", {})).toBe("Hi there, your business");
+  });
+
+  it("finds the [bracket] parts still to replace", () => {
+    expect(unfilledParts("I saw [a real detail]. Love the [piece].")).toEqual(["[a real detail]", "[piece]"]);
+    expect(unfilledParts("Nothing to fill [x] here")).toEqual([]);
+  });
+
+  it("picks this list and business type first, then falls back to an earlier step", () => {
+    const list = [
+      t({ id: "any1" }),
+      t({ id: "pros1", list: "PROSPECT" }),
+      t({ id: "manu1", list: "PROSPECT", segment: "MANUFACTURER" }),
+      t({ id: "exist1", list: "EXISTING" }),
+      t({ id: "off", list: "PROSPECT", segment: "MANUFACTURER", active: false, step: 2 }),
+      t({ id: "wa1", channel: "WHATSAPP" }),
+    ];
+    expect(pickTemplate(list, { channel: "EMAIL", step: 1, list: "PROSPECT", segment: "MANUFACTURER" })?.id).toBe("manu1");
+    expect(pickTemplate(list, { channel: "EMAIL", step: 1, list: "PROSPECT", segment: "RETAIL_JEWELER" })?.id).toBe("pros1");
+    expect(pickTemplate(list, { channel: "EMAIL", step: 1, list: "EXISTING", segment: null })?.id).toBe("exist1");
+    expect(pickTemplate(list, { channel: "EMAIL", step: 2, list: "PROSPECT", segment: "MANUFACTURER" })?.id).toBe("manu1");
+    expect(pickTemplate(list, { channel: "LINKEDIN", step: 1, list: "PROSPECT", segment: null })).toBeNull();
+  });
+
+  it("knows which channels a contact can be reached on", () => {
+    expect(reachableChannels({ email: "a@example.com", phone: "+1 512 555 0100" })).toEqual(["EMAIL", "WHATSAPP"]);
+    expect(reachableChannels({ instagram: "x" })).toEqual(["INSTAGRAM"]);
+  });
+
+  it("offers a sample file that imports with every column recognised", () => {
+    const table = parseTable(sampleCsv());
+    expect(table).toHaveLength(3);
+    expect(looksLikeHeader(table[0]!)).toBe(true);
+    const mapping = guessMapping(table[0]!);
+    expect(mapping.every(Boolean)).toBe(true);
+    const rows = buildRows(table, mapping, true);
+    expect(rows[0]).toMatchObject({ business_name: "Bright Bridal", email: "ana@example.com", phone: "+1 512 555 0100", segment: "Bridal jeweler" });
+    expect(sampleCsv()).not.toMatch(/[\w.]+@(?!example\.com)[\w-]+\.\w+/);
   });
 });

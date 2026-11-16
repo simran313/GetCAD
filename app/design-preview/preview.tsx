@@ -3,6 +3,7 @@
 import { Inbox, Package, Plus, Search } from "lucide-react";
 import { useState } from "react";
 
+import { DailyChart, FunnelChart, SenderChart, StageMix, TemplateChart } from "@/components/outreach/charts";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,36 @@ import { Toaster, toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 const inMinutes = (m: number) => new Date(Date.now() + m * 60_000).toISOString();
+
+/* Sample numbers for the outreach charts (no real contacts). */
+const SAMPLE_FUNNEL = [
+  { label: "Written to", n: 240 },
+  { label: "Replied", n: 31 },
+  { label: "Interested", n: 12 },
+  { label: "Became clients", n: 6 },
+  { label: "Ordered", n: 4 },
+];
+const SAMPLE_DAYS = Array.from({ length: 14 }, (_, i) => ({
+  day: `2026-11-${String(3 + i).padStart(2, "0")}`,
+  sent: [18, 22, 20, 0, 0, 24, 26, 25, 21, 0, 19, 27, 30, 12][i]!,
+  replied: [1, 2, 0, 0, 1, 3, 2, 4, 1, 0, 2, 3, 2, 1][i]!,
+}));
+const SAMPLE_SENDERS = [
+  { id: "a", label: "Main", contacted: 64, replied: 11, active: true },
+  { id: "b", label: "Cold 1", contacted: 58, replied: 7, active: true },
+  { id: "c", label: "Cold 2", contacted: 61, replied: 2, active: true },
+  { id: "d", label: "Cold 3", contacted: 57, replied: 6, active: true },
+];
+const SAMPLE_STAGES = [
+  { label: "Existing contacts", counts: { NEW: 20, CONTACTED: 34, REPLIED: 8, INTERESTED: 6, NOT_NOW: 4, NOT_INTERESTED: 2 } },
+  { label: "Prospects", counts: { NEW: 160, CONTACTED: 170, REPLIED: 11, INTERESTED: 6, NOT_NOW: 3, NOT_INTERESTED: 9 } },
+];
+const SAMPLE_TEMPLATES = [
+  { id: "1", name: "Jeweler · message 1", sent: 120, replied: 9 },
+  { id: "2", name: "People we know · message 1", sent: 64, replied: 11 },
+  { id: "3", name: "Manufacturer · message 1", sent: 40, replied: 4 },
+  { id: "4", name: "Jeweler · message 2", sent: 70, replied: 3 },
+];
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: React.ReactNode }) {
   return (
@@ -280,6 +311,51 @@ export function Preview() {
               ] },
             ]}
           />
+        </Section>
+
+        <Section id="outreach-charts" title="Outreach charts" note="The outreach dashboard's charts (DECISIONS 1.33), with sample numbers. Hover or tab to a bar to read it.">
+          <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
+            <Card>
+              <CardHeader>
+                <CardTitle>From first message to order</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <FunnelChart steps={SAMPLE_FUNNEL} />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Last 14 days</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <DailyChart days={SAMPLE_DAYS} />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Senders compared</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <SenderChart senders={SAMPLE_SENDERS} />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Each list by stage</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <StageMix lists={SAMPLE_STAGES} />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Reply rate by template</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <TemplateChart templates={SAMPLE_TEMPLATES} />
+              </CardBody>
+            </Card>
+          </div>
         </Section>
 
         <Section id="screens" title="Screens at 390 and 1440" note="Sample screens built from the components above (placeholder content).">

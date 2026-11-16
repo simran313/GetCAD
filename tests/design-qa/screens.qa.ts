@@ -248,7 +248,8 @@ const ROUTES: Record<string, { persona: Persona | null; paths: () => Promise<str
     paths: async () => [
       "/home", "/admin", "/admin/orders", "/admin/new-order", "/admin/credits", "/admin/clients", "/admin/designers", "/admin/access",
       "/admin/access/pods", "/admin/applications", "/admin/leads", "/admin/outreach", "/admin/outreach/import",
-      "/admin/outreach/new", "/admin/outreach/senders", "/admin/billing", "/admin/payouts", "/admin/users",
+      "/admin/outreach/new", "/admin/outreach/senders",
+      "/admin/outreach/today", "/admin/outreach/templates", "/admin/outreach/guide", "/admin/billing", "/admin/payouts", "/admin/users",
       "/admin/settings", "/dashboard", "/orders", ...orderPages(journey), ...orderPages(crawl), "/messages", "/account",
     ],
   },
