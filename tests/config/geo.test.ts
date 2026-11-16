@@ -43,8 +43,8 @@ describe("llms.txt", () => {
     expect(llms).toContain("3DM + STL ready for printing and casting");
     expect(llms).toContain(DELIVERABLES[3]!.replace("A weight sheet", "a weight sheet"));
     const faq = Object.fromEntries(FAQ);
-    expect(faq["Where are you based?"]).toContain("Mumbai, India");
-    expect(llms).toContain("Mumbai, India");
+    expect(faq["Where are you based?"]).toContain("registered in New Delhi");
+    expect(llms).toContain("registered in New Delhi, India");
     expect(faq["Do you work with consumers?"]).toMatch(/^No\./);
     expect(llms).toContain("not consumers");
   });

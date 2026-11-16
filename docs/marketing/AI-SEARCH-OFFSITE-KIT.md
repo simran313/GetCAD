@@ -11,7 +11,7 @@ ChatGPT, Claude, Perplexity and Google's AI answers recommend the businesses tha
 | Website | https://thecadpillar.com |
 | Email | simran@thecadpillar.com |
 | Phone / WhatsApp | +91 83692 88293 |
-| Location | Mumbai, India (serving the United States first; also the UK, Australia, Canada) |
+| Location | New Delhi, India (registered office: B10, Ground Floor, Vivek Vihar, Phase 2, New Delhi 110095); remote design team; serving the United States first, also the UK, Australia, Canada |
 | Category | Jewelry CAD design service · 3D jewelry modeling · B2B services for jewelers |
 
 ---
@@ -72,7 +72,7 @@ Free listings only. If a form asks for payment, skip it: none of these is worth 
 | 3 | **Upwork agency** and **Fiverr** profile under "The CAD Pillar" | These two own the search results for "jewelry CAD design service" today; being listed there puts the brand where buyers already look | Free to create. Same name, description and samples; say "from $35"; keep platform orders inside the platform per their rules |
 | 4 | **Clutch** and **GoodFirms** free profiles | B2B directories quoted in "best X services" answers | clutch.co → "Get listed"; goodfirms.co → "Get listed". Use the free profile only; ignore paid sponsorship offers |
 | 5 | **Trustpilot** business profile | Where reviews will live (section 5) | business.trustpilot.com → claim "thecadpillar.com" (free plan) |
-| 6 | **Google Business Profile**, **Bing Places** | Ties the brand to a real place in Google and Bing (Bing feeds ChatGPT); helps branded searches | Free. Only with the real Mumbai studio address, as a service-area business. Never a US address you do not have |
+| 6 | **Google Business Profile**, **Bing Places** | Ties the brand to a real place in Google and Bing (Bing feeds ChatGPT); helps branded searches | Free. Only with the registered office address in New Delhi, as a service-area business. Never a US address you do not have |
 | 7 | **Jewellery Monthly directory** (UK trade) | Trade audience in our second market | jewellerymonthly.co.uk → Jewellery business directory → "Submit new listing" (free if it stays free; skip otherwise) |
 
 Record each listing (URL, date, login) in the tracker sheet (section 7).

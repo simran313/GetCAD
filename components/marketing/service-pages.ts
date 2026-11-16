@@ -154,7 +154,7 @@ export const SERVICE_PAGES = {
         "Yes. Files carry your naming, never ours, and we work under NDA by default. Our designers never see who you or your customer are.",
       ],
       ["Do you work with jewelers in the United States?", "Yes. We work remotely with jewelry businesses across the United States, and in the UK, Australia and Canada. Prices are in US dollars, and live support hours are shown in US Eastern time."],
-      ["Where are you based?", "Our studio is in Mumbai, India. The portal is open 24/7; a person answers calls and WhatsApp " + c("LIVE_CALL_HOURS") + ", every day."],
+      ["Where are you based?", "We're an Indian company, registered in New Delhi, with a remote team of senior CAD designers. The portal is open 24/7; a person answers calls and WhatsApp " + c("LIVE_CALL_HOURS") + ", every day."],
       ["Can you match our existing CAD standards?", "Yes. Write your standing rules once on your account and every designer sees them on every order, alongside the brief."],
     ],
     related: [

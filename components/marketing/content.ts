@@ -53,7 +53,7 @@ export const INCLUDED = "3DM + STL · 3 renders · spec sheet · weight sheet ·
 export const FAQ: [string, string][] = [
   [
     "Where are you based?",
-    "Our studio is in Mumbai, India. The portal is open 24/7 and our AI works around the clock; a person answers calls and WhatsApp 5:30 AM – 2:30 PM ET (4:30 AM – 1:30 PM in US winter), every day.",
+    "We're an Indian company, registered in New Delhi, with a remote team of senior CAD designers. The portal is open 24/7 and our AI works around the clock; a person answers calls and WhatsApp 5:30 AM – 2:30 PM ET (4:30 AM – 1:30 PM in US winter), every day.",
   ],
   [
     "How fast is it really?",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SupportStatus } from "@/components/support/support-status";
 import { WhatsAppButton } from "@/components/support/whatsapp";
 import { Wordmark } from "@/components/wordmark";
+import { c } from "@/content/claims";
 import { SOCIAL_PROFILES } from "@/lib/seo";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
@@ -94,7 +95,8 @@ export function MarketingFooter() {
       </div>
       <div className="border-t border-border pb-24 pt-5 md:pb-5">
         <p className="mx-auto max-w-[1200px] px-4 text-[14px] text-muted-foreground sm:px-6 lg:px-8">
-          © {new Date().getFullYear()} Ichizu Private Limited. The CAD Pillar is a brand of Ichizu Private Limited. All rights reserved.
+          © {new Date().getFullYear()} {c("COMPANY").legalName}. The CAD Pillar is a brand of {c("COMPANY").legalName}. All rights
+          reserved. CIN {c("COMPANY").cin}. Registered office: {c("COMPANY").address}.
         </p>
       </div>
     </footer>
