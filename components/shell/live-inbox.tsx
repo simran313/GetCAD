@@ -23,6 +23,9 @@ import { markInboxReadAction } from "./inbox-actions";
 const POLL_MS = 20_000;
 
 export function hrefFor(item: Pick<InboxItem, "kind" | "order_id">, designer: boolean): string {
+  // A business waiting for approval (0068) opens the review; the client's own
+  // account news opens their home.
+  if (item.kind === "CLIENT_VERIFICATION") return "/admin/access#pending";
   if (!item.order_id) return "/home";
   if (item.kind === "MESSAGE") return `/messages/${item.order_id}`;
   return designer ? `/work/${item.order_id}` : `/orders/${item.order_id}`;

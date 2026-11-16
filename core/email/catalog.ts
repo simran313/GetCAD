@@ -14,7 +14,10 @@ export interface EmailCatalogEntry {
 }
 
 export const EMAIL_CATALOG: EmailCatalogEntry[] = [
-  { template: "WELCOME", audience: "Client", when: "A client creates their own account", kind: "always" },
+  { template: "WELCOME", audience: "Client", when: "A verified client adds their business for the first time", kind: "always" },
+  { template: "CLIENT_VERIFICATION_RECEIVED", audience: "Client", when: "A new client submits their business for verification", kind: "always" },
+  { template: "CLIENT_APPROVED", audience: "Client", when: "An admin approves the business: the portal opens (their welcome)", kind: "always" },
+  { template: "CLIENT_VERIFICATION_DECLINED", audience: "Client", when: "An admin declines the verification, with a reason", kind: "always" },
   { template: "ORDER_PLACED_FOR_YOU", audience: "Client", when: "The team places an order for a client (email, WhatsApp or phone)", kind: "always" },
   { template: "ORDER_RECEIVED", audience: "Client", when: "A client sends a brief from the portal", kind: "always" },
   { template: "QUOTE_READY", audience: "Client", when: "The order is quoted (again on a new price)", kind: "always" },

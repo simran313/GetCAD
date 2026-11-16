@@ -29,6 +29,9 @@ export const DESIGNER_APPLICATION_FILES_BUCKET = "designer-application-files";
 /** The private bucket designers' identity documents (PAN card, Aadhaar, bank proof) live in. Never public. */
 export const DESIGNER_DOCUMENTS_BUCKET = "designer-documents";
 
+/** The private bucket clients' proofs of business registration live in (0068). Admins only. Never public. */
+export const CLIENT_VERIFICATION_BUCKET = "client-verification";
+
 /** Signed download URLs are short-lived. */
 export const SIGNED_URL_TTL_SECONDS = 60;
 

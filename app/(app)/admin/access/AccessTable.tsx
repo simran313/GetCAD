@@ -48,6 +48,9 @@ const STAFF = new Set(["OPS", "SALES", "FINANCE"]);
 
 const TABS: [string, string, (r: AccessRow) => boolean][] = [
   ["all", "All", () => true],
+  // Clients who signed up and are not verified yet (0068): reviewed in
+  // "Waiting for approval" above the table.
+  ["awaiting", "Awaiting approval", (r) => r.role === "CLIENT" && r.status === "PENDING"],
   ["clients", "Clients", (r) => r.role === "CLIENT"],
   ["designers", "Designers", (r) => r.role === "DESIGNER"],
   ["leads", "Pod leads", (r) => r.role === "QC"],
@@ -203,6 +206,8 @@ export function AccessTable({ rows, initialQuery, initialTab, searchHint }: { ro
           <StatusPill tone="success">Active</StatusPill>
         ) : r.status === "SUSPENDED" ? (
           <StatusPill tone="attention">Suspended</StatusPill>
+        ) : r.role === "CLIENT" ? (
+          <StatusPill tone="warning">Awaiting approval</StatusPill>
         ) : (
           <StatusPill tone="neutral">Pending</StatusPill>
         ),

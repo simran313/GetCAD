@@ -65,6 +65,10 @@ export const FAQ: [string, string][] = [
   ["What if I need changes?", "Two revision rounds are included within 14 days."],
   ["Do you work with consumers?", "No. We work only with jewelry businesses."],
   [
+    "Why do you verify my business?",
+    "We work only with jewelry businesses and keep every design confidential. When you sign up you add your business details and one proof of registration; our team checks it, usually within our support hours, and then your portal opens.",
+  ],
+  [
     "Do you work with jewelers in the United States?",
     "Yes. We work remotely with jewelry businesses across the United States, and in the UK, Australia and Canada. Prices are in US dollars, you brief and approve every design in the portal, and live support hours are shown in US Eastern time.",
   ],

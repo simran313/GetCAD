@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { identitiesFor } from "@/lib/clerk/identities";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { refuseOn } from "@/lib/refusal";
+import { flushEmailsAfterResponse } from "@/lib/email/dispatch";
 
 /**
  * Change someone's role or status.
@@ -80,5 +81,29 @@ export async function setUserStatusAction(formData: FormData): Promise<void> {
   });
   refuseOn(error);
 
+  revalidatePath("/admin/access");
+}
+
+/**
+ * Approve a client's business (0068): their account becomes ACTIVE and every
+ * client screen unlocks. Decline needs a reason, which the client sees. The
+ * database checks that the caller is an admin.
+ */
+export async function approveClientAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("approve_client", { p_user_id: formData.get("user_id")?.toString() ?? "" });
+  refuseOn(error);
+  flushEmailsAfterResponse();
+  revalidatePath("/admin/access");
+}
+
+export async function declineClientAction(formData: FormData): Promise<void> {
+  const supabase = await createUserSupabaseClient();
+  const { error } = await supabase.rpc("reject_client_verification", {
+    p_user_id: formData.get("user_id")?.toString() ?? "",
+    p_reason: formData.get("reason")?.toString() ?? "",
+  });
+  refuseOn(error);
+  flushEmailsAfterResponse();
   revalidatePath("/admin/access");
 }

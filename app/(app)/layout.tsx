@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/auth/auth-provider";
 import { TimeZoneProvider } from "@/components/time-zone";
 import { ConnectionStatus } from "@/components/pwa/connection-status";
 import { AppShell } from "@/components/shell/app-shell";
+import { ClientGate } from "@/components/verification/client-gate";
 import { ROLE_LABEL, shellKind } from "@/components/shell/nav-config";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
@@ -105,7 +106,7 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
   // codes for Cmd+K are fetched when the palette opens, not on every load.
   const supabase = await createUserSupabaseClient();
   const [{ data: me }, , clientRes, designerRes, staffRes, jar] = await Promise.all([
-    supabase.from("users").select("role").maybeSingle(),
+    supabase.from("users").select("role, status").maybeSingle(),
     // The safety net for a first visit that does not start at /home or
     // /welcome (which create the user row themselves, before reading).
     supabase.rpc("ensure_self").then(() => undefined),
@@ -115,6 +116,27 @@ async function AppChrome({ children }: { children: React.ReactNode }) {
     cookies(),
   ]);
   const role = me?.role ?? "CLIENT";
+
+  // A client the team has not verified yet sees one screen, never the portal
+  // (0068; owner, 16 Nov 2026). No row yet is a first visit: a new sign-up,
+  // which starts PENDING.
+  if (role === "CLIENT" && (me?.status ?? "PENDING") !== "ACTIVE") {
+    return (
+      <div className="min-h-screen bg-[color:var(--app-ground)]">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/95 pt-[var(--safe-top)] backdrop-blur-md">
+          <div className="container flex h-14 items-center justify-between">
+            <Link href="/" aria-label="The CAD Pillar — home">
+              <Wordmark />
+            </Link>
+            <UserButton />
+          </div>
+        </header>
+        <ConnectionStatus className="top-[var(--chrome-top)]" />
+        <ClientGate />
+      </div>
+    );
+  }
+
   const kind = shellKind(role);
   const tabs = tabsForRole(role);
 

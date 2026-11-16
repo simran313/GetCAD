@@ -25,6 +25,10 @@ export const EMAIL_TEMPLATES = [
   "DESIGNER_APPLICATION_REJECTED",
   "PAYOUT_SENT",
   "ORDER_PLACED_FOR_YOU",
+  // Client verification (0068): received, approved (their welcome), declined.
+  "CLIENT_VERIFICATION_RECEIVED",
+  "CLIENT_APPROVED",
+  "CLIENT_VERIFICATION_DECLINED",
   // Client order emails (Phase 17, migration 0054): core/email/order.ts.
   ...ORDER_EMAIL_TEMPLATES,
 ] as const;
@@ -45,6 +49,10 @@ export interface EmailPayloads extends OrderEmailPayloads {
   // The client's own order, placed by the team from their message (0043).
   // site_url is added by the dispatcher, never stored in the outbox.
   ORDER_PLACED_FOR_YOU: { order_ref?: string; order_id?: string; channel?: string; site_url?: string };
+  // The client's own account (0068). The reason is the admin's note to them.
+  CLIENT_VERIFICATION_RECEIVED: { name?: string };
+  CLIENT_APPROVED: { name?: string; site_url?: string };
+  CLIENT_VERIFICATION_DECLINED: { name?: string; reason?: string; site_url?: string };
 }
 
 export interface RenderedEmail {
@@ -173,6 +181,49 @@ function orderPlacedForYou(p: EmailPayloads["ORDER_PLACED_FOR_YOU"]): RenderedEm
   );
 }
 
+/** The site's address for a link, only when it is a real https origin. */
+function siteLink(siteUrl: string | undefined, path: string): string | null {
+  return siteUrl && /^https:\/\/[^\s/]+/.test(siteUrl) ? `${siteUrl.replace(/\/+$/, "")}${path}` : null;
+}
+
+function clientVerificationReceived(p: EmailPayloads["CLIENT_VERIFICATION_RECEIVED"]): RenderedEmail {
+  return layout(`We're verifying your business — ${PRODUCT}`, [
+    `Hi ${esc(firstName(p.name))},`,
+    `Thanks for sending your business details. Our team is checking them now, usually within our support hours.`,
+    `As soon as your business is approved we'll email you, and your portal opens: briefs, prices within the hour, your orders and files.`,
+    `We work only with jewelry businesses and keep every design confidential; checking each business is how we keep it that way. Questions? Reply to this email.`,
+  ]);
+}
+
+function clientApproved(p: EmailPayloads["CLIENT_APPROVED"]): RenderedEmail {
+  const link = siteLink(p.site_url, "/orders/new");
+  return layout(
+    `Your business is verified — ${PRODUCT}`,
+    [
+      `Hi ${esc(firstName(p.name))},`,
+      `Your business is verified and your ${esc(PRODUCT)} portal is open.`,
+      `Send a sketch or a photo with the size, metal and stones, and you'll have a fixed price within the hour. Nothing is charged until you accept it. Your first look arrives within 6 hours of confirmation for standard pieces.`,
+      ...(link ? [] : [`Sign in to your ${esc(PRODUCT)} portal to start.`]),
+    ],
+    link ? { label: "Start your first design", href: link } : undefined,
+  );
+}
+
+function clientVerificationDeclined(p: EmailPayloads["CLIENT_VERIFICATION_DECLINED"]): RenderedEmail {
+  const link = siteLink(p.site_url, "/home");
+  const reason = (p.reason ?? "").replace(/\s+/g, " ").trim();
+  return layout(
+    `We need a little more to verify your business — ${PRODUCT}`,
+    [
+      `Hi ${esc(firstName(p.name))},`,
+      `We couldn't verify your business from what you sent yet.`,
+      ...(reason ? [`Our note: ${esc(reason)}`] : []),
+      `Sign in and send it again from the same screen; it only takes a minute. If anything is unclear, reply to this email.`,
+    ],
+    link ? { label: "Update your details", href: link } : undefined,
+  );
+}
+
 /**
  * Render a template with its payload. Throws on an unknown template rather than
  * sending a blank email — a template the DB allows but the renderer doesn't
@@ -195,6 +246,12 @@ export function renderEmail<T extends EmailTemplate>(
       return payoutSent(payload as EmailPayloads["PAYOUT_SENT"]);
     case "ORDER_PLACED_FOR_YOU":
       return orderPlacedForYou(payload as EmailPayloads["ORDER_PLACED_FOR_YOU"]);
+    case "CLIENT_VERIFICATION_RECEIVED":
+      return clientVerificationReceived(payload as EmailPayloads["CLIENT_VERIFICATION_RECEIVED"]);
+    case "CLIENT_APPROVED":
+      return clientApproved(payload as EmailPayloads["CLIENT_APPROVED"]);
+    case "CLIENT_VERIFICATION_DECLINED":
+      return clientVerificationDeclined(payload as EmailPayloads["CLIENT_VERIFICATION_DECLINED"]);
     default:
       if ((ORDER_EMAIL_TEMPLATES as readonly string[]).includes(template)) {
         return renderOrderEmail(template as OrderEmailTemplate, payload as OrderEmailPayloads[OrderEmailTemplate]);
