@@ -8,6 +8,7 @@ Find the task, then follow the link.
 - [Read the Queue and its counters](#queue)
 - [Find any order](#all-orders)
 - [Answer client and designer messages](#messages-admin)
+- [Approve new clients (verification)](#approve-clients)
 
 ### Orders {#tasks-orders}
 
@@ -30,6 +31,7 @@ Find the task, then follow the link.
 
 ### People {#tasks-people}
 
+- [Approve or decline a new client's business](#approve-clients)
 - [Understand "exists" versus "can receive work"](#exists-vs-eligible)
 - [Review a designer application](#applications)
 - [Add designers and get them working](#add-designers)

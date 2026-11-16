@@ -7,15 +7,16 @@ Work top to bottom. Most days it takes 15–20 minutes. The live-support hours a
 | # | Where | Look for | Do |
 | --- | --- | --- | --- |
 | 1 | **Queue** → red and grey alerts above the list | "First look missed…", "…escalated by a pod lead", "…dispute open", spec claims | **Decide** / **Review** / **Show** each one ([credits](#credits), [escalations](#escalations), [disputes](#disputes), [claims](#spec-claims)) |
-| 2 | **Queue** → **Awaiting quote** | New briefs (portal and team-placed) | Open each → **Set quote** ([how](#quote)) |
-| 3 | **Queue** → **Awaiting payment** | Quotes not yet paid; transfers that arrived | **Mark paid** for transfers received ([how](#mark-paid)); message slow payers |
-| 4 | **Queue** → **Ready to assign** | Rows saying "Paid · choose a pod" or "Paid · confirm the order…" | **Choose** the pod, then **Confirm** ([pod](#choose-pod), [confirm](#confirm)) |
-| 5 | **Queue** → **Ready to assign** | Rows saying "Paid and confirmed · assign a designer" whose clock is running down | Check the pod lead is on it (**Team board** via the order's pod). Assign yourself only as an exception ([how](#admin-assign)) |
-| 6 | **Queue** → **With designer** and **In QC** counters | Jobs stuck for hours; the **First look** column turning red | Open the order; message the pod lead in the designer conversation |
-| 7 | **Messages** → **Needs reply** | Clients waiting on the team, especially on orders with no pod yet | Reply in the **Client** tab ([how](#messages-admin)) |
-| 8 | **Queue** → **Ready to deliver** and **Delivered** | Approved orders not yet delivered; delivered orders not closed | **Deliver**, then **Close** ([how](#deliver-close)) |
-| 9 | **Applications** and **Leads** | New designer applications and contact messages | Accept / Reject; **Mark handled** |
-| 10 | **Designers** | Anyone **Waiting to sign in**, **Not in a pod**, or with **No bank details** | Chase them; place them in a pod ([how](#add-designers)) |
+| 2 | **Access** → **Waiting for approval** | New client businesses marked **Ready to review** | Open the proof, check the website; **Approve** or **Decline** with a reason ([how](#approve-clients)). Every hour a new client waits is a client who may not come back |
+| 3 | **Queue** → **Awaiting quote** | New briefs (portal and team-placed) | Open each → **Set quote** ([how](#quote)) |
+| 4 | **Queue** → **Awaiting payment** | Quotes not yet paid; transfers that arrived | **Mark paid** for transfers received ([how](#mark-paid)); message slow payers |
+| 5 | **Queue** → **Ready to assign** | Rows saying "Paid · choose a pod" or "Paid · confirm the order…" | **Choose** the pod, then **Confirm** ([pod](#choose-pod), [confirm](#confirm)) |
+| 6 | **Queue** → **Ready to assign** | Rows saying "Paid and confirmed · assign a designer" whose clock is running down | Check the pod lead is on it (**Team board** via the order's pod). Assign yourself only as an exception ([how](#admin-assign)) |
+| 7 | **Queue** → **With designer** and **In QC** counters | Jobs stuck for hours; the **First look** column turning red | Open the order; message the pod lead in the designer conversation |
+| 8 | **Messages** → **Needs reply** | Clients waiting on the team, especially on orders with no pod yet | Reply in the **Client** tab ([how](#messages-admin)) |
+| 9 | **Queue** → **Ready to deliver** and **Delivered** | Approved orders not yet delivered; delivered orders not closed | **Deliver**, then **Close** ([how](#deliver-close)) |
+| 10 | **Applications** and **Leads** | New designer applications and contact messages | Accept / Reject; **Mark handled** |
+| 11 | **Designers** | Anyone **Waiting to sign in**, **Not in a pod**, or with **No bank details** | Chase them; place them in a pod ([how](#add-designers)) |
 
 **Weekly:** export and pay the owed payouts ([how](#payouts)); check **Billing** against the Razorpay dashboard; look at **Performance** per pod (opens from a pod lead's view, or from an escalation alert); check that **Settings → Email previews** still shows the mode you expect.
 

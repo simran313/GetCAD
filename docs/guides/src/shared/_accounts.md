@@ -29,7 +29,7 @@ The product has no single "Admin" role. A person is a **full Admin** when their 
 | Status (Access screen pill) | Meaning | Can sign in | Can act |
 | --- | --- | --- | --- |
 | **Active** | Normal account | Yes | Yes |
-| **Pending** | Account exists but is not yet active. Designers added by the team start here until they sign the designer agreement. | Yes | Only what their role allows before activation (a designer cannot be assigned work) |
+| **Pending** (clients: **Awaiting approval**) | Account exists but is not yet active. A client who signed up starts here until an admin approves their business; they see only the verification screen and cannot order. Designers added by the team start here until they sign the designer agreement. | Yes | Only what their role allows before activation (a designer cannot be assigned work) |
 | **Suspended** | Frozen by an Ops member or Admin. Nothing is deleted. | Yes, but their actions are refused | No |
 
 There is no "delete account". Orders, files, money records and the audit history all refer to the person, so the product suspends instead.

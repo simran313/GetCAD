@@ -9,6 +9,7 @@ A full **Admin** holds three staff roles: **Sales**, **Ops** and **Finance**. St
 ## What do you need to do? {#admin-tasks-short}
 
 - [First sign-in and the Queue](#admin-first)
+- [Approve a new client](#admin-approve-client)
 - [Price an order](#admin-quote)
 - [Record a transfer payment](#admin-paid)
 - [Confirm an order](#admin-confirm)
@@ -34,6 +35,16 @@ The sidebar groups the rest:
 - **People**: **Clients**, **Access**, **Applications**, **Leads**;
 - **System**: **Settings**;
 - **More**: **Designers**.
+
+## Approve a new client {#admin-approve-client}
+
+A client who signs up sees only the verification screen until an admin approves their business ([what they see](#client-verify)). The bell says "New business to verify: …".
+
+1. **Access** → **Waiting for approval** (top of the page).
+2. Open the **Proof of registration** and check the **Website**.
+3. Click **Approve**: the portal opens for them at once and they get an email. Or type a reason and click **Decline**: they see it and can submit again.
+
+Approve within the hour during US hours if you can: a client cannot send a first brief before then.
 
 ## Price an order {#admin-quote}
 

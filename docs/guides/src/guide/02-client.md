@@ -5,6 +5,7 @@ For jewelry businesses ordering CAD and renders. Everything here happens in your
 ## What do you need to do? {#client-tasks}
 
 - [Open your account for the first time](#client-first-login)
+- [Verify your business (before the portal opens)](#client-verify)
 - [Order a CAD design or renders](#client-order)
 - [Start again from a past order](#client-repeat)
 - [Pay for an order](#client-pay)
@@ -23,15 +24,40 @@ For jewelry businesses ordering CAD and renders. Everything here happens in your
 ## Your first sign-in {#client-first-login}
 
 1. On thecadpillar.com, click **Start** (or go to **thecadpillar.com/sign-up**). Enter your work email, then the code that arrives by email.
-   - If the team already opened an account for you, go to **thecadpillar.com/sign-in** instead and use the email they used.
-2. On **Welcome**, fill in **Your business**:
+   - If the team already opened an account for you, go to **thecadpillar.com/sign-in** instead and use the email they used. Your business is already verified: you go straight to **Home**.
+2. You see **Tell us who you are**. Under **Your details**, fill in:
    - **Business name**: your client code is made from it.
    - **Your name**.
    - **Work email**.
    - **WhatsApp / phone**, with the country code.
    - **How did you hear about us?** (required).
-3. Optionally turn on **Notifications** under **Know the moment it's ready**: an alert on this device for prices, renders, files, messages and payments.
-4. Click **Start your first order**, or **Go to home**.
+3. Click **Continue**. You now see **Verify your business**: follow [Verify your business](#client-verify).
+4. When the team approves your business, you get an email ("Your business is verified") and a note on the bell. Refresh the page: **Home** opens with everything unlocked.
+5. Optionally turn on **Notifications** under **Account** → **On this device**: an alert on this device for prices, renders, files, messages and payments.
+
+## Verify your business {#client-verify}
+
+We work only with jewelry businesses, and every design stays confidential. So a new account adds its business details and one proof that the business is registered, and the team checks it before the portal opens. Until then, every portal page shows the verification screen, and no order can be placed.
+
+1. Under **Your business**, choose **What kind of business is it?**: **Retail or custom jeweler**, **Manufacturer or trade shop**, **Brand or wholesaler**, **Jewelry design studio** or **Other jewelry business**.
+2. Fill in **Country of registration** (United States is filled in for you), **Website or Instagram** (for example `example.com` or `@examplejewels`) and **Business address**. **Your role in the business** is optional.
+3. Under **Proof that the business is registered**, choose **What is it?**:
+   - **EIN letter (IRS CP 575 or 147C)**;
+   - **State business registration or certificate of formation**;
+   - **Sales tax permit or resale certificate**;
+   - **Business license**;
+   - **Registration outside the US (GST, Companies House, ABN…)**;
+   - **Other official proof of the business**.
+4. Click **Choose file** and pick the document: PDF, JPG, PNG or WebP, up to 10 MB. Only our admins can open it.
+5. Click **Submit for verification**. The screen changes to **We're checking your business**, and an email confirms it ("We're verifying your business").
+6. Wait for the approval email. The team checks usually within support hours; **WhatsApp us to speed it up** on the same screen reaches a person.
+
+The screen also lists **Unlocks once you're verified**: **New orders**, **A price within the hour**, **Your orders**, **Your files**, **A preview for your customer**, **Your factory's rules**, **Wallet** and **Alerts**.
+
+**If the team needs more.** The screen shows **We couldn't verify the business yet** with the team's note, and an email says the same. Change what the note asks for, add a clearer document if needed, and click **Submit for verification** again. Under **Proof on file**, **Remove** deletes a document you sent; you can keep up to five.
+
+> [!NOTE] Already ordering with us?
+> Accounts that already had orders, and accounts the team opened for you, were verified automatically. You never see this screen.
 
 **Home** shows:
 

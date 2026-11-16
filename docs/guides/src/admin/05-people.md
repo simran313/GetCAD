@@ -140,13 +140,39 @@ A pod lead without a pod can receive no orders and has no designers.
 > [!WARNING] Before you add a second led pod
 > While exactly one pod has a lead, paid orders route to it by themselves. The moment a second pod has a lead, every paid order waits on the Queue ("Paid · choose a pod") until an admin chooses.
 
+## Approve new clients (verification) {#approve-clients}
+
+**Who:** a full Admin (Sales + Ops + Finance). **Open:** sidebar → **Access** (`/admin/access`), section **Waiting for approval** at the top. The bell's "New business to verify: …" opens it too.
+
+A client who signs up sees only the verification screen until you approve them: no orders, no briefs, no files. The database refuses an order from them, except one the team places for them.
+
+Each account waiting shows:
+
+- the business name and a pill: **Ready to review**, **Not submitted yet** or **Declined, may resubmit**;
+- **Contact** (name, email, phone), **Business** type, **Role**, **Country**, **Address**, **Website** (a link; an Instagram handle opens Instagram), **Signed up** and **Submitted** times in US Eastern time;
+- **Proof of registration**: each document opens in a new tab. Every open is written to the audit log.
+
+To decide:
+
+1. Open the proof. Check that the business name matches, that it is a real registration (EIN letter, state registration, resale certificate, business license or a foreign registration), and that the website or Instagram is a real jewelry business.
+2. Click **Approve**. The account becomes **Active** at once; the client gets a note on the bell and the "Your business is verified" email, and their next page load opens the portal.
+3. Or type a reason in the box beside **Decline** (what to send instead; the client sees it word for word) and click **Decline**. They can fix it and submit again; the account comes back as **Ready to review**.
+
+> [!TIP] Approve fast
+> A new client cannot send their first brief until you approve them. Approving within the hour during US hours keeps the "first look in 6 hours" promise meaningful.
+
+- **Not submitted yet** means they signed up but have not sent the business details. You can still **Approve** someone you know.
+- **Who is approved without this:** clients the team opens with **Create order** (a new client), and clients who already had an order when verification started. Promoting a pending sign-up to **Ops**, **Sales**, **Finance** or **Pod lead** on **Access** activates them; a **Designer** still signs the agreement first.
+- The **Awaiting approval** tab in the accounts table lists the same accounts.
+
 ## Staff accounts and roles (Access) {#access}
 
 **Who:** Ops or Admin. **Open:** sidebar → **Access** (`/admin/access`).
 
 ![Access: every account with its role and status](../assets/screens/admin-access.png)
 
-- **Tabs:** **All**, **Clients**, **Designers**, **Pod leads**, **Admins** (Ops, Sales and Finance).
+- **Waiting for approval** (Admins only), above the table: new clients to verify ([how](#approve-clients)).
+- **Tabs:** **All**, **Awaiting approval**, **Clients**, **Designers**, **Pod leads**, **Admins** (Ops, Sales and Finance).
 - **Search accounts** by email, name or reference (ACC… for clients, DSG… for designers).
 - **Each row:**
   - the person, with **You** on your own row;

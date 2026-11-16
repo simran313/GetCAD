@@ -2,6 +2,7 @@
 | --- | --- |
 | **Account reference** | A person's short code (ACC… for clients, DSG… for designers). Quote it to support. |
 | **Assignable** | A designer who is Active, has signed the current agreement and is in the order's pod. |
+| **Awaiting approval** | A client who signed up and whose business an admin has not approved yet. They see only the verification screen. |
 | **Band** | The default price for a group of categories: $35, $85, from $120. |
 | **Brief** | The client's description of the piece: what it is, stones, size, metal, notes, reference photos. |
 | **Category (A–L)** | The job's size in minutes, from A (15 min) to L (480 min). It sets the band and the team's pay. |
