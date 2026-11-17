@@ -114,6 +114,9 @@ export interface ContactDetail {
   tags: string[];
   notes: string | null;
   source: string | null;
+  detail: string | null;
+  fit: string | null;
+  area_id: string | null;
   stage: string;
   do_not_contact: boolean;
   dnc_reason: string | null;

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { KINDS, SEGMENTS } from "@/core/outreach";
+import { FITS } from "@/core/outreach/research";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import type { ContactDetail } from "./types";
 
 type Values = Partial<Pick<ContactDetail,
   "id" | "kind" | "business_name" | "contact_name" | "email" | "phone" | "whatsapp" | "instagram" | "linkedin" |
-  "website" | "city" | "region" | "country" | "segment" | "tags" | "notes" | "source">>;
+  "website" | "city" | "region" | "country" | "segment" | "tags" | "notes" | "source" | "detail" | "fit">>;
 
 /** What most contacts have: shown first. */
 const ESSENTIAL: [keyof Values, string, string?, string?][] = [
@@ -57,7 +58,7 @@ export function ContactForm({
   const [pending, start] = useTransition();
   const editing = Boolean(initial.id);
   // Open "More details" when editing a contact that already has some.
-  const hasMore = editing && (MORE.some(([k]) => Boolean(initial[k])) || Boolean(initial.segment || initial.notes || initial.source || initial.tags?.length));
+  const hasMore = editing && (MORE.some(([k]) => Boolean(initial[k])) || Boolean(initial.segment || initial.notes || initial.source || initial.detail || initial.fit || initial.tags?.length));
 
   function submit(fd: FormData) {
     setError(null);
@@ -117,6 +118,17 @@ export function ContactForm({
                   <option key={v} value={v}>{l}</option>
                 ))}
               </Select>
+            </Field>
+            <Field label="Fit" htmlFor="c-fit" hint="Strong fits are offered first on Today.">
+              <Select id="c-fit" name="fit" defaultValue={initial.fit ?? ""}>
+                <option value="">Not graded</option>
+                {FITS.map(([v, l]) => (
+                  <option key={v} value={v}>{v}: {l}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="A real detail" htmlFor="c-detail" hint="Finishes “I saw …” in message 1, e.g. the halo ring you posted last week.">
+              <Input id="c-detail" name="detail" maxLength={300} defaultValue={initial.detail ?? ""} />
             </Field>
             <Field label="Tags" htmlFor="c-tags" hint="Separated by commas, e.g. bridal, texas">
               <Input id="c-tags" name="tags" defaultValue={(initial.tags ?? []).join(", ")} />
