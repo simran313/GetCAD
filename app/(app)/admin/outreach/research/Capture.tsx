@@ -48,7 +48,12 @@ export function Capture({ area }: { area: { id: string; segment: string; city: s
     <form
       ref={form}
       className="space-y-4"
-      action={(fd) => {
+      // onSubmit, not action: React resets an action form when its transition
+      // ends, which here is after router.refresh(), so whatever was typed for
+      // the next prospect in between was wiped (and its repeat check missed).
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         setError(null);
         fd.set("kind", "PROSPECT");
         fd.set("area_id", area.id);
