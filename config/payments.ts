@@ -64,3 +64,10 @@ export function readRazorpayPublicKeyId(env: NodeJS.ProcessEnv = process.env): s
   if (!keyId) throw new Error("RAZORPAY_KEY_ID is not set.");
   return keyId;
 }
+
+/** "live", "test", or null when no key is set (the key id's public prefix). */
+export function paymentsMode(keyId: string | undefined): "live" | "test" | null {
+  const k = (keyId ?? "").trim();
+  if (!k) return null;
+  return k.startsWith("rzp_live_") ? "live" : "test";
+}

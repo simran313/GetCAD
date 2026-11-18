@@ -43,8 +43,12 @@ Pay is set at quote with the standard rate. It is set again at the assigned desi
 - **Late-order credits.** How much is waiting for a decision, and a link to **Credits**.
 - **Reconcile with Razorpay** (top right) opens the Razorpay dashboard in a new tab.
 
-> [!LIMIT] No invoices or wallets yet
-> The platform has no numbered invoices and no client wallet top-ups. Send an invoice from your accounting tool. Record Wise, bank and PayPal payments on the order with **Mark paid**. The client's **Wallet** shows their credit and payments only.
+**Invoices.** Every paid order gets an invoice, numbered in sequence within the Indian financial year (`TCP/2026-27/0001`). It is issued the moment a card payment lands or you press **Mark paid**, and downloads as a PDF from the order, from the client's **Wallet → Invoices**, and under **Billing → Invoices**. What it prints (legal name, CIN, address, GSTIN once issued, LUT for exports, SAC code) is set under **Billing → Billing details**; an issued invoice never changes.
+
+**Other ways to pay.** Under **Billing → Billing details**, fill in bank transfer, Wise and PayPal details to show them on the client's pay page. When a client says they paid, finance is notified and the order shows "The client says they paid by …" beside **Mark paid**. Check the money arrived, then mark it paid with the same reference.
+
+> [!LIMIT] No wallet top-ups
+> Clients cannot add funds in advance. The client's **Wallet** shows their credit, payments and invoices.
 
 ## Pay designers and pod leads {#payouts}
 

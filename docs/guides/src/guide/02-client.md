@@ -283,8 +283,12 @@ The order shows the claim's progress: **Being re-measured**, **Being reviewed**,
 
 Tabs: **Invoices** (paid orders) and **Transactions**.
 
-> [!LIMIT] Top-ups and invoices
-> **Add funds** is not available yet: pay each order from its Pay page. For a formal invoice, message the team from the order.
+Every paid order has an invoice: download it from the order's **Payment** card or from **Wallet → Invoices** (**PDF**).
+
+**Paying by bank transfer, Wise or PayPal.** The Pay page shows the details when the team has set them up. Send the amount with the order reference, then press **I've paid** with your transfer reference; the team confirms when the money arrives and your order starts.
+
+> [!LIMIT] Top-ups
+> **Add funds** is not available yet: pay each order from its Pay page.
 
 ## Choose which emails you get {#client-emails}
 

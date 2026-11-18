@@ -49,6 +49,8 @@ export const NOTIFICATION_KINDS = [
   // Phase 13c: a job past its due time to QC; a job escalated to admins, or an escalation resolved.
   "OVERDUE",
   "ESCALATED",
+  // 0072: a client says they paid by transfer; finance checks and marks it paid.
+  "PAYMENT_REPORTED",
 ] as const;
 
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -106,6 +108,7 @@ const COPY: Record<NotificationKind, Copy> = {
   PLACED: { title: "Order placed", body: "The team placed an order for you." },
   OVERDUE: { title: "Job overdue", body: "A job is past its due time to QC." },
   ESCALATED: { title: "Escalation", body: "There's an escalation update on a job." },
+  PAYMENT_REPORTED: { title: "Payment to check", body: "A client says they paid an order. Check it arrived and mark it paid." },
 };
 
 export function isNotificationKind(value: string): value is NotificationKind {
