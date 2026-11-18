@@ -24,7 +24,7 @@ Where payments stand, what is ready, and the exact steps once the bank account i
 
 | # | Step | Where | Done when |
 |---|---|---|---|
-| 1 | Merge the billing PR and run `0072_billing.sql`, then `0053_billing_rls.sql`, in the Supabase SQL editor | Supabase | Admin → Billing → Billing details opens |
+| 1 | Merge the billing PR and run `0072_billing.sql`, then `0053_billing_rls.sql`, then `0073_billing_save_where.sql`, in the Supabase SQL editor | Supabase | Admin → Billing → Billing details opens and **Save billing details** works |
 | 2 | Fill in **Billing details**: check legal name, CIN, address; add the SAC code your CA confirms; add Wise and/or bank details for US clients | Portal | The pay page of a quoted test order shows them |
 | 3 | **Razorpay activation**: business details, policy links, settlement bank account (the current account), video KYC | Razorpay dashboard (A below) | Dashboard says "Activated" |
 | 4 | **International payments**: request it, purpose code for design services | Razorpay (B below) | Approval email |
