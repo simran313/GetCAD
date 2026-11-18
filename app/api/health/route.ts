@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { webhookSecretProblem } from "@/config/payments";
+import { paymentsMode, webhookSecretProblem } from "@/config/payments";
 import { cronSecretProblem } from "@/config/cron";
 import { pushConfigProblems } from "@/config/push";
 
@@ -78,6 +78,9 @@ export function GET(): NextResponse {
     {
       status: ready ? "ok" : "incomplete",
       configured: groups,
+      // Test or live Razorpay keys (the key id's public prefix, which every
+      // checkout page shows anyway): the one thing to check after go-live.
+      paymentsMode: paymentsMode(process.env.RAZORPAY_KEY_ID),
       // Named so it is obvious this is about configuration, not uptime: the
       // route answering at all already proves the app is running.
       note: ready

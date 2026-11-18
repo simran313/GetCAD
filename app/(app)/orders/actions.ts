@@ -194,6 +194,9 @@ export async function markPaidAction(formData: FormData): Promise<void> {
     p_reference: formData.get("reference")?.toString().trim() || null,
   });
   refuseOn(error);
+  // The invoice is issued with the payment (0072). Best effort: it is issued
+  // the first time it is opened if this fails.
+  await supabase.rpc("issue_invoice", { p_order_id: formData.get("order_id")?.toString() ?? "" });
   revalidatePath("/", "layout");
   flushEmailsAfterResponse();
 }

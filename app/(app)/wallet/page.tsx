@@ -25,7 +25,7 @@ export default async function WalletPage() {
     <Page>
       <PageHeader title="Wallet" description="Your credit, what you have paid on open orders, and every payment." />
       <WalletNav active="/wallet" />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardBody>
             <p className="text-[length:var(--fs-2)] text-muted-foreground">Credit</p>

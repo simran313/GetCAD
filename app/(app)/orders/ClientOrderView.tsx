@@ -213,9 +213,20 @@ export async function ClientOrderView({
               { label: "First look", value: firstLook },
             ]}
           />
-          <Link href="/wallet/invoices" className="mt-3 inline-flex min-h-[var(--ctl)] items-center text-[length:var(--fs-3)] underline underline-offset-4">
-            Invoices
-          </Link>
+          {held > 0 ? (
+            <a
+              href={`/api/invoices/${o.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex min-h-[var(--ctl)] items-center text-[length:var(--fs-3)] underline underline-offset-4"
+            >
+              Download invoice
+            </a>
+          ) : (
+            <Link href="/wallet/invoices" className="mt-3 inline-flex min-h-[var(--ctl)] items-center text-[length:var(--fs-3)] underline underline-offset-4">
+              Invoices
+            </Link>
+          )}
         </HubTile>
       ),
     },

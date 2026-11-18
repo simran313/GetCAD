@@ -14,6 +14,9 @@ import { createUserSupabaseClient } from "@/lib/supabase/server";
 import { transitionAction } from "../../actions";
 import { PayButton } from "../../PayButton";
 import { Page } from "@/components/ui/page";
+import { type PaymentOptions, offeredMethods } from "@/core/billing";
+
+import { OtherWays } from "./OtherWays";
 
 /**
  * C5 — Pay (docs/design). The price and what it buys, card payment through
@@ -49,7 +52,12 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
   if (!o || o.relation !== "CLIENT") redirect(`/orders/${id}`);
   if (o.status !== "QUOTED" || !o.price_total) redirect(`/orders/${id}`);
 
-  const { data: spec } = await supabase.from("order_specs").select("reference_name, product").eq("order_id", id).maybeSingle();
+  const [{ data: spec }, { data: optionsData }] = await Promise.all([
+    supabase.from("order_specs").select("reference_name, product").eq("order_id", id).maybeSingle(),
+    supabase.rpc("payment_options"),
+  ]);
+  const options = (optionsData ?? null) as PaymentOptions | null;
+  const offered = offeredMethods(options).length > 0;
   const title = (spec as { reference_name?: string } | null)?.reference_name || productWord(o.product_type);
   const price = formatMoney(o.price_total, o.currency ?? "USD");
   const promise =
@@ -87,15 +95,19 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
             </CardBody>
           </Card>
 
-          <Card>
-            <CardBody className="space-y-3 text-[length:var(--fs-2)]">
-              <p className="text-[length:var(--fs-3)] font-medium">Paying by Wise, bank transfer or PayPal?</p>
-              <p className="text-muted-foreground">Message the team for the details. We confirm your payment as soon as it arrives.</p>
-              <Link href={`/messages/${o.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-                Message the team
-              </Link>
-            </CardBody>
-          </Card>
+          {offered ? (
+            <OtherWays orderId={o.id} orderRef={o.display_ref ?? o.id} price={price} options={options!} />
+          ) : (
+            <Card>
+              <CardBody className="space-y-3 text-[length:var(--fs-2)]">
+                <p className="text-[length:var(--fs-3)] font-medium">Paying by Wise, bank transfer or PayPal?</p>
+                <p className="text-muted-foreground">Message the team for the details. We confirm your payment as soon as it arrives.</p>
+                <Link href={`/messages/${o.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  Message the team
+                </Link>
+              </CardBody>
+            </Card>
+          )}
 
           <form action={transitionAction}>
             <input type="hidden" name="order_id" value={o.id} />

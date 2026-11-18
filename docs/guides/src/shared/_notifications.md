@@ -73,4 +73,4 @@ Client emails are sent by the database event, never by a page, and each can be s
 | Designer application received / accepted / rejected | Matching email to the applicant | — |
 | Website contact form | Acknowledgement to the sender | — |
 
-**Not sent by email at all:** anything to designers about jobs (assignment, revisions, QC), anything to pod leads, and anything to admins. These are in-app and push only. There is no invoice email; the platform has no invoices yet.
+**Not sent by email at all:** anything to designers about jobs (assignment, revisions, QC), anything to pod leads, and anything to admins. These are in-app and push only. Invoices are not emailed: each one downloads from the order and from Wallet → Invoices (0072).

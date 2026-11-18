@@ -91,10 +91,13 @@ export default async function BillingPage() {
       </Page>
     );
   }
-  const [creditsRes, owedRes] = await Promise.all([
+  const [creditsRes, owedRes, invoicesRes] = await Promise.all([
     supabase.from("client_credits").select("status, amount_cents, decided_amount_cents"),
     supabase.from("payout_obligations").select("status, amount_paise"),
+    supabase.rpc("admin_invoices", { p_limit: 8 }),
   ]);
+  // Finance only (0072); another role simply sees none.
+  const invoices = (invoicesRes.data ?? []) as { order_id: string; number: string; amount: number; currency: string }[];
   const ledger = (ledgerRes.data ?? []) as Movement[];
   const credits = (creditsRes.data ?? []) as { status: string; amount_cents: number; decided_amount_cents: number | null }[];
   const owed = (owedRes.data ?? []) as { status: string; amount_paise: number }[];
@@ -122,9 +125,14 @@ export default async function BillingPage() {
         title="Billing"
         description="Client money in, team payouts out, and late-order credits."
         actions={
-          <a href="https://dashboard.razorpay.com/app/payments" target="_blank" rel="noreferrer" className={buttonVariants({ variant: "secondary" })}>
-            Reconcile with Razorpay
-          </a>
+          <>
+            <Link href="/admin/billing/details" className={buttonVariants({ variant: "secondary" })}>
+              Billing details
+            </Link>
+            <a href="https://dashboard.razorpay.com/app/payments" target="_blank" rel="noreferrer" className={buttonVariants({ variant: "secondary" })}>
+              Reconcile with Razorpay
+            </a>
+          </>
         }
       />
       <Stats
@@ -186,9 +194,29 @@ export default async function BillingPage() {
             </CardBody>
           </Card>
           <Card>
-            <CardBody className="text-[length:var(--fs-2)] text-muted-foreground">
-              Numbered invoices and client wallets arrive with the payment providers. Until then, send an invoice from your
-              accounting tool and mark Wise, bank or PayPal payments received on the order.
+            <CardHeader>
+              <CardTitle>Invoices</CardTitle>
+            </CardHeader>
+            <CardBody className="space-y-2 text-[length:var(--fs-2)]">
+              {invoices.length === 0 ? (
+                <p className="text-muted-foreground">
+                  None yet. An invoice is issued when an order is paid (card, or Mark paid for Wise, bank or PayPal).
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {invoices.map((i) => (
+                    <li key={i.number} className="flex items-baseline justify-between gap-3">
+                      <a href={`/api/invoices/${i.order_id}`} target="_blank" rel="noreferrer" className="min-w-0 truncate font-mono underline underline-offset-2">
+                        {i.number}
+                      </a>
+                      <span className="tabular shrink-0 font-mono text-muted-foreground">{formatMoney(i.amount, i.currency)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Link href="/admin/billing/details" className="inline-block underline underline-offset-2">
+                Invoice details and other ways to pay
+              </Link>
             </CardBody>
           </Card>
         </aside>

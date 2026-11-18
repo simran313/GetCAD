@@ -86,6 +86,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // The invoice is issued as the payment lands (0072). Best effort: a
+    // failure here never fails the webhook (Razorpay would retry a payment
+    // that is already applied), and the invoice is issued the first time the
+    // client or finance opens it instead.
+    const orderId = (data as { order_id?: string } | null)?.order_id;
+    if (orderId) await admin.rpc("issue_invoice_for_payment", { p_order_id: orderId });
+
     return NextResponse.json({ ok: true, ...(data as object) });
   }
 

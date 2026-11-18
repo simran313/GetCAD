@@ -38,6 +38,7 @@ import { IntakePanel, type ClientContact, type Screenshot } from "./IntakePanel"
 import { ThreadsPanel } from "./ThreadsPanel";
 import type { AttachmentRow, ChatBrief, DisputeRow, MessageRow, OrderRow, ThreadReads, ThreadRow, VersionRow } from "./types";
 import { viewerZone } from "@/lib/time/zone";
+import { PaymentReports } from "./PaymentReports";
 
 const HIDDEN_TARGETS = new Set(["QUOTED", "PAYMENT_HELD", "PAYOUT_RELEASED", "REFUNDED", "DISPUTED"]);
 
@@ -553,6 +554,7 @@ export async function OrderDetail({
             {canFund && (
               <PayButton orderId={o.id} amount={price} currency={currency} />
             )}
+            {canMarkPaid && <PaymentReports orderId={o.id} />}
             {canMarkPaid && (
               <form action={markPaidAction} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="order_id" value={o.id} />
@@ -798,6 +800,7 @@ export async function OrderDetail({
     );
     const markPaidForm = (
       <form action={markPaidAction} className="space-y-3">
+        <PaymentReports orderId={o.id} />
         <input type="hidden" name="order_id" value={o.id} />
         <div className="grid grid-cols-2 gap-2">
           <label className={field}>
