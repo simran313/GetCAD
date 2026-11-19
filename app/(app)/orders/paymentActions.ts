@@ -8,7 +8,15 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createUserSupabaseClient } from "@/lib/supabase/server";
 
 export type StartPaymentResult =
-  | { ok: true; keyId: string; razorpayOrderId: string; amount: number; currency: string }
+  | {
+      ok: true;
+      keyId: string;
+      razorpayOrderId: string;
+      amount: number;
+      currency: string;
+      /** The client's own details, so checkout opens already filled in. */
+      prefill: { name?: string; email?: string; contact?: string };
+    }
   | { ok: false; error: string };
 
 /**
@@ -31,12 +39,13 @@ export async function startPaymentAction(formData: FormData): Promise<StartPayme
   if (!orderId) return { ok: false, error: "Missing order." };
 
   const supabase = await createUserSupabaseClient();
-  const [{ data: order, error }, { data: me }] = await Promise.all([
+  const [{ data: order, error }, { data: me }, { data: profile }] = await Promise.all([
     supabase
       .rpc("visible_orders", { p_order_id: orderId })
       .select("id, relation, status, price_total, currency")
       .maybeSingle(),
     supabase.from("users").select("role").maybeSingle(),
+    supabase.from("client_profiles").select("legal_name, email, phone").eq("user_id", userId).maybeSingle(),
   ]);
 
   if (error || !order) return { ok: false, error: "Order not found." };
@@ -79,8 +88,21 @@ export async function startPaymentAction(formData: FormData): Promise<StartPayme
       razorpayOrderId: rp.id,
       amount: order.price_total,
       currency: order.currency,
+      prefill: checkoutPrefill(profile),
     };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Could not start payment." };
   }
+}
+
+/** Only well-formed values: checkout rejects a malformed phone instead of ignoring it. */
+function checkoutPrefill(p: { legal_name: string | null; email: string | null; phone: string | null } | null) {
+  const name = p?.legal_name?.trim();
+  const email = p?.email?.trim();
+  const contact = p?.phone?.replace(/[\s()-]/g, "");
+  return {
+    ...(name ? { name } : {}),
+    ...(email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? { email } : {}),
+    ...(contact && /^\+?\d{8,15}$/.test(contact) ? { contact } : {}),
+  };
 }
