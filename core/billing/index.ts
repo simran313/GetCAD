@@ -76,3 +76,13 @@ export function offeredMethods(o: PaymentOptions | null): (typeof OFFLINE_METHOD
   if (!o) return [];
   return OFFLINE_METHODS.filter(([, , key]) => Boolean(o[key]?.trim()));
 }
+
+/**
+ * What the pay page says when checkout reports a declined payment: the
+ * processor's reason when it gives one. It does not promise nothing was taken:
+ * a bank can hold an amount for a while before releasing it.
+ */
+export function declineText(reason: string | undefined): string {
+  const why = reason?.trim().replace(/\.+$/, "");
+  return `${why ? `${why}.` : "The payment did not go through."} The order is still unpaid: try again, or use another card or payment method.`;
+}

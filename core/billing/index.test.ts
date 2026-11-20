@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { exportStatement, invoiceFileName, offeredMethods, paymentLine, placeOfSupply } from ".";
+import { declineText, exportStatement, invoiceFileName, offeredMethods, paymentLine, placeOfSupply } from ".";
 
 const tax = { sac: "998391", export: true, lut_arn: "AD070426000123X", lut_fy: "2026-27", title: "Tax invoice", note: null };
 
@@ -40,5 +40,15 @@ describe("other ways to pay", () => {
       "WISE",
       "PAYPAL",
     ]);
+  });
+});
+
+describe("a declined payment", () => {
+  it("gives the processor's reason, or a plain one", () => {
+    expect(declineText("Your card was declined by the bank.")).toBe(
+      "Your card was declined by the bank. The order is still unpaid: try again, or use another card or payment method.",
+    );
+    expect(declineText(undefined)).toBe("The payment did not go through. The order is still unpaid: try again, or use another card or payment method.");
+    expect(declineText("  ")).toMatch(/^The payment did not go through\./);
   });
 });

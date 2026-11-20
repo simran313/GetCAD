@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { declineText } from "@/core/billing";
 import { formatMoney } from "@/lib/money";
 
 import { startPaymentAction } from "./paymentActions";
@@ -13,12 +15,16 @@ import { actionErrorText } from "@/lib/refusal";
  *
  * The browser's job ends at "checkout closed". It never tells the server a
  * payment succeeded — the signed webhook does that, so a client cannot fund
- * their own order by tampering with this component. On close we simply refresh
- * and let the order's real status speak.
+ * their own order by tampering with this component. After a payment we refresh
+ * every few seconds and let the order's real status speak: once the webhook
+ * has landed the order is no longer QUOTED and this button is gone.
  */
 declare global {
   interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+      on: (event: "payment.failed", cb: (r: { error?: { description?: string; reason?: string } }) => void) => void;
+    };
   }
 }
 
@@ -53,6 +59,24 @@ export function PayButton({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const router = useRouter();
+
+  // The webhook usually lands within seconds; check for it rather than asking
+  // the client to refresh. Stops after about a minute.
+  useEffect(() => {
+    if (!awaitingConfirmation) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries += 1;
+      router.refresh();
+      if (tries >= 20) {
+        clearInterval(timer);
+        setSlow(true);
+      }
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [awaitingConfirmation, router]);
 
   async function pay() {
     setError(null);
@@ -79,10 +103,16 @@ export function PayButton({
         currency: result.currency,
         name: "The CAD Pillar",
         description: `Order ${orderId}`,
+        prefill: result.prefill,
         // Payment confirmation arrives by webhook, so all we do here is stop
         // showing the button and tell the user what to expect.
         handler: () => setAwaitingConfirmation(true),
         modal: { ondismiss: () => setBusy(false) },
+      });
+      // Checkout shows the decline itself and lets them retry; this keeps a
+      // plain sentence on the page in case they close it.
+      checkout.on("payment.failed", (r) => {
+        setError(declineText(r.error?.description));
       });
       checkout.open();
     } catch (e) {
@@ -97,9 +127,17 @@ export function PayButton({
       <div className="rounded-md border border-border bg-subtle px-3 py-2 text-[length:var(--fs-3)] leading-[var(--lh-3)]">
         <p className="font-medium">Payment submitted</p>
         <p className="mt-1 text-muted-foreground">
-          We&apos;re confirming it with the payment provider. This page will show{" "}
-          <span className="font-medium">Payment held</span> once escrow is funded — usually within
-          a few seconds. Refresh if it hasn&apos;t updated.
+          {slow ? (
+            <>
+              It is taking longer than usual. Your payment is safe: refresh in a minute, or message the team if it
+              still shows as unpaid.
+            </>
+          ) : (
+            <>
+              We&apos;re confirming it with the payment provider. This page updates by itself to{" "}
+              <span className="font-medium">Payment held</span>, usually within a few seconds.
+            </>
+          )}
         </p>
       </div>
     );
