@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sales Training Master</title>
+<style>
+:root{--ink:#0A0A0A;--paper:#FFFFFF;--sub:#F5F5F5;--line:#E2E2E2;--mute:#5E5E5E;--accent:#9A7417;--accent-bg:#FAF6EA;--top:56px}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--top) + 16px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 Geist,Inter,"Helvetica Neue",Arial,sans-serif}
+header.top{position:sticky;top:0;z-index:20;height:var(--top);display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--ink);color:#fff}
+.brand{font-weight:700;letter-spacing:.04em;white-space:nowrap;font-size:14px}
+.brand b{display:inline-block;width:4px;height:16px;background:#fff;margin-right:3px;vertical-align:-2px}
+.top input{flex:1;max-width:360px;min-width:0;height:34px;border-radius:6px;border:1px solid #444;background:#1c1c1c;color:#fff;padding:0 12px;font:inherit;font-size:14px}
+.top input::placeholder{color:#9a9a9a}
+.badge{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;border:1px solid #fff;border-radius:4px;padding:3px 7px;white-space:nowrap}
+.top button{background:none;border:1px solid #555;color:#fff;border-radius:6px;height:34px;padding:0 12px;font:inherit;font-size:13px;cursor:pointer}
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:var(--top);align-self:start;height:calc(100vh - var(--top));overflow:auto;padding:20px 12px 40px;border-right:1px solid var(--line);font-size:13.5px}
+nav.toc a{display:block;padding:6px 10px;border-radius:6px;color:var(--mute);text-decoration:none;line-height:1.35}
+nav.toc a:hover{background:var(--sub);color:var(--ink)}
+nav.toc a.on{background:var(--ink);color:#fff}
+nav.toc .progress{font-size:12px;color:var(--mute);padding:0 10px 12px}
+nav.toc .bar{height:4px;background:var(--line);border-radius:2px;margin:6px 0 0}
+nav.toc .bar i{display:block;height:100%;width:0;background:var(--ink);border-radius:2px;transition:width .3s}
+main{padding:28px 40px 120px;min-width:0}
+.hero{background:var(--ink);color:#fff;border-radius:12px;padding:32px;margin-bottom:32px}
+.hero h1{font-size:34px;line-height:1.15;margin:0 0 8px;border:0}
+.hero p{color:#d6d6d6;margin:8px 0}
+.hero strong{color:#fff}
+.hero code{background:#2a2a2a;color:#fff}
+section.mod{max-width:860px;margin:0 0 56px}
+section.mod.hidden{display:none}
+h1{font-size:28px;line-height:1.2;border-bottom:3px solid var(--ink);padding-bottom:10px;margin:0 0 16px}
+h2{font-size:21px;margin:32px 0 10px}
+h3{font-size:17px;margin:24px 0 8px}
+p,li{max-width:76ch}
+code{font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--sub);padding:1px 5px;border-radius:4px}
+.tw{overflow-x:auto;margin:14px 0 20px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{background:var(--ink);color:#fff;text-align:left;font-weight:600;padding:9px 12px;white-space:nowrap}
+td{padding:8px 12px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even) td{background:#FAFAFA}
+tbody tr:hover td{background:var(--accent-bg)}
+.callout{border-left:5px solid var(--accent);background:var(--accent-bg);border-radius:0 8px 8px 0;padding:12px 18px;margin:16px 0}
+.callout p{margin:6px 0}
+.callout>p:first-child strong:first-child{color:var(--accent);text-transform:uppercase;font-size:12.5px;letter-spacing:.06em}
+.callout.never{border-left-color:var(--ink);background:#F3F3F3}
+.callout.never>p:first-child strong:first-child{color:var(--ink)}
+.callout.take{background:#fff;border:1px solid var(--line);border-left:5px solid var(--accent)}
+pre.tpl{position:relative;white-space:pre-wrap;font:14px/1.55 Geist,Inter,Arial,sans-serif;background:var(--sub);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin:14px 0}
+pre.tpl .copy{position:absolute;top:8px;right:8px;font:12px Arial;border:1px solid var(--ink);background:#fff;border-radius:5px;padding:3px 9px;cursor:pointer}
+figure.chart{margin:20px 0 28px;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}
+figure.chart svg{width:100%;height:auto;display:block}
+figure.chart .mark{cursor:pointer;transition:opacity .15s}
+figure.chart:hover .mark{opacity:.55}
+figure.chart .mark:hover,figure.chart .mark.hot{opacity:1;stroke:var(--accent);stroke-width:3}
+figcaption{font-size:13px;color:var(--mute);padding:6px 8px 2px}
+.hint{opacity:.75}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;line-height:1.4;padding:7px 10px;border-radius:6px;max-width:300px;opacity:0;transition:opacity .1s}
+.quiz{border:2px solid var(--ink);border-radius:10px;padding:14px 20px;margin:24px 0}
+.quiz h4{margin:0 0 6px;font-size:15px;text-transform:uppercase;letter-spacing:.06em}
+.quiz li{margin:8px 0}
+.quiz details{margin-top:4px}
+.quiz summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:600}
+.quiz details p{background:var(--accent-bg);border-radius:6px;padding:8px 12px;margin:6px 0 0;font-size:14.5px}
+mark.tbc{background:#FFF1C2;color:var(--ink);padding:0 3px;border-radius:3px;font-weight:600}
+mark.hit{background:#FFE58A}
+.managers .gate{border:2px dashed var(--accent);border-radius:10px;padding:18px;text-align:center}
+.managers .gate button{font:inherit;font-weight:600;background:var(--ink);color:#fff;border:0;border-radius:6px;padding:9px 16px;cursor:pointer;margin-top:8px}
+.managers.locked>:not(h1):not(.gate){display:none}
+footer.conf{position:fixed;bottom:0;left:0;right:0;background:var(--ink);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-align:center;padding:5px 16px;z-index:20}
+.navtoggle{display:none}
+#count{font-size:12px;color:#bdbdbd;white-space:nowrap}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  nav.toc{position:fixed;top:var(--top);left:0;width:280px;background:#fff;z-index:30;transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 40px rgba(0,0,0,.15)}
+  nav.toc.open{transform:none}
+  .navtoggle{display:inline-block}
+  main{padding:20px 16px 100px}
+  .badge,#count,.top .print{display:none}
+  .top input{max-width:none}
+  .brand{font-size:12px}
+  .hero{padding:22px}
+  .hero h1{font-size:26px}
+}
+@media print{
+  header.top,nav.toc,footer.conf,.copy,.gate,.hint{display:none!important}
+  .layout{display:block}
+  .managers.locked>*{display:block!important}
+  details{display:block}details>*{display:block}
+  section.mod{break-before:page}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="navtoggle" type="button" aria-label="Open contents" onclick="document.querySelector('nav.toc').classList.toggle('open')">☰</button>
+  <span class="brand"><b></b><b></b><b></b> THE CAD PILLAR</span>
+  <input id="q" type="search" placeholder="Search: price, objection, SLA…" aria-label="Search the document">
+  <span id="count"></span>
+  <span class="badge">INTERNAL — CONFIDENTIAL</span>
+  <button class="print" type="button" onclick="window.print()">Print</button>
+</header>
+<div class="layout">
+  <nav class="toc" aria-label="Contents">
+    <div class="progress">Quiz answers opened: <span id="done">0</span><div class="bar"><i id="pbar"></i></div></div>
+    {{NAV}}
+  </nav>
+  <main>
+    <div class="hero"><h1>{{TITLE}}</h1>{{INTRO}}</div>
+    {{BODY}}
+  </main>
+</div>
+<div id="tip" role="tooltip"></div>
+<footer class="conf">INTERNAL — CONFIDENTIAL · The CAD Pillar · Ichizu Private Limited</footer>
+<script>
+(function(){
+  // Chart tooltips (hover on desktop, tap on touch)
+  var tip=document.getElementById('tip');
+  function show(e,el){tip.textContent=el.getAttribute('data-tip');tip.style.opacity=1;var x=(e.clientX||0)+14,y=(e.clientY||0)+14;if(x+310>innerWidth)x=innerWidth-310;tip.style.left=x+'px';tip.style.top=y+'px';}
+  document.querySelectorAll('figure.chart .mark[data-tip]').forEach(function(el){
+    el.addEventListener('mousemove',function(e){show(e,el)});
+    el.addEventListener('mouseleave',function(){tip.style.opacity=0});
+    el.addEventListener('click',function(e){document.querySelectorAll('.mark.hot').forEach(function(m){m.classList.remove('hot')});el.classList.add('hot');show(e,el)});
+  });
+  // Copy buttons on templates
+  document.querySelectorAll('pre.tpl .copy').forEach(function(b){b.addEventListener('click',function(){var t=b.parentNode.textContent.replace(/^Copy/,'');try{navigator.clipboard.writeText(t);b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1200)}catch(e){}})});
+  // Managers-only gate
+  document.querySelectorAll('section.managers').forEach(function(s){
+    s.classList.add('locked');
+    var g=document.createElement('div');g.className='gate';
+    g.innerHTML='<strong>Managers only.</strong> Internal economics: never shared with clients, prospects or designers.<br><button type="button">Show this appendix</button>';
+    s.querySelector('h1').after(g);
+    g.querySelector('button').addEventListener('click',function(){s.classList.remove('locked');g.remove()});
+  });
+  // Quiz progress (remembered on this device only)
+  var all=document.querySelectorAll('.quiz details'),key='tcp-sales-quiz';
+  var seen={};try{seen=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+  function upd(){var n=Object.keys(seen).length;document.getElementById('done').textContent=n+' / '+all.length;document.getElementById('pbar').style.width=(100*n/all.length)+'%'}
+  all.forEach(function(d,i){d.addEventListener('toggle',function(){if(d.open){seen[i]=1;try{localStorage.setItem(key,JSON.stringify(seen))}catch(e){}upd()}})});upd();
+  // Scroll-spy
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.dataset.target===e.target.id)})}})},{rootMargin:'-20% 0px -70% 0px'});
+  document.querySelectorAll('section.mod').forEach(function(s){io.observe(s)});
+  links.forEach(function(a){a.addEventListener('click',function(){document.querySelector('nav.toc').classList.remove('open')})});
+  // Search: show only sections that contain the words; highlight hits
+  var q=document.getElementById('q'),secs=[].slice.call(document.querySelectorAll('section.mod')),count=document.getElementById('count');
+  function clear(){document.querySelectorAll('mark.hit').forEach(function(m){m.replaceWith(document.createTextNode(m.textContent))});secs.forEach(function(s){s.normalize()})}
+  q.addEventListener('input',function(){
+    clear();var v=q.value.trim().toLowerCase();var shown=0;
+    secs.forEach(function(s){var ok=!v||s.textContent.toLowerCase().indexOf(v)>=0;s.classList.toggle('hidden',!ok);if(ok)shown++;
+      if(ok&&v.length>2){var w=document.createTreeWalker(s,NodeFilter.SHOW_TEXT,null),n,hits=[];while(n=w.nextNode()){if(n.parentNode.closest('svg,script,button'))continue;var i=n.textContent.toLowerCase().indexOf(v);if(i>=0)hits.push([n,i])}
+        hits.forEach(function(h){var r=document.createRange();r.setStart(h[0],h[1]);r.setEnd(h[0],h[1]+v.length);var m=document.createElement('mark');m.className='hit';try{r.surroundContents(m)}catch(e){}})}
+    });
+    count.textContent=v?shown+' sections':'';
+  });
+})();
+</script>
+</body>
+</html>
